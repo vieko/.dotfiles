@@ -1,0 +1,1 @@
+/home/vieko/.fzf/shell/key-bindings.fish

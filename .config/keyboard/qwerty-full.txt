@@ -1,0 +1,59 @@
+<base>
+* --- OVERRIDE
+[rshf]>[lshf]
+* --- LEFT THUMBS MODS
+[lctr]>[lwin]
+[del]>[lctr]
+[home]>[lshf]
+[end]>[esc]
+* --- RIGHT THUMBS MODS
+[rctr]>[lwin]
+[rwin]>[ralt]
+[pgup]>[lshf]
+[pgdn]>[esc]
+* --- HOTKEYS
+[hk3]>[prnt]
+[hk4]>[ins]
+* --- HOME ROW MODS
+[a]>[a][t&h250][lwin]
+[s]>[s][t&h250][lalt]
+[d]>[d][t&h250][lctr]
+[f]>[f][t&h250][lshf]
+[j]>[j][t&h250][lshf]
+[k]>[k][t&h250][lctr]
+[l]>[l][t&h250][lalt]
+[scol]>[scol][t&h250][lwin]
+* --- TOP ROW MODS
+{1}>{s9}{-lshf}{8}{+lshf}
+{lshf}{1}>{s9}{1}
+{2}>{s9}{+lshf}{obrk}{-lshf}
+{lshf}{2}>{s9}{2}
+{3}>{s9}{-lshf}{obrk}{+lshf}
+{lshf}{3}>{s9}{3}
+{4}>{s9}{-lshf}{9}{+lshf}
+{lshf}{4}>{s9}{4}
+{5}>{s9}{-lshf}{3}{+lshf}
+{lshf}{5}>{s9}{5}
+{6}>{s9}{-lshf}{6}{+lshf}
+{lshf}{6}>{s9}{6}
+{7}>{s9}{-lshf}{0}{+lshf}
+{lshf}{7}>{s9}{7}
+{8}>{s9}{-lshf}{cbrk}{+lshf}
+{lshf}{8}>{s9}{8}
+{9}>{s9}{+lshf}{cbrk}{-lshf}
+{lshf}{9}>{s9}{9}
+{0}>{s9}{-lshf}{4}{+lshf}
+{lshf}{0}>{s9}{0}
+* --- BOTTOM ROW MODS
+{obrk}>{s9}{-lshf}{7}{+lshf}
+{lshf}{obrk}>{s9}{-lshf}{5}{+lshf}
+{cbrk}>{s9}{-lshf}{1}{+lshf}
+{lshf}{cbrk}>{s9}{-lshf}{2}{+lshf}
+[caps]>[tab]
+<keypad>
+<function1>
+* --- MEDIA
+[pgup]>[vol+]
+[pgdn]>[vol-]
+<function2>
+<function3>

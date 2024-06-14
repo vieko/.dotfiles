@@ -1,0 +1,38 @@
+<base>
+* --- HOTKEYS
+[hk3]>[prnt]
+[hk4]>[ins]
+* --- LEFT THUMBS
+[lctr]>[lwin]
+[lalt]>[lalt]
+[KhBB]>[KhBB]
+[del]>[lctr]
+[home]>[lshf]
+[end]>[esc]
+* --- RIGHT THUMBS
+[rctr]>[lwin]
+[rwin]>[ralt]
+[spc]>[spc]
+[ent]>[ent]
+[pgup]>[rshf]
+[pgdn]>[esc]
+* --- OVERRIDES
+[caps]>[tab]
+* --- HOME ROW MODS
+*[a]>[a][t&h250][lwin]
+*[s]>[s][t&h250][lalt]
+*[d]>[d][t&h250][lctr]
+*[f]>[f][t&h250][lshf]
+*[j]>[j][t&h250][lshf]
+*[k]>[k][t&h250][lctr]
+*[l]>[l][t&h250][lalt]
+*[scol]>[scol][t&h250][lwin]
+<keypad>
+<function1>
+* --- LEFT THUMBS
+[lalt]>[del]
+* --- MEDIA
+[pgup]>[vol+]
+[pgdn]>[vol-]
+<function2>
+<function3>

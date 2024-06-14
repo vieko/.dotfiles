@@ -1,0 +1,3 @@
+[submodule ".config/init.lua"]
+	path = .config/init.lua
+	url = git@github.com:vieko/init.lua.git

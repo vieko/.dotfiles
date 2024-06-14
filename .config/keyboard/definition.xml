@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE xkbConfigRegistry SYSTEM "xkb.dtd">
+<xkbConfigRegistry version="1.1">
+  <layoutList>
+    <layout>
+      <configItem>
+        <name>real-prog-layout</name>
+        <!-- Keyboard indicator for Kinesis layouts -->
+        <shortDescription>en</shortDescription>
+        <description>English (US)</description>
+      </configItem>
+      <variantList>
+        <variant>
+          <configItem>
+            <name>real-prog-qwerty</name>
+            <description>English (Real Programmers Qwerty)</description>
+            <vendor>ViekoFranetovic</vendor>
+          </configItem>
+        </variant>
+      </variantList>
+    </layout>
+  </layoutList> 
+</xkbConfigRegistry>

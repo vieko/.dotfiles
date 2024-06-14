@@ -1,0 +1,107 @@
+[core]
+	editor = nvim
+	pager = less -x2
+	autocrlf = input
+	
+[user]
+	; signingkey = E3BD560BD7BE8470
+	email = 48670+vieko@users.noreply.github.com
+	name = Vieko Franetovic
+	
+[color]
+	branch = auto
+	diff = auto
+	status = auto
+	
+[color "branch"]
+	current = red reverse
+  local = blue
+  remote = green
+  
+[color "diff"]
+	meta = yellow
+	frag = magenta
+	old = red bold
+	new = green
+	plain = white
+	
+[color "status"]
+	added = yellow
+	changed = green
+	untracked = cyan
+	
+[push]
+	default = current
+
+[pull]
+	default = current
+	
+[diff]
+	mnemonicprefix = true
+
+[branch]
+	autosetuprebase = never
+	autosetupmerge = true
+
+[apply]
+	whitespace = nowarn
+	
+[alias]
+	# basic
+	st = status -s
+	cl = clone
+	ci = commit
+	co = checkout
+	br = branch
+	r = reset
+	cp = cherry-pick
+	gr = grep -Ii
+	# tweaks
+	diff = diff --word-diff
+	branch = branch -ra
+	grep = grep -Ii
+	ai = add --interactive
+	f = "!git ls-files | grep -i"
+	# commit
+	cm = commit -m
+	cma = commit -a -m
+	ca = commit --amend
+	amend = commit --amend
+	caa = commit -a --amend -C HEAD
+	# log
+	ls = log --pretty=format:"%C(green)%h\\ %C(yellow)[%ad]%Cred%d\\ %Creset%s%Cblue\\ [%an]" --decorate --date=relative
+  ll = log --pretty=format:"%C(yellow)%h%Cred%d\\ %Creset%s%Cblue\\ [a:%an,c:%cn]" --decorate --numstat
+  lc  = "!f() { git ll "$1"^.."$1"; }; f"
+  lnc = log --pretty=format:"%h\\ %s\\ [%cn]"
+  fl = log -u
+  filelog = log -u
+  # diff
+  d = diff --word-diff
+  dc = diff --cached
+  dlc = diff --cached HEAD^
+  dr  = "!f() { git diff -w "$1"^.."$1"; }; f"
+  # reset
+  r1 = reset HEAD^
+  r2 = reset HEAD^^
+  rh = reset --hard
+  rh1 = reset HEAD^ --hard
+  rh2 = reset HEAD^^ --hard
+  # stash
+  sl = stash list
+  sa = stash apply
+  ss = stash save
+  # convenience
+  rem = "!git config -l | grep remote.*url | tail -n +2"
+  empty = "!git commit -am\"[empty] Initial commit\" --allow-empty"
+  undo = "!f() { git reset --hard $(git rev-parse --abbrev-ref HEAD)@{${1-1}}; }; f"
+	# list all aliases
+	la = "!git config -l | grep alias | cut -c 7-"
+
+[rebase]
+	autosquash = true
+	
+[commit]
+	gpgsign = true
+	
+[init]
+	defaultBranch = main
