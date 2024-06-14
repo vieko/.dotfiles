@@ -14,3 +14,7 @@ stow .
 - [ ] add `dunst` for notifications
 - [ ] try [Berkeley Mono](https://berkeleygraphics.com/typefaces/berkeley-mono/)
 
+### LAPTOP
+- [ ] conditionally load settings for laptop
+- [ ] install `picom`, `feh`, `polybar`, `rofi`, `gradience`
+
