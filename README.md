@@ -10,7 +10,7 @@ stow .
 ```
 
 ### TODOS
-- [ ] add maim for screenshot
-- [ ] add dunst for notifications
-- [ ] add berkeley mono for font
+- [ ] add `maim` for screenshot
+- [ ] add `dunst` for notifications
+- [ ] try [Berkeley Mono](https://berkeleygraphics.com/typefaces/berkeley-mono/)
 
