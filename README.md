@@ -15,6 +15,7 @@ stow .
 - [ ] try [Berkeley Mono](https://berkeleygraphics.com/typefaces/berkeley-mono/)
 
 ### LAPTOP
-- [ ] conditionally load settings for laptop
-- [ ] install `picom`, `feh`, `polybar`, `rofi`, `gradience`
+- [x] conditionally load settings for laptop
+- [x] install `picom`, `feh`, `polybar`, `rofi`, `gradience`
+- [ ] configure control on caps
 
