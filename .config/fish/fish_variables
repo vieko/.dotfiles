@@ -6,6 +6,7 @@ SETUVAR --export GOOGLE_APPLICATION_CREDENTIALS:/home/vieko/secrets/ltip\x2ddist
 SETUVAR --export MANPAGER:most
 SETUVAR --export PAGER:most
 SETUVAR --export PYENV_ROOT:/home/vieko/\x2epyenv
+SETUVAR --export TERM:xterm\x2dkitty
 SETUVAR --export TMPDIR:/home/vieko/tmp
 SETUVAR --export VISUAL:nvim
 SETUVAR XDG_CONFIG_HOME:/home/vieko/\x2econfig

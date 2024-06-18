@@ -1,6 +1,7 @@
 set fish_greeting
 
 # PATH
+# set -g -x TERM xterm-kitty
 set -Ux PAGER most
 set -Ux MANPAGER most
 set -Ux EDITOR nvim
