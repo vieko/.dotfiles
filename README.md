@@ -14,7 +14,7 @@ stow .
 
 ### GENERAL
 - [ ] add better icon to `i3lock-color`
-- [ ] add keymap for screen lock
+- [x] add keymap for screen lock
 
 ### DESKTOP
 - [ ] add `maim` for screenshot
