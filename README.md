@@ -15,6 +15,7 @@ stow .
 ### GENERAL
 - [ ] add better icon to `i3lock-color`
 - [x] add keymap for screen lock
+- [ ] fix white corners on google-chrome right click contextual menu
 
 ### DESKTOP
 - [ ] add `maim` for screenshot
