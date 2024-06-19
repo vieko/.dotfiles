@@ -9,7 +9,7 @@
     grey: #6c7086;
 
     width: 600;
-    font: "MonoLisa Custom Medium Regular 12";
+    font: "Berkeley Mono Bold 12";
 }
 
 element-text, element-icon , mode-switcher {
