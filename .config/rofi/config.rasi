@@ -1,6 +1,6 @@
 configuration{
     modi: "run,drun,window,filebrowser";
-    font: "MonoLisa Custom Medium Regular 12";
+    font: "Berkeley Mono Bold 12";
     icon-theme: "Oranchelo";
     show-icons: true;
     terminal: "kitty";

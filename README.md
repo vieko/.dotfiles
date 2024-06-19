@@ -10,7 +10,10 @@ stow .
 ```
 
 ### TODOS
-- [ ] try [Berkeley Mono](https://berkeleygraphics.com/typefaces/berkeley-mono/)
+- [x] try [Berkeley Mono](https://berkeleygraphics.com/typefaces/berkeley-mono/)
+
+### GENERAL
+- [ ] add better icon to `i3lock-color`
 
 ### DESKTOP
 - [ ] add `maim` for screenshot
@@ -19,9 +22,9 @@ stow .
 
 ### LAPTOP
 - [x] conditionally load settings for laptop
-- [x] install `picom`, `feh`, `polybar`, `rofi`, `gradience`
-- [ ] install `picom`, `feh`, `polybar`, `rofi`
+- [ ] install `gradience` and get it working as intended
 - [x] configure control on caps
-- [ ] add a way to handle blutooth via polybar and or rofi
-- [ ] bring back natural scroll
+- [ ] add a way to handle blutooth via polybar and / or rofi
+- [ ] bring back natural scroll for touchpad
+- [ ] handle right click on touchpad
 
