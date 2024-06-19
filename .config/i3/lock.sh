@@ -57,7 +57,7 @@ i3lock \
 --status-pos x+5:y+h-16 \
 --greeter-size 48 \
 --greeter-color $mauve \
---greeter-text "󰡛" \
+--greeter-text "" \
 --verif-size 16 \
 --verif-color $lavender \
 --verif-text "" \
@@ -71,8 +71,8 @@ i3lock \
 \
 --verif-font="Symbols Nerd Font Mono" \
 --wrong-font="Symbols Nerd Font Mono" \
---layout-font="MonoLisaCustom-Medium" \
+--layout-font="Berkeley Mono" \
 --greeter-font="Symbols Nerd Font Mono" \
---time-font="MonoLisaCustom-Medium" \
---date-font="MonoLisaCustom-Medium"
+--time-font="Berkeley Mono" \
+--date-font="Berkeley Mono"
 
