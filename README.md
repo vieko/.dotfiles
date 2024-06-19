@@ -25,6 +25,6 @@ stow .
 - [ ] install `gradience` and get it working as intended
 - [x] configure control on caps
 - [ ] add a way to handle blutooth via polybar and / or rofi
-- [ ] bring back natural scroll for touchpad
-- [ ] handle right click on touchpad
+- [x] bring back natural scroll for touchpad
+- [x] handle right click on touchpad
 
