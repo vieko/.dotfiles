@@ -55,9 +55,9 @@ i3lock \
 --ringver-color $lavender \
 --ringwrong-color $maroon \
 --status-pos x+5:y+h-16 \
---greeter-size 16 \
+--greeter-size 48 \
 --greeter-color $mauve \
---greeter-text "$hostname" \
+--greeter-text "󰡛" \
 --verif-size 16 \
 --verif-color $lavender \
 --verif-text "" \
@@ -69,10 +69,10 @@ i3lock \
 --wrong-align 1 \
 --modif-pos -5:-5 \
 \
---verif-font="MonoLisaCustom-Medium" \
---wrong-font="MonoLisaCustom-Medium" \
+--verif-font="Symbols Nerd Font Mono" \
+--wrong-font="Symbols Nerd Font Mono" \
 --layout-font="MonoLisaCustom-Medium" \
---greeter-font="MonoLisaCustom-Medium" \
+--greeter-font="Symbols Nerd Font Mono" \
 --time-font="MonoLisaCustom-Medium" \
 --date-font="MonoLisaCustom-Medium"
 
