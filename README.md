@@ -13,14 +13,14 @@ stow .
 - [x] try [Berkeley Mono](https://berkeleygraphics.com/typefaces/berkeley-mono/)
 
 ### GENERAL
-- [ ] add better icon to `i3lock-color`
+- [x] add better icon to `i3lock-color`
 - [x] add keymap for screen lock
 - [ ] fix white corners on google-chrome right click contextual menu
 
 ### DESKTOP
-- [ ] add `maim` for screenshot
-- [ ] add `dunst` for notifications
-- [ ] add `i3lock-color` for lockscreens on two monitors
+- [x] add `maim` for screenshot
+- [x] add `dunst` for notifications
+- [x] add `i3lock-color` for lockscreens on two monitors
 
 ### LAPTOP
 - [x] conditionally load settings for laptop
