@@ -12,6 +12,7 @@ stow .
 ### GENERAL
 - [ ] manage sleep, wake, and hibernate
 - [ ] fix white corners on google-chrome right click contextual menu
+- [ ] call `fefx` on launch along with easyeffects
 
 ### DESKTOP
 
