@@ -29,6 +29,7 @@ mantle='#181825'
 crust='#11111b'
 
 i3lock \
+--nofork \
 --color $base \
 --bar-indicator \
 --bar-pos y+h \
