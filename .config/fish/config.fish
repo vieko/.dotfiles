@@ -55,8 +55,6 @@ alias iotop="sudo iotop"
 alias heptabase="nohup ~/AppImages/Heptabase.AppImage >/dev/null 2>&1 disown"
 
 # FIXES
-alias fixeasy="~/.config/functions/reset-easyeffects.sh"
-alias fefx="~/.config/functions/reset-easyeffects.sh"
 alias toggledns="~/.config/functions/toggle-dns.sh"
 alias toggletheme="~/.config/functions/toggle-theme.sh"
 alias resetaudio="~/.config/functions/reset-audio.sh"
