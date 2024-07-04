@@ -10,13 +10,13 @@ stow .
 ```
 
 ### GENERAL
-- [ ] manage sleep, wake, and hibernate
+- [x] manage sleep, wake, and hibernate
 - [ ] fix white corners on google-chrome right click contextual menu
-- [ ] call `fefx` on launch along with easyeffects
+- [x] call `fefx` on launch along with easyeffects
 
 ### DESKTOP
 
 ### LAPTOP
 - [ ] install `gradience` and get it working as intended
-- [ ] add a way to handle blutooth via polybar and / or rofi
+- [ ] add [bluetooth module](https://github.com/polybar/polybar-scripts/tree/master)
 
