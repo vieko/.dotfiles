@@ -13,6 +13,8 @@ stow .
 - [x] manage sleep, wake, and hibernate
 - [ ] fix white corners on google-chrome right click contextual menu
 - [x] call `fefx` on launch along with easyeffects
+- [ ] time to move back to `bash`?
+- [ ] try [starship](https://starship.rs/)
 
 ### DESKTOP
 
