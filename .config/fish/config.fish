@@ -35,6 +35,7 @@ alias pn="pnpm"
 alias upn="~/.config/functions/update-pnpm.sh"
 alias prog="setxkbmap real-prog-qwerty"
 alias keys="setxkbmap us"
+alias fefx="~/.config/functions/reset-easyeffects.sh"
 
 # EDITOR
 alias vi='NVIM_APPNAME="init.lua" nvim'
