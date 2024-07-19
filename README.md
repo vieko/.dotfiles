@@ -20,6 +20,6 @@ stow .
 
 ### LAPTOP
 - [ ] install `gradience` and get it working as intended
-- [ ] add [bluetooth module](https://github.com/polybar/polybar-scripts/tree/master)
+- [x] add [bluetooth module](https://github.com/polybar/polybar-scripts/tree/master)
 - [ ] add missing keyboard description for kinesis 360
 
