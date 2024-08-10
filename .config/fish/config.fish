@@ -37,6 +37,7 @@ alias prog="setxkbmap real-prog-qwerty"
 alias keys="setxkbmap us"
 alias fefx="~/.config/functions/reset-easyeffects.sh"
 alias bose="bluetoothctl connect AC:BF:71:CD:94:76"
+alias btdc="bluetoothctl disconnect"
 
 # EDITOR
 alias vi='NVIM_APPNAME="init.lua" nvim'
