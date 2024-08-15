@@ -23,3 +23,6 @@ stow .
 - [x] add [bluetooth module](https://github.com/polybar/polybar-scripts/tree/master)
 - [ ] add missing keyboard description for kinesis 360
 
+### NOTES
+- copy [real-prog-qwerty](https://gist.github.com/vieko/54d6b048f7da6c31d454e81212c7c23c) to `/usr/share/X11/xkb/symbols/`
+
