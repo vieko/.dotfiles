@@ -1,0 +1,100 @@
+{
+  "position": "bottom",
+  "margin-bottom": 0,
+  "margin-top": 0,
+  "margin-left": 6,
+  "margin-right": 6,
+  "spacing": 6,
+  "height": 24,
+  "line-height": 2,
+
+  "modules-left": ["hyprland/workspaces"],
+  "modules-center": [],
+  "modules-right": [
+    "hyprland/language",
+    "pulseaudio",
+    "memory",
+    "cpu",
+    "network",
+    "battery",
+    "clock",
+  ],
+
+  "hyprland/workspaces": {
+    "format": "{icon}",
+    "on-click": "activate",
+    "sort-by-number": true,
+    "persistent-workspaces": {
+      "*": 5,
+    },
+  },
+  "hyprland/window": {
+    "format": "summoning demons",
+    "max-length": 16,
+    "separate-outputs": false,
+  },
+  "hyprland/language": {
+    "format": "<span foreground='#cba6f7'>KEY</span> {short}",
+    "on-click": "~/.config/waybar/scripts/keyboard_layout.sh",
+    "tooltip": false,
+  },
+
+  "clock": {
+    "format": "{:%H:%M}",
+    "format-alt": "{:%Y-%m-%d %H:%M:%S}",
+    "tooltip": false,
+  },
+  "battery": {
+    "interval": 5,
+    "states": {
+      "warning": 30,
+      "critical": 15,
+    },
+    "format": "<span foreground='#cba6f7' weight='normal'>{icon}</span> {capacity}%",
+    "format-warning": "<span foreground='#fab387' weight='normal'>{icon}</span> {capacity}%",
+    "format-critical": "<span foreground='#f38ba8' weight='normal'>{icon}</span> LOW",
+    "format-charging": "<span foreground='#cba6f7' weight='normal'>{icon}</span> {capacity}%",
+    "format-full": "<span foreground='#cba6f7' weight='normal'>{icon}</span> TOP",
+    "format-alt": "<span foreground='#cba6f7' weight='normal'>{icon}</span> {time}",
+    "format-icons": ["", "", "", "", ""],
+    "tooltip": false,
+  },
+
+  "network": {
+    "format-wifi": "<span foreground='#f2cdcd'>{ifname}</span> {essid}",
+    "format-ethernet": "<span foreground='#f2cdcd'>{ifname}</span> {cidr}",
+    "format-disconnected": "<span foreground='#f2cdcd'>{ifname}</span> disconnected",
+    "tooltip": false,
+  },
+
+  "cpu": {
+    "interval": 2,
+    "format": "<span foreground='#cba6f7'>CPU</span> {usage:2}%",
+    "tooltip": false,
+  },
+
+  "memory": {
+    "interval": 2,
+    "format": "<span foreground='#cba6f7'>RAM</span> {percentage:2}%",
+    "tooltip": false,
+  },
+
+  "pulseaudio": {
+    "format": "<span foreground='#cba6f7'>VOL</span> {volume}%",
+    "format-muted": "muted",
+    "on-click": "pactl set-sink-mute @DEFAULT_SINK@ toggle",
+    "ignored-sinks": ["Easy Effects Sink"],
+    "tooltip": false,
+  },
+
+  "bluetooth": {
+    "format": "<span foreground='#cba6f7' weight='normal'></span> {status}",
+    "format-connected": " {num_connections} connected",
+    "format-connected-battery": " {device_alias} ({device_battery_percentage}%)",
+    "tooltip-format": "{controller_alias}\t{controller_address}",
+    "tooltip-format-connected": "{controller_alias}\t{controller_address}\n\n{device_enumerate}",
+    "tooltip-format-enumerate-connected": "{device_alias}\t{device_address}",
+    "on-click": "blueman-manager",
+    "tooltip": false,
+  },
+}

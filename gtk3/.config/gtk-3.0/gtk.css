@@ -1,0 +1,12 @@
+* {
+  border-radius: 0px;
+}
+
+window,
+window.background,
+window.csd,
+headerbar,
+.titlebar,
+.titlebar > * {
+  border-radius: 0px;
+}

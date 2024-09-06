@@ -1,3 +1,4 @@
 credentials
 *.log
 .config/tmux/plugins/*
+tmux/.config/tmux/plugins/*

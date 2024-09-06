@@ -1,0 +1,1 @@
+run `bat cache --build`

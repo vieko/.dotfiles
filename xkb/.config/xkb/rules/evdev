@@ -1,0 +1,4 @@
+! option   = symbols
+  real-prog-qwerty:real-prog-qwerty  = +real-prog-qwerty(real-prog-qwerty)
+
+! include %S/evdev
