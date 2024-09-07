@@ -61,9 +61,11 @@
   },
 
   "network": {
+    "interface": "wlp1s0",
     "format-wifi": "<span foreground='#f2cdcd'>{ifname}</span> {essid}",
     "format-ethernet": "<span foreground='#f2cdcd'>{ifname}</span> {cidr}",
     "format-disconnected": "<span foreground='#f2cdcd'>{ifname}</span> disconnected",
+    "on-click": "~/.config/waybar/scripts/network_menu.sh",
     "tooltip": false,
   },
 
