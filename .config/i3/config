@@ -1,8 +1,0 @@
-# i3 config file (v4)
-
-set $hostname exec hostname
-
-include $HOME/.config/i3/catppuccin-mocha.conf
-include $HOME/.config/i3/config_default.conf
-
-include $HOME/.config/i3/config_$(hostname).conf
