@@ -36,3 +36,4 @@ eval "$(fzf --bash)"
 eval "$(zoxide init bash)"
 
 eval "$(starship init bash)"
+. "$HOME/.cargo/env"
