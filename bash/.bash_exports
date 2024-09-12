@@ -8,6 +8,10 @@ export XDG_STATE_HOME="${XDG_STATE_HOME:-$HOME/.local/state}"
 if ! [[ "$PATH" =~ "$HOME/.local/bin:$HOME/bin:" ]]; then
     PATH="$HOME/.local/bin:$HOME/bin:$PATH"
 fi
+# SCRIPTS
+if ! [[ "$PATH" =~ "$HOME/.scripts:" ]]; then
+    PATH="$HOME/.scripts:$PATH"
+fi
 export PATH
 
 export CDPATH=.:~:/etc:/var

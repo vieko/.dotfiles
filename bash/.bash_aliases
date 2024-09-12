@@ -24,5 +24,6 @@ alias ....="cd ../../.."
 alias qcd=fcd
 
 # aliases for convenience
-alias summon="tmux"
+alias tmux="tmux-start.sh"
+alias summon="tmux-start.sh"
 alias demons="nvim"
