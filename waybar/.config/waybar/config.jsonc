@@ -11,8 +11,8 @@
   "modules-left": ["hyprland/workspaces"],
   "modules-center": [],
   "modules-right": [
-    "bluetooth",
     "hyprland/language",
+    "bluetooth",
     "pulseaudio",
     "memory",
     "cpu",
@@ -91,9 +91,10 @@
   },
 
   "bluetooth": {
-    "format": "<span foreground='#cba6f7' weight='normal'></span> {status}",
-    "format-connected": " {device_alias}",
-    "format-connected-battery": " {device_alias} ({device_battery_percentage}%)",
+    "controller": "viekobose",
+    "format": "<span foreground='#cba6f7'>BT</span> {status}",
+    "format-connected": "<span foreground='#cba6f7'>BT</span> {device_alias}",
+    "format-connected-battery": "<span foreground='#cba6f7'>BT</span> {device_alias} ({device_battery_percentage}%)",
     "on-click": "blueman-manager",
     "tooltip": false,
   },
