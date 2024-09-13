@@ -4,7 +4,7 @@
 include "/home/vieko/.gtkrc-2.0.mine"
 gtk-theme-name="catppuccin-mocha-mauve-standard+default"
 gtk-icon-theme-name="Adwaita"
-gtk-font-name="Berkeley Mono 11"
+gtk-font-name="Fira Sans Book 10"
 gtk-cursor-theme-name="catppuccin-mocha-dark-cursors"
 gtk-cursor-theme-size=24
 gtk-toolbar-style=GTK_TOOLBAR_ICONS
