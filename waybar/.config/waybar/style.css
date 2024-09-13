@@ -85,10 +85,10 @@ label:focus {
   background-color: transparent;
 }
 #battery.warning:not(.charging) {
-  color: @yellow;
+  color: @peach;
 }
 #battery.critical:not(.charging) {
-  color: @maroon;
+  color: @red;
 }
 
 /* === CPU === */
