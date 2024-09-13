@@ -31,9 +31,8 @@ export PROMPT_COMMAND='history -a; history -n; . ~/.bashrc'
 bind '"\e[A": history-search-backward'
 bind '"\e[B": history-search-forward'
 
-eval "$(fzf --bash)"
-
 eval "$(zoxide init bash)"
-
+eval "$(fzf --bash)"
 eval "$(starship init bash)"
+
 . "$HOME/.cargo/env"
