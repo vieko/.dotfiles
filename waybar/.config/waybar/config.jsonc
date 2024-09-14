@@ -11,7 +11,7 @@
   "modules-left": ["hyprland/workspaces"],
   "modules-center": [],
   "modules-right": [
-    "hyprland/language",
+    "custom/keyboard",
     "bluetooth",
     "pulseaudio",
     "memory",
@@ -34,9 +34,18 @@
     "max-length": 16,
     "separate-outputs": false,
   },
+
+  "custom/keyboard": {
+    "exec": "~/.config/waybar/scripts/keyboard-current.sh",
+    "format": "<span foreground='#cba6f7'>KEY</span> {}",
+    "on-click": "~/.config/waybar/scripts/keyboard-toggle.sh",
+    "signal": 1,
+    "tooltip": false,
+  },
+
   "hyprland/language": {
     "format": "<span foreground='#cba6f7'>KEY</span> {short}",
-    "on-click": "~/.config/waybar/scripts/keyboard_layout.sh",
+    "on-click": "~/.config/waybar/scripts/keyboard-toggle.sh",
     "tooltip": false,
   },
 
@@ -84,7 +93,7 @@
 
   "pulseaudio": {
     "format": "<span foreground='#cba6f7'>VOL</span> {volume}%",
-    "format-muted": "muted",
+    "format-muted": "<span foreground='#cba6f7'>VOL</span> muted",
     "on-click": "pactl set-sink-mute @DEFAULT_SINK@ toggle",
     "ignored-sinks": ["Easy Effects Sink"],
     "tooltip": false,

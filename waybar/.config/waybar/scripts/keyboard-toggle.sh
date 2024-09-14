@@ -7,3 +7,6 @@ if [ "$current_layout" = "us" ]; then
 else
     hyprctl keyword input:kb_layout us
 fi
+
+# Send signal to Waybar to update the module
+pkill -SIGRTMIN+1 waybar
