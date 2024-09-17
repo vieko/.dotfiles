@@ -19,9 +19,39 @@ _fzf_compgen_dir() {
 #   esac
 # }
 
-# Function to change directory and list contents
-cd() {
-    z "$@" && exa
+# use rg if available, otherwise use grep
+# TODO yields a syntax error
+# grep() {
+#   if command -v rg &> /dev/null; then
+#     rg "$@"
+#   else
+#     command grep "$@"
+#   fi
+# }
+
+# use fd if available, otherwise use find
+find() {
+  if command -v fd &> /dev/null; then
+    fd "$@"
+  else
+    command find "$@"
+  fi
+}
+
+# custom function for changing directory with z and listing with exa
+cz() {
+    if command -v z >/dev/null 2>&1; then
+        z "$@" && {
+            if command -v exa >/dev/null 2>&1; then
+                exa
+            else
+                ls
+            fi
+        }
+    else
+        echo "z is not installed. Falling back to cd."
+        cd "$@" && ls
+    fi
 }
 
 # Interactive zoxide navigation using fzf

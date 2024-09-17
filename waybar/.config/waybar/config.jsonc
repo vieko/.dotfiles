@@ -5,8 +5,7 @@
   "margin-left": 6,
   "margin-right": 6,
   "spacing": 6,
-  "height": 24,
-  "line-height": 2,
+  "height": 20,
 
   "modules-left": ["hyprland/workspaces"],
   "modules-center": [],
