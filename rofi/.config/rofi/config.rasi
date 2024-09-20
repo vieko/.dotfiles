@@ -1,4 +1,4 @@
-configuration{
+configuration {
     modi: "run,drun,window,filebrowser";
     font: "Berkeley Mono Bold 9";
     icon-theme: "Oranchelo";

@@ -8,7 +8,6 @@
     fg-col2: #f38ba8;
     grey: #6c7086;
 
-    width: 520;
     font: "Berkeley Mono Bold 10";
 }
 
@@ -18,6 +17,7 @@ element-text, element-icon , mode-switcher {
 }
 
 window {
+    width: 520;
     height: 325;
     border: 2px;
     border-radius: 6px;
