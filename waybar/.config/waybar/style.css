@@ -121,27 +121,27 @@ label:focus {
   box-shadow: inherit;
   text-shadow: inherit;
   background-color: transparent;
-  border-bottom: 2px solid transparent;
+  border-bottom: 2px solid @base;
 }
 #workspaces button:hover {
   color: @mauve;
   background-color: inherit;
-  border-bottom: 2px solid transparent;
+  border-bottom: 2px solid @base;
 }
 #workspaces button.active {
   color: @base;
   background-color: @mauve;
-  border-bottom: 2px solid transparent;
+  border-bottom: 2px solid @base;
 }
 #workspaces button.focused {
   color: @base;
   background-color: @rosewater;
-  border-bottom: 2px solid transparent;
+  border-bottom: 2px solid @base;
 }
 #workspaces button.urgent {
   color: @base;
   background-color: @red;
-  border-bottom: 2px solid transparent;
+  border-bottom: 2px solid @base;
 }
 #mode {
   background-color: #64727d;
