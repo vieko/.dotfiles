@@ -4,4 +4,4 @@ credentials
 tmux/.config/tmux/plugins/*
 cargo/.cargo/*
 !cargo/.cargo/env
-hypr/.config/hypr/host.conf
+host.conf
