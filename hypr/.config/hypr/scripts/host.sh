@@ -9,20 +9,14 @@ nvidia_config_file="$HOME/.config/hypr/nvidia.conf"
 
 # Function to set monitor configuration
 set_monitor_config() {
-    local config="$1"
-    echo "monitor=$config" > "$host_config_file"
-    hyprctl keyword monitor "$config"
+    echo "monitor=$1" > "$host_config_file"
+    hyprctl keyword monitor "$1"
 }
 
 # Function to apply NVIDIA configuration
 apply_nvidia_config() {
-    # Execute each line in nvidia.conf using hyprctl
-    while IFS= read -r line || [[ -n "$line" ]]; do
-        if [[ -n "$line" && ! "$line" =~ ^# ]]; then
-            hyprctl keyword "$line"
-            echo "$line" >> "$host_config_file"
-        fi
-    done < "$nvidia_config_file"
+    cat "$nvidia_config_file" >> "$host_config_file"
+    hyprctl keyword source "$nvidia_config_file"
 }
 
 # Main configuration logic
@@ -41,8 +35,4 @@ case "$hostname" in
 esac
 
 # Ensure the host configuration is loaded
-if [ -f "$host_config_file" ]; then
-    hyprctl keyword source "$host_config_file"
-else
-    echo "Warning: Host configuration file not found at $host_config_file"
-fi
+hyprctl keyword source "$host_config_file"

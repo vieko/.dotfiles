@@ -1,7 +1,7 @@
 [Desktop Entry]
 Type=Application
 Name=Firefox Developer Edition
-Exec=/usr/local/bin/firefox/firefox
+Exec=/usr/local/bin/firefox-developer-edition/firefox
 Icon=/home/vieko/.local/share/icons/firefox-developer-default-128.png
 Comment=The browser made for developers
 Categories=Network;WebBrowser;
