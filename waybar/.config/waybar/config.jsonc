@@ -13,8 +13,8 @@
     "custom/keyboard",
     "bluetooth",
     "pulseaudio",
-    "memory",
-    "cpu",
+    // "memory",
+    // "cpu",
     "network",
     "battery",
     "clock",
@@ -24,10 +24,8 @@
     "format": "{icon}",
     "on-click": "activate",
     "sort-by-number": true,
-    "persistent-workspaces": {
-      "*": 3,
-    },
   },
+
   "hyprland/window": {
     "format": "summoning demons",
     "max-length": 16,
