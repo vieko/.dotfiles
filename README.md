@@ -11,7 +11,6 @@ then `stow .` for everything or `stow <folder>` for specific configurations
 
 ### GENERAL
 - SET UP SSL authentication for github
-- FIGURE OUT best practice for authentication agent
 - ADD bindings for screenshots
 - FIND blueman-like applet for WIFI and VPNs
 
