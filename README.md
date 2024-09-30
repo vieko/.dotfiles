@@ -10,6 +10,8 @@ cd .dotfiles
 then `stow .` for everything or `stow <folder>` for specific configurations
 
 ### GENERAL
+- CONFIGURE hypridle
+- ADD keybindings for screenlock
 - ADD keybindings for keyboard layout switch
 - ADD bindings for screenshots
 - SET UP Bluetooth properly
@@ -18,6 +20,7 @@ then `stow .` for everything or `stow <folder>` for specific configurations
 
 ### DESKTOP
 - UPDATE waybar to show ethernet
+- UPDATE hyprlock to show feedback
 
 ### LAPTOP
 - UPDATE waybar to show connected interface
