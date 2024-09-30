@@ -1,0 +1,57 @@
+- install fedora workstation 40
+- `sudo dnf update`
+- `sudo dnf install fedora-workstation-repositories`
+- `sudo dnf install akmod-nvidia`
+- install veracrypt
+- create encrypted container charon
+- install unison-gtk
+- sync charon with watchtower
+- install keepassxc
+- install gnome-tweaks
+- install gnome-extensions-app
+- `sudo dnf install gh`
+- `gh auth login`
+- `gh repo clone vieko/.dotfiles -- --recurse-submodules`
+- `gh repo clone vieko/fonts`
+- install fonts from repo
+- install Fira Sans, Fira Mono, Roboto Slab
+- `sudo dnf install zoxide`
+- `sudo dnf install fzf`
+- install starship
+- `sudo dnf install exa bat fd-find trash-cli`
+- install pnpm
+- install nvm
+- `sudo dnf install rust cargo`
+- install stow
+- `cd .dotfiles`
+- `stow xrdb`
+- `stow cargo`
+- `stow bash`
+- `stow starship`
+- `stow assets`
+- `sudo dnf install kitty`
+- `stow bat`
+- `bat cache --build`
+- `stow aws btop gh git neofetch`
+- `sudo dnf config-manager --set-enabled google-chrome`
+- `sudo dnf install google-chrome-stable`
+- download Firefox Developer Edition
+- harden Firefox
+- `sudo dnf install easyeffects`
+- `stow easyeffects`
+- `cargo install --locked yazi-fm yazi-cli`
+- `stow yazi`
+- `stow icons`
+- `stow themes`
+- `stow nvim`
+- `stow scripts`
+- `stow xkb`
+- `sudo dnf copr enable solopasha/hyprland`
+- `sudo dnf install hyprland hyprpaper hyprlock`
+- `stow hypr`
+- `sudo dnf install waybar mako`
+- `stow waybar mako`
+- `sudo dnf install slurp grim wl-clipboard`
+- `sudo dnf install rofi-wayland`
+- `stow rofi`
+- install tofi

@@ -1,0 +1,165 @@
+@import "mocha.css";
+
+/* === STARTUP === */
+* {
+  all: unset;
+  padding: 0;
+  margin: 0;
+  border: none;
+  min-height: 0;
+  font-family: "Berkeley Mono", "Symbols Nerd Font Mono";
+  font-size: 9pt;
+  font-weight: bold;
+}
+button {
+  border: none;
+  border-radius: 0;
+}
+button:hover {
+  background: inherit;
+}
+window#waybar {
+  background-color: transparent;
+}
+#window {
+  padding: 0 0.5rem;
+  color: @text;
+}
+label:focus {
+  background-color: transparent;
+}
+
+/* === PULSEAUDIO === */
+#pulseaudio {
+  padding: 0 0.5rem;
+  color: @text;
+}
+#pulseaudio.muted {
+  padding: 0 0.5rem;
+  color: @overlay0;
+}
+#pulseaudio:hover {
+  background-color: transparent;
+}
+
+/* === NETWORK === */
+#network {
+  padding: 0 0.5rem;
+  color: @text;
+}
+#network.disconnected {
+  color: @overlay0;
+}
+#network:hover {
+  background-color: transparent;
+}
+
+/* === BLUETOOTH === */
+#bluetooth {
+  padding: 0 0.5rem;
+  color: @text;
+}
+#bluetooth.disabled {
+  padding: 0 0.5rem;
+  color: @overlay0;
+}
+#bluetooth:hover {
+  background-color: transparent;
+}
+
+/* === CLOCK === */
+#clock {
+  padding: 0 0.5rem;
+  color: @mauve;
+}
+#clock:hover {
+  background-color: transparent;
+}
+
+/* === BATTERY === */
+#battery {
+  padding: 0 0.5rem;
+  color: @text;
+}
+#battery:hover {
+  background-color: transparent;
+}
+#battery.warning:not(.charging) {
+  color: @peach;
+}
+#battery.critical:not(.charging) {
+  color: @red;
+}
+
+/* === CPU === */
+#cpu {
+  padding: 0 0.5rem;
+  color: @text;
+}
+
+/* === MEMORY === */
+#memory {
+  padding: 0 0.5rem;
+  color: @text;
+}
+
+/* === LANGUAGE === */
+#language {
+  padding: 0 0.5rem;
+  color: @text;
+}
+
+#custom-keyboard {
+  padding: 0 0.5rem;
+  color: @text;
+}
+
+/* === WORKSPACES === */
+#workspaces button {
+  padding: 0 0.5rem;
+  color: @text;
+  box-shadow: inherit;
+  text-shadow: inherit;
+  background-color: transparent;
+  border-bottom: 2px solid @base;
+}
+#workspaces button:hover {
+  color: @mauve;
+  background-color: inherit;
+  border-bottom: 2px solid @base;
+}
+#workspaces button.active {
+  color: @base;
+  background-color: @mauve;
+  border-bottom: 2px solid @base;
+}
+#workspaces button.focused {
+  color: @base;
+  background-color: @rosewater;
+  border-bottom: 2px solid @base;
+}
+#workspaces button.urgent {
+  color: @base;
+  background-color: @red;
+  border-bottom: 2px solid @base;
+}
+#mode {
+  background-color: #64727d;
+  border-bottom: 2px solid @rosewater;
+}
+
+/* === MODULES === */
+.modules-left,
+.modules-right,
+.modules-center {
+  border-radius: 0;
+}
+.modules-left {
+  padding: 0 0.5rem;
+}
+.modules-right {
+  padding: 0 0.5rem;
+}
+.modules-center {
+  padding: 0 0.5rem;
+}
