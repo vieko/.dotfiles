@@ -26,6 +26,5 @@ alias lz="lazygit"
 alias qcd=fcd
 
 # aliases for convenience
-alias tmux="tmux-start.sh"
 alias summon="tmux-start.sh"
 alias demons="nvim"
