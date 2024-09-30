@@ -12,11 +12,12 @@ then `stow .` for everything or `stow <folder>` for specific configurations
 ### GENERAL
 - ADD keybindings for keyboard layout switch
 - ADD bindings for screenshots
-- FIND blueman-like applet for WIFI and VPNs
+- SET UP Bluetooth properly
+- SET UP wifi and vpn properly
 - SET UP SSL authentication for github
 
 ### DESKTOP
--
+- UPDATE waybar to show ethernet
 
 ### LAPTOP
--
+- UPDATE waybar to show connected interface
