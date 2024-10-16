@@ -13,9 +13,6 @@ then `stow .` for everything or `stow <folder>` for specific configurations
 To prevent breaking hyprland when updating other packages, install [hyprland](https://wiki.hyprland.org/Getting-Started/Installation/) manually (from releases or from source) and [hy3](https://github.com/outfoxxed/hy3) using `hyprpm`. Make sure versions match!
 
 ### GENERAL
-- ADD bindings for screenshots
-- CONFIGURE hypridle
-- ADD keybindings for screenlock
 - ADD keybindings for keyboard layout switch
 - SET UP Bluetooth properly
 - SET UP wifi and vpn properly
