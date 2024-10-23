@@ -47,7 +47,7 @@ case "$hostname" in
         ;;
     "chaos")
         set_monitor_config "DP-2,3840x2160@160,0x0,1.5"
-        apply_nvidia_config
+        # apply_nvidia_config
         ;;
     *)
         echo "Unknown hostname: $hostname. Using default configuration."

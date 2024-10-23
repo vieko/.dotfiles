@@ -4,7 +4,8 @@ recentrepos:
     - /home/vieko/Documents/Development/app-beta-squadron
 startuppopupversion: 5
 lastversion: 0.44.0
-customcommandshistory: []
+customcommandshistory:
+    - q
 hidecommandlog: false
 ignorewhitespaceindiffview: false
 diffcontextsize: 3
