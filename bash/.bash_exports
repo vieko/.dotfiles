@@ -69,3 +69,6 @@ export NVM_DIR="$XDG_CONFIG_HOME/nvm"
 
 # Colored grep output
 export GREP_OPTIONS='--color=auto'
+ 
+# GPG TTY
+export GPG_TTY=$(tty)
