@@ -6,7 +6,7 @@
 [user]
     email = 48670+vieko@users.noreply.github.com
     name = Vieko Franetovic
-    signingkey = /home/vieko/.ssh/id_ed25519.pub
+    signingkey = 16FBF1CF29A0CDAE
     
 [color]
     branch = auto
@@ -111,6 +111,3 @@
     
 [credential "https://gist.github.com"]
     helper = !/usr/bin/gh auth git-credential
-    
-[gpg]
-    format = ssh
