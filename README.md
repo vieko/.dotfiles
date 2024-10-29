@@ -17,10 +17,10 @@ To prevent breaking hyprland when updating other packages, install [hyprland](ht
 - SET UP Bluetooth properly
 - SET UP wifi and vpn properly
 - SET UP SSL authentication for github
+- SHOW when on resize mode
 
 ### DESKTOP
 - UPDATE waybar to show ethernet
-- UPDATE hyprlock to show feedback
 
 ### LAPTOP
 - UPDATE waybar to show connected interface
