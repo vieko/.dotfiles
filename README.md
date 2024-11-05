@@ -30,6 +30,8 @@ To prevent breaking hyprland when updating other packages, install [hyprland](ht
 - SET UP wifi and vpn properly
 - SET UP SSL authentication for github
 - SHOW when on resize mode
+- ADD hyprpicker
+- CONFIG NextDNS
 
 ### DESKTOP
 
