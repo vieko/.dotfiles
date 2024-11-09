@@ -37,3 +37,9 @@ eval "$(starship init bash)"
 
 . "$HOME/.cargo/env"
 
+. "$HOME/.local/share/../bin/env"
+
+# source secrets
+if [ -f ~/.secrets ]; then
+    source ~/.secrets
+fi
