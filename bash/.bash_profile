@@ -9,6 +9,6 @@ if [ -f "$HOME/.bashrc" ]; then
 fi
 
 # [ "$(tty)" = "/dev/tty1" ] && exec sway
-. "$HOME/.cargo/env"
 
-. "$HOME/.local/share/../bin/env"
+# "$HOME/.cargo/env"
+# . "$HOME/.local/share/../bin/env"

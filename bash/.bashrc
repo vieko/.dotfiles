@@ -35,8 +35,8 @@ eval "$(zoxide init bash)"
 eval "$(fzf --bash)"
 eval "$(starship init bash)"
 
-. "$HOME/.cargo/env"
-. "$HOME/.local/bin/env"
+# . "$HOME/.cargo/env"
+# . "$HOME/.local/bin/env"
 
 # source secrets
 if [ -f ~/.secrets ]; then

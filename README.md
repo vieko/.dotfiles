@@ -32,6 +32,7 @@ To prevent breaking hyprland when updating other packages, install [hyprland](ht
 - SHOW when on resize mode
 - ADD hyprpicker
 - CONFIG NextDNS
+- CONFIG syncthing
 
 ### DESKTOP
 
