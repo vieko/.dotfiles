@@ -31,7 +31,6 @@ To prevent breaking hyprland when updating other packages, install [hyprland](ht
 - SHOW when on resize mode
 - ADD hyprpicker
 - CONFIG NextDNS
-- CONFIG syncthing
 
 ### DESKTOP
 
@@ -41,5 +40,3 @@ To prevent breaking hyprland when updating other packages, install [hyprland](ht
 
 - UPDATE waybar to show connected interface
 - INSTALL Docker
-- INSTALL Slack and Discord
-- INSTALL VS Code from rpm

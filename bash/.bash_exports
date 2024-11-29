@@ -74,8 +74,8 @@ export GREP_OPTIONS='--color=auto'
 export GPG_TTY=$(tty)
 
 # BUN
-export BUN_INSTALL="$HOME/.bun"
-export PATH=$BUN_INSTALL/bin:$PATH
+# export BUN_INSTALL="$HOME/.bun"
+# export PATH=$BUN_INSTALL/bin:$PATH
 
 # PYTHON
 export PYTHONWARNINGS="ignore::SyntaxWarning"
