@@ -35,6 +35,7 @@
 
 [pull]
     default = current
+	rebase = false
     
 [diff]
     mnemonicprefix = true
