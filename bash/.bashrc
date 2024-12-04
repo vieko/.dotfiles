@@ -25,7 +25,10 @@ export HISTFILESIZE=20000
 export HISTCONTROL=ignoreboth:erasedups
 
 # auto-reload .bashrc if changes are detected
-export PROMPT_COMMAND='history -a; history -n; . ~/.bashrc'
+# export PROMPT_COMMAND='history -a; history -n; . ~/.bashrc' 
+
+# append to history file and reload history
+export PROMPT_COMMAND='history -a; history -n;'
 
 # enhanced history search
 bind '"\e[A": history-search-backward'
@@ -42,4 +45,5 @@ eval "$(starship init bash)"
 if [ -f ~/.secrets ]; then
     source ~/.secrets
 fi
+
 
