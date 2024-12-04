@@ -6,8 +6,8 @@ alias tree="exa --tree"
 alias cat="bat"
 # alias grep="rg"
 # alias find="fd"
-alias cl="clear"
-alias pn="pnpm"
+# alias cl="clear"
+# alias pn="pnpm"
 alias rm='echo "This is not the command you are looking for. Use (trash) instead!"; false'
 
 # directory navigation
