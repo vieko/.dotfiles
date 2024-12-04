@@ -1,0 +1,56 @@
+{
+  "assistant": {
+    "default_model": {
+      "provider": "anthropic",
+      "model": "claude-3-5-sonnet-latest"
+    },
+    "version": "2"
+  },
+  "theme": {
+    "mode": "system",
+    "light": "Catppuccin Frappé",
+    "dark": "Catppuccin Mocha"
+  },
+  "base_keymap": "VSCode",
+  "features": {
+    "inline_completion_provider": "copilot"
+  },
+  "buffer_font_family": "MonoLisa Custom",
+  "buffer_font_size": 15,
+  "buffer_font_weight": 400,
+  "buffer_line_height": "comfortable",
+  "ui_font_family": "Berkeley Mono",
+  "ui_font_size": 15,
+  "vim_mode": true,
+  "cursor_blink": false,
+  "cursor_shape": "block",
+  "show_whitespaces": "all",
+  "indent_guides": {
+    "enabled": false,
+    "line_width": 1,
+    "active_line_width": 1,
+    "coloring": "indent_aware",
+    "background_coloring": "disabled"
+  },
+  "project_panel": {
+    "indent_guides": {
+      "show": "never"
+    }
+  },
+  "vim": {
+    "toggle_relative_line_numbers": true,
+    "use_system_clipboard": "always",
+    "use_multiline_find": false,
+    "use_smartcase_find": false
+  },
+  "terminal": {
+    "font_family": "MonoLisa Custom",
+    "font_size": 13,
+    "line_height": "standard",
+    "cursor_shape": "block"
+  },
+  "telemetry": {
+    "diagnostics": false,
+    "metrics": false
+  }
+}
