@@ -82,3 +82,6 @@ esac
 
 # PYTHON
 export PYTHONWARNINGS="ignore::SyntaxWarning"
+
+# GLAMOUR
+export GLAMOUR_STYLE="$XDG_CONFIG_HOME/glamour/catppuccin-mocha.json"

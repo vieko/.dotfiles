@@ -9,13 +9,7 @@
   {
     "context": "Workspace",
     "bindings": {
-      // "shift shift": "file_finder::Toggle"
-    }
-  },
-  {
-    "context": "Editor",
-    "bindings": {
-      // "j k": ["workspace::SendKeystrokes", "escape"]
+      "shift shift": "file_finder::Toggle"
     }
   },
   {
@@ -28,9 +22,21 @@
     }
   },
   {
+    "context": "Editor",
+    "bindings": {
+      // "j k": ["workspace::SendKeystrokes", "escape"]
+    }
+  },
+  {
     "context": "Editor && vim_mode == insert && !menu",
     "bindings": {
       "j k": ["vim::SwitchMode", "Normal"]
+    }
+  },
+  {
+    "context": "VimControl && !menu",
+    "bindings": {
+      "ctrl-b": "workspace::ToggleLeftDock" // "vim::PageUp"
     }
   }
 ]

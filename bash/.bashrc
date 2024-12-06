@@ -41,9 +41,10 @@ eval "$(starship init bash)"
 # . "$HOME/.cargo/env"
 # . "$HOME/.local/bin/env"
 
+. "$HOME/.deno/env"
+
 # source secrets
 if [ -f ~/.secrets ]; then
     source ~/.secrets
 fi
-
 

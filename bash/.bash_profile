@@ -8,3 +8,4 @@ if [ -f "$HOME/.bashrc" ]; then
     . "$HOME/.bashrc"
 fi
 
+. "/home/vieko/.deno/env"
