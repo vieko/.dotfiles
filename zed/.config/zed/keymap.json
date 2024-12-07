@@ -22,6 +22,13 @@
     }
   },
   {
+    "context": "Pane",
+    "bindings": {
+      "ctrl-t h": "pane::ActivatePrevItem",
+      "ctrl-t l": "pane::ActivateNextItem"
+    }
+  },
+  {
     "context": "Editor",
     "bindings": {
       // "j k": ["workspace::SendKeystrokes", "escape"]
