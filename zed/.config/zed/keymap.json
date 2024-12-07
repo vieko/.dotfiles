@@ -36,7 +36,8 @@
   {
     "context": "VimControl && !menu",
     "bindings": {
-      "ctrl-b": "workspace::ToggleLeftDock" // "vim::PageUp"
+      "ctrl-b": "workspace::ToggleLeftDock", // "vim::PageUp"
+      "ctrl-j": "workspace::ToggleBottomDock" // "vim::Down"
     }
   }
 ]

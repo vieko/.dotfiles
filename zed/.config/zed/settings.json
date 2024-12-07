@@ -8,8 +8,8 @@
   },
   "theme": {
     "mode": "system",
-    "light": "Catppuccin Frappé",
-    "dark": "Catppuccin Mocha"
+    "light": "Catppuccin Frappé - No Italics",
+    "dark": "Catppuccin Mocha - No Italics"
   },
   "base_keymap": "VSCode",
   "features": {
