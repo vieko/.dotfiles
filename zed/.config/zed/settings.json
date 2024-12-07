@@ -1,58 +1,64 @@
 {
   "assistant": {
     "default_model": {
-      "provider": "zed.dev",
-      "model": "claude-3-5-sonnet-latest"
+      "model": "claude-3-5-sonnet-latest",
+      "provider": "zed.dev"
     },
     "version": "2"
   },
-  "theme": {
-    "mode": "system",
-    "light": "Catppuccin Frappé - No Italics",
-    "dark": "Catppuccin Mocha - No Italics"
-  },
   "base_keymap": "VSCode",
+  "buffer_font_family": "MonoLisa Custom",
+  "buffer_font_size": 14,
+  "buffer_font_weight": 500,
+  "buffer_line_height": "comfortable",
+  "cursor_blink": false,
+  "cursor_shape": "block",
   "features": {
     "inline_completion_provider": "supermaven"
   },
-  "buffer_font_family": "MonoLisa Custom",
-  "buffer_font_size": 13,
-  "buffer_font_weight": 500,
-  "buffer_line_height": "comfortable",
-  "ui_font_family": "Zed Plex Sans",
-  "ui_font_size": 14,
-  "ui_font_features": {
-    "calt": false
-  },
-  "vim_mode": true,
-  "cursor_blink": false,
-  "cursor_shape": "block",
-  "show_whitespaces": "all",
   "indent_guides": {
-    "enabled": false,
-    "line_width": 1,
     "active_line_width": 1,
+    "background_coloring": "disabled",
     "coloring": "indent_aware",
-    "background_coloring": "disabled"
+    "enabled": false,
+    "line_width": 1
   },
   "project_panel": {
+    "default_width": 320,
     "indent_guides": {
       "show": "never"
     }
   },
-  "vim": {
-    "toggle_relative_line_numbers": true,
-    "use_system_clipboard": "always",
-    "use_multiline_find": false,
-    "use_smartcase_find": false
-  },
-  "terminal": {
-    "font_family": "MonoLisa Custom",
-    "font_size": 12,
-    "line_height": "standard"
-  },
+  "show_whitespaces": "all",
+  "show_wrap_guides": true,
+  "tab_size": 2,
   "telemetry": {
     "diagnostics": false,
     "metrics": false
-  }
+  },
+  "terminal": {
+    "font_family": "MonoLisa Custom",
+    "font_size": 13,
+    "font_weight": 400,
+    "line_height": "comfortable"
+  },
+  "theme": {
+    "dark": "Catppuccin Mocha - No Italics",
+    "light": "Catppuccin Frappé - No Italics",
+    "mode": "system"
+  },
+  "ui_font_family": "Berkeley Mono",
+  "ui_font_features": {
+    "calt": false
+  },
+  "ui_font_size": 14,
+  "ui_font_weight": 400,
+  "vim": {
+    "toggle_relative_line_numbers": true,
+    "use_multiline_find": false,
+    "use_smartcase_find": false,
+    "use_system_clipboard": "always"
+  },
+  "vim_mode": true,
+  "wrap_guides": [80]
 }
