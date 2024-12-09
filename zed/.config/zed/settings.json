@@ -9,7 +9,7 @@
   },
   "base_keymap": "VSCode",
   "buffer_font_family": "MonoLisa Custom",
-  "buffer_font_size": 13, // 14 on chaos
+  "buffer_font_size": 13, // 14? on chaos, 13 on havoc.
   "buffer_font_weight": 500,
   "buffer_line_height": "comfortable",
   "cursor_blink": false,
@@ -17,15 +17,15 @@
   "features": {
     "inline_completion_provider": "supermaven"
   },
-  "journal": {
-    "hour_format": "hour24"
-  },
   "indent_guides": {
     "active_line_width": 1,
     "background_coloring": "disabled",
     "coloring": "indent_aware",
     "enabled": false,
     "line_width": 1
+  },
+  "journal": {
+    "hour_format": "hour24"
   },
   "preferred_line_length": 80,
   "project_panel": {
@@ -35,6 +35,10 @@
       "show": "never"
     }
   },
+  "scrollbar": {
+    "show": "never"
+  },
+  "scroll_beyond_last_line": "vertical_scroll_margin",
   "show_whitespaces": "all",
   "show_wrap_guides": true,
   "soft_wrap": "preferred_line_length",
@@ -47,13 +51,13 @@
     "default_height": 320,
     "detect_venv": {
       "on": {
-        "directories": [".venv", "venv"],
-        "activate_script": "default"
+        "activate_script": "default",
+        "directories": [".venv", "venv"]
       }
     },
-    "dock": "bottom", // bottom on chaos
+    "dock": "bottom",
     "font_family": "MonoLisa Custom",
-    "font_size": 11, // 12 on chaos
+    "font_size": 12, // 12 on chaos, 11 on havoc.
     "font_weight": 400,
     "line_height": "comfortable",
     "toolbar": {
@@ -69,7 +73,7 @@
   "ui_font_features": {
     "calt": false
   },
-  "ui_font_size": 13, // 14 on chaos
+  "ui_font_size": 14, // 14 on chaos, 13 on havoc.
   "ui_font_weight": 400,
   "unnecessary_code_fade": 0.8,
   "vim": {
