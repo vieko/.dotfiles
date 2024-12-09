@@ -4,11 +4,12 @@
       "model": "claude-3-5-sonnet-latest",
       "provider": "zed.dev"
     },
+    "dock": "right",
     "version": "2"
   },
   "base_keymap": "VSCode",
   "buffer_font_family": "MonoLisa Custom",
-  "buffer_font_size": 14,
+  "buffer_font_size": 13, // 14 on chaos
   "buffer_font_weight": 500,
   "buffer_line_height": "comfortable",
   "cursor_blink": false,
@@ -26,14 +27,17 @@
     "enabled": false,
     "line_width": 1
   },
+  "preferred_line_length": 80,
   "project_panel": {
     "default_width": 320,
+    "dock": "left",
     "indent_guides": {
       "show": "never"
     }
   },
   "show_whitespaces": "all",
   "show_wrap_guides": true,
+  "soft_wrap": "preferred_line_length",
   "tab_size": 2,
   "telemetry": {
     "diagnostics": false,
@@ -41,10 +45,20 @@
   },
   "terminal": {
     "default_height": 320,
+    "detect_venv": {
+      "on": {
+        "directories": [".venv", "venv"],
+        "activate_script": "default"
+      }
+    },
+    "dock": "bottom", // bottom on chaos
     "font_family": "MonoLisa Custom",
-    "font_size": 12,
+    "font_size": 11, // 12 on chaos
     "font_weight": 400,
-    "line_height": "comfortable"
+    "line_height": "comfortable",
+    "toolbar": {
+      "breadcrumbs": true
+    }
   },
   "theme": {
     "dark": "Catppuccin Mocha - No Italics",
@@ -55,7 +69,7 @@
   "ui_font_features": {
     "calt": false
   },
-  "ui_font_size": 14,
+  "ui_font_size": 13, // 14 on chaos
   "ui_font_weight": 400,
   "unnecessary_code_fade": 0.8,
   "vim": {

@@ -1,8 +1,9 @@
 lastupdatecheck: 0
 recentrepos:
+    - /home/vieko/Documents/Development/website-vlambeer
     - /home/vieko/Documents/Development/app-beta-squadron
-    - /home/vieko/Documents/Sandbox/sandbox-python
     - /home/vieko/.dotfiles
+    - /home/vieko/Documents/Sandbox/sandbox-python
     - /home/vieko/.dotfiles/nvim/.config/nvim
 startuppopupversion: 5
 lastversion: 0.44.0
