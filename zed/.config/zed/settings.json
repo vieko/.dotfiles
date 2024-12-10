@@ -4,6 +4,7 @@
       "model": "claude-3-5-sonnet-latest",
       "provider": "zed.dev"
     },
+    "default_width": 640,
     "dock": "right",
     "version": "2"
   },
@@ -26,6 +27,9 @@
   },
   "journal": {
     "hour_format": "hour24"
+  },
+  "outline_panel": {
+    "default_width": 320
   },
   "preferred_line_length": 80,
   "project_panel": {
