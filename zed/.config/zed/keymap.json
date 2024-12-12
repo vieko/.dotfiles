@@ -18,7 +18,11 @@
     "context": "Pane",
     "bindings": {
       "ctrl-t h": "pane::ActivatePrevItem",
-      "ctrl-t l": "pane::ActivateNextItem"
+      "ctrl-t l": "pane::ActivateNextItem",
+      "ctrl-k k": "pane::SplitUp",
+      "ctrl-k j": "pane::SplitDown",
+      "ctrl-k h": "pane::SplitLeft",
+      "ctrl-k l": "pane::SplitRight"
     }
   },
   {
