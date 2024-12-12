@@ -12,7 +12,7 @@
   "buffer_font_family": "MonoLisa Custom",
   "buffer_font_size": 13, // 14? on chaos, 13 on havoc.
   "buffer_font_weight": 500,
-  "buffer_line_height": "comfortable",
+  "buffer_line_height": "standard",
   "cursor_blink": false,
   "cursor_shape": "block",
   "features": {
@@ -62,8 +62,8 @@
     "dock": "bottom",
     "font_family": "MonoLisa Custom",
     "font_size": 12, // 12 on chaos, 11 on havoc.
-    "font_weight": 400,
-    "line_height": "comfortable",
+    "font_weight": 500,
+    "line_height": "standard",
     "toolbar": {
       "breadcrumbs": true
     }
@@ -79,7 +79,7 @@
   },
   "ui_font_size": 14, // 14 on chaos, 13 on havoc.
   "ui_font_weight": 400,
-  "unnecessary_code_fade": 0.8,
+  "unnecessary_code_fade": 0.6,
   "vim": {
     "toggle_relative_line_numbers": true,
     "use_multiline_find": false,
