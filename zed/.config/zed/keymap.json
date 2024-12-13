@@ -22,7 +22,8 @@
       "ctrl-k k": "pane::SplitUp",
       "ctrl-k j": "pane::SplitDown",
       "ctrl-k h": "pane::SplitLeft",
-      "ctrl-k l": "pane::SplitRight"
+      "ctrl-k l": "pane::SplitRight",
+      "ctrl-w w": "pane::CloseActiveItem"
     }
   },
   {
@@ -36,6 +37,13 @@
     "bindings": {
       "ctrl-b": "workspace::ToggleLeftDock", // "vim::PageUp"
       "ctrl-j": "workspace::ToggleBottomDock" // "vim::Down"
+    }
+  },
+  {
+    "context": "ProjectPanel || CollabPanel || OutlinePanel || ChatPanel || VimControl || EmptyPane || SharedScreen || MarkdownPreview || KeyContextView",
+    "bindings": {
+      // "ctrl-w": "pane::CloseActiveItem"
+      "ctrl-w w": "pane::CloseActiveItem"
     }
   }
 ]
