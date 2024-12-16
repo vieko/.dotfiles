@@ -36,7 +36,8 @@
     "context": "VimControl && !menu",
     "bindings": {
       "ctrl-b": "workspace::ToggleLeftDock", // "vim::PageUp"
-      "ctrl-j": "workspace::ToggleBottomDock" // "vim::Down"
+      "ctrl-j": "workspace::ToggleBottomDock", // "vim::Down"
+      "ctrl-^": "pane::AlternateFile"
     }
   },
   {
@@ -44,6 +45,13 @@
     "bindings": {
       // "ctrl-w": "pane::CloseActiveItem"
       "ctrl-w w": "pane::CloseActiveItem"
+    }
+  },
+  {
+    // netrw compatibility
+    "context": "ProjectPanel && not_editing",
+    "bindings": {
+      "ctrl-^": "pane::AlternateFile"
     }
   }
 ]
