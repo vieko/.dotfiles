@@ -1,0 +1,7 @@
+font-family = MonoLisa Custom
+font-style = Regular
+font-size = 10
+cursor-style = block
+cursor-style-blink = false
+theme = catppuccin-mocha
+window-decoration = false
