@@ -11,7 +11,7 @@
   "base_keymap": "VSCode",
   "buffer_font_family": "MonoLisa Custom",
   "buffer_font_size": 13, // 14? on chaos, 13 on havoc.
-  "buffer_font_weight": 400,
+  "buffer_font_weight": 500,
   "buffer_line_height": "standard",
   "cursor_blink": false,
   "cursor_shape": "block",
@@ -80,7 +80,7 @@
     "calt": false
   },
   "ui_font_size": 14, // 14 on chaos, 13 on havoc.
-  "ui_font_weight": 400,
+  "ui_font_weight": 500,
   "unnecessary_code_fade": 0.6,
   "vim": {
     "toggle_relative_line_numbers": true,
