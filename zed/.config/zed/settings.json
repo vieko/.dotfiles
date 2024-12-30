@@ -11,7 +11,7 @@
   "base_keymap": "VSCode",
   "buffer_font_family": "MonoLisa Custom",
   "buffer_font_size": 13, // 14? on chaos, 13 on havoc.
-  "buffer_font_weight": 500,
+  "buffer_font_weight": 400,
   "buffer_line_height": "standard",
   "cursor_blink": false,
   "cursor_shape": "block",
@@ -35,6 +35,8 @@
   "project_panel": {
     "default_width": 320,
     "dock": "left",
+    "file_icons": false,
+    "folder_icons": false,
     "indent_guides": {
       "show": "never"
     }
@@ -62,7 +64,7 @@
     "dock": "bottom",
     "font_family": "MonoLisa Custom",
     "font_size": 12, // 12 on chaos, 11 on havoc.
-    "font_weight": 500,
+    "font_weight": 400,
     "line_height": "standard",
     "toolbar": {
       "breadcrumbs": true
