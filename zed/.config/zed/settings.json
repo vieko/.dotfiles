@@ -69,7 +69,7 @@
     }
   },
   "theme": {
-    "dark": "Catppuccin Mocha",
+    "dark": "Catppuccin Mocha - No Italics",
     "light": "Catppuccin Frappé - No Italics",
     "mode": "system"
   },
