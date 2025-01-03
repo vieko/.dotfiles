@@ -25,6 +25,7 @@ To prevent breaking hyprland when updating other packages, install [hyprland](ht
 
 ### GENERAL
 
+- CONSOLIDATE keymaps between Zed, VSCode and terminal
 - ADD keybindings for keyboard layout switch
 - SET UP Bluetooth properly
 - SET UP wifi and vpn properly

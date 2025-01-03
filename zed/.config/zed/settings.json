@@ -6,11 +6,13 @@
     },
     "default_width": 640,
     "dock": "right",
+    "enable_experimental_live_diffs": true,
+    "enabled": true,
     "version": "2"
   },
   "base_keymap": "VSCode",
   "buffer_font_family": "MonoLisa Custom",
-  "buffer_font_size": 13, // 14? on chaos, 13 on havoc.
+  "buffer_font_size": 13,
   "buffer_font_weight": 400,
   "buffer_line_height": "standard",
   "cursor_blink": false,
@@ -35,16 +37,16 @@
   "project_panel": {
     "default_width": 320,
     "dock": "left",
-    "file_icons": false,
+    "file_icons": true,
     "folder_icons": false,
     "indent_guides": {
       "show": "never"
     }
   },
+  "scroll_beyond_last_line": "vertical_scroll_margin",
   "scrollbar": {
     "show": "never"
   },
-  "scroll_beyond_last_line": "vertical_scroll_margin",
   "show_whitespaces": "all",
   "show_wrap_guides": true,
   "soft_wrap": "preferred_line_length",
@@ -63,7 +65,7 @@
     },
     "dock": "bottom",
     "font_family": "MonoLisa Custom",
-    "font_size": 12, // 12 on chaos, 11 on havoc.
+    "font_size": 12,
     "font_weight": 400,
     "line_height": "standard",
     "toolbar": {
@@ -79,7 +81,7 @@
   "ui_font_features": {
     "calt": false
   },
-  "ui_font_size": 14, // 14 on chaos, 13 on havoc.
+  "ui_font_size": 14,
   "ui_font_weight": 400,
   "unnecessary_code_fade": 0.6,
   "vim": {
