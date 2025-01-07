@@ -18,7 +18,7 @@
   "cursor_blink": false,
   "cursor_shape": "block",
   "features": {
-    "inline_completion_provider": "copilot"
+    "inline_completion_provider": "supermaven"
   },
   "indent_guides": {
     "active_line_width": 1,

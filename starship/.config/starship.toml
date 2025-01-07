@@ -210,6 +210,7 @@ Void = "void "
 Windows = "win "
 
 [package]
+disabled = true
 symbol = "pkg "
 
 [perl]
