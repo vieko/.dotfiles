@@ -50,6 +50,22 @@
   "show_whitespaces": "all",
   "show_wrap_guides": true,
   "soft_wrap": "preferred_line_length",
+  "ssh_connections": [
+    {
+      "host": "192.168.50.116",
+      "nickname": "chaos",
+      "projects": [
+        {
+          "paths": [
+            "~/Documents/Development/poc-influencer-dashboard-elt-serve"
+          ]
+        },
+        {
+          "paths": ["~/Documents/Development/app-beta-squadron"]
+        }
+      ]
+    }
+  ],
   "tab_size": 2,
   "telemetry": {
     "diagnostics": false,
