@@ -124,6 +124,9 @@ symbol = "guix "
 [hg_branch]
 symbol = "hg "
 
+[hostname]
+ssh_symbol = "ssh "
+
 [java]
 symbol = "java "
 
