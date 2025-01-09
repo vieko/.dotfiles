@@ -66,6 +66,10 @@
       ]
     }
   ],
+  "tabs": {
+    "file_icons": false,
+    "git_status": true
+  },
   "tab_size": 2,
   "telemetry": {
     "diagnostics": false,
