@@ -6,6 +6,12 @@
     }
   },
   {
+    "context": "Terminal",
+    "bindings": {
+      "ctrl-o": null
+    }
+  },
+  {
     "context": "Dock",
     "bindings": {
       "ctrl-w h": ["workspace::ActivatePaneInDirection", "Left"],
@@ -17,13 +23,20 @@
   {
     "context": "Pane",
     "bindings": {
-      "ctrl-t h": "pane::ActivatePrevItem",
-      "ctrl-t l": "pane::ActivateNextItem",
-      "ctrl-k k": "pane::SplitUp",
-      "ctrl-k j": "pane::SplitDown",
-      "ctrl-k h": "pane::SplitLeft",
-      "ctrl-k l": "pane::SplitRight",
-      "ctrl-w w": "pane::CloseActiveItem"
+      // "ctrl-t h": "pane::ActivatePrevItem",
+      // "ctrl-t l": "pane::ActivateNextItem",
+      // "ctrl-k k": "pane::SplitUp",
+      // "ctrl-k j": "pane::SplitDown",
+      // "ctrl-k h": "pane::SplitLeft",
+      // "ctrl-k l": "pane::SplitRight"
+      // "ctrl-w w": "pane::CloseActiveItem"
+    }
+  },
+  {
+    "context": "vim_mode == normal || vim_mode == visual",
+    "bindings": {
+      "s": ["vim::PushOperator", { "Sneak": {} }],
+      "S": ["vim::PushOperator", { "SneakBackward": {} }]
     }
   },
   {
@@ -44,7 +57,7 @@
     "context": "ProjectPanel || CollabPanel || OutlinePanel || ChatPanel || VimControl || EmptyPane || SharedScreen || MarkdownPreview || KeyContextView",
     "bindings": {
       // "ctrl-w": "pane::CloseActiveItem"
-      "ctrl-w w": "pane::CloseActiveItem"
+      // "ctrl-w w": "pane::CloseActiveItem"
     }
   },
   {

@@ -1,7 +1,7 @@
 {
   "assistant": {
     "default_model": {
-      "model": "claude-3-5-sonnet-latest",
+      "model": "claude-3-5-sonnet-20240620-fast-edit",
       "provider": "zed.dev"
     },
     "default_width": 640,
@@ -30,15 +30,35 @@
   "journal": {
     "hour_format": "hour24"
   },
+  "languages": {
+    "Markdown": { "show_inline_completions": false }
+  },
+  "language_models": {
+    "zed.dev": {
+      "available_models": [
+        {
+          "provider": "anthropic",
+          "name": "claude-3-5-sonnet-20240620-fast-edit",
+          "max_tokens": 200000,
+          "max_output_tokens": 8192,
+          "display_name": "Claude 3.5 Sonnet (Fast Edit)"
+        }
+      ]
+    }
+  },
   "outline_panel": {
-    "default_width": 320
+    "default_width": 320,
+    "file_icons": false,
+    "folder_icons": false,
+    "git_status": true
   },
   "preferred_line_length": 80,
   "project_panel": {
     "default_width": 320,
     "dock": "left",
-    "file_icons": true,
+    "file_icons": false,
     "folder_icons": false,
+    "git_status": true,
     "indent_guides": {
       "show": "never"
     }
@@ -105,6 +125,7 @@
   "ui_font_weight": 400,
   "unnecessary_code_fade": 0.6,
   "vim": {
+    "highlight_on_yank_duration": 150,
     "toggle_relative_line_numbers": true,
     "use_multiline_find": false,
     "use_smartcase_find": false,

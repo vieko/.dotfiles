@@ -79,6 +79,13 @@ case ":$PATH:" in
   *":$BUN_INSTALL:"*) ;;
   *) export PATH="$BUN_INSTALL/bin:$PATH" ;;
 esac
+ 
+# CARGO
+export CARGO_HOME="$HOME/.cargo"
+case ":$PATH:" in
+  *":$CARGO_HOME:"*) ;;
+  *) export PATH="$CARGO_HOME/bin:$PATH" ;;
+esac
 
 # PYTHON
 export PYTHONWARNINGS="ignore::SyntaxWarning"
