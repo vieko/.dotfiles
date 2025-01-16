@@ -1,37 +1,37 @@
 [
+  // General Workspace Settings
   {
     "context": "Workspace",
     "bindings": {
       "shift shift": "file_finder::Toggle"
     }
   },
-  {
-    "context": "Terminal",
-    "bindings": {
-      "ctrl-o": null
-    }
-  },
+
+  // Dock and Pane Navigation
   {
     "context": "Dock",
     "bindings": {
       "ctrl-w h": ["workspace::ActivatePaneInDirection", "Left"],
-      "ctrl-w l": ["workspace::ActivatePaneInDirection", "Right"],
+      "ctrl-w j": ["workspace::ActivatePaneInDirection", "Down"],
       "ctrl-w k": ["workspace::ActivatePaneInDirection", "Up"],
-      "ctrl-w j": ["workspace::ActivatePaneInDirection", "Down"]
+      "ctrl-w l": ["workspace::ActivatePaneInDirection", "Right"]
     }
   },
   {
     "context": "Pane",
     "bindings": {
+      // Uncomment and adjust as needed
       // "ctrl-t h": "pane::ActivatePrevItem",
       // "ctrl-t l": "pane::ActivateNextItem",
-      // "ctrl-k k": "pane::SplitUp",
-      // "ctrl-k j": "pane::SplitDown",
       // "ctrl-k h": "pane::SplitLeft",
-      // "ctrl-k l": "pane::SplitRight"
+      // "ctrl-k j": "pane::SplitDown",
+      // "ctrl-k k": "pane::SplitUp",
+      // "ctrl-k l": "pane::SplitRight",
       // "ctrl-w w": "pane::CloseActiveItem"
     }
   },
+
+  // Vim Mode Settings
   {
     "context": "vim_mode == normal || vim_mode == visual",
     "bindings": {
@@ -48,23 +48,42 @@
   {
     "context": "VimControl && !menu",
     "bindings": {
-      "ctrl-b": "workspace::ToggleLeftDock", // "vim::PageUp"
-      "ctrl-j": "workspace::ToggleBottomDock", // "vim::Down"
+      "ctrl-b": "workspace::ToggleLeftDock",
+      "ctrl-j": "workspace::ToggleBottomDock",
+      "ctrl-^": "pane::AlternateFile"
+    }
+  },
+  {
+    "context": "VimControl && !menu && vim_mode != operator",
+    "bindings": {
+      "w": "vim::NextSubwordStart",
+      "b": "vim::PreviousSubwordStart",
+      "e": "vim::NextSubwordEnd",
+      "g e": "vim::PreviousSubwordEnd"
+    }
+  },
+
+  // Panel-specific Settings
+  {
+    "context": "ProjectPanel && not_editing",
+    "bindings": {
       "ctrl-^": "pane::AlternateFile"
     }
   },
   {
     "context": "ProjectPanel || CollabPanel || OutlinePanel || ChatPanel || VimControl || EmptyPane || SharedScreen || MarkdownPreview || KeyContextView",
     "bindings": {
-      // "ctrl-w": "pane::CloseActiveItem"
+      // Uncomment if needed
+      // "ctrl-w": "pane::CloseActiveItem",
       // "ctrl-w w": "pane::CloseActiveItem"
     }
   },
+
+  // Terminal Settings
   {
-    // netrw compatibility
-    "context": "ProjectPanel && not_editing",
+    "context": "Terminal",
     "bindings": {
-      "ctrl-^": "pane::AlternateFile"
+      "ctrl-o": null
     }
   }
 ]

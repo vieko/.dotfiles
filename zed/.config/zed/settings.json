@@ -1,8 +1,8 @@
 {
   // Editor appearance
   "theme": {
-    "dark": "Catppuccin Mocha - No Italics",
-    "light": "Catppuccin Frappé - No Italics",
+    "dark": "Catppuccin Mocha",
+    "light": "Catppuccin Frappé",
     "mode": "system"
   },
   "ui_font_family": "Inter",
@@ -11,8 +11,9 @@
   "buffer_font_family": "MonoLisa Custom",
   "buffer_font_size": 13,
   "buffer_font_weight": 500,
-  "buffer_line_height": "standard",
-
+  "buffer_line_height": {
+    "custom": 1.4
+  },
   // Editor behavior
   "base_keymap": "VSCode",
   "vim_mode": true,
@@ -98,7 +99,7 @@
     }
   },
   "features": {
-    "inline_completion_provider": "supermaven"
+    "inline_completion_provider": "copilot"
   },
 
   // Vim-specific settings
