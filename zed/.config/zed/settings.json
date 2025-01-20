@@ -31,7 +31,7 @@
   // Panels and UI elements
   "assistant": {
     "default_model": {
-      "model": "claude-3-5-sonnet-20240620-fast-edit",
+      "model": "claude-3-5-sonnet-latest",
       "provider": "zed.dev"
     },
     "default_width": 640,
@@ -99,9 +99,9 @@
     }
   },
   "features": {
-    "inline_completion_provider": "copilot"
+    "inline_completion_provider": "supermaven",
+    "copilot": true
   },
-
   // Vim-specific settings
   "vim": {
     "highlight_on_yank_duration": 150,
