@@ -136,6 +136,16 @@
           "paths": ["~/Documents/Development/app-beta-squadron"]
         }
       ]
+    },
+    {
+      "host": "100.97.133.24",
+      "username": "root",
+      "nickname": "erebos",
+      "projects": [
+        {
+          "paths": ["~/tmp/"]
+        }
+      ]
     }
   ],
   "telemetry": {
