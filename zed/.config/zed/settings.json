@@ -31,9 +31,15 @@
   // Panels and UI elements
   "assistant": {
     "default_model": {
-      "model": "claude-3-5-sonnet-latest",
-      "provider": "zed.dev"
+      "provider": "zed.dev",
+      "model": "claude-3-5-sonnet-20240620-fast-edit"
     },
+    "inline_alternatives": [
+      {
+        "provider": "openai",
+        "model": "gtp-4o"
+      }
+    ],
     "default_width": 640,
     "dock": "right",
     "enable_experimental_live_diffs": true,
@@ -125,6 +131,7 @@
   "ssh_connections": [
     {
       "host": "192.168.50.116",
+      "username": "vieko",
       "nickname": "chaos",
       "projects": [
         {
@@ -143,7 +150,7 @@
       "nickname": "erebos",
       "projects": [
         {
-          "paths": ["~/tmp/"]
+          "paths": ["~/tmp/poc-influencer-dashboard-elt-serve"]
         }
       ]
     }

@@ -65,6 +65,14 @@
     }
   },
 
+  // REPL Settings
+  {
+    "context": "Editor && jupyter && !ContextEditor",
+    "bindings": {
+      "ctrl-shift-escape": "repl::ClearOutputs"
+    }
+  },
+
   // Panel-specific Settings
   {
     "context": "ProjectPanel && not_editing",

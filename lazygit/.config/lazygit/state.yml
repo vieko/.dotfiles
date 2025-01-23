@@ -1,13 +1,14 @@
 lastupdatecheck: 0
 recentrepos:
     - /home/vieko/Documents/Development/poc-influencer-dashboard-elt-serve
+    - /home/vieko/repos/template-insights
     - /home/vieko/.dotfiles
     - /home/vieko/Documents/Development/app-beta-squadron
     - /home/vieko/Documents/Development/website-vlambeer
     - /home/vieko/Documents/Sandbox/sandbox-python
     - /home/vieko/.dotfiles/nvim/.config/nvim
 startuppopupversion: 5
-lastversion: 0.45.0
+lastversion: 0.45.2
 customcommandshistory:
     - q
 hidecommandlog: false
