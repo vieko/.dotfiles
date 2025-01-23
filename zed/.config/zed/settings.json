@@ -143,7 +143,7 @@
       "nickname": "erebos",
       "projects": [
         {
-          "paths": ["~/tmp/"]
+          "paths": ["~/tmp/poc-influencer-dashboard-elt-serve"]
         }
       ]
     }
