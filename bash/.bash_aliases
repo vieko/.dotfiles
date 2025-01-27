@@ -17,6 +17,7 @@ alias ....="cd ../../.."
 
 # git aliases
 alias lz="lazygit"
+alias lk="lazydocker" 
 #alias ga="git add"
 #alias gc="git commit"
 #alias gp="git push"
