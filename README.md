@@ -25,13 +25,11 @@ To prevent breaking hyprland when updating other packages, install [hyprland](ht
 
 ### GENERAL
 
-- CONSOLIDATE keymaps between Zed, VSCode and terminal
+- CONSOLIDATE keymaps between Zed and Neovim
 - ADD keybindings for keyboard layout switch
 - SET UP Bluetooth properly
 - SET UP wifi and vpn properly
-- SHOW when on resize mode
 - ADD hyprpicker
-- CONFIG NextDNS
 
 ### DESKTOP
 
