@@ -1,9 +1,9 @@
 lastupdatecheck: 0
 recentrepos:
-    - /home/vieko/learn/rust/guessing_game
-    - /home/vieko/Documents/Development/poc-influencer-dashboard-elt-serve
-    - /home/vieko/repos/template-insights
     - /home/vieko/.dotfiles
+    - /home/vieko/Documents/Development/poc-influencer-dashboard-elt-serve
+    - /home/vieko/learn/rust/guessing_game
+    - /home/vieko/repos/template-insights
     - /home/vieko/Documents/Development/app-beta-squadron
     - /home/vieko/Documents/Development/website-vlambeer
     - /home/vieko/Documents/Sandbox/sandbox-python
