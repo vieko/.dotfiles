@@ -25,7 +25,7 @@
   "wrap_guides": [80],
   "show_wrap_guides": true,
   "soft_wrap": "preferred_line_length",
-  "scroll_beyond_last_line": "vertical_scroll_margin",
+  "scroll_beyond_last_line": "one_page",
   "show_whitespaces": "all",
   "unnecessary_code_fade": 0.6,
 
