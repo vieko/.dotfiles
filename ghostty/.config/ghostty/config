@@ -1,8 +1,8 @@
-font-family = MonoLisa Custom Medium
-font-family-bold = MonoLisa Custom SemiBold  
-font-family-italic = MonoLisa Custom Medium Italic
-font-family-bold-italic = MonoLisa Custom SemiBold Italic
-font-size = 10
+font-family = Berkeley Mono Retina
+font-family-bold = Berkeley Mono Medium
+font-family-italic = Berkeley Mono Retina Oblique
+font-family-bold-italic = Berkeley Mono Medium Oblique
+font-size = 11
 cursor-style = block
 cursor-style-blink = false
 window-decoration = false

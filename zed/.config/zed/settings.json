@@ -1,7 +1,7 @@
 {
   // Editor appearance
   "theme": {
-    "dark": "Catppuccin Mocha",
+    "dark": "One Dark",
     "light": "Catppuccin Frappé",
     "mode": "system"
   },
@@ -9,12 +9,13 @@
   "ui_font_family": "Inter",
   "ui_font_size": 14,
   "ui_font_weight": 400,
-  "buffer_font_family": "MonoLisa Custom",
-  "buffer_font_size": 13,
-  "buffer_font_weight": 500,
+  "buffer_font_family": "Berkeley Mono",
+  "buffer_font_size": 14,
+  "buffer_font_weight": 375,
   "buffer_line_height": {
     "custom": 1.4
   },
+
   // Editor behavior
   "base_keymap": "VSCode",
   "vim_mode": true,
@@ -27,7 +28,7 @@
   "soft_wrap": "preferred_line_length",
   "scroll_beyond_last_line": "one_page",
   "show_whitespaces": "all",
-  "unnecessary_code_fade": 0.6,
+  "unnecessary_code_fade": 0.5,
 
   // Panels and UI elements
   "assistant": {
@@ -72,9 +73,9 @@
       }
     },
     "dock": "bottom",
-    "font_family": "MonoLisa Custom",
-    "font_size": 12,
-    "font_weight": 400,
+    "font_family": "Berkeley Mono",
+    "font_size": 13,
+    "font_weight": 375,
     "line_height": "standard",
     "toolbar": {
       "breadcrumbs": true
@@ -110,6 +111,7 @@
     "inline_completion_provider": "zed",
     "copilot": true
   },
+
   // Vim-specific settings
   "vim": {
     "highlight_on_yank_duration": 150,
