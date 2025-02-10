@@ -6,7 +6,7 @@
     "mode": "system"
   },
   "icon_theme": "Zed (Default)",
-  "ui_font_family": "Inter",
+  "ui_font_family": "Zed Plex Sans",
   "ui_font_size": 14,
   "ui_font_weight": 400,
   "buffer_font_family": "Berkeley Mono",
@@ -73,9 +73,9 @@
       }
     },
     "dock": "bottom",
-    "font_family": "Berkeley Mono",
+    "font_family": "MonoLisa Custom",
     "font_size": 12,
-    "font_weight": 375,
+    "font_weight": 400,
     "line_height": "standard",
     "toolbar": {
       "breadcrumbs": true
