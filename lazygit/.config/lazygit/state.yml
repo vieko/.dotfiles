@@ -1,8 +1,8 @@
 lastupdatecheck: 0
 recentrepos:
-    - /home/vieko/Documents/Development/poc-influencer-dashboard-elt-serve
     - /home/vieko/.dotfiles
     - /home/vieko/dev/theme-one-dark
+    - /home/vieko/Documents/Development/poc-influencer-dashboard-elt-serve
     - /home/vieko/.dotfiles/nvim/.config/nvim
     - /home/vieko/learn/rust/guessing_game
     - /home/vieko/repos/template-insights
@@ -14,7 +14,7 @@ lastversion: 0.45.2
 customcommandshistory:
     - q
 hidecommandlog: false
-ignorewhitespaceindiffview: false
+ignorewhitespaceindiffview: true
 diffcontextsize: 3
 renamesimilaritythreshold: 50
 localbranchsortorder: recency

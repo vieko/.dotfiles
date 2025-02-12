@@ -2,7 +2,7 @@
   // Editor appearance
   "theme": {
     "dark": "One Dark",
-    "light": "One Light",
+    "light": "Catppuccin Frappé",
     "mode": "system"
   },
   "icon_theme": "Zed (Default)",
@@ -92,7 +92,7 @@
 
   // Language and completion settings
   "languages": {
-    "Markdown": { "show_edit_predictions": false }
+    "Markdown": { "show_inline_completions": false }
   },
   "language_models": {
     "zed.dev": {
@@ -108,11 +108,8 @@
     }
   },
   "features": {
-    "edit_prediction_provider": "zed",
+    "inline_completion_provider": "zed",
     "copilot": true
-  },
-  "edit_predictions": {
-    "inline_preview": "auto"
   },
 
   // Vim-specific settings
