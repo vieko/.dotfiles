@@ -1,4 +1,4 @@
-@import "mocha.css";
+@import "one-dark.css";
 
 /* === STARTUP === */
 * {
@@ -42,7 +42,7 @@ label:focus {
 
 #pulseaudio.muted {
   padding: 0 0.5rem;
-  color: @overlay0;
+  color: @subtext0;
 }
 
 #pulseaudio:hover {
@@ -56,7 +56,7 @@ label:focus {
 }
 
 #network.disconnected {
-  color: @overlay0;
+  color: @subtext0;
 }
 
 #network:hover {
@@ -71,7 +71,7 @@ label:focus {
 
 #bluetooth.disabled {
   padding: 0 0.5rem;
-  color: @overlay0;
+  color: @subtext0;
 }
 
 #bluetooth:hover {
@@ -81,7 +81,7 @@ label:focus {
 /* === CLOCK === */
 #clock {
   padding: 0 0.5rem;
-  color: @mauve;
+  color: @green;
 }
 
 #clock:hover {
@@ -140,14 +140,14 @@ label:focus {
 }
 
 #workspaces button:hover {
-  color: @mauve;
+  color: @sapphire;
   background-color: inherit;
   border-bottom: 2px solid @base;
 }
 
 #workspaces button.active {
   color: @base;
-  background-color: @mauve;
+  background-color: @sapphire;
   border-bottom: 2px solid @base;
 }
 

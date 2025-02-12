@@ -32,13 +32,13 @@
   },
   "custom/keyboard": {
     "exec": "~/.config/waybar/scripts/keyboard-current.sh",
-    "format": "<span foreground='#cba6f7'>KEY</span> {}",
+    "format": "<span foreground='#98C379'>KEY</span> {}",
     "on-click": "~/.config/waybar/scripts/keyboard-toggle.sh",
     "signal": 1,
     "tooltip": false
   },
   "hyprland/language": {
-    "format": "<span foreground='#cba6f7'>KEY</span> {short}",
+    "format": "<span foreground='#98C379'>KEY</span> {short}",
     "on-click": "~/.config/waybar/scripts/keyboard-toggle.sh",
     "tooltip": false
   },
@@ -78,17 +78,17 @@
   },
   "cpu": {
     "interval": 2,
-    "format": "<span foreground='#cba6f7'>CPU</span> {usage:2}%",
+    "format": "<span foreground='#98C379'>CPU</span> {usage:2}%",
     "tooltip": false
   },
   "memory": {
     "interval": 2,
-    "format": "<span foreground='#cba6f7'>RAM</span> {percentage:2}%",
+    "format": "<span foreground='#98C379'>RAM</span> {percentage:2}%",
     "tooltip": false
   },
   "pulseaudio": {
-    "format": "<span foreground='#cba6f7'>VOL</span> {volume}%",
-    "format-muted": "<span foreground='#cba6f7'>VOL</span> muted",
+    "format": "<span foreground='#98C379'>VOL</span> {volume}%",
+    "format-muted": "<span foreground='#98C379'>VOL</span> muted",
     "on-click": "pactl set-sink-mute @DEFAULT_SINK@ toggle",
     "ignored-sinks": [
       "Easy Effects Sink"
@@ -97,9 +97,9 @@
   },
   "bluetooth": {
     "controller": "viekobose",
-    "format": "<span foreground='#cba6f7'>BT</span> {status}",
-    "format-connected": "<span foreground='#cba6f7'>BT</span> {device_alias}",
-    "format-connected-battery": "<span foreground='#cba6f7'>BT</span> {device_alias} ({device_battery_percentage}%)",
+    "format": "<span foreground='#98C379'>BT</span> {status}",
+    "format-connected": "<span foreground='#98C379'>BT</span> {device_alias}",
+    "format-connected-battery": "<span foreground='#98C379'>BT</span> {device_alias} ({device_battery_percentage}%)",
     "on-click": "blueman-manager",
     "tooltip": false
   }
