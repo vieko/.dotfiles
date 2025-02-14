@@ -1,3 +1,5 @@
+#!/usr/bin/env bash
+
 # source global definitions
 if [ -f /etc/bashrc ]; then
     . /etc/bashrc

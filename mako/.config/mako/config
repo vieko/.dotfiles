@@ -5,9 +5,9 @@ ignore-timeout=1
 border-radius=6
 
 background-color=#282c34
-text-color=#abb2bf
-border-color=#61AFEF
+text-color=#DCE0E5
+border-color=#74ade8
 progress-color=over #21252b
 
 [urgency=high]
-border-color=#d19a66
+border-color=#d07277

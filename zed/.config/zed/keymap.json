@@ -102,5 +102,13 @@
     "bindings": {
       "ctrl-o": null
     }
+  },
+
+  // predictions
+  {
+    "context": "os != macos && Editor && edit_prediction",
+    "bindings": {
+      "alt-l": "editor::AcceptEditPrediction"
+    }
   }
 ]

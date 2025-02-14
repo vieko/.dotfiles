@@ -112,7 +112,7 @@
     "copilot": true
   },
   "edit_predictions": {
-    "inline_preview": "auto"
+    "mode": "auto"
   },
 
   // Vim-specific settings

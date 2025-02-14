@@ -5,3 +5,5 @@ tmux/.config/tmux/plugins/*
 cargo/.cargo/*
 !cargo/.cargo/env
 hypr/.config/hypr/host.conf
+icons/.icons/
+themes/.themes/

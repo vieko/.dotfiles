@@ -11,7 +11,8 @@ return {
         changedelete = { text = "C" },
         untracked = { text = "?" },
       },
+      attach_to_untracked = true,
+      current_line_blame = true,
     },
   },
 }
-

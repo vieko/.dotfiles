@@ -42,7 +42,7 @@ label:focus {
 
 #pulseaudio.muted {
   padding: 0 0.5rem;
-  color: @subtext0;
+  color: @overlay2;
 }
 
 #pulseaudio:hover {
@@ -56,7 +56,7 @@ label:focus {
 }
 
 #network.disconnected {
-  color: @subtext0;
+  color: @overlay2;
 }
 
 #network:hover {
@@ -71,7 +71,7 @@ label:focus {
 
 #bluetooth.disabled {
   padding: 0 0.5rem;
-  color: @subtext0;
+  color: @overlay2;
 }
 
 #bluetooth:hover {
@@ -140,14 +140,14 @@ label:focus {
 }
 
 #workspaces button:hover {
-  color: @sapphire;
+  color: @blue;
   background-color: inherit;
   border-bottom: 2px solid @base;
 }
 
 #workspaces button.active {
   color: @base;
-  background-color: @sapphire;
+  background-color: @blue;
   border-bottom: 2px solid @base;
 }
 
