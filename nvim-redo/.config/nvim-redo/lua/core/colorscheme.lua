@@ -1,6 +1,9 @@
 -- [[ COLORSCHEME ]]
 return {
   {
+    "tinted-theming/tinted-vim",
+  },
+  {
     "folke/tokyonight.nvim",
     lazy = false,
     priority = 1000,
@@ -92,9 +95,10 @@ return {
         },
       })
     end,
-    -- init = function()
-    --   vim.opt.background = "dark"
-    --   vim.cmd.colorscheme("tokyonight-moon")
-    -- end,
+    init = function()
+      vim.opt.background = "dark"
+      vim.g.tinted_colorspace = 256
+      vim.g.tinted_background_transparent = 1
+    end,
   },
 }
