@@ -2,11 +2,11 @@
   // Editor appearance
   "theme": {
     "dark": "One Dark",
-    "light": "Catppuccin Frappé",
+    "light": "One Light",
     "mode": "system"
   },
   "icon_theme": "Zed (Default)",
-  "ui_font_family": "Inter",
+  "ui_font_family": "Zed Plex Sans",
   "ui_font_size": 14,
   "ui_font_weight": 400,
   "buffer_font_family": "Berkeley Mono",
@@ -73,9 +73,9 @@
       }
     },
     "dock": "bottom",
-    "font_family": "Berkeley Mono",
+    "font_family": "MonoLisa Custom",
     "font_size": 12,
-    "font_weight": 375,
+    "font_weight": 400,
     "line_height": "standard",
     "toolbar": {
       "breadcrumbs": true
@@ -92,7 +92,7 @@
 
   // Language and completion settings
   "languages": {
-    "Markdown": { "show_inline_completions": false }
+    "Markdown": { "show_edit_predictions": false }
   },
   "language_models": {
     "zed.dev": {
@@ -108,8 +108,11 @@
     }
   },
   "features": {
-    "inline_completion_provider": "zed",
+    "edit_prediction_provider": "zed",
     "copilot": true
+  },
+  "edit_predictions": {
+    "mode": "auto"
   },
 
   // Vim-specific settings

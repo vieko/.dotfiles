@@ -1,3 +1,5 @@
+#!/usr/bin/env bash
+ 
 # aliases for common commands
 alias ls="exa"
 alias la="exa -a"
@@ -28,4 +30,5 @@ alias qcd=fcd
 
 # aliases for convenience
 alias summon="tmux-start.sh"
-alias demons="nvim"
+alias demons="NVIM_APPNAME=nvim-redo nvim"
+alias wraith="nvim"

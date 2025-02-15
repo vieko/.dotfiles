@@ -1,0 +1,111 @@
+[
+  // General Workspace Settings
+  {
+    "context": "Workspace",
+    "bindings": {
+      "shift shift": "file_finder::Toggle"
+    }
+  },
+
+  // Dock and Pane Navigation
+  {
+    "context": "Dock",
+    "bindings": {
+      "ctrl-w h": ["workspace::ActivatePaneInDirection", "Left"],
+      "ctrl-w j": ["workspace::ActivatePaneInDirection", "Down"],
+      "ctrl-w k": ["workspace::ActivatePaneInDirection", "Up"],
+      "ctrl-w l": ["workspace::ActivatePaneInDirection", "Right"]
+    }
+  },
+  {
+    "context": "Pane",
+    "bindings": {
+      // Uncomment and adjust as needed
+      // "ctrl-t h": "pane::ActivatePrevItem",
+      // "ctrl-t l": "pane::ActivateNextItem",
+      // "ctrl-k h": "pane::SplitLeft",
+      // "ctrl-k j": "pane::SplitDown",
+      // "ctrl-k k": "pane::SplitUp",
+      // "ctrl-k l": "pane::SplitRight",
+      // "ctrl-w w": "pane::CloseActiveItem"
+    }
+  },
+
+  // Vim Mode Settings
+  {
+    "context": "vim_mode == normal || vim_mode == visual",
+    "bindings": {
+      "s": ["vim::PushOperator", { "Sneak": {} }],
+      "S": ["vim::PushOperator", { "SneakBackward": {} }],
+      "] x": "vim::SelectLargerSyntaxNode", // [ x
+      "[ x": "vim::SelectSmallerSyntaxNode" // ] x
+    }
+  },
+  {
+    "context": "vim_mode == insert",
+    "bindings": {
+      "j k": "vim::NormalBefore"
+    }
+  },
+  {
+    "context": "VimControl && !menu",
+    "bindings": {
+      "ctrl-b": "workspace::ToggleLeftDock",
+      "ctrl-j": "workspace::ToggleBottomDock",
+      "ctrl-^": "pane::AlternateFile"
+    }
+  },
+  {
+    "context": "vim_mode == visual",
+    "bindings": {
+      "shift-s": [
+        "vim::PushOperator",
+        {
+          "AddSurrounds": {}
+        }
+      ]
+    }
+  },
+  // TODO: report ysw includes next whitepsace when subwords are enabled
+  // {
+  //   "context": "VimControl && !menu && vim_mode != operator",
+  //   "bindings": {
+  //     "w": "vim::NextSubwordStart",
+  //     "b": "vim::PreviousSubwordStart",
+  //     "e": "vim::NextSubwordEnd",
+  //     "g e": "vim::PreviousSubwordEnd"
+  //   }
+  // },
+
+  // REPL Settings
+  {
+    "context": "Editor && jupyter && !ContextEditor",
+    "bindings": {
+      "ctrl-shift-escape": "repl::ClearOutputs"
+    }
+  },
+
+  // Panel-specific Settings
+  {
+    "context": "ProjectPanel && not_editing",
+    "bindings": {
+      "ctrl-^": "pane::AlternateFile"
+    }
+  },
+  {
+    "context": "ProjectPanel || CollabPanel || OutlinePanel || ChatPanel || VimControl || EmptyPane || SharedScreen || MarkdownPreview || KeyContextView",
+    "bindings": {
+      // Uncomment if needed
+      // "ctrl-w": "pane::CloseActiveItem",
+      // "ctrl-w w": "pane::CloseActiveItem"
+    }
+  },
+
+  // Terminal Settings
+  {
+    "context": "Terminal",
+    "bindings": {
+      "ctrl-o": null
+    }
+  }
+]

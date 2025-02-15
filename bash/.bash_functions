@@ -1,3 +1,5 @@
+#!/usr/bin/env bash
+
 # .bash_functions
 _fzf_compgen_path() {
   fd --hidden --follow --exclude ".git" . "$1"

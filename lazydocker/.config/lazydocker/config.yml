@@ -4,14 +4,14 @@ gui:
   border: "rounded" # one of 'rounded' | 'single' | 'double' | 'hidden'
   theme:
     activeBorderColor:
-      - "#cba6f7"
+      - "#61afef" # Blue for active borders
       - bold
     inactiveBorderColor:
-      - "#a6adc8"
+      - "#3e4451" # Darker shade for inactive borders
     optionsTextColor:
-      - "#89b4fa"
+      - "#56b6c2" # Cyan for options text
     selectedLineBgColor:
-      - "#313244"
+      - "#3e4451" # Dark background for selected lines
   returnImmediately: false
   wrapMainPanel: true
   # Side panel width as a ratio of the screen's width
@@ -57,7 +57,7 @@ stats:
   graphs:
     - caption: CPU (%)
       statPath: DerivedStats.CPUPercentage
-      color: "#89b4fa"
+      color: "#56b6c2"
     - caption: Memory (%)
       statPath: DerivedStats.MemoryPercentage
-      color: "#a6e3a1"
+      color: "#3e4451"

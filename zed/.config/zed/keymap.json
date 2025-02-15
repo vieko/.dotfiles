@@ -11,18 +11,18 @@
   {
     "context": "Dock",
     "bindings": {
-      "ctrl-w h": ["workspace::ActivatePaneInDirection", "Left"],
-      "ctrl-w j": ["workspace::ActivatePaneInDirection", "Down"],
-      "ctrl-w k": ["workspace::ActivatePaneInDirection", "Up"],
-      "ctrl-w l": ["workspace::ActivatePaneInDirection", "Right"]
+      "ctrl-w h": "workspace::ActivatePaneLeft",
+      "ctrl-w j": "workspace::ActivatePaneDown",
+      "ctrl-w k": "workspace::ActivatePaneUp",
+      "ctrl-w l": "workspace::ActivatePaneRight"
     }
   },
   {
     "context": "Pane",
     "bindings": {
       // Uncomment and adjust as needed
-      // "ctrl-t h": "pane::ActivatePrevItem",
-      // "ctrl-t l": "pane::ActivateNextItem",
+      "ctrl-t h": "pane::ActivatePrevItem",
+      "ctrl-t l": "pane::ActivateNextItem"
       // "ctrl-k h": "pane::SplitLeft",
       // "ctrl-k j": "pane::SplitDown",
       // "ctrl-k k": "pane::SplitUp",
@@ -35,8 +35,8 @@
   {
     "context": "vim_mode == normal || vim_mode == visual",
     "bindings": {
-      "s": ["vim::PushOperator", { "Sneak": {} }],
-      "S": ["vim::PushOperator", { "SneakBackward": {} }],
+      "s": ["vim::PushSneak", {}],
+      "S": ["vim::PushSneakBackward", {}],
       "] x": "vim::SelectLargerSyntaxNode", // [ x
       "[ x": "vim::SelectSmallerSyntaxNode" // ] x
     }
@@ -58,12 +58,7 @@
   {
     "context": "vim_mode == visual",
     "bindings": {
-      "shift-s": [
-        "vim::PushOperator",
-        {
-          "AddSurrounds": {}
-        }
-      ]
+      "shift-s": ["vim::PushAddSurrounds", {}]
     }
   },
   // TODO: report ysw includes next whitepsace when subwords are enabled
@@ -106,6 +101,14 @@
     "context": "Terminal",
     "bindings": {
       "ctrl-o": null
+    }
+  },
+
+  // predictions
+  {
+    "context": "os != macos && Editor && edit_prediction",
+    "bindings": {
+      "alt-l": "editor::AcceptEditPrediction"
     }
   }
 ]

@@ -1,13 +1,13 @@
-font=Inter 9
+font= IBM Plex Sans 9
 default-timeout=5000
 ignore-timeout=1
 
 border-radius=6
 
-background-color=#1e1e2e
-text-color=#cdd6f4
-border-color=#cba6f7
-progress-color=over #313244
+background-color=#282c34
+text-color=#DCE0E5
+border-color=#74ade8
+progress-color=over #21252b
 
 [urgency=high]
-border-color=#fab387
+border-color=#d07277
