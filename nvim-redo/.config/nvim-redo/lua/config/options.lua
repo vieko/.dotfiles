@@ -52,7 +52,7 @@ opt.shell = "bash"
 opt.shiftwidth = 2
 opt.showmatch = false
 opt.showmode = false
-opt.showtabline = 0
+opt.showtabline = 2
 opt.shortmess:append("I")
 opt.shortmess:append("c")
 opt.sidescrolloff = 8

@@ -35,45 +35,53 @@ return {
         },
       },
       bufdelete = {},
-      notifier = { enabled = false },
+      notifier = { enabled = true },
       bigfile = {},
       words = {},
+      ui = {},
     },
     keys = {
       {
-        "<C-b>",
+        "<leader>.",
         function()
-          Snacks.explorer()
+          Snacks.scratch()
         end,
-        desc = "Open Explorer",
-      },
-      {
-        "<C-p>",
-        function()
-          Snacks.picker.pick("files")
-        end,
-        desc = "Find Files",
-      },
-      {
-        "g/",
-        function()
-          Snacks.picker.grep({ title = "Search All Files", icons = { ui = { live = "" } } })
-        end,
-        desc = "Search All Files",
+        desc = "Toggle scratch buffer",
       },
       {
         "<leader><leader>",
         function()
           Snacks.picker.smart()
         end,
-        desc = "Smart Find Files",
+        desc = "Smart find files",
+      },
+      {
+        "<C-b>",
+        function()
+          Snacks.explorer()
+        end,
+        desc = "Open explorer",
+      },
+      {
+        "<C-p>",
+        function()
+          Snacks.picker.pick("files")
+        end,
+        desc = "Find files",
+      },
+      {
+        "g/",
+        function()
+          Snacks.picker.grep({ title = "Search all files", icons = { ui = { live = "" } } })
+        end,
+        desc = "Search all files",
       },
       {
         "ZZ",
         function()
           Snacks.bufdelete()
         end,
-        desc = "Delete Buffer",
+        desc = "Delete buffer",
       },
     },
   },

@@ -1,5 +1,34 @@
--- [[ GIT SIGNS  ]]
+-- [[ LINT  ]]
+-- @param name The name of the linter to run.
+local function run_linter_by(name)
+  local cwd = require("utils.root").get()
+  require("lint").try_lint(name, {
+    cwd = cwd,
+  })
+  local bufnr = vim.api.nvim_get_current_buf()
+  vim.cmd(string.format("augroup au_%s_lint_%d", name, bufnr))
+  vim.cmd("au!")
+  vim.cmd(
+    string.format("au BufWritePost <buffer=%d> lua require'lint'.try_lint('%s', { cwd = '%s' })", bufnr, name, cwd)
+  )
+  vim.cmd(string.format("au BufEnter <buffer=%d> lua require'lint'.try_lint('%s', { cwd = '%s' })", bufnr, name, cwd))
+  vim.cmd("augroup end")
+end
+
 return {
+  {
+    "williamboman/mason.nvim",
+    optional = true,
+    opts = {
+      ensure_installed = {
+        "eslint_d",
+        "oxlint",
+        "codespell",
+        "cspell",
+        "shellcheck",
+      },
+    },
+  },
   {
     "mfussenegger/nvim-lint",
     event = "VeryLazy",
@@ -71,5 +100,48 @@ return {
         end,
       })
     end,
+    keys = {
+      {
+        -- Run lint by name
+        "<leader>lR",
+        function()
+          local items = {
+            -- Github actions
+            "actionlint", -- go install github.com/rhysd/actionlint/cmd/actionlint@latest
+            -- .env files
+            "dotenv_linter", -- brew install dotenv-linter
+            -- Markdown and writing
+            "write_good", -- npm install -g write-good
+            -- Eslint
+            "eslint_d",
+          }
+
+          vim.ui.select(items, {
+            prompt = "Select Linter to run",
+          }, function(choice)
+            if choice ~= nil then
+              run_linter_by(choice)
+            end
+          end)
+        end,
+        desc = "Select Linter to run",
+      },
+      -- Fix .env variables
+      {
+        "<leader>le",
+        function()
+          local file = vim.fn.fnameescape(vim.fn.expand("%:p")) -- Escape file path for shell
+
+          -- Warn user if file is not .env
+          if not string.match(file, "%.env") then
+            vim.notify("This is not a .env file", vim.log.levels.WARN)
+            return
+          end
+
+          vim.cmd("silent !dotenv-linter fix " .. file)
+        end,
+        desc = "Fix .env file",
+      },
+    },
   },
 }

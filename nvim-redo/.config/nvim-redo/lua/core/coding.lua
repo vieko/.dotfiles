@@ -1,10 +1,11 @@
--- [[ CMP ]]
+-- [[ CODING ]]
 return {
   { -- Autocompletion
     "hrsh7th/nvim-cmp",
     event = "InsertEnter",
+    version = false,
     dependencies = {
-      {
+      { -- Snippet Engine & its associated nvim-cmp source
         "L3MON4D3/LuaSnip",
         build = (function()
           if vim.fn.has("win32") == 1 or vim.fn.executable("make") == 0 then
@@ -23,8 +24,8 @@ return {
       },
       "saadparwaiz1/cmp_luasnip",
       "hrsh7th/cmp-nvim-lsp",
-      "hrsh7th/cmp-path",
       "hrsh7th/cmp-buffer",
+      "hrsh7th/cmp-path",
     },
     config = function()
       local cmp = require("cmp")
@@ -37,19 +38,16 @@ return {
             luasnip.lsp_expand(args.body)
           end,
         },
-        completion = { completeopt = "menu,menuone,noinsert" },
+
+        completion = { completeopt = "menu,menuone,noselect" },
         mapping = cmp.mapping.preset.insert({
           ["<C-n>"] = cmp.mapping.select_next_item(),
           ["<C-p>"] = cmp.mapping.select_prev_item(),
           ["<C-b>"] = cmp.mapping.scroll_docs(-4),
           ["<C-f>"] = cmp.mapping.scroll_docs(4),
           ["<C-y>"] = cmp.mapping.confirm({ select = true }),
-          ["<C-Space>"] = cmp.mapping.complete({}),
-
-          ["<Tab>"] = cmp.mapping.select_next_item({ behaviour = cmp.SelectBehavior.Insert }),
-          ["<S-Tab>"] = cmp.mapping.select_prev_item({ behaviour = cmp.SelectBehavior.Insert }),
-
           ["<CR>"] = cmp.mapping.confirm({ select = true }),
+          ["<C-Space>"] = cmp.mapping.complete({}),
         }),
         sources = {
           { name = "nvim_lsp", group_index = 2 },
@@ -60,5 +58,47 @@ return {
         },
       })
     end,
+  },
+  { -- supermaven
+    "supermaven-inc/supermaven-nvim",
+    lazy = false,
+    opts = {
+      keymaps = {
+        accept_suggestion = "<C-l>",
+      },
+    },
+  },
+  { -- copilot
+    "github/copilot.vim",
+    enabled = false,
+    config = function()
+      vim.g.copilot_workspace_folders = { "~/Documents/Development", "~/Documents/Sandbox", "~/dev", "~/tmp" }
+      vim.g.copilot_assume_mapped = true
+      vim.g.copilot_no_tab_map = true
+      vim.g.copilot_filetypes = {
+        ["TelescopePrompt"] = false,
+      }
+      vim.keymap.set("i", "<C-l>", 'copilot#Accept("\\<CR>")', { expr = true, replace_keycodes = false })
+    end,
+  },
+  { -- install lsp servers
+    "williamboman/mason.nvim",
+    opts = {
+      ensure_installed = {
+        "stylua",
+        "prettier",
+        "prettierd",
+        "codespell",
+        "misspell",
+        "cspell",
+        "markdownlint",
+        "rustywind",
+      },
+    },
+  },
+  { -- Code comment
+    "folke/ts-comments.nvim",
+    opts = {},
+    event = "VeryLazy",
   },
 }
