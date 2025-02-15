@@ -1,26 +1,29 @@
 -- [[ COLORSCHEME ]]
 return {
   {
+    "folke/tokyonight.nvim",
+    lazy = false,
+    priority = 1000,
+    opts = {},
+  },
+  {
     "navarasu/onedark.nvim",
     priority = 1000,
     lazy = false,
-    config = function()
-      require("onedark").setup({
-        style = "dark",
-        transparent = true,
-        code_style = {
-          comments = "none",
-        },
-        diagnostics = {
-          darker = true,
-          undercurl = true,
-          background = false,
-        },
-        colors = {},
-        highlight = {},
-      })
-      require("onedark").load()
-    end,
+    opts = {
+      style = "dark",
+      transparent = true,
+      code_style = {
+        comments = "none",
+      },
+      diagnostics = {
+        darker = true,
+        undercurl = true,
+        background = false,
+      },
+      colors = {},
+      highlight = {},
+    },
   },
   {
     "catppuccin/nvim",
@@ -89,9 +92,9 @@ return {
         },
       })
     end,
-    init = function()
-      vim.opt.background = "dark"
-      vim.cmd.colorscheme("onedark")
-    end,
+    -- init = function()
+    --   vim.opt.background = "dark"
+    --   vim.cmd.colorscheme("tokyonight-moon")
+    -- end,
   },
 }

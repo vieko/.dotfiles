@@ -32,6 +32,9 @@ export HISTCONTROL=ignoreboth:erasedups
 # append to history file and reload history
 export PROMPT_COMMAND='history -a; history -n;'
 
+# prevents ctrl+d from exiting the shell
+IGNOREEOF=10
+
 # enhanced history search
 bind '"\e[A": history-search-backward'
 bind '"\e[B": history-search-forward'
