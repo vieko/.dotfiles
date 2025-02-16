@@ -1,12 +1,4 @@
 -- [[ EDITOR ]]
-local function hex(color)
-  if type(color) == "number" then
-    return string.format("#%06X", color) -- Convert number to uppercase hex
-  elseif type(color) == "string" and color:match("^#?%x%x%x%x%x%x$") then
-    return "#" .. color:gsub("#", ""):upper() -- Ensure '#' prefix & uppercase
-  end
-  return "#AAAAAA" -- Fallback if nil or unexpected type
-end
 return {
   { -- detect tabstops and shiftwidth automatically
     "tpope/vim-sleuth",
@@ -65,11 +57,12 @@ return {
     "akinsho/bufferline.nvim",
     event = "VeryLazy",
     config = function()
-      local bufferline = require("bufferline")
-      bufferline.setup({
+      local bl = require("bufferline")
+      local to_hex = require("utils.colors").to_hex
+      bl.setup({
         highlights = {
           separator = {
-            fg = hex(vim.g.tinted_gui01),
+            fg = to_hex(vim.g.tinted_gui01),
           },
         },
         options = {
@@ -78,8 +71,8 @@ return {
             style = "none",
           },
           style_preset = {
-            bufferline.style_preset.no_bold,
-            bufferline.style_preset.no_italic,
+            bl.style_preset.no_bold,
+            bl.style_preset.no_italic,
           },
           numbers = function(opts)
             return string.format("%s", opts.ordinal)
@@ -96,12 +89,12 @@ return {
           diagnostics = "nvim_lsp",
           enforce_regular_tabs = false,
           always_show_bufferline = true,
+          sort_by = "insert_at_end",
           offsets = {
             {
               filetype = "snacks_layout_box",
             },
           },
-          sort_by = "insert_after_current",
         },
       })
       vim.api.nvim_create_autocmd({ "BufAdd", "BufDelete" }, {

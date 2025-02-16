@@ -15,8 +15,7 @@ function M.load(name)
   vim.api.nvim_exec_autocmds("User", { pattern = pattern, modeline = false })
 end
 
----@param colorscheme string
-function M.setup(colorscheme)
+function M.setup()
   local lazy_autocmds = vim.fn.argc(-1) == 0
   if not lazy_autocmds then
     M.load("autocmds")
@@ -33,14 +32,5 @@ function M.setup(colorscheme)
       M.load("keymaps")
     end,
   })
-
-  if colorscheme == "" then
-    return
-  end
-  vim.o.termguicolors = true
-  vim.g.tinted_colorspace = 256
-  vim.g.tinted_background_transparent = 1
-  vim.cmd.colorscheme(colorscheme)
 end
-
 return M
