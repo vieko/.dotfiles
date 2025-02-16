@@ -6,55 +6,25 @@ add_newline = true
 
 command_timeout = 3000
 
-palette = "one_dark"
+palette = "base16-onedark"
 
-[palettes.one_dark]
-mono0 = '#d7dae0'         # terminal white, from the One Dark Pro VSCode theme.
-mono1 = '#abb2bf'         # syntax_fg.
-mono2 = '#828997'
-mono3 = '#5c6370'
-mono4 = '#3f4451'         # terminal black, from the One Dark Pro VSCode theme.
-color_red0 = '#e06c75'
-color_red1 = '#be5046'
-color_green = '#98c379'
-color_yellow = '#e5c07b'
-color_blue = '#61afef'
-color_purple = '#c678dd'
-color_cyan = '#56b6c2'
-color_orange = '#d19a66'
-syntax_fg = '#abb2bf'
-syntax_bg = '#282c34'
-color_bg2 = '#665c54'
-syntax_gutter = '#647382'
-syntax_accent = '#528cff'
-
-[palettes.catppuccin_mocha]
-rosewater = "#f5e0dc"
-flamingo = "#f2cdcd"
-pink = "#f5c2e7"
-mauve = "#cba6f7"
-red = "#f38ba8"
-maroon = "#eba0ac"
-peach = "#fab387"
-yellow = "#f9e2af"
-green = "#a6e3a1"
-teal = "#94e2d5"
-sky = "#89dceb"
-sapphire = "#74c7ec"
-blue = "#89b4fa"
-lavender = "#b4befe"
-text = "#cdd6f4"
-subtext1 = "#bac2de"
-subtext0 = "#a6adc8"
-overlay2 = "#9399b2"
-overlay1 = "#7f849c"
-overlay0 = "#6c7086"
-surface2 = "#585b70"
-surface1 = "#45475a"
-surface0 = "#313244"
-base = "#1e1e2e"
-mantle = "#181825"
-crust = "#11111b"
+[palettes.base16-onedark]
+base00 = "#282c34"
+base01 = "#353b45"
+base02 = "#3e4451"
+base03 = "#545862"
+base04 = "#565c64"
+base05 = "#abb2bf"
+base06 = "#b6bdca"
+base07 = "#c8ccd4"
+base08 = "#e06c75"
+base09 = "#d19a66"
+base0A = "#e5c07b"
+base0B = "#98c379"
+base0C = "#56b6c2"
+base0D = "#61afef"
+base0E = "#c678dd"
+base0F = "#be5046"
 
 [character]
 success_symbol = "[>](bold green)"
