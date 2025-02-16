@@ -1,6 +1,11 @@
 -- [[ COLORSCHEME ]]
 return {
   {
+    "tinted-theming/tinted-vim",
+    priority = 1000,
+    lazy = false,
+  },
+  {
     "folke/tokyonight.nvim",
     lazy = false,
     enabled = false,

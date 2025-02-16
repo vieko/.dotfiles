@@ -1,72 +1,12 @@
 -- [[ EDITOR ]]
-local default_bufferline_style = { bold = false, italic = false }
-local bufferline_highlight_keys = {
-  "fill",
-  "background",
-  "tab",
-  "tab_selected",
-  "tab_separator",
-  "tab_separator_selected",
-  "tab_close",
-  "close_button",
-  "close_button_visible",
-  "close_button_selected",
-  "buffer_visible",
-  "buffer_selected",
-  "numbers",
-  "numbers_visible",
-  "numbers_selected",
-  "diagnostic",
-  "diagnostic_visible",
-  "diagnostic_selected",
-  "hint",
-  "hint_visible",
-  "hint_selected",
-  "hint_diagnostic",
-  "hint_diagnostic_visible",
-  "hint_diagnostic_selected",
-  "info",
-  "info_visible",
-  "info_selected",
-  "info_diagnostic",
-  "info_diagnostic_visible",
-  "info_diagnostic_selected",
-  "warning",
-  "warning_visible",
-  "warning_selected",
-  "warning_diagnostic",
-  "warning_diagnostic_visible",
-  "warning_diagnostic_selected",
-  "error",
-  "error_visible",
-  "error_selected",
-  "error_diagnostic",
-  "error_diagnostic_visible",
-  "error_diagnostic_selected",
-  "modified",
-  "modified_visible",
-  "modified_selected",
-  "duplicate_selected",
-  "duplicate_visible",
-  "duplicate",
-  "separator_selected",
-  "separator_visible",
-  "separator",
-  "indicator_visible",
-  "indicator_selected",
-  "pick_selected",
-  "pick_visible",
-  "pick",
-  "offset_separator",
-  "trunc_marker",
-}
-
-local bufferline_highlights = {}
-
-for _, key in ipairs(bufferline_highlight_keys) do
-  bufferline_highlights[key] = default_bufferline_style
+local function hex(color)
+  if type(color) == "number" then
+    return string.format("#%06X", color) -- Convert number to uppercase hex
+  elseif type(color) == "string" and color:match("^#?%x%x%x%x%x%x$") then
+    return "#" .. color:gsub("#", ""):upper() -- Ensure '#' prefix & uppercase
+  end
+  return "#AAAAAA" -- Fallback if nil or unexpected type
 end
-
 return {
   { -- detect tabstops and shiftwidth automatically
     "tpope/vim-sleuth",
@@ -124,47 +64,46 @@ return {
   {
     "akinsho/bufferline.nvim",
     event = "VeryLazy",
-    opts = {
-      highlights = bufferline_highlights,
-      options = {
-        indicator = {
-          icon = " ",
-          style = "none",
-        },
-        style_preset = function()
-          local bufferline = require("bufferline")
-          return {
-            bufferline.style_preset.no_bold,
-            bufferline.style_preset.no_italic,
-          }
-        end,
-        numbers = function(opts)
-          return string.format("%s", opts.ordinal)
-        end,
-        buffer_close_icon = "",
-        modified_icon = " ",
-        close_icon = " ",
-        left_trunc_marker = " ",
-        right_trunc_marker = " ",
-        separator_style = { " | ", " | " },
-        show_buffer_close_icons = false,
-        show_close_icon = false,
-        show_tab_indicators = false,
-        -- stylua: ignore
-        close_command = function(n) Snacks.bufdelete(n) end,
-        diagnostics = "nvim_lsp",
-        enforce_regular_tabs = true,
-        always_show_bufferline = true,
-        offsets = {
-          {
-            filetype = "snacks_layout_box",
+    config = function()
+      local bufferline = require("bufferline")
+      bufferline.setup({
+        highlights = {
+          separator = {
+            fg = hex(vim.g.tinted_gui01),
           },
         },
-        sort_by = "insert_after_current",
-      },
-    },
-    config = function(_, opts)
-      require("bufferline").setup(opts)
+        options = {
+          indicator = {
+            icon = " ",
+            style = "none",
+          },
+          style_preset = {
+            bufferline.style_preset.no_bold,
+            bufferline.style_preset.no_italic,
+          },
+          numbers = function(opts)
+            return string.format("%s", opts.ordinal)
+          end,
+          buffer_close_icon = "",
+          modified_icon = " ",
+          close_icon = " ",
+          left_trunc_marker = " ",
+          right_trunc_marker = " ",
+          separator_style = { " | ", " | " },
+          show_buffer_close_icons = false,
+          show_close_icon = false,
+          show_tab_indicators = false,
+          diagnostics = "nvim_lsp",
+          enforce_regular_tabs = false,
+          always_show_bufferline = true,
+          offsets = {
+            {
+              filetype = "snacks_layout_box",
+            },
+          },
+          sort_by = "insert_after_current",
+        },
+      })
       vim.api.nvim_create_autocmd({ "BufAdd", "BufDelete" }, {
         callback = function()
           vim.schedule(function()
