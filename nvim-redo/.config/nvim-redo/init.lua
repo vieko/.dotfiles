@@ -71,4 +71,6 @@ require("lazy").setup({
   },
 })
 
-require("config.lazy").setup("onedark")
+require("config.lazy").setup()
+
+require("config.theme")

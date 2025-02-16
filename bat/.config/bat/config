@@ -1,4 +1,4 @@
---theme="TwoDark"
+--theme="base16-256"
 # --italic-text=always
 # --style=numbers,snip
 # --paging=never

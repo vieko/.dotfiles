@@ -1,17 +1,16 @@
 -- [[ COLORSCHEME ]]
 return {
   {
-    "tinted-theming/tinted-vim",
-  },
-  {
     "folke/tokyonight.nvim",
     lazy = false,
+    enabled = false,
     priority = 1000,
     opts = {},
   },
   {
     "navarasu/onedark.nvim",
     priority = 1000,
+    enabled = false,
     lazy = false,
     opts = {
       style = "dark",
@@ -94,11 +93,6 @@ return {
           lsp_trouble = false,
         },
       })
-    end,
-    init = function()
-      vim.opt.background = "dark"
-      vim.g.tinted_colorspace = 256
-      vim.g.tinted_background_transparent = 1
     end,
   },
 }

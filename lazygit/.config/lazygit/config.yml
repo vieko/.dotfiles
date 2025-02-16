@@ -1,50 +1,28 @@
 gui:
   theme:
     activeBorderColor:
-      - "#61afef" # Blue for active borders
+      - "#61afef"
       - bold
     inactiveBorderColor:
-      - "#3e4451" # Darker shade for inactive borders
+      - "#545862"
+    searchingActiveBorderColor:
+      - "#d19a66"
     optionsTextColor:
-      - "#56b6c2" # Cyan for options text
+      - "#61afef"
     selectedLineBgColor:
-      - "#3e4451" # Dark background for selected lines
-    selectedRangeBgColor:
       - "#3e4451"
     cherryPickedCommitBgColor:
-      - "#98c379" # Green background for cherry-picked commits
+      - "#545862"
     cherryPickedCommitFgColor:
-      - "#282c34" # Dark foreground for contrast
+      - "#61afef"
+    markedBaseCommitFgColor:
+      - "#61afef"
     unstagedChangesColor:
-      - "#e06c75" # Red for unstaged changes
+      - "#e06c75"
     defaultFgColor:
-      - "#abb2bf" # Foreground text color
-    searchingActiveBorderColor:
-      - "#c678dd" # Magenta for active search
+      - "#abb2bf"
 git:
   overrideGpg: true
   paging:
     colorArg: always
     pager: delta --dark --paging=never --syntax-theme TwoDark -s
-#
-# Use the mocha catppuccin theme with blue accent
-# theme:
-#   activeBorderColor:
-#     - "#89b4fa"
-#     - bold
-#   inactiveBorderColor:
-#     - "#a6adc8"
-#   optionsTextColor:
-#     - "#89b4fa"
-#   selectedLineBgColor:
-#     - "#313244"
-#   cherryPickedCommitBgColor:
-#     - "#45475a"
-#   cherryPickedCommitFgColor:
-#     - "#89b4fa"
-#   unstagedChangesColor:
-#     - "#f38ba8"
-#   defaultFgColor:
-#     - "#cdd6f4"
-#   searchingActiveBorderColor:
-#     - "#f9e2af"

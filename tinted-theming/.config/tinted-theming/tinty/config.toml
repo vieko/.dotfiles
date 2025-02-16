@@ -1,0 +1,36 @@
+# Global settings
+shell = "bash -c '{}'"
+default-scheme = "base16-onedark"
+
+# Items
+[[items]]
+name = "tinted-shell"
+path = "https://github.com/tinted-theming/tinted-shell"
+themes-dir = "scripts"
+supported-systems = ["base16"]
+hook = "source %f"
+
+[[items]]
+path = "https://github.com/tinted-theming/tinted-terminal"
+name = "tinted-terminal"
+themes-dir = "themes/kitty"
+hook = "kitten @ load-config"
+supported-systems = ["base16"]
+
+[[items]]
+name = "tinted-vim"
+path = "https://github.com/tinted-theming/tinted-vim"
+themes-dir = "colors"
+supported-systems = ["base16"]
+
+[[items]]
+path = "https://github.com/tinted-theming/tinted-tmux"
+name = "tinted-tmux"
+hook = "tmux run 2> /dev/null && tmux source-file %f"
+themes-dir = "colors"
+
+[[items]]
+path = "https://github.com/tinted-theming/tinted-fzf"
+name = "tinted-fzf"
+hook = ". %f"
+themes-dir = "sh"
