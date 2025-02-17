@@ -23,7 +23,7 @@ function M.set_diagnostics_level(level)
       underline = { severity = vim.diagnostic.severity.ERROR },
       signs = { severity = vim.diagnostic.severity.ERROR },
       virtual_text = {
-        prefix = "●",
+        prefix = "",
         spacing = 2,
         severity = vim.diagnostic.severity.ERROR,
       },
@@ -34,7 +34,7 @@ function M.set_diagnostics_level(level)
       underline = true,
       signs = true,
       virtual_text = {
-        prefix = "●",
+        prefix = "",
         spacing = 2,
       },
     })

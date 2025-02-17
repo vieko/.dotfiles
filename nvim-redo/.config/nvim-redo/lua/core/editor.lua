@@ -3,7 +3,7 @@ return {
   { -- detect tabstops and shiftwidth automatically
     "tpope/vim-sleuth",
   },
-  {
+  { -- navigate between tmux and nvim panes
     "christoomey/vim-tmux-navigator",
     cmd = {
       "TmuxNavigateLeft",
@@ -34,8 +34,37 @@ return {
       },
     },
   },
+  { -- icons
+    "echasnovski/mini.icons",
+    version = false,
+    opts = {
+      style = "ascii",
+      default = { hl = "MiniIconsGrey" },
+    },
+    config = function(_, options)
+      local icons = require("mini.icons")
+      local to_hex = require("utils.colors").to_hex
+      local hl_groups = {
+        "MiniIconsAzure",
+        "MiniIconsBlue",
+        "MiniIconsCyan",
+        "MiniIconsGreen",
+        "MiniIconsGrey",
+        "MiniIconsOrange",
+        "MiniIconsPurple",
+        "MiniIconsRed",
+        "MiniIconsYellow",
+      }
+      icons.setup(options)
+      icons.mock_nvim_web_devicons()
+      for _, group in ipairs(hl_groups) do
+        vim.api.nvim_set_hl(0, group, { fg = to_hex(vim.g.tinted_gui05) })
+      end
+    end,
+  },
   { -- Adds git related signs to the gutter, as well as utilities for managing changes.
     "lewis6991/gitsigns.nvim",
+    event = "VeryLazy",
     opts = {
       signs = {
         add = { text = "A" },
@@ -47,10 +76,52 @@ return {
       },
       attach_to_untracked = true,
       current_line_blame = true,
+      on_attach = function(buffer)
+        local gs = package.loaded.gitsigns
+
+        local function map(mode, l, r, desc)
+          vim.keymap.set(mode, l, r, { buffer = buffer, desc = desc })
+        end
+
+        map("n", "]c", function()
+          gs.nav_hunk("next")
+        end, "Go to next git change")
+        map("n", "[c", function()
+          gs.nav_hunk("prev")
+        end, "Go to previous git change")
+      end,
     },
   },
   {
     "nvim-lualine/lualine.nvim",
+    event = "VeryLazy",
+    config = function()
+      local ll = require("lualine")
+      ll.setup({
+        options = {
+          icons_enabled = false,
+          theme = "auto",
+          component_separators = { left = "", right = "" },
+          section_separators = { left = "", right = "" },
+        },
+        sections = {
+          lualine_a = { "mode" },
+          lualine_b = { "branch", "diff", "diagnostics" },
+          lualine_c = { "filename" },
+          lualine_x = { "encoding", "fileformat", "filetype" },
+          lualine_y = { "progress" },
+          lualine_z = { "location" },
+        },
+        inactive_sections = {
+          lualine_a = {},
+          lualine_b = {},
+          lualine_c = { "filename" },
+          lualine_x = { "location" },
+          lualine_y = {},
+          lualine_z = {},
+        },
+      })
+    end,
     opts = {},
   },
   {
@@ -118,19 +189,6 @@ return {
     event = "VeryLazy",
     config = function()
       require("nvim-surround").setup({})
-    end,
-  },
-  { -- autopairs for neovim written in lua
-    "windwp/nvim-autopairs",
-    event = "InsertEnter",
-    dependencies = { "hrsh7th/nvim-cmp" },
-    config = function()
-      require("nvim-autopairs").setup({
-        enable_check_bracket_line = false,
-      })
-      local cmp_autopairs = require("nvim-autopairs.completion.cmp")
-      local cmp = require("cmp")
-      cmp.event:on("confirm_done", cmp_autopairs.on_confirm_done())
     end,
   },
 }

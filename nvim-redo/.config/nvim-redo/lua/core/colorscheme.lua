@@ -2,20 +2,21 @@
 return {
   {
     "tinted-theming/tinted-vim",
+    enabled = true,
     priority = 1000,
     lazy = false,
   },
   {
     "folke/tokyonight.nvim",
-    lazy = false,
     enabled = false,
     priority = 1000,
+    lazy = false,
     opts = {},
   },
   {
     "navarasu/onedark.nvim",
-    priority = 1000,
     enabled = false,
+    priority = 1000,
     lazy = false,
     opts = {
       style = "dark",
@@ -35,9 +36,9 @@ return {
   {
     "catppuccin/nvim",
     name = "catppuccin",
+    enabled = false,
     priority = 1000,
     lazy = false,
-    enabled = false,
     config = function()
       require("catppuccin").setup({
         flavour = "auto",
