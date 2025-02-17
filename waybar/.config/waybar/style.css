@@ -1,4 +1,4 @@
-@import "one-dark.css";
+@import "base16-onedark.css";
 
 /* === STARTUP === */
 * {
@@ -27,7 +27,7 @@ window#waybar {
 
 #window {
   padding: 0 0.5rem;
-  color: @text;
+  color: @base07;
 }
 
 label:focus {
@@ -37,12 +37,12 @@ label:focus {
 /* === PULSEAUDIO === */
 #pulseaudio {
   padding: 0 0.5rem;
-  color: @text;
+  color: @base07;
 }
 
 #pulseaudio.muted {
   padding: 0 0.5rem;
-  color: @overlay2;
+  color: @base03;
 }
 
 #pulseaudio:hover {
@@ -52,11 +52,11 @@ label:focus {
 /* === NETWORK === */
 #network {
   padding: 0 0.5rem;
-  color: @text;
+  color: @base07;
 }
 
 #network.disconnected {
-  color: @overlay2;
+  color: @base03;
 }
 
 #network:hover {
@@ -66,12 +66,12 @@ label:focus {
 /* === BLUETOOTH === */
 #bluetooth {
   padding: 0 0.5rem;
-  color: @text;
+  color: @base07;
 }
 
 #bluetooth.disabled {
   padding: 0 0.5rem;
-  color: @overlay2;
+  color: @base03;
 }
 
 #bluetooth:hover {
@@ -81,7 +81,7 @@ label:focus {
 /* === CLOCK === */
 #clock {
   padding: 0 0.5rem;
-  color: @green;
+  color: @base0B;
 }
 
 #clock:hover {
@@ -91,7 +91,7 @@ label:focus {
 /* === BATTERY === */
 #battery {
   padding: 0 0.5rem;
-  color: @text;
+  color: @base07;
 }
 
 #battery:hover {
@@ -99,73 +99,73 @@ label:focus {
 }
 
 #battery.warning:not(.charging) {
-  color: @peach;
+  color: @base09;
 }
 
 #battery.critical:not(.charging) {
-  color: @red;
+  color: @base0F;
 }
 
 /* === CPU === */
 #cpu {
   padding: 0 0.5rem;
-  color: @text;
+  color: @base07;
 }
 
 /* === MEMORY === */
 #memory {
   padding: 0 0.5rem;
-  color: @text;
+  color: @base07;
 }
 
 /* === LANGUAGE === */
 #language {
   padding: 0 0.5rem;
-  color: @text;
+  color: @base07;
 }
 
 #custom-keyboard {
   padding: 0 0.5rem;
-  color: @text;
+  color: @base07;
 }
 
 /* === WORKSPACES === */
 #workspaces button {
   padding: 0 0.5rem;
-  color: @text;
+  color: @base07;
   box-shadow: inherit;
   text-shadow: inherit;
   background-color: transparent;
-  border-bottom: 2px solid @base;
+  border-bottom: 2px solid @base00;
 }
 
 #workspaces button:hover {
-  color: @blue;
+  color: @base0D;
   background-color: inherit;
-  border-bottom: 2px solid @base;
+  border-bottom: 2px solid @base00;
 }
 
 #workspaces button.active {
-  color: @base;
-  background-color: @blue;
-  border-bottom: 2px solid @base;
+  color: @base00;
+  background-color: @base0D;
+  border-bottom: 2px solid @base00;
 }
 
 #workspaces button.focused {
-  color: @base;
-  background-color: @rosewater;
-  border-bottom: 2px solid @base;
+  color: @base00;
+  background-color: @base0A;
+  border-bottom: 2px solid @base00;
 }
 
 #workspaces button.urgent {
-  color: @base;
-  background-color: @red;
-  border-bottom: 2px solid @base;
+  color: @base00;
+  background-color: @base0F;
+  border-bottom: 2px solid @base00;
 }
 
 #mode {
   background-color: #64727d;
-  border-bottom: 2px solid @rosewater;
+  border-bottom: 2px solid @base0A;
 }
 
 /* === MODULES === */

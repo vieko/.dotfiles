@@ -14,10 +14,6 @@ return {
       require("nvim-treesitter.query_predicates")
     end,
     cmd = { "TSUpdateSync", "TSUpdate", "TSInstall" },
-    keys = {
-      { "<c-Space>", desc = "Increment Selection" },
-      { "<BS>", desc = "Decrement Selection", mode = "x" },
-    },
     opts_extend = { "ensure_installed" },
     opts = {
       highlight = { enable = true },
@@ -25,33 +21,30 @@ return {
       auto_install = true,
       ensure_installed = {
         "bash",
-        "regex",
-        "vim",
-        "vimdoc",
+        "c",
+        "diff",
+        "html",
+        "http",
+        "javascript",
+        "jsdoc",
+        "json",
+        "jsonc",
         "lua",
         "luadoc",
-        "html",
+        "luap",
         "markdown",
         "markdown_inline",
-        "css",
-        "typescript",
-        "javascript",
-        "tsx",
-        "json",
-        "json5",
-        "jsonc",
-        "graphql",
-        "prisma",
-        "rust",
-        "go",
+        "printf",
+        "python",
+        "query",
+        "regex",
         "toml",
-        "c",
-        "proto",
-        "svelte",
-        "astro",
-        "embedded_template",
-        "diff",
-        "http",
+        "tsx",
+        "typescript",
+        "vim",
+        "vimdoc",
+        "xml",
+        "yaml",
       },
       incremental_selection = {
         enable = true,
@@ -81,7 +74,6 @@ return {
         },
       },
     },
-    ---@param opts TSConfig
     config = function(_, opts)
       require("nvim-treesitter.configs").setup(opts)
     end,
@@ -96,7 +88,12 @@ return {
   {
     "echasnovski/mini.cursorword",
     event = "LspAttach",
-    opts = { delay = 100 },
-    enabled = false,
+    config = function()
+      local mc = require("mini.cursorword")
+      mc.setup({
+        delay = 100,
+      })
+      vim.api.nvim_set_hl(0, "MiniCursorword", { link = "Visual" })
+    end,
   },
 }

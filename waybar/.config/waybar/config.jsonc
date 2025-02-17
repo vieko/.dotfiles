@@ -32,13 +32,13 @@
   },
   "custom/keyboard": {
     "exec": "~/.config/waybar/scripts/keyboard-current.sh",
-    "format": "<span foreground='#a1c181'>KEY</span> {}",
+    "format": "<span foreground='#98c379'>KEY</span> {}",
     "on-click": "~/.config/waybar/scripts/keyboard-toggle.sh",
     "signal": 1,
     "tooltip": false
   },
   "hyprland/language": {
-    "format": "<span foreground='#a1c181'>KEY</span> {short}",
+    "format": "<span foreground='#98c379'>KEY</span> {short}",
     "on-click": "~/.config/waybar/scripts/keyboard-toggle.sh",
     "tooltip": false
   },
@@ -53,12 +53,12 @@
       "warning": 30,
       "critical": 15
     },
-    "format": "<span foreground='#cba6f7' weight='normal'>{icon}</span> {capacity}%",
-    "format-warning": "<span foreground='#fab387' weight='normal'>{icon}</span> {capacity}%",
-    "format-critical": "<span foreground='#f38ba8' weight='normal'>{icon}</span> LOW",
-    "format-charging": "<span foreground='#cba6f7' weight='normal'>{icon}</span> {capacity}%",
-    "format-full": "<span foreground='#cba6f7' weight='normal'>{icon}</span> TOP",
-    "format-alt": "<span foreground='#cba6f7' weight='normal'>{icon}</span> {time}",
+    "format": "<span foreground='#c678dd' weight='normal'>{icon}</span> {capacity}%",
+    "format-warning": "<span foreground='#d19a66' weight='normal'>{icon}</span> {capacity}%",
+    "format-critical": "<span foreground='#e06c75' weight='normal'>{icon}</span> LOW",
+    "format-charging": "<span foreground='#c678dd' weight='normal'>{icon}</span> {capacity}%",
+    "format-full": "<span foreground='#c678dd' weight='normal'>{icon}</span> TOP",
+    "format-alt": "<span foreground='#c678dd' weight='normal'>{icon}</span> {time}",
     "format-icons": [
       "",
       "",
@@ -70,9 +70,9 @@
   },
   "network": {
     "interface": "wlp1s0",
-    "format-wifi": "<span foreground='#f2cdcd'>{ifname}</span> {essid}",
-    "format-ethernet": "<span foreground='#f2cdcd'>{ifname}</span> {cidr}",
-    "format-disconnected": "<span foreground='#f2cdcd'>{ifname}</span> disconnected",
+    "format-wifi": "<span foreground='#e5c07b'>{ifname}</span> {essid}",
+    "format-ethernet": "<span foreground='#e5c07b'>{ifname}</span> {cidr}",
+    "format-disconnected": "<span foreground='#e5c07b'>{ifname}</span> disconnected",
     "on-click": "~/.config/waybar/scripts/network_menu.sh",
     "tooltip": false
   },

@@ -16,6 +16,7 @@ end
 vim.opt.rtp:prepend(lazypath)
 
 require("config.lazy").load("options")
+require("config.lazy").load("theme")
 
 local spec = {
   { import = "core.editor" },
@@ -29,6 +30,7 @@ local spec = {
 
 require("lazy").setup({
   spec = spec,
+  defaults = { lazy = true, version = false },
   checker = { enabled = true },
   change_detection = { notify = false },
   ui = {
@@ -71,4 +73,4 @@ require("lazy").setup({
   },
 })
 
-require("config.lazy").setup("onedark")
+require("config.lazy").setup()

@@ -2,15 +2,20 @@
 return {
   {
     "tinted-theming/tinted-vim",
+    enabled = true,
+    priority = 1000,
+    lazy = false,
   },
   {
     "folke/tokyonight.nvim",
-    lazy = false,
+    enabled = false,
     priority = 1000,
+    lazy = false,
     opts = {},
   },
   {
     "navarasu/onedark.nvim",
+    enabled = false,
     priority = 1000,
     lazy = false,
     opts = {
@@ -31,9 +36,9 @@ return {
   {
     "catppuccin/nvim",
     name = "catppuccin",
+    enabled = false,
     priority = 1000,
     lazy = false,
-    enabled = false,
     config = function()
       require("catppuccin").setup({
         flavour = "auto",
@@ -94,11 +99,6 @@ return {
           lsp_trouble = false,
         },
       })
-    end,
-    init = function()
-      vim.opt.background = "dark"
-      vim.g.tinted_colorspace = 256
-      vim.g.tinted_background_transparent = 1
     end,
   },
 }

@@ -65,12 +65,28 @@ local function setup_quality_of_life_tweaks()
   map("v", ">", ">gv", { desc = "Indent right and maintain selection" })
 end
 
+local function setup_diagnostics()
+  local diagnostic_goto = function(next, severity)
+    local go = next and vim.diagnostic.goto_next or vim.diagnostic.goto_prev
+    severity = severity and vim.diagnostic.severity[severity] or nil
+    return function()
+      go({ severity = severity })
+    end
+  end
+  map("n", "]d", diagnostic_goto(true), { desc = "Go to next diagnostic" })
+  map("n", "[d", diagnostic_goto(false), { desc = "Go to previous diagnostic" })
+  map("n", "g]", diagnostic_goto(true), { desc = "Go to next diagnostic" })
+  map("n", "g[", diagnostic_goto(false), { desc = "Go to previous diagnostic" })
+  map("n", "gh", vim.diagnostic.open_float, { desc = "Line diagnostics" })
+end
+
 --- Setup all keymaps
 function M.setup()
   disable_arrows()
   setup_buffer_operations()
   setup_navigation_maps()
   setup_quality_of_life_tweaks()
+  setup_diagnostics()
 end
 
 return M.setup()

@@ -9,7 +9,7 @@ gui:
     inactiveBorderColor:
       - "#3e4451" # Darker shade for inactive borders
     optionsTextColor:
-      - "#56b6c2" # Cyan for options text
+      - "#545862" # Cyan for options text
     selectedLineBgColor:
       - "#3e4451" # Dark background for selected lines
   returnImmediately: false
@@ -57,7 +57,7 @@ stats:
   graphs:
     - caption: CPU (%)
       statPath: DerivedStats.CPUPercentage
-      color: "#56b6c2"
+      color: "#545862"
     - caption: Memory (%)
       statPath: DerivedStats.MemoryPercentage
       color: "#3e4451"

@@ -1,9 +1,4 @@
 -- [[ LSPCONFIG ]]
----@class LSPDiagnosticSigns
----@field Error string
----@field Warn string
----@field Hint string
----@field Info string
 local diagnostics = {
   Error = "E ",
   Warn = "W ",
@@ -12,6 +7,7 @@ local diagnostics = {
 }
 
 local setup_keymaps = function(client, buffer)
+  local Snacks = require("snacks")
   local map = function(keys, func, desc, mode)
     mode = mode or "n"
     vim.keymap.set(mode, keys, func, { buffer = buffer, desc = "LSP: " .. desc })
@@ -38,7 +34,7 @@ local setup_keymaps = function(client, buffer)
   map("gS", function()
     Snacks.picker.lsp_workspace_symbols()
   end, "Find symbol in entire project")
-  map("gh", vim.lsp.buf.hover, "Show inline error (hover")
+  map("K", vim.lsp.buf.hover, "Show hover")
   map("g.", vim.lsp.buf.code_action, "Open the code actions menu", { "n", "x" })
 
   if client and client.server_capabilities.inlayHintProvider and vim.lsp.inlay_hint then
@@ -48,13 +44,6 @@ local setup_keymaps = function(client, buffer)
   end
 end
 
----@class LSPOptions
----@field diagnostics table
----@field inlay_hints table
----@field capabilities table
----@field servers table
----@field setup table<string, function>
-
 return {
   { -- lspconfig
     "neovim/nvim-lspconfig",
@@ -63,21 +52,8 @@ return {
       "mason.nvim",
       "williamboman/mason-lspconfig.nvim",
     },
-    ---@return LSPOptions
     opts = function()
-      -- local border = "rounded"
-      -- vim.lsp.handlers["textDocument/hover"] = vim.lsp.with(vim.lsp.handlers.hover, {
-      --   border = border,
-      -- })
-      -- vim.lsp.handlers["textDocument/signatureHelp"] = vim.lsp.with(vim.lsp.handlers.signature_help, {
-      --   border = border,
-      -- })
-      -- vim.diagnostic.config({
-      --   float = { border = border },
-      -- })
       return {
-        -- options for vim.diagnostic.config()
-        ---@type vim.diagnostic.Opts
         diagnostics = {
           underline = true,
           update_in_insert = false,
@@ -96,14 +72,10 @@ return {
             },
           },
         },
-        -- Enable this to enable the builtin LSP inlay hints on Neovim >= 0.10.0
-        -- Be aware that you also will need to properly configure your LSP server to
-        -- provide the inlay hints.
         inlay_hints = {
           enabled = true,
-          exclude = { "vue" }, -- filetypes for which you don't want to enable inlay hints
+          exclude = { "vue" },
         },
-        -- add any global capabilities here
         capabilities = {
           workspace = {
             fileOperations = {
@@ -116,10 +88,7 @@ return {
         setup = {},
       }
     end,
-    ---@param _ any
-    ---@param opts LSPOptions
     config = function(_, opts)
-      -- Setup keymaps
       require("utils.lsp").on_attach(setup_keymaps)
       require("utils.lsp").setup()
       require("utils.lsp").on_dynamic_capability(setup_keymaps)
@@ -154,7 +123,7 @@ return {
         "force",
         {},
         vim.lsp.protocol.make_client_capabilities(),
-        has_cmp and cmp_nvim_lsp.default_capabilities() or {},
+        has_cmp and cmp_nvim_lsp.default_capabilities(),
         opts.capabilities or {}
       )
 
@@ -182,12 +151,11 @@ return {
         all_mslp_servers = vim.tbl_keys(require("mason-lspconfig.mappings.server").lspconfig_to_package)
       end
 
-      local ensure_installed = {} ---@type string[]
+      local ensure_installed = {}
       for server, server_opts in pairs(servers) do
         if server_opts then
           server_opts = server_opts == true and {} or server_opts
           if server_opts.enabled ~= false then
-            -- run manual setup if mason=false or if this is a server that cannot be installed with mason-lspconfig
             if server_opts.mason == false or not vim.tbl_contains(all_mslp_servers, server) then
               setup(server)
             else
@@ -198,6 +166,7 @@ return {
       end
 
       if have_mason then
+        ---@diagnostic disable-next-line: missing-fields
         mlsp.setup({
           ensure_installed = vim.tbl_deep_extend("force", ensure_installed, {}),
           handlers = { setup },
@@ -208,7 +177,6 @@ return {
   { -- cmdline tools and lsp servers
     "williamboman/mason.nvim",
     cmd = "Mason",
-    keys = { { "<leader>cm", "<cmd>Mason<cr>", desc = "Mason" } },
     build = ":MasonUpdate",
     opts_extend = { "ensure_installed" },
     opts = {
@@ -219,13 +187,11 @@ return {
         border = "rounded",
       },
     },
-    ---@param opts MasonSettings | {ensure_installed: string[]}
     config = function(_, opts)
       require("mason").setup(opts)
       local mr = require("mason-registry")
       mr:on("package:install:success", function()
         vim.defer_fn(function()
-          -- trigger FileType event to possibly load this newly installed LSP server
           require("lazy.core.handler.event").trigger({
             event = "FileType",
             buf = vim.api.nvim_get_current_buf(),
@@ -241,23 +207,6 @@ return {
           end
         end
       end)
-    end,
-  },
-  { -- Useful status updates for LSP.
-    "j-hui/fidget.nvim",
-    config = function()
-      require("fidget").setup({
-        progress = {
-          display = {
-            done_icon = "",
-          },
-        },
-        notification = {
-          window = {
-            winblend = 0,
-          },
-        },
-      })
     end,
   },
 }

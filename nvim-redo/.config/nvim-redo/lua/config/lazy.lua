@@ -1,7 +1,7 @@
 -- [[ LAZY ]]
 local M = {}
 
----@param name "autocmds" | "options" | "keymaps"
+---@param name "autocmds" | "keymaps" | "options" | "theme"
 function M.load(name)
   local function _load(mod)
     if require("lazy.core.cache").find(mod)[1] then
@@ -15,9 +15,7 @@ function M.load(name)
   vim.api.nvim_exec_autocmds("User", { pattern = pattern, modeline = false })
 end
 
----@param colorscheme string
-function M.setup(colorscheme)
-  -- autocmds can be loaded lazily when not opening a file
+function M.setup()
   local lazy_autocmds = vim.fn.argc(-1) == 0
   if not lazy_autocmds then
     M.load("autocmds")
@@ -34,11 +32,5 @@ function M.setup(colorscheme)
       M.load("keymaps")
     end,
   })
-
-  if colorscheme == "" then
-    return
-  end
-  vim.cmd.colorscheme(colorscheme)
 end
-
 return M
