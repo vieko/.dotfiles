@@ -201,6 +201,12 @@ return {
           view = "mini",
         },
       },
+      cmdline = {
+        format = {
+          search_down = { kind = "search", pattern = "^/", icon = " ", lang = "regex" },
+          search_up = { kind = "search", pattern = "^%?", icon = " ", lang = "regex" },
+        },
+      },
       presets = {
         bottom_search = true,
         command_palette = true,
