@@ -65,6 +65,9 @@ return {
       map("n", "ZZ", function()
         Snacks.bufdelete()
       end, { desc = "Delete buffer" })
+      map("n", "gb", function()
+        Snacks.git.blame_line()
+      end, { desc = "Blame line" })
     end,
   },
 }

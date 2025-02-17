@@ -8,3 +8,4 @@
 
 - [ ] multi-cursor?
 - [ ] flash or sneak?
+- [ ] move to init.lua repo
