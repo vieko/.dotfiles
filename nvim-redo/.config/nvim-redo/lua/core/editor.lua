@@ -246,4 +246,16 @@ return {
       require("nvim-surround").setup({})
     end,
   },
+  {
+    "lukas-reineke/virt-column.nvim",
+    event = "VeryLazy",
+    config = function()
+      require("virt-column").setup({
+        enabled = true,
+        char = "│", -- │ ╎ ┆ ┊
+        virtcolumn = "80",
+        highlight = "VirtColumn",
+      })
+    end,
+  },
 }

@@ -93,6 +93,14 @@ return {
       },
     },
   },
+  { -- better text-objects
+    "echasnovski/mini.ai",
+    event = "VeryLazy",
+    config = function()
+      local ai = require("mini.ai")
+      ai.setup()
+    end,
+  },
   { -- Auto pairs
     "echasnovski/mini.pairs",
     event = "VeryLazy",
