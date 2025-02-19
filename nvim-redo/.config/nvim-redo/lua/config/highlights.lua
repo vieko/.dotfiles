@@ -13,6 +13,7 @@ M.setup = function()
   hl(0, "Visual", { bg = "#446181" })
   hl(0, "ColorColumn", { bg = "none", fg = "none" })
   hl(0, "VirtColumn", { fg = "#20232A" }) -- #5B5D64 #20232A
+  hl(0, "GitSignsCurrentLineBlame", { fg = "#788CA6" })
 end
 
 return M.setup()

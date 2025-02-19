@@ -73,6 +73,13 @@ return {
       },
       attach_to_untracked = true,
       current_line_blame = true,
+      current_line_blame_opts = {
+        virt_text = true,
+        virt_text_pos = "eol",
+        delay = 0,
+      },
+      current_line_blame_formatter = "       <author>, <author_time:%R> ", -- " <author>, <author_time:%R> - <summary> "
+      current_line_blame_formatter_nc = "",
       on_attach = function(buffer)
         local gs = package.loaded.gitsigns
 
