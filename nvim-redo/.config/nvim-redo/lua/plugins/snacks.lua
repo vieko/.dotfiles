@@ -47,24 +47,35 @@ return {
         git = { enabled = true },
       })
 
+      -- SCRATCH BUFFER
       map("n", "<leader>.", function()
         Snacks.scratch()
       end, { desc = "Toggle scratch buffer" })
+      -- HIGHLIGHT PICKER
+      map("n", "<leader>h", function()
+        Snacks.picker.highlights()
+      end, { desc = "Toggle scratch buffer" })
+      -- SMART PICKER
       map("n", "<leader><leader>", function()
         Snacks.picker.smart()
       end, { desc = "Smart find files" })
+      -- EXPLORER
       map("n", "<C-b>", function()
         Snacks.explorer()
       end, { desc = "Open explorer" })
+      -- FILE PICKER
       map("n", "<C-p>", function()
         Snacks.picker.pick("files")
       end, { desc = "Find files" })
+      -- GREP SEARCH
       map("n", "g/", function()
         Snacks.picker.grep({ title = "Search all files" })
       end, { desc = "Search all files" })
+      -- DELETE BUFFER
       map("n", "ZZ", function()
         Snacks.bufdelete()
       end, { desc = "Delete buffer" })
+      -- GIT BLAME
       map("n", "gb", function()
         Snacks.git.blame_line()
       end, { desc = "Blame line" })

@@ -1,7 +1,7 @@
 -- [[ LAZY ]]
 local M = {}
 
----@param name "autocmds" | "keymaps" | "options" | "theme"
+---@param name "autocmds" | "keymaps" | "options" | "theme" | "highlights"
 function M.load(name)
   local function _load(mod)
     if require("lazy.core.cache").find(mod)[1] then

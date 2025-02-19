@@ -117,7 +117,7 @@
 
   // Vim-specific settings
   "vim": {
-    "highlight_on_yank_duration": 150,
+    "highlight_on_yank_duration": 1500,
     "toggle_relative_line_numbers": true,
     "use_multiline_find": false,
     "use_smartcase_find": false,

@@ -17,6 +17,7 @@ vim.opt.rtp:prepend(lazypath)
 
 require("config.lazy").load("options")
 require("config.lazy").load("theme")
+require("config.lazy").load("highlights")
 
 local spec = {
   { import = "core.editor" },
