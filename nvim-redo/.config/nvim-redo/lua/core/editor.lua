@@ -99,34 +99,68 @@ return {
   {
     "nvim-lualine/lualine.nvim",
     event = "VeryLazy",
+    init = function()
+      vim.g.lualine_laststatus = vim.o.laststatus
+      if vim.fn.argc(-1) > 0 then
+        vim.o.statusline = " "
+      else
+        vim.o.laststatus = 0
+      end
+    end,
     config = function()
       local ll = require("lualine")
+      vim.o.laststatus = vim.g.lualine_laststatus
       ll.setup({
         options = {
-          icons_enabled = false,
           theme = "onedark",
+          icons_enabled = false,
           component_separators = { left = "", right = "" },
           section_separators = { left = "", right = "" },
+          globalstatus = vim.o.laststatus == 3,
         },
         sections = {
           lualine_a = { "mode" },
-          lualine_b = { "branch", "diff", "diagnostics" },
-          lualine_c = { "filename" },
-          lualine_x = { "encoding", "fileformat", "filetype" },
-          lualine_y = { "progress" },
-          lualine_z = { "location" },
-        },
-        inactive_sections = {
-          lualine_a = {},
-          lualine_b = {},
-          lualine_c = { "filename" },
-          lualine_x = { "location" },
-          lualine_y = {},
-          lualine_z = {},
+          lualine_b = { "branch" },
+          lualine_c = {
+            {
+              "diagnostics",
+              symbols = {
+                error = "E",
+                warn = "W",
+                info = "I",
+                hint = "H",
+              },
+            },
+          },
+          lualine_x = {
+            {
+              "diff",
+              symbols = {
+                added = "A",
+                modified = "M",
+                removed = "R",
+              },
+              source = function()
+                local gitsigns = vim.b.gitsigns_status_dict
+                if gitsigns then
+                  return {
+                    added = gitsigns.added,
+                    modified = gitsigns.changed,
+                    removed = gitsigns.removed,
+                  }
+                end
+              end,
+            },
+          },
+          lualine_y = {
+            { "progress", separator = " ", padding = { left = 1, right = 1 } },
+          },
+          lualine_z = {
+            { "location", padding = { left = 1, right = 1 } },
+          },
         },
       })
     end,
-    opts = {},
   },
   {
     "akinsho/bufferline.nvim",
