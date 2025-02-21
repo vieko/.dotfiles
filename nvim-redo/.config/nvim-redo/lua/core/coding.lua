@@ -53,15 +53,53 @@ return {
   { -- supermaven
     "supermaven-inc/supermaven-nvim",
     event = "InsertEnter",
-    lazy = false,
+    enabled = true,
     config = function()
       local sm = require("supermaven-nvim")
       sm.setup({
         keymaps = {
           accept_suggestion = "<C-l>",
+          clear_suggestion = "<C-h>",
         },
         disable_inline_completion = false,
         ignore_filetypes = { "bigfile", "snacks_input", "snacks_notif" },
+      })
+    end,
+  },
+  {
+    "zbirenbaum/copilot.lua",
+    cmd = "Copilot",
+    event = "InsertEnter",
+    enabled = false,
+    config = function()
+      local cp = require("copilot")
+      cp.setup({
+        panel = { enabled = false },
+        suggestion = {
+          enabled = true,
+          auto_trigger = true,
+          hide_during_completion = false,
+          debounce = 75,
+          keymap = {
+            accept = "<C-l>",
+            accept_word = false,
+            accept_line = false,
+            next = false,
+            prev = false,
+            dismiss = "<C-h>",
+          },
+        },
+        filetypes = {
+          yaml = false,
+          markdown = false,
+          help = false,
+          gitcommit = false,
+          gitrebase = false,
+          hgcommit = false,
+          svn = false,
+          cvs = false,
+          ["."] = false,
+        },
       })
     end,
   },
