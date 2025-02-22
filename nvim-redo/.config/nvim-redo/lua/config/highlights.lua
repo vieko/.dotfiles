@@ -8,6 +8,7 @@ M.setup = function()
   hl(0, "Visual", { bg = "#446181" })
   hl(0, "VirtColumn", { fg = "#20232A" }) -- #5B5D64 #20232A
   hl(0, "MiniCursorword", { bg = "#394B62" })
+  hl(0, "MatchParen", { bg = "#394B62", bold = false })
   -- GIT
   hl(0, "GitSignsCurrentLineBlame", { fg = "#788CA6" })
   -- SNACKS
