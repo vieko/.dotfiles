@@ -61,7 +61,7 @@ return {
       end, { desc = "Smart find files" })
       -- EXPLORER
       map("n", "<C-b>", function()
-        Snacks.explorer()
+        Snacks.explorer({ focus = false })
       end, { desc = "Open explorer" })
       -- FILE PICKER
       map("n", "<C-p>", function()
