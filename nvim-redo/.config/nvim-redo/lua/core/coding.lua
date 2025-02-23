@@ -61,6 +61,9 @@ return {
           accept_suggestion = "<C-l>",
           clear_suggestion = "<C-h>",
         },
+        color = {
+          suggestion_color = "#5a6a87",
+        },
         disable_inline_completion = false,
         ignore_filetypes = { "bigfile", "snacks_input", "snacks_notif" },
       })

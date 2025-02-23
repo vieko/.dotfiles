@@ -299,4 +299,15 @@ return {
       })
     end,
   },
+  {
+    "echasnovski/mini.colors",
+    event = "VeryLazy",
+    enabled = false,
+    version = false,
+    config = function()
+      local mc = require("mini.colors")
+      require("mini.colors").setup()
+      -- mc.get_colorscheme():chan_add("saturation", -10, { filter = "fg" }):apply()
+    end,
+  },
 }
