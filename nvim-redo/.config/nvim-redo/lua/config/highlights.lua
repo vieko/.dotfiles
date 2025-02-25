@@ -846,8 +846,11 @@ local function setup_plugins_highlights()
   link("CmpItemKindVariable", "@lsp.type.variable")
   -- LAZY
   hl("LazyNormal", { fg = defaults.guifg, bg = defaults.transparent })
+  -- MASON
+  hl("MasonNormal", { fg = defaults.guifg, bg = defaults.transparent })
+  hl("MasonBackdrop", { bg = colors.gui00 })
   -- SNACKS
-  hl("SnacksBackdrop", { bg = colors.gui00})
+  hl("SnacksBackdrop", { bg = colors.gui00 })
   hl("SnacksPicker", { bg = defaults.ui.surface.background, fg = defaults.guifg })
   hl("SnacksPickerTitle", { bg = defaults.ui.surface.background, fg = colors.gui05 })
   hl("SnacksPickerBorder", { bg = defaults.ui.surface.background, fg = defaults.border.base })
