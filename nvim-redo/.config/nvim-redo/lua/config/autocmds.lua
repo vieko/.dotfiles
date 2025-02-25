@@ -17,18 +17,18 @@ vim.api.nvim_create_autocmd("FileType", {
 })
 
 -- Automatically save folds and other view settings when leaving a buffer
-vim.api.nvim_create_autocmd("BufWinLeave", {
-  group = augroup("lua_folds"),
-  pattern = "*",
-  command = "silent! mkview",
-})
+-- vim.api.nvim_create_autocmd("BufWinLeave", {
+--   group = augroup("lua_folds"),
+--   pattern = "*",
+--   command = "silent! mkview",
+-- })
 
 -- Automatically restore folds and other view settings when opening a buffer
-vim.api.nvim_create_autocmd("BufWinEnter", {
-  group = augroup("lua_folds"),
-  pattern = "*",
-  command = "silent! loadview",
-})
+-- vim.api.nvim_create_autocmd("BufWinEnter", {
+--   group = augroup("lua_folds"),
+--   pattern = "*",
+--   command = "silent! loadview",
+-- })
 
 -- highlight when yanking (copying) text
 vim.api.nvim_create_autocmd("TextYankPost", {

@@ -1,4 +1,7 @@
 -- [[ EDITOR ]]
+local highlight = require("config/highlights")
+local colors = highlight.colors
+local defaults = highlight.defaults
 return {
   { -- detect tabstops and shiftwidth automatically
     "tpope/vim-sleuth",
@@ -40,7 +43,6 @@ return {
     opts = { style = "ascii" },
     config = function(_, options)
       local icons = require("mini.icons")
-      local to_hex = require("utils.colors").to_hex
       local hl_groups = {
         "MiniIconsAzure",
         "MiniIconsBlue",
@@ -55,7 +57,7 @@ return {
       icons.setup(options)
       icons.mock_nvim_web_devicons()
       for _, group in ipairs(hl_groups) do
-        vim.api.nvim_set_hl(0, group, { fg = to_hex(vim.g.tinted_gui05) })
+        vim.api.nvim_set_hl(0, group, { fg = colors.gui05 })
       end
     end,
   },
@@ -167,21 +169,16 @@ return {
     event = "VeryLazy",
     config = function()
       local bl = require("bufferline")
-      local to_hex = require("utils.colors").to_hex
       bl.setup({
-        highlights = {
-          separator = {
-            fg = to_hex(vim.g.tinted_gui01),
-          },
-        },
         options = {
           indicator = {
             icon = " ",
             style = "none",
           },
           style_preset = {
-            bl.style_preset.no_bold,
+            bl.style_preset.minimal,
             bl.style_preset.no_italic,
+            bl.style_preset.no_bold,
           },
           numbers = function(opts)
             return string.format("%s", opts.ordinal)
