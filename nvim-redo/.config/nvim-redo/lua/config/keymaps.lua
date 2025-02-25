@@ -1,6 +1,5 @@
 -- [[ KEYMAPS ]]
 local M = {}
-local auto_format = true
 
 local function map(mode, lhs, rhs, opts)
   local options = { noremap = true, silent = true }
@@ -45,8 +44,8 @@ local function setup_navigation_maps()
   end
 
   -- move to the beginning and end of line
-  map({ "n", "v", "o" }, "gl", "$", { desc = "Go to end of line" })
-  map({ "n", "v", "o" }, "gh", "^", { desc = "Go to start of line" })
+  -- map({ "n", "v", "o" }, "gl", "$", { desc = "Go to end of line" })
+  -- map({ "n", "v", "o" }, "gh", "^", { desc = "Go to start of line" })
 end
 
 local function setup_quality_of_life_tweaks()
@@ -70,12 +69,12 @@ local function setup_diagnostics()
     local go = next and vim.diagnostic.goto_next or vim.diagnostic.goto_prev
     severity = severity and vim.diagnostic.severity[severity] or nil
     return function()
-      go({ severity = severity })
+      go({ severity = severity, float = false })
     end
   end
   map("n", "]d", diagnostic_goto(true), { desc = "Go to next diagnostic" })
   map("n", "[d", diagnostic_goto(false), { desc = "Go to previous diagnostic" })
-  map("n", "gh", vim.diagnostic.open_float, { desc = "Line diagnostics" })
+  -- map("n", "gh", vim.diagnostic.open_float, { desc = "Line diagnostics" })
 end
 
 --- Setup all keymaps

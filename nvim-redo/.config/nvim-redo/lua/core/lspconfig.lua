@@ -1,4 +1,6 @@
 -- [[ LSPCONFIG ]]
+local lsp = require("utils.lsp")
+
 local diagnostics = {
   Error = "E ",
   Warn = "W ",
@@ -52,6 +54,12 @@ return {
       "mason.nvim",
       "williamboman/mason-lspconfig.nvim",
     },
+    ---@class PluginLspOpts
+    ---@field diagnostics {underline: boolean, update_in_insert: boolean, virtual_text: {spacing: number, source: string, prefix: string}, severity_sort: boolean, signs: {text: table<number, string>}}
+    ---@field inlay_hints {enabled: boolean, exclude?: string[]}
+    ---@field capabilities table<string, any>
+    ---@field servers table<string, any>
+    ---@field setup table<string, fun(server:string, opts:table):boolean?>
     opts = function()
       return {
         diagnostics = {
@@ -74,7 +82,7 @@ return {
         },
         inlay_hints = {
           enabled = true,
-          exclude = { "vue" },
+          exclude = {},
         },
         capabilities = {
           workspace = {
@@ -84,14 +92,17 @@ return {
             },
           },
         },
+        ---@type lspconfig.options
         servers = {},
+        ---@type table<string, fun(server:string, opts:lspconfig.options):boolean?>
         setup = {},
       }
     end,
+    ---@param opts PluginLspOpts
     config = function(_, opts)
-      require("utils.lsp").on_attach(setup_keymaps)
-      require("utils.lsp").setup()
-      require("utils.lsp").on_dynamic_capability(setup_keymaps)
+      lsp.on_attach(setup_keymaps)
+      lsp.setup()
+      lsp.on_dynamic_capability(setup_keymaps)
 
       -- diagnostics signs
       if type(opts.diagnostics.signs) ~= "boolean" then
@@ -144,14 +155,13 @@ return {
         require("lspconfig")[server].setup(server_opts)
       end
 
-      -- get all the servers that are available through mason-lspconfig
       local have_mason, mlsp = pcall(require, "mason-lspconfig")
       local all_mslp_servers = {}
       if have_mason then
         all_mslp_servers = vim.tbl_keys(require("mason-lspconfig.mappings.server").lspconfig_to_package)
       end
 
-      local ensure_installed = {}
+      local ensure_installed = {} ---@type string[]
       for server, server_opts in pairs(servers) do
         if server_opts then
           server_opts = server_opts == true and {} or server_opts
@@ -187,6 +197,7 @@ return {
         border = "rounded",
       },
     },
+    ---@param opts MasonSettings | {ensure_installed: string[]}
     config = function(_, opts)
       require("mason").setup(opts)
       local mr = require("mason-registry")

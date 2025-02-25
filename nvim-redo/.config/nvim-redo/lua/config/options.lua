@@ -18,10 +18,12 @@ opt.errorbells = false
 opt.expandtab = true
 opt.fileencoding = "utf-8"
 opt.fillchars = { eob = " " }
-opt.foldenable = false
+opt.foldmethod = "syntax"
+opt.foldenable = true
 opt.foldlevel = 99
 opt.foldlevelstart = 99
 opt.formatoptions:remove("o")
+opt.foldcolumn = "0"
 opt.guicursor = ""
 opt.history = 100
 opt.hlsearch = true
@@ -69,6 +71,8 @@ opt.tabstop = 2
 opt.termguicolors = true
 opt.timeoutlen = 300
 opt.undodir = vim.fn.stdpath("data") .. "/undodir"
+opt.viewdir = vim.fn.stdpath("data") .. "/viewdir"
+opt.viewoptions = "folds,cursor,curdir"
 opt.undofile = true
 opt.updatetime = 250
 opt.virtualedit = "block"

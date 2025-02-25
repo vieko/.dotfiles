@@ -3,6 +3,33 @@ local function augroup(name)
   return vim.api.nvim_create_augroup("vieko_" .. name, { clear = true })
 end
 
+-- set foldmethod=indent for lua files
+vim.api.nvim_create_autocmd("FileType", {
+  pattern = "lua",
+  group = augroup("lua_folds"),
+  callback = function()
+    vim.opt.foldmethod = "expr" -- Use expression-based folding
+    vim.opt.foldexpr = "nvim_treesitter#foldexpr()" -- Use Treesitter for folding
+    vim.opt.foldenable = true
+    vim.opt.foldlevel = 99
+    vim.opt.foldlevelstart = 99
+  end,
+})
+
+-- Automatically save folds and other view settings when leaving a buffer
+vim.api.nvim_create_autocmd("BufWinLeave", {
+  group = augroup("lua_folds"),
+  pattern = "*",
+  command = "silent! mkview",
+})
+
+-- Automatically restore folds and other view settings when opening a buffer
+vim.api.nvim_create_autocmd("BufWinEnter", {
+  group = augroup("lua_folds"),
+  pattern = "*",
+  command = "silent! loadview",
+})
+
 -- highlight when yanking (copying) text
 vim.api.nvim_create_autocmd("TextYankPost", {
   group = augroup("highlight_yank"),

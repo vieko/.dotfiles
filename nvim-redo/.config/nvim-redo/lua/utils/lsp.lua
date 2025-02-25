@@ -18,7 +18,6 @@ local kind_filter = {
   },
   markdown = false,
   help = false,
-  -- you can specify a different filter for each filetype
   lua = {
     "Class",
     "Constructor",
@@ -54,7 +53,6 @@ function M.get_kind_filter(buf)
   return type(M.kind_filter) == "table" and type(M.kind_filter.default) == "table" and M.kind_filter.default or nil
 end
 
---- Get the path of the config file in the current directory or the root of the git repo
 ---@param filename string
 ---@return string | nil
 local function get_config_path(filename)
@@ -64,8 +62,6 @@ local function get_config_path(filename)
     return current_dir
   end
 
-  -- If the current directory is a git repo, check if the root of the repo
-  -- contains a biome.json file
   local git_root = Path.get_git_root()
   if Path.is_git_repo() and git_root ~= current_dir then
     config_file = git_root .. "/" .. filename

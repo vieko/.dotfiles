@@ -226,6 +226,7 @@ return {
           ["cmp.entry.get_documentation"] = true,
         },
         hover = {
+          enabled = true,
           silent = true,
         },
       },
@@ -262,6 +263,30 @@ return {
         command_palette = true,
         long_message_to_split = true,
       },
+      views = {
+        hover = {
+          view = "popup",
+          relative = "cursor",
+          zindex = 45,
+          enter = false,
+          anchor = "auto",
+          size = {
+            width = "auto",
+            height = "auto",
+            max_height = 20,
+            max_width = 120,
+          },
+          border = {
+            style = "none",
+            padding = { 1, 2 },
+          },
+          position = { row = 2, col = 0 },
+          win_options = {
+            wrap = true,
+            linebreak = true,
+          },
+        },
+      },
     },
     config = function(_, opts)
       -- HACK: noice shows messages from before it was enabled,
@@ -297,17 +322,6 @@ return {
         virtcolumn = "80",
         highlight = "VirtColumn",
       })
-    end,
-  },
-  {
-    "echasnovski/mini.colors",
-    event = "VeryLazy",
-    enabled = false,
-    version = false,
-    config = function()
-      local mc = require("mini.colors")
-      require("mini.colors").setup()
-      -- mc.get_colorscheme():chan_add("saturation", -10, { filter = "fg" }):apply()
     end,
   },
 }

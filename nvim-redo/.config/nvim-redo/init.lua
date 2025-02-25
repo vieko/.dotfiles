@@ -16,7 +16,6 @@ end
 vim.opt.rtp:prepend(lazypath)
 
 require("config.lazy").load("options")
--- require("config.lazy").load("theme")
 require("config.lazy").load("highlights")
 
 local spec = {
@@ -35,7 +34,7 @@ require("lazy").setup({
   checker = { enabled = true },
   change_detection = { notify = false },
   ui = {
-    border = "rounded",
+    border = "single",
     icons = {
       cmd = " ",
       config = "",

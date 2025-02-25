@@ -22,28 +22,9 @@ return {
     "stevearc/conform.nvim",
     event = { "BufWritePre" },
     cmd = { "ConformInfo" },
-    keys = {
-      {
-        -- Customize or remove this keymap to your liking
-        "<leader>tf",
-        function()
-          if vim.g.disable_autoformat then
-            vim.cmd("FormatEnable")
-          else
-            vim.cmd("FormatDisable")
-          end
-        end,
-        mode = "",
-        desc = "Toggle Format On Save",
-      },
-      -- Add keymap for show info
-      { "<leader>cn", "<cmd>ConformInfo<cr>", desc = "Conform Info" },
-      { "<leader>cf", "<cmd>Format<cr>", desc = "Format Code", mode = "v" },
-    },
     ---@type conform.setupOpts
     opts = {
       format_on_save = function(bufnr)
-        -- Disable with a global or buffer-local variable
         if vim.g.disable_autoformat or vim.b[bufnr].disable_autoformat then
           return
         end
@@ -51,7 +32,6 @@ return {
       end,
       formatters_by_ft = {
         sh = { "shfmt" },
-        -- Conform will run multiple formatters sequentially
         yaml = { "prettierd", "prettier", "dprint", stop_after_first = true },
         ["markdown"] = { "prettierd", "prettier", "dprint", stop_after_first = true },
         ["markdown.mdx"] = { "prettierd", "prettier", "dprint", stop_after_first = true },
