@@ -37,6 +37,13 @@ return {
               Info = "I ",
             },
           },
+          win = {
+            preview = {
+              wo = {
+                signcolumn = "yes:2",
+              },
+            },
+          },
         },
         bufdelete = { enabled = true },
         notifier = { enabled = true },
@@ -45,26 +52,60 @@ return {
         util = { enabled = true },
         image = { enabled = true },
         git = { enabled = true },
+        win = { enabled = false },
       })
 
+      -- SCRATCH BUFFER
       map("n", "<leader>.", function()
         Snacks.scratch()
-      end, { desc = "Toggle scratch buffer" })
+      end, { desc = "Open scratch buffer" })
+      -- HIGHLIGHT PICKER
+      map("n", "<leader>h", function()
+        Snacks.picker.highlights()
+      end, { desc = "Show highlights" })
+      -- SMART PICKER
       map("n", "<leader><leader>", function()
         Snacks.picker.smart()
       end, { desc = "Smart find files" })
+      -- EXPLORER
       map("n", "<C-b>", function()
         Snacks.explorer()
       end, { desc = "Open explorer" })
+      -- FILE PICKER
       map("n", "<C-p>", function()
         Snacks.picker.pick("files")
       end, { desc = "Find files" })
+      -- GREP SEARCH
       map("n", "g/", function()
         Snacks.picker.grep({ title = "Search all files" })
       end, { desc = "Search all files" })
+      -- DELETE BUFFER
       map("n", "ZZ", function()
         Snacks.bufdelete()
       end, { desc = "Delete buffer" })
+      -- GIT BLAME
+      map("n", "gb", function()
+        Snacks.git.blame_line()
+      end, { desc = "Blame line" })
+      -- DIAGNOSTICS
+      map("n", "gh", function()
+        Snacks.picker.diagnostics({
+          finder = "diagnostics",
+          format = "diagnostic",
+          sort = {
+            fields = {
+              "is_current",
+              "is_cwd",
+              "severity",
+              "file",
+              "lnum",
+            },
+          },
+          matcher = { sort_empty = true },
+          filter = { cwd = true },
+          layout = { preset = "select" },
+        })
+      end, { desc = "Show diagnostics" })
     end,
   },
 }

@@ -20,7 +20,6 @@ if ! tmux has-session -t "$DEFAULT_SESSION" 2>/dev/null; then
     tmux select-window -t "$DEFAULT_SESSION":"$EDITOR_WINDOW"
     
     # Send commands
-    tmux send-keys -t "$DEFAULT_SESSION":"$EDITOR_WINDOW" "demons" C-m
     tmux send-keys -t "$DEFAULT_SESSION":"$DOTFILES_WINDOW" "cd ~/.dotfiles; clear" C-m
 fi
 

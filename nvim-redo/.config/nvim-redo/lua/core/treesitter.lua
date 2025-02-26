@@ -93,7 +93,6 @@ return {
       mc.setup({
         delay = 100,
       })
-      vim.api.nvim_set_hl(0, "MiniCursorword", { link = "Visual" })
     end,
   },
 }

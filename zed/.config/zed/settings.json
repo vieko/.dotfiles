@@ -34,14 +34,8 @@
   "assistant": {
     "default_model": {
       "provider": "zed.dev",
-      "model": "claude-3-5-sonnet-20240620-fast-edit"
+      "model": "claude-3-7-sonnet-latest"
     },
-    "inline_alternatives": [
-      {
-        "provider": "openai",
-        "model": "gtp-4o"
-      }
-    ],
     "default_width": 640,
     "dock": "right",
     "enable_experimental_live_diffs": true,
@@ -117,7 +111,7 @@
 
   // Vim-specific settings
   "vim": {
-    "highlight_on_yank_duration": 150,
+    "highlight_on_yank_duration": 1500,
     "toggle_relative_line_numbers": true,
     "use_multiline_find": false,
     "use_smartcase_find": false,

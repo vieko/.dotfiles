@@ -1,4 +1,7 @@
 -- [[ EDITOR ]]
+local highlight = require("config/highlights")
+local colors = highlight.colors
+local defaults = highlight.defaults
 return {
   { -- detect tabstops and shiftwidth automatically
     "tpope/vim-sleuth",
@@ -37,13 +40,9 @@ return {
   { -- icons
     "echasnovski/mini.icons",
     version = false,
-    opts = {
-      style = "ascii",
-      default = { hl = "MiniIconsGrey" },
-    },
+    opts = { style = "ascii" },
     config = function(_, options)
       local icons = require("mini.icons")
-      local to_hex = require("utils.colors").to_hex
       local hl_groups = {
         "MiniIconsAzure",
         "MiniIconsBlue",
@@ -58,7 +57,7 @@ return {
       icons.setup(options)
       icons.mock_nvim_web_devicons()
       for _, group in ipairs(hl_groups) do
-        vim.api.nvim_set_hl(0, group, { fg = to_hex(vim.g.tinted_gui05) })
+        vim.api.nvim_set_hl(0, group, { fg = colors.gui05 })
       end
     end,
   },
@@ -76,6 +75,13 @@ return {
       },
       attach_to_untracked = true,
       current_line_blame = true,
+      current_line_blame_opts = {
+        virt_text = true,
+        virt_text_pos = "eol",
+        delay = 0,
+      },
+      current_line_blame_formatter = "       <author>, <author_time:%R> ", -- " <author>, <author_time:%R> - <summary> "
+      current_line_blame_formatter_nc = "",
       on_attach = function(buffer)
         local gs = package.loaded.gitsigns
 
@@ -95,61 +101,90 @@ return {
   {
     "nvim-lualine/lualine.nvim",
     event = "VeryLazy",
+    init = function()
+      vim.g.lualine_laststatus = vim.o.laststatus
+      if vim.fn.argc(-1) > 0 then
+        vim.o.statusline = " "
+      else
+        vim.o.laststatus = 0
+      end
+    end,
     config = function()
       local ll = require("lualine")
+      vim.o.laststatus = vim.g.lualine_laststatus
       ll.setup({
         options = {
+          theme = "onedark",
           icons_enabled = false,
-          theme = "auto",
           component_separators = { left = "", right = "" },
           section_separators = { left = "", right = "" },
+          globalstatus = vim.o.laststatus == 3,
         },
         sections = {
           lualine_a = { "mode" },
-          lualine_b = { "branch", "diff", "diagnostics" },
-          lualine_c = { "filename" },
-          lualine_x = { "encoding", "fileformat", "filetype" },
-          lualine_y = { "progress" },
-          lualine_z = { "location" },
-        },
-        inactive_sections = {
-          lualine_a = {},
-          lualine_b = {},
-          lualine_c = { "filename" },
-          lualine_x = { "location" },
-          lualine_y = {},
-          lualine_z = {},
+          lualine_b = { "branch" },
+          lualine_c = {
+            {
+              "diagnostics",
+              symbols = {
+                error = "E",
+                warn = "W",
+                info = "I",
+                hint = "H",
+              },
+            },
+          },
+          lualine_x = {
+            {
+              "diff",
+              symbols = {
+                added = "A",
+                modified = "M",
+                removed = "R",
+              },
+              source = function()
+                local gitsigns = vim.b.gitsigns_status_dict
+                if gitsigns then
+                  return {
+                    added = gitsigns.added,
+                    modified = gitsigns.changed,
+                    removed = gitsigns.removed,
+                  }
+                end
+              end,
+            },
+          },
+          lualine_y = {
+            { "progress", separator = " ", padding = { left = 1, right = 1 } },
+          },
+          lualine_z = {
+            { "location", padding = { left = 1, right = 1 } },
+          },
         },
       })
     end,
-    opts = {},
   },
   {
     "akinsho/bufferline.nvim",
     event = "VeryLazy",
     config = function()
       local bl = require("bufferline")
-      local to_hex = require("utils.colors").to_hex
       bl.setup({
-        highlights = {
-          separator = {
-            fg = to_hex(vim.g.tinted_gui01),
-          },
-        },
         options = {
           indicator = {
             icon = " ",
             style = "none",
           },
           style_preset = {
-            bl.style_preset.no_bold,
+            bl.style_preset.minimal,
             bl.style_preset.no_italic,
+            bl.style_preset.no_bold,
           },
           numbers = function(opts)
             return string.format("%s", opts.ordinal)
           end,
           buffer_close_icon = "",
-          modified_icon = " ",
+          modified_icon = " ",
           close_icon = " ",
           left_trunc_marker = " ",
           right_trunc_marker = " ",
@@ -177,6 +212,89 @@ return {
       })
     end,
   },
+  { -- notifications
+    "folke/noice.nvim",
+    event = "VeryLazy",
+    opts = {
+      lsp = {
+        override = {
+          ["vim.lsp.util.convert_input_to_markdown_lines"] = true,
+          ["vim.lsp.util.stylize_markdown"] = true,
+          ["cmp.entry.get_documentation"] = true,
+        },
+        hover = {
+          enabled = true,
+          silent = true,
+        },
+      },
+      routes = {
+        {
+          view = "notify",
+          filter = { event = "msg_showmode" },
+        },
+        {
+          filter = {
+            event = "msg_show",
+            any = {
+              { find = "%d+L, %d+B" },
+              { find = "; after #%d+" },
+              { find = "; before #%d+" },
+            },
+          },
+          view = "mini",
+        },
+      },
+      cmdline = {
+        format = {
+          cmdline = { icon = " " },
+          search_down = { icon = " " },
+          search_up = { icon = " " },
+          filter = { icon = " " },
+          lua = { icon = " " },
+          help = { icon = " " },
+          input = { icon = " " },
+        },
+      },
+      presets = {
+        bottom_search = false,
+        command_palette = true,
+        long_message_to_split = true,
+      },
+      views = {
+        hover = {
+          view = "popup",
+          relative = "cursor",
+          zindex = 45,
+          enter = false,
+          anchor = "auto",
+          size = {
+            width = "auto",
+            height = "auto",
+            max_height = 20,
+            max_width = 120,
+          },
+          border = {
+            style = "none",
+            padding = { 1, 2 },
+          },
+          position = { row = 2, col = 0 },
+          win_options = {
+            wrap = true,
+            linebreak = true,
+          },
+        },
+      },
+    },
+    config = function(_, opts)
+      -- HACK: noice shows messages from before it was enabled,
+      -- but this is not ideal when Lazy is installing plugins,
+      -- so clear the messages in this case.
+      if vim.o.filetype == "lazy" then
+        vim.cmd([[messages clear]])
+      end
+      require("noice").setup(opts)
+    end,
+  },
   { -- Highlight todo, notes, etc in comments.
     "folke/todo-comments.nvim",
     dependencies = { "nvim-lua/plenary.nvim" },
@@ -189,6 +307,18 @@ return {
     event = "VeryLazy",
     config = function()
       require("nvim-surround").setup({})
+    end,
+  },
+  {
+    "lukas-reineke/virt-column.nvim",
+    event = "VeryLazy",
+    config = function()
+      require("virt-column").setup({
+        enabled = true,
+        char = "│", -- │ ╎ ┆ ┊
+        virtcolumn = "80",
+        highlight = "VirtColumn",
+      })
     end,
   },
 }
