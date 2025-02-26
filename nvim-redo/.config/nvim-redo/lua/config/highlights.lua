@@ -851,6 +851,7 @@ local function setup_plugins_highlights()
   hl("MasonBackdrop", { bg = colors.gui00 })
   -- SNACKS
   hl("SnacksBackdrop", { bg = colors.gui00 })
+  hl("SnacksNormal", { bg = defaults.ui.surface.background, fg = defaults.guifg })
   hl("SnacksPicker", { bg = defaults.ui.surface.background, fg = defaults.guifg })
   hl("SnacksPickerTitle", { bg = defaults.ui.surface.background, fg = colors.gui05 })
   hl("SnacksPickerBorder", { bg = defaults.ui.surface.background, fg = defaults.border.base })

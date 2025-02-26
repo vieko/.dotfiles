@@ -103,12 +103,17 @@
       "ctrl-o": null
     }
   },
-
   // predictions
   {
-    "context": "os != macos && Editor && edit_prediction",
+    "context": "Editor && !edit_prediction",
     "bindings": {
-      "alt-l": "editor::AcceptEditPrediction"
+      "ctrl-\\": "editor::ShowEditPrediction"
+    }
+  },
+  {
+    "context": "Editor && edit_prediction",
+    "bindings": {
+      "ctrl-l": "editor::AcceptEditPrediction"
     }
   }
 ]
