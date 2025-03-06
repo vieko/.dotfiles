@@ -24,7 +24,11 @@ local spec = {
   { import = "core.colorscheme" },
   { import = "core.lspconfig" },
   { import = "core.treesitter" },
-  { import = "plugins" },
+  { import = "plugins.conform" },
+  { import = "plugins.dropbar" },
+  { import = "plugins.eslint" },
+  { import = "plugins.nvim-lint" },
+  { import = "plugins.snacks" },
   { import = "langs" },
 }
 

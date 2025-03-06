@@ -135,6 +135,7 @@ M.eslint_config_exists = function()
     ".eslintrc.json",
     ".eslintrc",
     "eslint.config.js",
+    "eslint.config.mjs",
   }
 
   for _, file in ipairs(config_files) do

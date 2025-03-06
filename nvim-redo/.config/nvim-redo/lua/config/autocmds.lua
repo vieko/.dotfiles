@@ -3,9 +3,9 @@ local function augroup(name)
   return vim.api.nvim_create_augroup("vieko_" .. name, { clear = true })
 end
 
--- set foldmethod=indent for lua files
+-- set foldmethod=indent for files where treesitter makes the most sense
 vim.api.nvim_create_autocmd("FileType", {
-  pattern = "lua",
+  pattern = { "json", "jsonc", "javascript", "typescript", "lua", "python", "html", "css", "yaml", "toml" },
   group = augroup("lua_folds"),
   callback = function()
     vim.opt.foldmethod = "expr" -- Use expression-based folding

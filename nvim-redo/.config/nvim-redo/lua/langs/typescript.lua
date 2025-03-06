@@ -4,6 +4,13 @@ local Lsp = require("utils.lsp")
 return {
   {
     "neovim/nvim-lspconfig",
+    dependencies = {
+      -- Typescript formatter
+      {
+        "dmmulroy/ts-error-translator.nvim",
+        ft = "javascript,typescript,typescriptreact,svelte",
+      },
+    },
     opts = {
       servers = {
         tsserver = {

@@ -28,36 +28,33 @@ return {
         if vim.g.disable_autoformat or vim.b[bufnr].disable_autoformat then
           return
         end
-        return { timeout_ms = 500, lsp_format = "fallback" }
+        return { timeout_ms = 3000, lsp_format = "fallback" }
       end,
       formatters_by_ft = {
         sh = { "shfmt" },
-        yaml = { "prettierd", "prettier", "dprint", stop_after_first = true },
-        ["markdown"] = { "prettierd", "prettier", "dprint", stop_after_first = true },
-        ["markdown.mdx"] = { "prettierd", "prettier", "dprint", stop_after_first = true },
-        ["javascript"] = { "deno_fmt", "prettierd", "prettier", "biome", "dprint", stop_after_first = true },
+        yaml = { "prettier", "dprint", stop_after_first = true },
+        ["markdown"] = { "prettier", "dprint", stop_after_first = true },
+        ["markdown.mdx"] = { "prettier", "dprint", stop_after_first = true },
+        ["javascript"] = { "prettier", "biome", "dprint", stop_after_first = true },
         ["javascriptreact"] = function(bufnr)
-          return { "rustywind", first(bufnr, "deno_fmt", "prettierd", "prettier", "biome", "dprint") }
+          return { "rustywind", first(bufnr, "prettier", "biome", "dprint") }
         end,
-        ["typescript"] = { "deno_fmt", "prettierd", "prettier", "biome", "dprint", stop_after_first = true },
+        ["typescript"] = { "prettier", "biome", "dprint", stop_after_first = true },
         ["typescriptreact"] = function(bufnr)
-          return { "rustywind", first(bufnr, "deno_fmt", "prettierd", "prettier", "biome", "dprint") }
+          return { "rustywind", first(bufnr, "prettier", "biome", "dprint") }
         end,
         ["svelte"] = function(bufnr)
-          return { "rustywind", first(bufnr, "deno_fmt", "prettierd", "prettier", "biome", "dprint") }
+          return { "rustywind", first(bufnr, "prettier", "biome", "dprint") }
         end,
       },
       formatters = {
         biome = {
           condition = function()
             local path = Lsp.biome_config_path()
-            -- Skip if biome.json is in nvim
             local is_nvim = path and string.match(path, "nvim")
-
             if path and not is_nvim then
               return true
             end
-
             return false
           end,
         },
@@ -74,22 +71,17 @@ return {
         prettier = {
           condition = function()
             local path = Lsp.biome_config_path()
-            -- Skip if biome.json is in nvim
             local is_nvim = path and string.match(path, "nvim")
-
             if path and not is_nvim then
               return false
             end
-
             return true
           end,
         },
         prettierd = {
           condition = function()
             local path = Lsp.biome_config_path()
-            -- Skip if biome.json is in nvim
             local is_nvim = path and string.match(path, "nvim")
-
             if path and not is_nvim then
               return false
             end
@@ -100,9 +92,7 @@ return {
       },
     },
     init = function()
-      -- If you want the formatexpr, here is the place to set it
       vim.o.formatexpr = "v:lua.require'conform'.formatexpr()"
-
       -- Async formatting
       vim.api.nvim_create_user_command("Format", function(args)
         local range = nil
@@ -118,7 +108,6 @@ return {
 
       vim.api.nvim_create_user_command("FormatDisable", function(args)
         if args.bang then
-          -- FormatDisable! will disable formatting just for this buffer
           vim.b.disable_autoformat = true
         else
           vim.g.disable_autoformat = true

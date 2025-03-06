@@ -107,13 +107,21 @@
   {
     "context": "Editor && !edit_prediction",
     "bindings": {
-      "ctrl-\\": "editor::ShowEditPrediction"
+      "alt-\\": "editor::ShowEditPrediction"
     }
   },
   {
     "context": "Editor && edit_prediction",
     "bindings": {
-      "ctrl-l": "editor::AcceptEditPrediction"
+      "alt-l": "editor::AcceptEditPrediction"
+      // "alt-l": null
+    }
+  },
+  {
+    "context": "Editor && edit_prediction_conflict",
+    "bindings": {
+      "alt-l": "editor::AcceptEditPrediction"
+      // "alt-l": null
     }
   }
 ]

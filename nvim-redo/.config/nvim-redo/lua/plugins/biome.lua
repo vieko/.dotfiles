@@ -18,7 +18,6 @@ return {
             if Lsp.biome_config_exists() then
               return Lsp.biome_config_path()
             end
-
             return vim.fn.stdpath("config")
           end,
         },

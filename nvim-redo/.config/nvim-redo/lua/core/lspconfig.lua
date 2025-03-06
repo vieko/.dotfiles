@@ -1,5 +1,5 @@
 -- [[ LSPCONFIG ]]
-local lsp = require("utils.lsp")
+local Lsp = require("utils.lsp")
 
 local diagnostics = {
   Error = "E ",
@@ -93,16 +93,26 @@ return {
           },
         },
         ---@type lspconfig.options
-        servers = {},
+        servers = {
+          cssls = {
+            settings = {
+              css = {
+                lint = {
+                  unknownAtRules = "ignore",
+                },
+              },
+            },
+          },
+        },
         ---@type table<string, fun(server:string, opts:lspconfig.options):boolean?>
         setup = {},
       }
     end,
     ---@param opts PluginLspOpts
     config = function(_, opts)
-      lsp.on_attach(setup_keymaps)
-      lsp.setup()
-      lsp.on_dynamic_capability(setup_keymaps)
+      Lsp.on_attach(setup_keymaps)
+      Lsp.setup()
+      Lsp.on_dynamic_capability(setup_keymaps)
 
       -- diagnostics signs
       if type(opts.diagnostics.signs) ~= "boolean" then
