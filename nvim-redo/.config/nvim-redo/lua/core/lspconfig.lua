@@ -103,6 +103,14 @@ return {
               },
             },
           },
+          eslint = {
+            settings = {
+              workingDirectories = { mode = "auto" },
+              experimental = {
+                useFlatConfig = true,
+              },
+            },
+          },
         },
         ---@type table<string, fun(server:string, opts:lspconfig.options):boolean?>
         setup = {},
@@ -202,6 +210,7 @@ return {
     opts = {
       ensure_installed = {
         "stylua",
+        "eslint-lsp",
       },
       ui = {
         border = "rounded",

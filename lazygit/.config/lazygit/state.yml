@@ -1,8 +1,8 @@
 lastupdatecheck: 0
 recentrepos:
-    - /home/vieko/.dotfiles/nvim/.config/nvim
-    - /home/vieko/Documents/Development/monorepo-devolver
     - /home/vieko/.dotfiles
+    - /home/vieko/Documents/Development/monorepo-devolver
+    - /home/vieko/.dotfiles/nvim/.config/nvim
     - /home/vieko/Documents/Development/website-mothership-payloadcms
     - /home/vieko/Documents/Development/poc-influencer-dashboard-elt-serve
     - /home/vieko/Documents/Development/app-beta-squadron
