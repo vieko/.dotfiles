@@ -103,14 +103,6 @@ return {
               },
             },
           },
-          eslint = {
-            settings = {
-              workingDirectories = { mode = "auto" },
-              experimental = {
-                useFlatConfig = true,
-              },
-            },
-          },
         },
         ---@type table<string, fun(server:string, opts:lspconfig.options):boolean?>
         setup = {},
@@ -211,6 +203,7 @@ return {
       ensure_installed = {
         "stylua",
         "eslint-lsp",
+        "tailwindcss-language-server",
       },
       ui = {
         border = "rounded",

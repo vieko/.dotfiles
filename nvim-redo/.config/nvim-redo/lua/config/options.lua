@@ -16,6 +16,8 @@ opt.cursorcolumn = false
 opt.cursorline = true
 opt.errorbells = false
 opt.expandtab = true
+opt.exrc = true
+opt.secure = true
 opt.fileencoding = "utf-8"
 opt.fillchars = { eob = " " }
 opt.foldmethod = "syntax"

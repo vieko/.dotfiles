@@ -1,16 +1,12 @@
--- [[ ESLINT ]]
--- Change the global to false to disable the eslint LSP start on startup
 local enable_eslint = vim.g.lsp_eslint_enable == "yes" or false
 
 local Lsp = require("utils.lsp")
 
 local eslint_config = {
   settings = {
-    -- helps eslint find the eslintrc when it's placed in a subfolder instead of the cwd root
     workingDirectories = { mode = "auto" },
-    -- change to flag to true to use the flat config (Eslint 9+), refer https://eslint.org/blog/2024/04/eslint-v9.0.0-released/
     experimental = {
-      useFlatConfig = false,
+      useFlatConfig = true,
     },
   },
 }
@@ -32,7 +28,6 @@ vim.api.nvim_create_user_command("ToggleEslint", toggle_eslint, {
 return {
   {
     "neovim/nvim-lspconfig",
-    -- other settings removed for brevity
     opts = {
       servers = {
         eslint = eslint_config,
