@@ -26,12 +26,12 @@ return {
           -- Project-specific tailwind CSS entrypoint configurations
           -- Map: { [project_path]: { css_file: string, patterns: string[] } }
           local project_configs = {
-            ["/home/vieko/dev/monorepo-devolver"] = {
-              css_file = "/home/vieko/dev/monorepo-devolver/packages/ui/src/globals.css",
+            ["/home/vieko/dev/mothership"] = {
+              css_file = "/home/vieko/dev/mothership/packages/ui/src/globals.css",
               patterns = {
-                "/home/vieko/dev/monorepo-devolver/apps/influencer/**/*",
-                "/home/vieko/dev/monorepo-devolver/apps/mothership/**/*",
-                "/home/vieko/dev/monorepo-devolver/packages/ui/**/*",
+                "/home/vieko/dev/mothership/apps/influencer/**/*",
+                "/home/vieko/dev/mothership/apps/website/**/*",
+                "/home/vieko/dev/mothership/packages/ui/**/*",
               },
             },
             -- Add more projects as needed
