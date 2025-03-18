@@ -27,7 +27,7 @@ return {
           -- Map: { [project_path]: { css_file: string, patterns: string[] } }
           local project_configs = {
             ["/home/vieko/dev/mothership"] = {
-              css_file = "/home/vieko/dev/mothership/packages/ui/src/globals.css",
+              css_file = "/home/vieko/dev/mothership/packages/ui/src/styles/globals.css",
               patterns = {
                 "/home/vieko/dev/mothership/apps/influencer/**/*",
                 "/home/vieko/dev/mothership/apps/website/**/*",

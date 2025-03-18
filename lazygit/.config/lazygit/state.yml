@@ -1,5 +1,7 @@
 lastupdatecheck: 0
 recentrepos:
+    - /home/vieko/tmp/bookbot
+    - /home/vieko/dev/mothership
     - /home/vieko/.dotfiles
     - /home/vieko/Documents/Development/monorepo-devolver
     - /home/vieko/.dotfiles/nvim/.config/nvim

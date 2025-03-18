@@ -35,7 +35,7 @@
 
 [pull]
     default = current
-	rebase = false
+	rebase = true
     
 [diff]
     mnemonicprefix = true
@@ -105,7 +105,7 @@
     gpgsign = true
     
 [init]
-    defaultBranch = main
+	defaultBranch = main
     
 [credential "https://github.com"]
     helper = !/usr/bin/gh auth git-credential

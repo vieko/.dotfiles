@@ -1,23 +1,22 @@
 #!/usr/bin/env bash
  
-# aliases for common commands
+# ==> aliases for common commands
 alias ls="exa"
 alias la="exa -a"
 alias ll="exa -alh"
 alias tree="exa --tree"
 alias cat="bat"
-# alias grep="rg"
 # alias find="fd"
 # alias cl="clear"
 # alias pn="pnpm"
-alias rm='echo "This is not the command you are looking for. Use (trash) instead!"; false'
+# alias rm='echo "This is not the command you are looking for. Use (trash) instead!"; false'
 
-# directory navigation
+# ==>  directory navigation
 alias ..="cd .."
 alias ...="cd ../.."
 alias ....="cd ../../.."
 
-# git aliases
+# ==> git aliases
 alias lz="lazygit"
 alias lk="lazydocker" 
 #alias ga="git add"
@@ -25,10 +24,10 @@ alias lk="lazydocker"
 #alias gp="git push"
 #alias gs="git status"
  
-# alias for quick navigation
+# ==> alias for quick navigation
 alias qcd=fcd
 
-# aliases for convenience
+# ==> aliases for convenience
 alias summon="tmux-start.sh"
 alias demons="NVIM_APPNAME=nvim-redo nvim"
 alias wraith="nvim"

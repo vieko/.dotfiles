@@ -9,3 +9,4 @@
 - [ ] multi-cursor?
 - [ ] flash or sneak?
 - [ ] move to init.lua repo
+- [ ] organize imports is not working

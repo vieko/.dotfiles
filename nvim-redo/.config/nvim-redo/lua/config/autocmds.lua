@@ -107,5 +107,6 @@ vim.api.nvim_create_autocmd({ "BufRead", "BufNewFile" }, {
   pattern = { "*.env", ".env.*" },
   callback = function()
     vim.opt_local.filetype = "sh"
+    vim.diagnostic.enable(false)
   end,
 })
