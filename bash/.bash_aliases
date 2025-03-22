@@ -31,3 +31,5 @@ alias qcd=fcd
 alias summon="tmux-start.sh"
 alias demons="NVIM_APPNAME=nvim-redo nvim"
 alias wraith="nvim"
+alias goat="goat-power.sh"
+alias lamb="lamb-power.sh"
