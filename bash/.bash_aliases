@@ -27,9 +27,12 @@ alias lk="lazydocker"
 # ==> alias for quick navigation
 alias qcd=fcd
 
-# ==> aliases for convenience
+# ==> aliases for editors
 alias summon="tmux-start.sh"
 alias demons="NVIM_APPNAME=nvim-redo nvim"
 alias wraith="nvim"
+
+# ==> aliases for wallpapers
 alias goat="goat-power.sh"
 alias lamb="lamb-power.sh"
+alias flat="reset-background.sh"

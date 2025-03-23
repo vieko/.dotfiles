@@ -63,6 +63,13 @@ case ":$PATH:" in
   *) export PATH="$PNPM_HOME:$PATH" ;;
 esac
 
+# npm
+export NPM_HOME="$HOME/.npm-global"
+case ":$PATH:" in
+  *":$NPM_HOME:"*) ;;
+  *) export PATH="$NPM_HOME/bin:$PATH" ;;
+esac
+
 # nvm
 export NVM_DIR="$XDG_CONFIG_HOME/nvm"
 [ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"  # This loads nvm
@@ -100,3 +107,8 @@ export PYTHONWARNINGS="ignore::SyntaxWarning"
 
 # GLAMOUR
 export GLAMOUR_STYLE="$XDG_CONFIG_HOME/glamour/catppuccin-mocha.json"
+
+# CLAUDE CODE
+export CLAUDE_CODE_USE_BEDROCK=1
+# export ANTHROPIC_MODEL="anthropic.claude-3-7-sonnet-20250219-v1:0"
+export DISABLE_PROMPT_CACHING=1
