@@ -6,6 +6,7 @@ EDITOR_WINDOW="altar"
 RUNNER_WINDOW="void"
 DOTFILES_WINDOW="arcana"
 LOGS_WINDOW="coven"
+LEARN_WINDOW="cognize"
 
 # Check if tmux is already running
 if ! tmux has-session -t "$DEFAULT_SESSION" 2>/dev/null; then
@@ -15,6 +16,7 @@ if ! tmux has-session -t "$DEFAULT_SESSION" 2>/dev/null; then
     tmux new-window -t "$DEFAULT_SESSION" -n "$RUNNER_WINDOW"
     tmux new-window -t "$DEFAULT_SESSION" -n "$DOTFILES_WINDOW"
     tmux new-window -t "$DEFAULT_SESSION" -n "$LOGS_WINDOW"
+    tmux new-window -t "$DEFAULT_SESSION" -n "$LEARN_WINDOW"
 
     # Select the first window
     tmux select-window -t "$DEFAULT_SESSION":"$EDITOR_WINDOW"
