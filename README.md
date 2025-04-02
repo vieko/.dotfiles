@@ -29,7 +29,6 @@ To prevent breaking hyprland when updating other packages, install [hyprland](ht
 - ADD keybindings for keyboard layout switch
 - SET UP Bluetooth properly
 - SET UP wifi and vpn properly
-- ADD hyprpicker
 
 ### DESKTOP
 
@@ -39,3 +38,4 @@ To prevent breaking hyprland when updating other packages, install [hyprland](ht
 
 - UPDATE waybar to show connected interface
 - INSTALL Docker
+- FIX kitty crashes when summoned via hyprland keybinding
