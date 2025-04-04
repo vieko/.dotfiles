@@ -45,6 +45,15 @@ return {
             },
           },
         },
+        statuscolumn = {
+          enabled = true,
+          left = { "git", "sign" },
+          right = { "mark", "fold" },
+          git = {
+            pattern = { "GitSign" },
+          },
+          refresh = 50,
+        },
         bufdelete = { enabled = true },
         notifier = { enabled = true },
         bigfile = { enabled = true },
