@@ -109,6 +109,6 @@ export PYTHONWARNINGS="ignore::SyntaxWarning"
 export GLAMOUR_STYLE="$XDG_CONFIG_HOME/glamour/catppuccin-mocha.json"
 
 # CLAUDE CODE
-export CLAUDE_CODE_USE_BEDROCK=1
+# export CLAUDE_CODE_USE_BEDROCK=1
 # export ANTHROPIC_MODEL="anthropic.claude-3-7-sonnet-20250219-v1:0"
-export DISABLE_PROMPT_CACHING=1
+# export DISABLE_PROMPT_CACHING=0
