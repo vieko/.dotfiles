@@ -2,6 +2,14 @@
 
 # Toggle between normal hypridle configuration and a no-suspend mode for remote access
 # Usage: toggle_monitor.sh
+#
+# To check current status:
+#   - Check if state file exists: [[ -f "$HOME/.no_suspend_state" ]]
+#   - Check if sleep target is masked: systemctl status sleep.target
+#   - View current hypridle config: cat $HOME/.config/hypr/hypridle.conf.no_suspend
+#
+# If no_suspend_state exists and sleep.target is masked, the script is in no-suspend mode.
+# Otherwise, it's in normal mode with suspend enabled.
 
 STATE_FILE="$HOME/.no_suspend_state"
 CONFIG_DIR="$HOME/.config/hypr"
