@@ -72,6 +72,10 @@ return {
       map("n", "<leader>h", function()
         Snacks.picker.highlights()
       end, { desc = "Show highlights" })
+      -- KEYMAP
+      map("n", "<leader>k", function()
+        Snacks.picker.keymaps()
+      end, { desc = "Show keymaps" })
       -- SMART PICKER
       map("n", "<leader><leader>", function()
         Snacks.picker.smart()

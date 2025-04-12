@@ -36,8 +36,10 @@ export PROMPT_COMMAND='history -a; history -n;'
 IGNOREEOF=10
 
 # enhanced history search
-bind '"\e[A": history-search-backward'
-bind '"\e[B": history-search-forward'
+if [[ $- == *i* ]]; then
+  bind '"\e[A": history-search-backward'
+  bind '"\e[B": history-search-forward'
+fi
 
 eval "$(zoxide init bash)"
 eval "$(fzf --bash)"

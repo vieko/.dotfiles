@@ -32,6 +32,7 @@
 
   // Panels and UI elements
   "assistant": {
+    "default_profile": "ask",
     "default_model": {
       "provider": "zed.dev",
       "model": "claude-3-7-sonnet-latest"
@@ -106,7 +107,7 @@
     "copilot": true
   },
   "edit_predictions": {
-    "mode": "auto"
+    "mode": "eager"
   },
 
   // Vim-specific settings
