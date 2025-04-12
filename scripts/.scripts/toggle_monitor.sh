@@ -28,6 +28,12 @@ listener {
     on-timeout = hyprctl dispatch dpms off
     on-resume = hyprctl dispatch dpms on
 }
+
+# === HYPRIDLE: DUMMY SUSPEND (disabled)
+listener {
+    timeout = 999999 # Effectively disabled (11+ days)
+    on-timeout = echo "Suspend prevented by no-suspend mode"
+}
 EOF
 }
 
@@ -38,6 +44,9 @@ if [[ -f "$STATE_FILE" ]]; then
         rm "$TEMP_CONFIG"
     fi
     rm "$STATE_FILE"
+    
+    # Re-enable systemd suspend targets
+    pkexec systemctl unmask sleep.target suspend.target hibernate.target hybrid-sleep.target
     
     # Restart hypridle to apply normal config
     killall hypridle 2>/dev/null
@@ -53,6 +62,9 @@ else
     # Use the no-suspend config
     killall hypridle 2>/dev/null
     HYPRIDLE_CONFIG="$TEMP_CONFIG" hypridle &
+    
+    # Disable system suspend via systemd (requires sudo/polkit)
+    pkexec systemctl mask sleep.target suspend.target hibernate.target hybrid-sleep.target
     
     notify-send "Hypridle" "No-suspend mode for remote access"
 fi
