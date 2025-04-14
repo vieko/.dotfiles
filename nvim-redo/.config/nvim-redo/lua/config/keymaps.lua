@@ -74,6 +74,8 @@ local function setup_diagnostics()
   end
   map("n", "]d", diagnostic_goto(true), { desc = "Go to next diagnostic" })
   map("n", "[d", diagnostic_goto(false), { desc = "Go to previous diagnostic" })
+  map("n", "g]", diagnostic_goto(true), { desc = "Go to next diagnostic" })
+  map("n", "g[", diagnostic_goto(false), { desc = "Go to previous diagnostic" })
   -- map("n", "gh", vim.diagnostic.open_float, { desc = "Line diagnostics" })
 end
 
