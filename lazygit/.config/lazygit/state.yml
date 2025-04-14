@@ -1,14 +1,10 @@
 lastupdatecheck: 0
 recentrepos:
+    - /home/vieko/dev/poc-influencer-dashboard-elt-serve
     - /home/vieko/dev/mothership
     - /home/vieko/tmp/bookbot
     - /home/vieko/.dotfiles
-    - /home/vieko/Documents/Development/monorepo-devolver
     - /home/vieko/.dotfiles/nvim/.config/nvim
-    - /home/vieko/Documents/Development/website-mothership-payloadcms
-    - /home/vieko/Documents/Development/poc-influencer-dashboard-elt-serve
-    - /home/vieko/Documents/Development/app-beta-squadron
-    - /home/vieko/Documents/Development/website-vlambeer
     - /home/vieko/Documents/Sandbox/sandbox-python
 startuppopupversion: 5
 lastversion: 0.47.2

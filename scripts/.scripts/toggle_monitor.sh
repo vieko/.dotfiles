@@ -11,6 +11,8 @@
 # If no_suspend_state exists and sleep.target is masked, the script is in no-suspend mode.
 # Otherwise, it's in normal mode with suspend enabled.
 
+# TODO: resolve `the system will now suspend` issue
+
 STATE_FILE="$HOME/.no_suspend_state"
 CONFIG_DIR="$HOME/.config/hypr"
 ORIG_CONFIG="$CONFIG_DIR/hypridle.conf"
