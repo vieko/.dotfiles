@@ -29,6 +29,7 @@ local spec = {
   { import = "plugins.eslint" },
   { import = "plugins.nvim-lint" },
   { import = "plugins.snacks" },
+  { import = "plugins.flash" },
   { import = "langs" },
 }
 
