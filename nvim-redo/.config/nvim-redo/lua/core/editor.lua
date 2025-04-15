@@ -73,6 +73,15 @@ return {
         changedelete = { text = "C" },
         untracked = { text = "?" },
       },
+      signs_staged = {
+        add = { text = "A" },
+        change = { text = "M" },
+        delete = { text = "D" },
+        topdelete = { text = "T" },
+        changedelete = { text = "C" },
+        untracked = { text = "?" },
+      },
+      signs_staged_enable = true,
       attach_to_untracked = true,
       current_line_blame = true,
       current_line_blame_opts = {
@@ -95,6 +104,18 @@ return {
         map("n", "[c", function()
           gs.nav_hunk("prev")
         end, "Go to previous git change")
+        map("n", "dt", function()
+          gs.diffthis("~")
+        end, "Diff this")
+        map("n", "do", function()
+          gs.preview_hunk_inline()
+        end, "Expand diff hunk")
+        map("n", "dO", function()
+          gs.stage_hunk()
+        end, "Toggle staged")
+        map("n", "dp", function()
+          gs.reset_hunk()
+        end, "Restore change")
       end,
     },
   },
