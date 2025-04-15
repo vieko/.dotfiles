@@ -92,6 +92,10 @@ return {
       map("n", "g/", function()
         Snacks.picker.grep({ title = "Search all files" })
       end, { desc = "Search all files" })
+      -- GREP WORD SEARCH
+      map("n", "gr", function()
+        Snacks.picker.grep_word({ title = "Visual selection or word" })
+      end, { desc = "Visual selection or word" })
       -- DELETE BUFFER
       map("n", "ZZ", function()
         Snacks.bufdelete()
