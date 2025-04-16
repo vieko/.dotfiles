@@ -93,7 +93,7 @@ return {
         Snacks.picker.grep({ title = "Search all files" })
       end, { desc = "Search all files" })
       -- GREP WORD SEARCH
-      map("n", "gr", function()
+      map({ "n", "x" }, "gr", function()
         Snacks.picker.grep_word({ title = "Visual selection or word" })
       end, { desc = "Visual selection or word" })
       -- DELETE BUFFER

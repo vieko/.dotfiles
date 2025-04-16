@@ -1,6 +1,6 @@
 lastupdatecheck: 0
 recentrepos:
-    - /home/vieko/dev/poc-influencer-dashboard-elt-serve
+    - /home/vieko/dev/app-data-dashboard
     - /home/vieko/dev/mothership
     - /home/vieko/tmp/bookbot
     - /home/vieko/.dotfiles
@@ -12,7 +12,7 @@ customcommandshistory:
     - q
 hidecommandlog: false
 ignorewhitespaceindiffview: true
-diffcontextsize: 3
+diffcontextsize: 2
 renamesimilaritythreshold: 50
 localbranchsortorder: recency
 remotebranchsortorder: alphabetical
