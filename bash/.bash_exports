@@ -6,15 +6,39 @@ export XDG_CACHE_HOME="${XDG_CACHE_HOME:-$HOME/.cache}"
 export XDG_DATA_HOME="${XDG_DATA_HOME:-$HOME/.local/share}"
 export XDG_STATE_HOME="${XDG_STATE_HOME:-$HOME/.local/state}"
 
-# PATH
+# Clean PATH function - remove duplicates while preserving order
+clean_path() {
+    local path_items=()
+    local clean_path=""
+    
+    IFS=':' read -ra path_array <<< "$PATH"
+    
+    for path_item in "${path_array[@]}"; do
+        if [[ ! " ${path_items[*]} " =~ " ${path_item} " ]]; then
+            path_items+=("$path_item")
+        fi
+    done
+    
+    for i in "${!path_items[@]}"; do
+        if [ $i -eq 0 ]; then
+            clean_path="${path_items[$i]}"
+        else
+            clean_path="$clean_path:${path_items[$i]}"
+        fi
+    done
+    
+    PATH="$clean_path"
+}
+
+# PATH additions
 if ! [[ "$PATH" =~ "$HOME/.local/bin:$HOME/bin:" ]]; then
     PATH="$HOME/.local/bin:$HOME/bin:$PATH"
 fi
+
 # SCRIPTS
 if ! [[ "$PATH" =~ "$HOME/.scripts:" ]]; then
     PATH="$HOME/.scripts:$PATH"
 fi
-export PATH
 
 export CDPATH=.:~:/etc:/var
 
@@ -96,10 +120,11 @@ case ":$PATH:" in
 esac
 
 # GO
-export GO_HOME="$HOME/go"
+export GOPATH="$HOME/go"
+# Use case statement like other PATH additions for consistency
 case ":$PATH:" in
-  *":$GO_HOME:"*) ;;
-  *) export PATH="$GO_HOME/bin:$PATH" ;;
+  *":$GOPATH/bin:"*) ;;
+  *) export PATH="$GOPATH/bin:$PATH" ;;
 esac
 
 # PYTHON
@@ -112,3 +137,8 @@ export GLAMOUR_STYLE="$XDG_CONFIG_HOME/glamour/catppuccin-mocha.json"
 export CLAUDE_CODE_USE_BEDROCK=1
 # export ANTHROPIC_MODEL="anthropic.claude-3-7-sonnet-20250219-v1:0"
 export DISABLE_PROMPT_CACHING=1
+
+# Clean the PATH at the end to remove any duplicates
+clean_path
+export PATH
+export PATH=$PATH:$HOME/bin
