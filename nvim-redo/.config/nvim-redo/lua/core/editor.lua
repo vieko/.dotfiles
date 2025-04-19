@@ -104,7 +104,7 @@ return {
         map("n", "[c", function()
           gs.nav_hunk("prev")
         end, "Go to previous git change")
-        map("n", "dt", function()
+        map("n", "di", function()
           gs.diffthis("~")
         end, "Diff this")
         map("n", "do", function()

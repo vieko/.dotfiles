@@ -204,6 +204,7 @@ return {
         "stylua",
         "eslint-lsp",
         "tailwindcss-language-server",
+        "golangci-lint",
       },
       ui = {
         border = "rounded",
