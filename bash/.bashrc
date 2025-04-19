@@ -45,8 +45,15 @@ eval "$(zoxide init bash)"
 eval "$(fzf --bash)"
 eval "$(starship init bash)"
 
-. "$HOME/.deno/env"
-. "$HOME/.cargo/env"
+# Load deno environment if it exists
+if [ -f "$HOME/.deno/env" ]; then
+    . "$HOME/.deno/env"
+fi
+
+# Load cargo environment if not already in PATH
+if ! [[ "$PATH" =~ "$HOME/.cargo/bin" ]]; then
+    [ -f "$HOME/.cargo/env" ] && . "$HOME/.cargo/env"
+fi
 
 # source secrets
 if [ -f ~/.secrets ]; then
