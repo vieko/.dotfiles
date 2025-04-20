@@ -29,8 +29,7 @@ alias qcd=fcd
 
 # ==> aliases for editors
 alias summon="tmux-start.sh"
-alias demons="NVIM_APPNAME=nvim-redo nvim"
-alias wraith="nvim"
+alias demons="nvim"
 
 # ==> aliases for wallpapers
 alias goat="goat-power.sh"
