@@ -5,7 +5,7 @@ end
 
 -- set foldmethod=indent for files where treesitter makes the most sense
 vim.api.nvim_create_autocmd("FileType", {
-  pattern = { "json", "jsonc", "javascript", "typescript", "lua", "python", "html", "css", "yaml", "toml" },
+  pattern = { "json", "jsonc", "javascript", "typescript", "lua", "python", "html", "css", "yaml", "toml", "go" },
   group = augroup("lua_folds"),
   callback = function()
     vim.opt.foldmethod = "expr" -- Use expression-based folding
