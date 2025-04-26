@@ -30,7 +30,6 @@ alias qcd=fcd
 # ==> aliases for editors
 alias summon="tmux-start.sh"
 alias demons="nvim"
-alias opencode="/home/vieko/dev/termai/termai"
 
 # ==> aliases for wallpapers
 alias goat="goat-power.sh"

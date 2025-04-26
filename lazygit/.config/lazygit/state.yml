@@ -1,7 +1,8 @@
 lastupdatecheck: 0
 recentrepos:
-    - /home/vieko/.dotfiles
     - /home/vieko/dev/app-data-dashboard
+    - /home/vieko/dev/project-anton-go
+    - /home/vieko/.dotfiles
     - /home/vieko/dev/mothership
     - /home/vieko/tmp/bookbot
     - /home/vieko/.dotfiles/nvim/.config/nvim
