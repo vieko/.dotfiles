@@ -8,4 +8,4 @@ hypr/.config/hypr/host.conf
 icons/.icons/
 themes/.themes/
 hypridle.conf.no_suspend
-.opencode/*
+.opencode/
