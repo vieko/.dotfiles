@@ -31,7 +31,7 @@
   "unnecessary_code_fade": 0.5,
 
   // Panels and UI elements
-  "assistant": {
+  "agent": {
     "default_profile": "write",
     "default_model": {
       "provider": "zed.dev",
@@ -39,7 +39,6 @@
     },
     "default_width": 640,
     "dock": "right",
-    "enable_experimental_live_diffs": true,
     "enabled": true,
     "version": "2"
   },
@@ -137,22 +136,10 @@
       "nickname": "chaos",
       "projects": [
         {
-          "paths": [
-            "~/Documents/Development/poc-influencer-dashboard-elt-serve"
-          ]
+          "paths": ["~/dev/app-data-dashboard"]
         },
         {
-          "paths": ["~/Documents/Development/app-beta-squadron"]
-        }
-      ]
-    },
-    {
-      "host": "100.97.133.24",
-      "username": "root",
-      "nickname": "erebos",
-      "projects": [
-        {
-          "paths": ["~/tmp/poc-influencer-dashboard-elt-serve"]
+          "paths": ["~/dev/app-beta-squadron"]
         }
       ]
     }
