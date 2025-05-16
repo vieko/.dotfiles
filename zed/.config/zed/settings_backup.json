@@ -2,7 +2,7 @@
   // Editor appearance
   "theme": {
     "dark": "One Dark",
-    "light": "Catppuccin Frappé",
+    "light": "One Light",
     "mode": "system"
   },
   "icon_theme": "Zed (Default)",
@@ -32,16 +32,11 @@
 
   // Panels and UI elements
   "assistant": {
+    "default_profile": "write",
     "default_model": {
       "provider": "zed.dev",
-      "model": "claude-3-5-sonnet-20240620-fast-edit"
+      "model": "claude-3-7-sonnet-latest"
     },
-    "inline_alternatives": [
-      {
-        "provider": "openai",
-        "model": "gtp-4o"
-      }
-    ],
     "default_width": 640,
     "dock": "right",
     "enable_experimental_live_diffs": true,
@@ -92,7 +87,7 @@
 
   // Language and completion settings
   "languages": {
-    "Markdown": { "show_inline_completions": false }
+    "Markdown": { "show_edit_predictions": false }
   },
   "language_models": {
     "zed.dev": {
@@ -108,13 +103,16 @@
     }
   },
   "features": {
-    "inline_completion_provider": "zed",
+    "edit_prediction_provider": "zed",
     "copilot": true
+  },
+  "edit_predictions": {
+    "mode": "eager"
   },
 
   // Vim-specific settings
   "vim": {
-    "highlight_on_yank_duration": 150,
+    "highlight_on_yank_duration": 1500,
     "toggle_relative_line_numbers": true,
     "use_multiline_find": false,
     "use_smartcase_find": false,
@@ -139,22 +137,10 @@
       "nickname": "chaos",
       "projects": [
         {
-          "paths": [
-            "~/Documents/Development/poc-influencer-dashboard-elt-serve"
-          ]
+          "paths": ["~/dev/app-data-dashboard"]
         },
         {
-          "paths": ["~/Documents/Development/app-beta-squadron"]
-        }
-      ]
-    },
-    {
-      "host": "100.97.133.24",
-      "username": "root",
-      "nickname": "erebos",
-      "projects": [
-        {
-          "paths": ["~/tmp/poc-influencer-dashboard-elt-serve"]
+          "paths": ["~/dev/app-beta-squadron"]
         }
       ]
     }

@@ -21,8 +21,8 @@
     "context": "Pane",
     "bindings": {
       // Uncomment and adjust as needed
-      "ctrl-t h": "pane::ActivatePrevItem",
-      "ctrl-t l": "pane::ActivateNextItem"
+      // "ctrl-t h": "pane::ActivatePrevItem",
+      // "ctrl-t l": "pane::ActivateNextItem"
       // "ctrl-k h": "pane::SplitLeft",
       // "ctrl-k j": "pane::SplitDown",
       // "ctrl-k k": "pane::SplitUp",
@@ -38,7 +38,9 @@
       "s": ["vim::PushSneak", {}],
       "S": ["vim::PushSneakBackward", {}],
       "] x": "vim::SelectLargerSyntaxNode", // [ x
-      "[ x": "vim::SelectSmallerSyntaxNode" // ] x
+      "[ x": "vim::SelectSmallerSyntaxNode", // ] x
+      "ctrl-space": "vim::SelectLargerSyntaxNode",
+      "ctrl-shift-space": "vim::SelectSmallerSyntaxNode"
     }
   },
   {

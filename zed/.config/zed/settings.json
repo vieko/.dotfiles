@@ -67,9 +67,9 @@
       }
     },
     "dock": "bottom",
-    "font_family": "MonoLisa Custom",
+    "font_family": "Berkeley Mono",
     "font_size": 12,
-    "font_weight": 400,
+    "font_weight": 375,
     "line_height": "standard",
     "toolbar": {
       "breadcrumbs": true
@@ -88,30 +88,17 @@
   "languages": {
     "Markdown": { "show_edit_predictions": false }
   },
-  "language_models": {
-    "zed.dev": {
-      "available_models": [
-        {
-          "provider": "anthropic",
-          "name": "claude-3-5-sonnet-20240620-fast-edit",
-          "max_tokens": 200000,
-          "max_output_tokens": 8192,
-          "display_name": "Claude 3.5 Sonnet (Fast Edit)"
-        }
-      ]
-    }
-  },
   "features": {
     "edit_prediction_provider": "zed",
     "copilot": true
   },
   "edit_predictions": {
-    "mode": "eager"
+    "mode": "subtle"
   },
 
   // Vim-specific settings
   "vim": {
-    "highlight_on_yank_duration": 1500,
+    "highlight_on_yank_duration": 150,
     "toggle_relative_line_numbers": true,
     "use_multiline_find": false,
     "use_smartcase_find": false,
