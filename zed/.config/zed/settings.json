@@ -67,9 +67,9 @@
       }
     },
     "dock": "bottom",
-    "font_family": "Berkeley Mono",
+    "font_family": "Zed Plex Mono",
     "font_size": 12,
-    "font_weight": 375,
+    "font_weight": 400,
     "line_height": "standard",
     "toolbar": {
       "breadcrumbs": true
