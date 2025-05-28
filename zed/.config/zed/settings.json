@@ -32,10 +32,11 @@
 
   // Panels and UI elements
   "agent": {
+    "always_allow_tool_actions": true,
     "default_profile": "write",
     "default_model": {
       "provider": "zed.dev",
-      "model": "claude-3-7-sonnet-latest"
+      "model": "claude-sonnet-4-latest"
     },
     "default_width": 640,
     "dock": "right",
@@ -43,7 +44,7 @@
     "version": "2"
   },
   "project_panel": {
-    "default_width": 320,
+    "default_width": 360,
     "dock": "left",
     "file_icons": true,
     "folder_icons": true,
@@ -53,10 +54,14 @@
     }
   },
   "outline_panel": {
-    "default_width": 320,
+    "default_width": 360,
     "file_icons": true,
     "folder_icons": true,
     "git_status": true
+  },
+  "git_panel": {
+    "default_width": 360,
+    "dock": "left"
   },
   "terminal": {
     "default_height": 320,
