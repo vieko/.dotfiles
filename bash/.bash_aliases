@@ -34,4 +34,5 @@ alias demons="nvim"
 # ==> aliases for wallpapers
 alias goat="goat-power.sh"
 alias lamb="lamb-power.sh"
+alias computer="devo-computer.sh"
 alias flat="reset-background.sh"
