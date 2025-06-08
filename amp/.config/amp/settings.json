@@ -1,0 +1,37 @@
+{
+  "amp.commands.allowlist": [
+    "pnpm typecheck",
+    "pnpm lint",
+    "pnpm",
+    "pnpm build",
+    "node",
+    "tsx",
+    "curl",
+    "git",
+    "realpath",
+    "cp",
+    "mv",
+    "rm"
+  ],
+  "amp.mcpServers": {
+    "playwright": {
+      "command": "npx",
+      "args": [
+        "@playwright/mcp@latest"
+      ],
+      "env": {},
+      "disabled": false,
+      "_target": "global"
+    },
+    "neon": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "mcp-remote",
+        "https://mcp.neon.tech/sse"
+      ],
+      "env": {}
+    }
+  },
+  "amp.subagents.return.of.the": true
+}
