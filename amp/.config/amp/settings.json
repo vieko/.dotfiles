@@ -1,18 +1,10 @@
 {
-  "amp.commands.allowlist": [
-    "pnpm typecheck",
-    "pnpm lint",
-    "pnpm",
-    "pnpm build",
-    "node",
-    "tsx",
-    "curl",
-    "git",
-    "realpath",
-    "cp",
-    "mv",
-    "rm"
-  ],
+  "amp.anthropic.thinking.enabled": true,
+  "amp.todos.enabled": true,
+  "amp.tools.disabled": [],
+  "amp.tools.stopTimeout": 300,
+  "amp.terminal.commands.environment": "node-spawn",
+  "amp.terminal.commands.nodeSpawn.loadProfile": "always",
   "amp.mcpServers": {
     "playwright": {
       "command": "npx",
@@ -33,5 +25,18 @@
       "env": {}
     }
   },
-  "amp.subagents.return.of.the": true
+  "amp.commands.allowlist": [
+    "pnpm typecheck",
+    "pnpm lint",
+    "pnpm",
+    "pnpm build",
+    "node",
+    "tsx",
+    "curl",
+    "git",
+    "realpath",
+    "cp",
+    "mv",
+    "rm"
+  ]
 }
