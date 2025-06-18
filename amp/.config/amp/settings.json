@@ -5,6 +5,7 @@
   "amp.tools.stopTimeout": 300,
   "amp.terminal.commands.environment": "node-spawn",
   "amp.terminal.commands.nodeSpawn.loadProfile": "always",
+  "amp.lsp.enabled": true,
   "amp.mcpServers": {
     "playwright": {
       "command": "npx",
