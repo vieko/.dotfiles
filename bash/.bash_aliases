@@ -31,6 +31,9 @@ alias qcd=fcd
 alias summon="tmux-start.sh"
 alias demons="nvim"
 
+# ==> aliases for agents
+alias opencode-dev="bun run /home/vieko/dev/opencode/packages/opencode/src/index.ts"
+
 # ==> aliases for wallpapers
 alias goat="goat-power.sh"
 alias lamb="lamb-power.sh"

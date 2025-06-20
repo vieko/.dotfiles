@@ -9,3 +9,6 @@ icons/.icons/
 themes/.themes/
 hypridle.conf.no_suspend
 .opencode/
+.claude/projects
+.claude/statsig
+.claude/todos
