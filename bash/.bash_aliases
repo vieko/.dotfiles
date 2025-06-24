@@ -39,6 +39,7 @@ alias goat="goat-power.sh"
 alias lamb="lamb-power.sh"
 alias computer="devo-computer.sh"
 alias goblin="devo-goblin.sh"
+alias pattern="devo-pattern.sh"
 alias flat="reset-background.sh"
 
 # ==> aliases for convenience
