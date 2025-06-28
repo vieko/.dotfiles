@@ -22,7 +22,7 @@ button:hover {
 }
 
 window#waybar {
-  background-color: transparent;
+  background-color: @base00;
 }
 
 #window {
