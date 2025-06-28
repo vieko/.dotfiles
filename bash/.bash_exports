@@ -46,7 +46,7 @@ export CDPATH=.:~:/etc:/var
 export EDITOR="nvim"
 export VISUAL="nvim"
 export PAGER="less"
-export MANPAGER="less"
+export MANPAGER="less -FRX"
 
 # mozilla environment variables
 export MOZ_ENABLED_WAYLAND=1
