@@ -38,6 +38,7 @@
     "realpath",
     "cp",
     "mv",
-    "rm"
+    "rm",
+    "npx"
   ]
 }
