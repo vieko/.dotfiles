@@ -45,7 +45,7 @@ export CDPATH=.:~:/etc:/var
 # Default applications
 export EDITOR="nvim"
 export VISUAL="nvim"
-export PAGER="less"
+export PAGER="less -FRX"
 export MANPAGER="less -FRX"
 
 # mozilla environment variables
@@ -135,7 +135,8 @@ export GLAMOUR_STYLE="$XDG_CONFIG_HOME/glamour/catppuccin-mocha.json"
 
 # CLAUDE CODE
 export CLAUDE_CODE_USE_BEDROCK=1
-# export ANTHROPIC_MODEL="anthropic.claude-3-7-sonnet-20250219-v1:0"
+export ANTHROPIC_MODEL='us.anthropic.claude-opus-4-20250514-v1:0'
+export ANTHROPIC_SMALL_FAST_MODEL='us.anthropic.claude-3-5-haiku-20241022-v1:0'
 export DISABLE_PROMPT_CACHING=1
 
 # Clean the PATH at the end to remove any duplicates
