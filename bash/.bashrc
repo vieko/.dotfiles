@@ -45,6 +45,9 @@ eval "$(zoxide init bash)"
 eval "$(fzf --bash)"
 eval "$(starship init bash)"
 
+# jj completion
+source <(jj util completion bash)
+
 # Load deno environment if it exists
 if [ -f "$HOME/.deno/env" ]; then
     . "$HOME/.deno/env"
