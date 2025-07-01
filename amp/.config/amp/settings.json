@@ -13,7 +13,7 @@
         "@playwright/mcp@latest"
       ],
       "env": {},
-      "disabled": false,
+      "disabled": true,
       "_target": "global"
     },
     "neon": {
@@ -23,7 +23,8 @@
         "mcp-remote",
         "https://mcp.neon.tech/sse"
       ],
-      "env": {}
+      "env": {},
+      "disabled": true
     }
   },
   "amp.commands.allowlist": [
@@ -39,6 +40,10 @@
     "cp",
     "mv",
     "rm",
-    "npx"
+    "npx",
+    "jj",
+    "true",
+    "sort",
+    "jq"
   ]
 }
