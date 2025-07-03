@@ -1,5 +1,6 @@
 {
   "amp.anthropic.thinking.enabled": true,
+  "amp.tab.enabled": false,
   "amp.todos.enabled": true,
   "amp.tools.disabled": [],
   "amp.tools.stopTimeout": 300,
@@ -10,21 +11,11 @@
     "playwright": {
       "command": "npx",
       "args": [
-        "@playwright/mcp@latest"
-      ],
-      "env": {},
-      "disabled": true,
-      "_target": "global"
-    },
-    "neon": {
-      "command": "npx",
-      "args": [
         "-y",
-        "mcp-remote",
-        "https://mcp.neon.tech/sse"
-      ],
-      "env": {},
-      "disabled": true
+        "@playwright/mcp@latest",
+        "--headless",
+        "--isolated"
+      ]
     }
   },
   "amp.commands.allowlist": [
