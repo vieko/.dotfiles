@@ -1,12 +1,12 @@
 {
   "amp.anthropic.thinking.enabled": true,
-  "amp.tab.enabled": false,
   "amp.todos.enabled": true,
   "amp.tools.disabled": [],
   "amp.tools.stopTimeout": 300,
   "amp.terminal.commands.environment": "node-spawn",
   "amp.terminal.commands.nodeSpawn.loadProfile": "always",
   "amp.lsp.enabled": true,
+  "amp.notifications.enabled": true,
   "amp.mcpServers": {
     "playwright": {
       "command": "npx",
@@ -36,5 +36,7 @@
     "true",
     "sort",
     "jq"
-  ]
+  ],
+  "amp.git.commit.coauthor.enabled": false,
+  "amp.git.commit.ampThread.enabled": false
 }
