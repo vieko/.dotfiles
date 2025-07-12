@@ -1,114 +1,135 @@
-[core]
-    editor = nvim
-    pager = less -x2
-    autocrlf = input
-    
-[user]
-    email = 48670+vieko@users.noreply.github.com
-    name = Vieko Franetovic
-    signingkey = 16FBF1CF29A0CDAE
-    
-[color]
-    branch = auto
-    diff = auto
-    status = auto
-    
-[color "branch"]
-    current = red reverse
-    local = blue
-    remote = green
-  
-[color "diff"]
-    meta = yellow
-    frag = magenta
-    old = red bold
-    new = green
-    plain = white
-    
-[color "status"]
-    added = yellow
-    changed = green
-    untracked = cyan
-    
-[push]
-    default = current
-
-[pull]
-    default = current
-	rebase = true
-    
-[diff]
-    mnemonicprefix = true
-
-[branch]
-    autosetuprebase = never
-    autosetupmerge = true
-
-[apply]
-    whitespace = nowarn
-    
 [alias]
     # basic
-    st = status -s
-    cl = clone
-    ci = commit
-    co = checkout
-    br = branch
-    r = reset
-    cp = cherry-pick
-    gr = grep -Ii
-    # tweaks
-    diff = diff --word-diff
-    branch = branch -ra
-    grep = grep -Ii
     ai = add --interactive
-    f = "!git ls-files | grep -i"
-    # commit
+    amend = commit --amend
+    br = branch
+    branch = branch -ra
+    ca = commit --amend
+    caa = commit -a --amend -C HEAD
+    ci = commit
+    cl = clone
     cm = commit -m
     cma = commit -a -m
-    ca = commit --amend
-    amend = commit --amend
-    caa = commit -a --amend -C HEAD
-    # log
-    ls = log --pretty=format:"%C(green)%h\\ %C(yellow)[%ad]%Cred%d\\ %Creset%s%Cblue\\ [%an]" --decorate --date=relative
-    ll = log --pretty=format:"%C(yellow)%h%Cred%d\\ %Creset%s%Cblue\\ [a:%an,c:%cn]" --decorate --numstat
-    lc = "!f() { git ll "$1"^.."$1"; }; f"
-    lnc = log --pretty=format:"%h\\ %s\\ [%cn]"
-    fl = log -u
-    filelog = log -u
+    co = checkout
+    cp = cherry-pick
     # diff
     d = diff --word-diff
     dc = diff --cached
     dlc = diff --cached HEAD^
     dr = "!f() { git diff -w "$1"^.."$1"; }; f"
+    # convenience
+    empty = "!git commit -am\"[empty] Initial commit\" --allow-empty"
+    f = "!git ls-files | grep -i"
+    # log
+    filelog = log -u
+    fl = log -u
+    gr = grep -Ii
+    grep = grep -Ii
+    # list all aliases
+    la = "!git config -l | grep alias | cut -c 7-"
+    lc = "!f() { git ll "$1"^.."$1"; }; f"
+    ll = log --pretty=format:"%C(yellow)%h%Cred%d\\ %Creset%s%Cblue\\ [a:%an,c:%cn]" --decorate --numstat
+    lnc = log --pretty=format:"%h\\ %s\\ [%cn]"
+    ls = log --pretty=format:"%C(green)%h\\ %C(yellow)[%ad]%Cred%d\\ %Creset%s%Cblue\\ [%an]" --decorate --date=relative
+    r = reset
     # reset
     r1 = reset HEAD^
     r2 = reset HEAD^^
+    rem = "!git config -l | grep remote.*url | tail -n +2"
     rh = reset --hard
     rh1 = reset HEAD^ --hard
     rh2 = reset HEAD^^ --hard
     # stash
-    sl = stash list
     sa = stash apply
+    sl = stash list
     ss = stash save
-    # convenience
-    rem = "!git config -l | grep remote.*url | tail -n +2"
-    empty = "!git commit -am\"[empty] Initial commit\" --allow-empty"
+    st = status -s
     undo = "!f() { git reset --hard $(git rev-parse --abbrev-ref HEAD)@{${1-1}}; }; f"
-    # list all aliases
-    la = "!git config -l | grep alias | cut -c 7-"
+
+[apply]
+    whitespace = nowarn
+
+[branch]
+    autosetupmerge = true
+    autosetuprebase = never
+
+[color]
+    branch = auto
+    diff = auto
+    status = auto
+
+[color "branch"]
+    current = red reverse
+    local = blue
+    remote = green
+
+[color "diff"]
+    frag = magenta
+    meta = yellow
+    new = green
+    old = red bold
+    plain = white
+
+[color "status"]
+    added = yellow
+    changed = green
+    untracked = cyan
+
+[commit]
+    gpgsign = true
+
+[core]
+    autocrlf = input
+    editor = nvim
+    pager = delta ;less -x2
+
+[credential "https://gist.github.com"]
+    helper = !/usr/bin/gh auth git-credential
+
+[credential "https://github.com"]
+    helper = !/usr/bin/gh auth git-credential
+
+[delta]
+    dark = true
+    line-numbers = true
+    navigate = true
+    side-by-side = true
+
+[diff]
+    mnemonicprefix = false
+
+[fetch]
+    prune = true
+
+[help]
+    autocorrect = 1
+
+[init]
+    defaultBranch = main
+
+[interactive]
+    diffFilter = delta --color-only
+
+[merge]
+    conflictstyle = zdiff3
+
+[pull]
+    default = current
+    rebase = true
+
+[push]
+    default = simple
 
 [rebase]
     autosquash = true
-    
-[commit]
-    gpgsign = true
-    
-[init]
-	defaultBranch = main
-    
-[credential "https://github.com"]
-    helper = !/usr/bin/gh auth git-credential
-    
-[credential "https://gist.github.com"]
-    helper = !/usr/bin/gh auth git-credential
+
+[rerere]
+    enabled = true
+
+[status]
+    showUntrackedFiles = all
+
+[user]
+    email = 48670+vieko@users.noreply.github.com
+    name = Vieko Franetovic
+    signingkey = 16FBF1CF29A0CDAE

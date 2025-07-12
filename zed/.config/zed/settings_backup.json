@@ -31,20 +31,20 @@
   "unnecessary_code_fade": 0.5,
 
   // Panels and UI elements
-  "assistant": {
+  "agent": {
+    "always_allow_tool_actions": true,
     "default_profile": "write",
     "default_model": {
       "provider": "zed.dev",
-      "model": "claude-3-7-sonnet-latest"
+      "model": "claude-sonnet-4"
     },
     "default_width": 640,
     "dock": "right",
-    "enable_experimental_live_diffs": true,
     "enabled": true,
     "version": "2"
   },
   "project_panel": {
-    "default_width": 320,
+    "default_width": 360,
     "dock": "left",
     "file_icons": true,
     "folder_icons": true,
@@ -54,10 +54,14 @@
     }
   },
   "outline_panel": {
-    "default_width": 320,
+    "default_width": 360,
     "file_icons": true,
     "folder_icons": true,
     "git_status": true
+  },
+  "git_panel": {
+    "default_width": 360,
+    "dock": "left"
   },
   "terminal": {
     "default_height": 320,
@@ -68,7 +72,7 @@
       }
     },
     "dock": "bottom",
-    "font_family": "MonoLisa Custom",
+    "font_family": "Zed Plex Mono",
     "font_size": 12,
     "font_weight": 400,
     "line_height": "standard",
@@ -89,30 +93,17 @@
   "languages": {
     "Markdown": { "show_edit_predictions": false }
   },
-  "language_models": {
-    "zed.dev": {
-      "available_models": [
-        {
-          "provider": "anthropic",
-          "name": "claude-3-5-sonnet-20240620-fast-edit",
-          "max_tokens": 200000,
-          "max_output_tokens": 8192,
-          "display_name": "Claude 3.5 Sonnet (Fast Edit)"
-        }
-      ]
-    }
-  },
   "features": {
     "edit_prediction_provider": "zed",
     "copilot": true
   },
   "edit_predictions": {
-    "mode": "eager"
+    "mode": "subtle"
   },
 
   // Vim-specific settings
   "vim": {
-    "highlight_on_yank_duration": 1500,
+    "highlight_on_yank_duration": 150,
     "toggle_relative_line_numbers": true,
     "use_multiline_find": false,
     "use_smartcase_find": false,

@@ -1,5 +1,19 @@
 {
   // Editor appearance
+  "context_servers": {
+    "playwright": {
+      "source": "custom",
+      "enabled": true,
+      "command": "npx",
+      "args": [
+        "-y",
+        "@playwright/mcp@latest",
+        "--headless",
+        "--isolated"
+      ],
+      "env": {}
+    }
+  },
   "theme": {
     "dark": "One Dark",
     "light": "One Light",
@@ -32,16 +46,16 @@
 
   // Panels and UI elements
   "agent": {
+    "play_sound_when_agent_done": true,
     "always_allow_tool_actions": true,
     "default_profile": "write",
     "default_model": {
       "provider": "zed.dev",
-      "model": "claude-sonnet-4-latest"
+      "model": "claude-sonnet-4"
     },
     "default_width": 640,
     "dock": "right",
-    "enabled": true,
-    "version": "2"
+    "enabled": true
   },
   "project_panel": {
     "default_width": 360,
@@ -82,7 +96,6 @@
   },
   "tabs": {
     "file_icons": true,
-    "folder_icons": true,
     "git_status": true
   },
   "scrollbar": {
@@ -94,8 +107,7 @@
     "Markdown": { "show_edit_predictions": false }
   },
   "features": {
-    "edit_prediction_provider": "zed",
-    "copilot": true
+    "edit_prediction_provider": "zed"
   },
   "edit_predictions": {
     "mode": "subtle"
@@ -105,7 +117,6 @@
   "vim": {
     "highlight_on_yank_duration": 150,
     "toggle_relative_line_numbers": true,
-    "use_multiline_find": false,
     "use_smartcase_find": false,
     "use_system_clipboard": "always"
   },
