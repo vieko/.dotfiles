@@ -49,7 +49,16 @@
         "EraserButton": null,
         "PenButtons": [
           null,
-          null
+          {
+            "Path": "OpenTabletDriver.Desktop.Binding.MouseBinding",
+            "Settings": [
+              {
+                "Property": "Button",
+                "Value": "Right"
+              }
+            ],
+            "Enable": true
+          }
         ],
         "AuxButtons": [
           null,
