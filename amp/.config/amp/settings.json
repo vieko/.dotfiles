@@ -35,7 +35,8 @@
     "jj",
     "true",
     "sort",
-    "jq"
+    "jq",
+    "tmux"
   ],
   "amp.git.commit.coauthor.enabled": false,
   "amp.git.commit.ampThread.enabled": false
