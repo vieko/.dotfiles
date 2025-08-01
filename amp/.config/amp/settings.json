@@ -36,7 +36,10 @@
     "true",
     "sort",
     "jq",
-    "tmux"
+    "tmux",
+    "sleep",
+    "npm",
+    "xargs"
   ],
   "amp.git.commit.coauthor.enabled": false,
   "amp.git.commit.ampThread.enabled": false
