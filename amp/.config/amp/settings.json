@@ -39,7 +39,10 @@
     "tmux",
     "sleep",
     "npm",
-    "xargs"
+    "xargs",
+    "find",
+    "rg",
+    "diff"
   ],
   "amp.git.commit.coauthor.enabled": false,
   "amp.git.commit.ampThread.enabled": false
