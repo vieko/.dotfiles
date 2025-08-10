@@ -4,9 +4,11 @@
 # Inserts a blank line between shell prompts
 add_newline = true
 
-command_timeout = 3000
+command_timeout = 1000
 
 palette = "base16-onedark"
+
+scan_timeout = 30
 
 [palettes.base16-onedark]
 base00 = "#282c34"
@@ -40,42 +42,51 @@ behind = "<"
 diverged = "<>"
 renamed = "r"
 deleted = "x"
+ignore_submodules = true
 
 [aws]
 symbol = "aws "
 
 [azure]
 symbol = "az "
+disabled = true
 
 [bun]
 symbol = "bun "
 
 [c]
 symbol = "C "
+disabled = true
 
 [cobol]
 symbol = "cobol "
+disabled = true
 
 [conda]
 symbol = "conda "
+disabled = true
 
 [crystal]
 symbol = "cr "
+disabled = true
 
 [cmake]
 symbol = "cmake "
 
 [daml]
 symbol = "daml "
+disabled = true
 
 [dart]
 symbol = "dart "
+disabled = true
 
 [deno]
 symbol = "deno "
 
 [dotnet]
 symbol = ".NET "
+disabled = true
 
 [directory]
 read_only = " ro"
@@ -85,48 +96,59 @@ symbol = "docker "
 
 [elixir]
 symbol = "exs "
+disabled = true
 
 [elm]
 symbol = "elm "
+disabled = true
 
 [fennel]
 symbol = "fnl "
+disabled = true
 
 [fossil_branch]
 symbol = "fossil "
+disabled = true
 
 [gcloud]
 symbol = "gcp "
+disabled = true
 
 [git_branch]
 symbol = "git "
 
 [gleam]
 symbol = "gleam "
+disabled = true
 
 [golang]
 symbol = "go "
 
 [gradle]
 symbol = "gradle "
+disabled = true
 
 [guix_shell]
 symbol = "guix "
 
 [hg_branch]
 symbol = "hg "
+disabled = true
 
 [hostname]
 ssh_symbol = "ssh "
 
 [java]
 symbol = "java "
+disabled = true
 
 [julia]
 symbol = "jl "
+disabled = true
 
 [kotlin]
 symbol = "kt "
+disabled = true
 
 [lua]
 symbol = "lua "
@@ -142,18 +164,23 @@ symbol = "meson "
 
 [nats]
 symbol = "nats "
+disabled = true
 
 [nim]
 symbol = "nim "
+disabled = true
 
 [nix_shell]
 symbol = "nix "
+disabled = true
 
 [ocaml]
 symbol = "ml "
+disabled = true
 
 [opa]
 symbol = "opa "
+disabled = true
 
 [os.symbols]
 AIX = "aix "
@@ -205,47 +232,58 @@ Void = "void "
 Windows = "win "
 
 [package]
-disabled = true
 symbol = "pkg "
+disabled = true
 
 [perl]
 symbol = "pl "
+disabled = true
 
 [php]
 symbol = "php "
+disabled = true
 
 [pijul_channel]
 symbol = "pijul "
+disabled = true
 
 [pulumi]
 symbol = "pulumi "
+disabled = true
 
 [purescript]
 symbol = "purs "
+disabled = true
 
 [python]
 symbol = "py "
 
 [quarto]
 symbol = "quarto "
+disabled = true
 
 [raku]
 symbol = "raku "
+disabled = true
 
 [ruby]
 symbol = "rb "
+disabled = true
 
 [rust]
 symbol = "rs "
 
 [scala]
 symbol = "scala "
+disabled = true
 
 [spack]
 symbol = "spack "
+disabled = true
 
 [solidity]
 symbol = "solidity "
+disabled = true
 
 [status]
 symbol = "[x](bold red) "
@@ -255,12 +293,17 @@ symbol = "sudo "
 
 [swift]
 symbol = "swift "
+disabled = true
 
 [typst]
 symbol = "typst "
+disabled = true
 
 [terraform]
 symbol = "terraform "
+disabled = true
+
 
 [zig]
 symbol = "zig "
+disabled = true
