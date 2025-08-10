@@ -26,11 +26,9 @@ export HISTSIZE=10000
 export HISTFILESIZE=20000
 export HISTCONTROL=ignoreboth:erasedups
 
-# auto-reload .bashrc if changes are detected
-# export PROMPT_COMMAND='history -a; history -n; . ~/.bashrc' 
 
-# append to history file and reload history
-export PROMPT_COMMAND='history -a; history -n;'
+# Optimized history handling - only append, don't reload every prompt
+export PROMPT_COMMAND='history -a'
 
 # prevents ctrl+d from exiting the shell
 IGNOREEOF=10
@@ -41,12 +39,16 @@ if [[ $- == *i* ]]; then
   bind '"\e[B": history-search-forward'
 fi
 
+# Load zoxide and fzf immediately for keybindings to work
+# These are fast enough and needed for interactive features
 eval "$(zoxide init bash)"
 eval "$(fzf --bash)"
 eval "$(starship init bash)"
 
-# jj completion
-source <(jj util completion bash)
+# Conditionally load jj completion if jj is available
+if command -v jj &>/dev/null; then
+    source <(jj util completion bash)
+fi
 
 # Load deno environment if it exists
 if [ -f "$HOME/.deno/env" ]; then
