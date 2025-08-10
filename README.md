@@ -42,5 +42,4 @@ To prevent breaking hyprland when updating other packages, install [hyprland](ht
 ### LAPTOP
 
 - UPDATE waybar to show connected interface
-- INSTALL Docker
 - FIX kitty crashes when summoned via hyprland keybinding
