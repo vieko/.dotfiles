@@ -46,6 +46,7 @@ ignore_submodules = true
 
 [aws]
 symbol = "aws "
+disabled = true
 
 [azure]
 symbol = "az "
