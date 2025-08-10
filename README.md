@@ -1,3 +1,5 @@
+# My dotfiles using stow since 2024
+
 ## REQUIREMENTS
 
 - git
