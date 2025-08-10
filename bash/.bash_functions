@@ -9,69 +9,34 @@ _fzf_compgen_dir() {
   fd --type d --hidden --follow --exclude ".git" . "$1"
 }
 
-# _fzf_comprun() {
-#   local command=$1
-#   shift
-#
-#   case "$command" in
-#     cd)           fzf --preview 'tree -C {} | head -200'   "$@" ;;
-#     export|unset) fzf --preview "eval 'echo \$'{}"         "$@" ;;
-#     ssh)          fzf --preview 'dig {}'                   "$@" ;;
-#     *)            fzf --preview 'bat -n --color=always {}' "$@" ;;
-#   esac
-# }
 
-# use rg if available, otherwise use grep
-# TODO yields a syntax error
-# grep() {
-#   if command -v rg &> /dev/null; then
-#     rg "$@"
-#   else
-#     command grep "$@"
-#   fi
-# }
+# Use fd if available, otherwise fallback to find (cached check)
+if command -v fd &>/dev/null; then
+  find() { fd "$@"; }
+else
+  find() { command find "$@"; }
+fi
 
-# use fd if available, otherwise use find
-find() {
-  if command -v fd &> /dev/null; then
-    fd "$@"
-  else
-    command find "$@"
-  fi
-}
+# Custom function for changing directory with z and listing with exa (optimized)
+# Since zoxide is loaded immediately, z command will be available
+if command -v exa &>/dev/null; then
+    cz() { z "$@" && exa; }
+else
+    cz() { z "$@" && ls; }
+fi
 
-# custom function for changing directory with z and listing with exa
-cz() {
-    if command -v z >/dev/null 2>&1; then
-        z "$@" && {
-            if command -v exa >/dev/null 2>&1; then
-                exa
-            else
-                ls
-            fi
-        }
-    else
-        echo "z is not installed. Falling back to cd."
-        cd "$@" && ls
-    fi
-}
-
-# Interactive zoxide navigation using fzf
+# Interactive zoxide navigation using fzf (optimized)
 fcd() {
     local dir
-    dir=$(zoxide query -l | fzf --preview='exa --tree --level=1 {}')
-    if [[ -n "$dir" ]]; then
-        cd "$dir"
-    fi
+    dir=$(zoxide query -l | fzf --preview='exa --tree --level=1 {} 2>/dev/null || ls {}')
+    [[ -n "$dir" ]] && cd "$dir"
 }
 
-# FZF-based directory navigation (as a fallback or alternative)
+# FZF-based directory navigation (optimized fallback)
 ffcd() {
     local dir
-    dir=$(fd . "$HOME" --type d --hidden --follow --exclude .git | fzf --preview='exa --tree --level=1 {}')
-    if [[ -d "$dir" ]]; then
-        cd "$dir"
-    fi
+    dir=$(fd . "$HOME" --type d --hidden --follow --exclude .git | fzf --preview='exa --tree --level=1 {} 2>/dev/null || ls {}')
+    [[ -d "$dir" ]] && cd "$dir"
 }
 
 # Wrapper around `gh copilot suggest` to suggest a command based on a natural language description of the desired output effort
