@@ -26,6 +26,8 @@ To prevent breaking hyprland when updating other packages, install [hyprland](ht
 
 ![Voyager](https://github.com/vieko/.dotfiles/blob/main/assets/Screenshots/voyager-layout.png)
 
+## TODOS
+
 ### GENERAL
 
 - CONSOLIDATE keymaps between Zed and Neovim
