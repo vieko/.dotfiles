@@ -25,6 +25,7 @@ if ! tmux has-session -t "$DEFAULT_SESSION" 2>/dev/null; then
     
     # Send commands
     tmux send-keys -t "$DEFAULT_SESSION":"$DOTFILES_WINDOW" "cd ~/.dotfiles; clear" C-m
+    tmux send-keys -t "$DEFAULT_SESSION":"$LOGS_WINDOW" "btop" C-m
 fi
 
 # Attach to the existing session
