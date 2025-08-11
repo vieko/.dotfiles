@@ -1,6 +1,8 @@
 #!/usr/bin/env bash
 # Auto-generated bash abbreviations file
 
+__bash_abbr_list[gm]=git\ commit\ -m
+__bash_abbr_list[ga]=git\ add
 __bash_abbr_list[gc]=git\ commit
 __bash_abbr_list[gp]=git\ push
 __bash_abbr_list[gs]=git\ status

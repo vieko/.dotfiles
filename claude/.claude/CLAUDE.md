@@ -1,16 +1,28 @@
-## Git Workflow
+## Planning & Execution
 
-- **Commit Messages**: Follow Conventional Commits format
-  - Format: `<type>[optional scope]: <description>`
-  - Examples: `feat: adds user profile`, `fix(auth): resolves login issue`
-  - Types: feat, fix, docs, style, refactor, test, chore, perf
-  - Do not include "Generated with" or "Co-Authored-By" lines in commit messages
+### Task Classification
 
-## Filesystem Operations
+- **Quick fixes** (<30 min): Brief plan in response, no separate file needed
+- **Feature work** (>30 min): Create plan in `specs/tasks/TASK_NAME.md`
+- **Complex projects**: Full specification with research phase
 
-- When working with directories or files that have special characters like
-  parentheses (e.g., `(dashboard)`):
-  - For Bash commands, always use single quotes: `mkdir -p 'src/app/(dashboard)/lists'`
-  - Avoid using escaped paths like `src/app/\(dashboard\)/lists` as they can cause syntax errors
-  - For `touch` or other commands, also use quotes: `touch 'src/app/(dashboard)/lists/page.tsx'`
-  - When using GlobTool, quotes aren't needed: `GlobTool({ pattern: "src/app/(dashboard)/**" })`
+### Planning Template (for non-trivial tasks)
+
+1. **Context**: Why this task exists
+2. **Approach**: High-level strategy (focus on MVP)
+3. **Implementation steps**: Concrete, testable milestones
+4. **Success criteria**: How we'll know it's done
+
+### Execution Guidelines
+
+- Update plan with discoveries/pivots as we go
+- Document key decisions and trade-offs
+- Clean up artifacts before review (temp files, logs, etc.)
+- Prepare commit message but await review
+
+### Communication
+
+- Ask for clarification early rather than making assumptions
+- Flag potential risks or alternative approaches
+- Summarize completed work with what changed and why
+
