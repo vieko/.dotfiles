@@ -183,3 +183,133 @@ ghce() {
 
 	GH_DEBUG="$GH_DEBUG" GH_HOST="$GH_HOST" gh copilot explain "$@"
 }
+
+# Fish-style abbreviations for bash
+declare -A __bash_abbr_list
+
+# Abbreviation storage file
+__ABBR_FILE="$HOME/.bash_abbreviations"
+
+# Load abbreviations from file
+__load_abbreviations() {
+    [[ -f "$__ABBR_FILE" ]] && source "$__ABBR_FILE"
+}
+
+# Save abbreviations to file
+__save_abbreviations() {
+    {
+        echo "#!/usr/bin/env bash"
+        echo "# Auto-generated bash abbreviations file"
+        echo
+        for key in "${!__bash_abbr_list[@]}"; do
+            printf "__bash_abbr_list[%q]=%q\n" "$key" "${__bash_abbr_list[$key]}"
+        done
+    } > "$__ABBR_FILE"
+}
+
+# Main abbr function
+abbr() {
+    case "$1" in
+        --add|-a)
+            shift
+            if [[ $# -ne 2 ]]; then
+                echo "Usage: abbr --add <abbreviation> <expansion>" >&2
+                return 1
+            fi
+            __bash_abbr_list["$1"]="$2"
+            __save_abbreviations
+            echo "Added abbreviation: $1 -> $2"
+            ;;
+        --erase|-e)
+            shift
+            if [[ $# -ne 1 ]]; then
+                echo "Usage: abbr --erase <abbreviation>" >&2
+                return 1
+            fi
+            if [[ -n "${__bash_abbr_list[$1]:-}" ]]; then
+                unset "__bash_abbr_list[$1]"
+                __save_abbreviations
+                echo "Erased abbreviation: $1"
+            else
+                echo "Abbreviation '$1' not found" >&2
+                return 1
+            fi
+            ;;
+        --list|-l|"")
+            if [[ ${#__bash_abbr_list[@]} -eq 0 ]]; then
+                echo "No abbreviations defined"
+                return 0
+            fi
+            for key in $(printf '%s\n' "${!__bash_abbr_list[@]}" | sort); do
+                printf "abbr -a %s %q\n" "$key" "${__bash_abbr_list[$key]}"
+            done
+            ;;
+        --show|-s)
+            shift
+            if [[ $# -ne 1 ]]; then
+                echo "Usage: abbr --show <abbreviation>" >&2
+                return 1
+            fi
+            if [[ -n "${__bash_abbr_list[$1]:-}" ]]; then
+                echo "${__bash_abbr_list[$1]}"
+            else
+                echo "Abbreviation '$1' not found" >&2
+                return 1
+            fi
+            ;;
+        --help|-h)
+            cat << 'EOF'
+abbr - manage command abbreviations
+
+USAGE:
+    abbr --add <abbr> <expansion>     Add an abbreviation
+    abbr --erase <abbr>               Remove an abbreviation  
+    abbr --list                       List all abbreviations
+    abbr --show <abbr>                Show expansion for abbreviation
+    abbr --help                       Show this help
+
+EXAMPLES:
+    abbr --add gc "git commit"
+    abbr --add ll "ls -la"
+    abbr --erase gc
+EOF
+            ;;
+        *)
+            echo "Unknown option: $1" >&2
+            echo "Use 'abbr --help' for usage information" >&2
+            return 1
+            ;;
+    esac
+}
+
+# Expansion function bound to space key
+__expand_abbr() {
+    local line words word
+    line="$READLINE_LINE"
+    words=($line)
+    
+    # Get the last word
+    if [[ ${#words[@]} -gt 0 ]]; then
+        word="${words[-1]}"
+        
+        # Check if it's an abbreviation
+        if [[ -n "${__bash_abbr_list[$word]:-}" ]]; then
+            # Replace the abbreviation with its expansion
+            local new_line="${line%$word}${__bash_abbr_list[$word]}"
+            READLINE_LINE="$new_line"
+            READLINE_POINT=${#new_line}
+        fi
+    fi
+    
+    # Insert the space
+    READLINE_LINE="$READLINE_LINE "
+    READLINE_POINT=$((READLINE_POINT + 1))
+}
+
+# Initialize abbreviations
+__load_abbreviations
+
+# Bind space key to expansion function (only in interactive mode)
+if [[ $- == *i* ]]; then
+    bind -x '" ": __expand_abbr'
+fi
