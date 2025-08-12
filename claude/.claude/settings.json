@@ -2,5 +2,6 @@
   "model": "sonnet",
   "feedbackSurveyState": {
     "lastShownTime": 1753999739890
-  }
+  },
+  "includeCoAuthoredBy": false
 }
