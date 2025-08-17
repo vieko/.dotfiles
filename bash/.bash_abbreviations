@@ -1,6 +1,7 @@
 #!/usr/bin/env bash
 # Auto-generated bash abbreviations file
 
+__bash_abbr_list[lg]=lazygit
 __bash_abbr_list[pd]=pnpm\ dev
 __bash_abbr_list[cl]=clear
 __bash_abbr_list[gba]=git\ branch\ -a
@@ -9,3 +10,4 @@ __bash_abbr_list[ga]=git\ add
 __bash_abbr_list[gc]=git\ commit
 __bash_abbr_list[gp]=git\ push
 __bash_abbr_list[gs]=git\ status
+__bash_abbr_list[gw]=git\ switch
