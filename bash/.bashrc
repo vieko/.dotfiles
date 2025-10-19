@@ -39,9 +39,8 @@ if [[ $- == *i* ]]; then
   bind '"\e[B": history-search-forward'
 fi
 
-# Load zoxide and fzf immediately for keybindings to work
+# Load fzf and starship immediately for keybindings to work
 # These are fast enough and needed for interactive features
-eval "$(zoxide init bash)"
 eval "$(fzf --bash)"
 eval "$(starship init bash)"
 
@@ -68,3 +67,6 @@ fi
 
 # Generated for envman. Do not edit.
 [ -s "$HOME/.config/envman/load.sh" ] && source "$HOME/.config/envman/load.sh"
+
+# Load zoxide at the very end to avoid configuration issues
+eval "$(zoxide init bash)"

@@ -1,25 +1,23 @@
 #!/bin/bash
 
 # HAVOC (eDP-1): 13.5" screen, 2880x1920 resolution, scale factor 2
-# CHAOS (DP-2): 27" screen, 3840x2160 resolution
-# 
+# CHAOS (DP-2): 31.5" screen, 6016x3384 resolution (Asus PA32QCV 6K)
+#
 # === Laptop DPI calculation:
 # Diagonal resolution: sqrt(2880² + 1920²) = 3456 pixels
 # DPI = 3456 / 13.5 = 256 DPI
 # Effective DPI after scaling: 256 / 2 = 128 DPI
 #
 #
-# === Desktop DPI calculation:
-# Diagonal resolution: sqrt(3840² + 2160²) = 4406.72 pixels
-# DPI = 4406.72 / 27 = 163.21 DPI
+# === Desktop DPI calculation (Asus PA32QCV):
+# Diagonal resolution: sqrt(6016² + 3384²) = 6883.52 pixels
+# DPI = 6883.52 / 31.5 = 218.52 DPI
+# Effective DPI after scaling: 218.52 / 2 = 109.26 DPI
 #
 #
-# === Scale factor = Desktop DPI / Target DPI
-# = 163.21 / 128
-# ≈ 1.275
-#
-# Scale factor of 1.25: Effective DPI: 163.21 / 1.25 = 130.57 DPI
-# Scale factor of 1.5: Effective DPI: 163.21 / 1.5 = 108.81 DPI
+# === Scale factor comparison:
+# Scale factor of 1.5: Effective DPI: 218.52 / 1.5 = 145.68 DPI (too large)
+# Scale factor of 2.0: Effective DPI: 218.52 / 2 = 109.26 DPI (ideal, matches laptop workflow)
 
 # ===  get the hostname
 hostname=$(hostname)
@@ -46,7 +44,7 @@ case "$hostname" in
         set_monitor_config "eDP-1,2880x1920@120,0x0,2"
         ;;
     "chaos")
-        set_monitor_config "DP-2,3840x2160@160,0x0,1.5"
+        set_monitor_config "DP-2,6016x3384@60,0x0,2"
         # apply_nvidia_config
         ;;
     *)
