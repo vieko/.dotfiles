@@ -6,6 +6,13 @@ export XDG_CACHE_HOME="${XDG_CACHE_HOME:-$HOME/.cache}"
 export XDG_DATA_HOME="${XDG_DATA_HOME:-$HOME/.local/share}"
 export XDG_STATE_HOME="${XDG_STATE_HOME:-$HOME/.local/state}"
 
+# Detect OS for cross-platform configs (used by kitty, etc.)
+case "$(uname -s)" in
+    Darwin) export USER_OS="macos" ;;
+    Linux)  export USER_OS="linux" ;;
+    *)      export USER_OS="unknown" ;;
+esac
+
 # PATH additions using consistent case statement pattern
 case ":$PATH:" in
   *":$HOME/.local/bin:"*) ;;

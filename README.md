@@ -12,9 +12,34 @@ git clone git@github.com:vieko/.dotfiles.git
 cd .dotfiles
 ```
 
-Then `stow .` for everything or `stow <folder>` for specific configurations.
+### Stowing Configurations
 
-For packages linking outside of the home directory, use: `stow -t / <folder>`. You may need to run this as root.
+Stow individual packages based on your OS and needs:
+
+**Cross-platform (macOS + Linux):**
+```bash
+stow bash git kitty tmux nvim starship bat btop lazygit yazi
+```
+
+**macOS-only:**
+```bash
+stow macos-keyboard
+```
+
+**Linux-only (Wayland/Hyprland):**
+```bash
+stow hypr waybar dunst fuzzel mako rofi sway i3 polybar
+```
+
+**After stowing kitty (required for OS-specific settings):**
+```bash
+cd ~/.config/kitty && ./setup-os-link.sh
+```
+
+**For system-wide packages:**
+```bash
+stow -t / <folder>  # May need sudo
+```
 
 ## REGARDING HYPRLAND
 
@@ -37,11 +62,10 @@ To prevent breaking hyprland when updating other packages, install [hyprland](ht
 - SET UP Bluetooth properly
 - SET UP wifi and vpn properly
 
-### DESKTOP
+### CHAOS
 
 - UPDATE waybar to show ethernet
 
-### LAPTOP
+### HAVOC
 
 - UPDATE waybar to show connected interface
-- FIX kitty crashes when summoned via hyprland keybinding

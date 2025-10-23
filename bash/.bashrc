@@ -86,3 +86,4 @@ fi
 
 # Load zoxide at the very end to avoid configuration issues
 eval "$(zoxide init bash)"
+. "$HOME/.cargo/env"

@@ -5,13 +5,58 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 ## Dotfiles Management
 
 ### Commands
-- `stow .`: Symlink all dotfiles to appropriate locations
-- `stow <folder>`: Symlink specific configuration folder
+- `stow <folder>`: Symlink specific configuration folder (preferred method)
 - `stow -t / <folder>`: Symlink system-wide configurations (may need sudo)
 - `git status`: Check status of dotfiles repository
 - `git diff`: View pending changes
 - `git add -u`: Add modified tracked files
 - `git add <file>`: Add specific file
+
+**Note:** Stow packages individually based on OS. Do NOT run `stow .` blindly.
+
+### Cross-Platform Strategy
+
+**Cross-platform packages:** bash, git, kitty, tmux, nvim, starship, bat, btop, lazygit, yazi
+**macOS-only:** macos-keyboard
+**Linux-only:** hypr, waybar, dunst, fuzzel, mako, rofi, sway, i3, polybar
+
+### OS Detection Pattern
+
+A `USER_OS` environment variable is exported in `bash/.bash_exports`:
+- `macos` on macOS
+- `linux` on Linux
+
+Use this in configs that support environment variables, or use conditional logic in bash:
+```bash
+if [[ "$OSTYPE" == "linux-gnu"* ]]; then
+    # Linux-specific
+elif [[ "$OSTYPE" == "darwin"* ]]; then
+    # macOS-specific
+fi
+```
+
+### OS-Specific Configuration Pattern
+
+**Kitty terminal** uses a symlink-based approach:
+1. Main config: `kitty.conf` (contains defaults)
+2. OS-specific configs: `os-macos.conf`, `os-linux.conf`
+3. Symlink: `os-current.conf` → points to the correct OS config
+4. Run `./setup-os-link.sh` after stowing to create the symlink
+5. Main config includes `os-current.conf` at the END (so it overrides defaults)
+
+This pattern can be reused for other tools that don't support environment variables.
+
+### Clipboard Configuration
+
+**Neovim** clipboard integration:
+- `clipboard = "unnamedplus"` in `nvim/lua/config/options.lua`
+- Neovim auto-detects clipboard tool: `pbcopy/pbpaste` on macOS, `wl-copy` on Wayland, `xclip` on X11
+- Do NOT hardcode clipboard commands in configs
+
+**Tmux** clipboard integration:
+- Uses `tmux-yank` plugin (auto-detects OS)
+- Copy mode: `Space` to start selection, `y` to copy to system clipboard
+- Integrates seamlessly with system clipboard on both macOS and Linux
 
 ### Style Guidelines
 - **Organization**: Each application's configs belong in their own directory

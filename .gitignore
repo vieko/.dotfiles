@@ -13,3 +13,4 @@ hypridle.conf.no_suspend
 .claude/statsig
 .claude/todos
 lazygit/.config/lazygit/state.yml
+.DS_Store
