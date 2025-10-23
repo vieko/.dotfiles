@@ -54,9 +54,9 @@
     autosetuprebase = never
 
 [color]
-    branch = auto
-    diff = auto
-    status = auto
+    branch = true
+    diff = true
+    status = true
 
 [color "branch"]
     current = red reverse
@@ -81,13 +81,13 @@
 [core]
     autocrlf = input
     editor = nvim
-    pager = delta ;less -x2
+    pager = delta
 
 [credential "https://gist.github.com"]
-    helper = !/usr/bin/gh auth git-credential
+    helper = !gh auth git-credential
 
 [credential "https://github.com"]
-    helper = !/usr/bin/gh auth git-credential
+    helper = !gh auth git-credential
 
 [delta]
     dark = true
