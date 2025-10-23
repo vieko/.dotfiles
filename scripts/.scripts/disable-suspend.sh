@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 
 # Disable system suspend for remote access with modified hypridle configuration
 # Usage: disable_suspend.sh

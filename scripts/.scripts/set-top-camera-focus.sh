@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 
 # Manual focus mode (for close-up card viewing)
 v4l2-ctl -d /dev/video1 --set-ctrl=focus_automatic_continuous=0

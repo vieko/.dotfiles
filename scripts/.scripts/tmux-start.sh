@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 
 # Default session name
 DEFAULT_SESSION="SUMMONING DEMONS"

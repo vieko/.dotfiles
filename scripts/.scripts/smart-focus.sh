@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 
 # Log file for debugging
 LOGFILE="$HOME/.smart-focus.log"

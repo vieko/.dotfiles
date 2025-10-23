@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 
 STATE_FILE="$HOME/.config/tablet-mode"
 SCRIPT_DIR="$(dirname "$0")"

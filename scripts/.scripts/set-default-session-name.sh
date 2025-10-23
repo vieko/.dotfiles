@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 # Launch tmux with a default session name if no name is given
 
 SESSION_NAME="${1:-SUMMONING DEMONS}"

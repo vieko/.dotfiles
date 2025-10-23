@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 
 # Path to resolved.conf
 RESOLVED_CONF="/etc/systemd/resolved.conf"
