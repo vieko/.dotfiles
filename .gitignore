@@ -13,4 +13,5 @@ hypridle.conf.no_suspend
 .claude/statsig
 .claude/todos
 lazygit/.config/lazygit/state.yml
+zed/.config/zed/prompts/prompts-library-db.*.mdb/
 .DS_Store
