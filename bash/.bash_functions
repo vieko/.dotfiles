@@ -182,7 +182,8 @@ ghce() {
 	GH_DEBUG="$GH_DEBUG" GH_HOST="$GH_HOST" gh copilot explain "$@"
 }
 
-# Fish-style abbreviations for bash
+# Fish-style abbreviations for bash (requires bash 4.0+ for associative arrays)
+if ((BASH_VERSINFO[0] >= 4)); then
 declare -A __bash_abbr_list
 
 # Abbreviation storage file
@@ -311,3 +312,5 @@ __load_abbreviations
 if [[ $- == *i* ]]; then
     bind -x '" ": __expand_abbr'
 fi
+
+fi  # End bash 4.0+ check for abbreviations

@@ -22,12 +22,16 @@ if [[ $- == *i* ]]; then
 fi
 
 # shell options
-shopt -s autocd     # Enhanced directory navigation
 shopt -s nocaseglob # Case-insensitive globbing
 shopt -s histappend # Append to the history file instead of overwriting it
 shopt -s cdspell    # Autocorrect typos in path names when using `cd`
-shopt -s dirspell   # Autocorrect typos in path names during tab completion
-shopt -s globstar   # Enable ** recursive globbing
+
+# bash 4.0+ shell options
+if ((BASH_VERSINFO[0] >= 4)); then
+    shopt -s autocd     # Enhanced directory navigation
+    shopt -s dirspell   # Autocorrect typos in path names during tab completion
+    shopt -s globstar   # Enable ** recursive globbing
+fi
 
 # history settings
 export HISTSIZE=10000
