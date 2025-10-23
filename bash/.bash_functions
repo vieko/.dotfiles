@@ -10,17 +10,15 @@ _fzf_compgen_dir() {
 }
 
 
-# Use fd if available, otherwise fallback to find (cached check)
+# Alternative to find using fd - use 'fdfind' instead of overriding 'find'
 if command -v fd &>/dev/null; then
-  find() { fd "$@"; }
-else
-  find() { command find "$@"; }
+  alias fdfind='fd'
 fi
 
-# Custom function for changing directory with z and listing with exa (optimized)
+# Custom function for changing directory with z and listing with eza (optimized)
 # Since zoxide is loaded immediately, z command will be available
-if command -v exa &>/dev/null; then
-    cz() { z "$@" && exa; }
+if command -v eza &>/dev/null; then
+    cz() { z "$@" && eza; }
 else
     cz() { z "$@" && ls; }
 fi
@@ -28,14 +26,14 @@ fi
 # Interactive zoxide navigation using fzf (optimized)
 fcd() {
     local dir
-    dir=$(zoxide query -l | fzf --preview='exa --tree --level=1 {} 2>/dev/null || ls {}')
+    dir=$(zoxide query -l | fzf --preview='eza --tree --level=1 {} 2>/dev/null || ls {}')
     [[ -n "$dir" ]] && cd "$dir"
 }
 
 # FZF-based directory navigation (optimized fallback)
 ffcd() {
     local dir
-    dir=$(fd . "$HOME" --type d --hidden --follow --exclude .git | fzf --preview='exa --tree --level=1 {} 2>/dev/null || ls {}')
+    dir=$(fd . "$HOME" --type d --hidden --follow --exclude .git | fzf --preview='eza --tree --level=1 {} 2>/dev/null || ls {}')
     [[ -d "$dir" ]] && cd "$dir"
 }
 
