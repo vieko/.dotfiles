@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 
 # Toggle between normal hypridle configuration and a no-suspend mode for remote access
 # Usage: toggle_monitor.sh

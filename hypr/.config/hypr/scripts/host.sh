@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 
 # HAVOC (eDP-1): 13.5" screen, 2880x1920 resolution, scale factor 2
 # CHAOS (DP-2): 31.5" screen, 6016x3384 resolution (Asus PA32QCV 6K)

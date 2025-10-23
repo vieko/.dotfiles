@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 
 # restart wireplumber, pipewire and pulse
 systemctl --user restart wireplumber pipewire pipewire-pulse

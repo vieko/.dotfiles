@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 
 # Nikhil Singh <nik.singh710@gmail.com>
 

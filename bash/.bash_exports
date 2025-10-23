@@ -6,29 +6,12 @@ export XDG_CACHE_HOME="${XDG_CACHE_HOME:-$HOME/.cache}"
 export XDG_DATA_HOME="${XDG_DATA_HOME:-$HOME/.local/share}"
 export XDG_STATE_HOME="${XDG_STATE_HOME:-$HOME/.local/state}"
 
-# Clean PATH function - remove duplicates while preserving order
-clean_path() {
-    local path_items=()
-    local clean_path=""
-    
-    IFS=':' read -ra path_array <<< "$PATH"
-    
-    for path_item in "${path_array[@]}"; do
-        if [[ ! " ${path_items[*]} " =~ " ${path_item} " ]]; then
-            path_items+=("$path_item")
-        fi
-    done
-    
-    for i in "${!path_items[@]}"; do
-        if [ $i -eq 0 ]; then
-            clean_path="${path_items[$i]}"
-        else
-            clean_path="$clean_path:${path_items[$i]}"
-        fi
-    done
-    
-    PATH="$clean_path"
-}
+# Detect OS for cross-platform configs (used by kitty, etc.)
+case "$(uname -s)" in
+    Darwin) export USER_OS="macos" ;;
+    Linux)  export USER_OS="linux" ;;
+    *)      export USER_OS="unknown" ;;
+esac
 
 # PATH additions using consistent case statement pattern
 case ":$PATH:" in
@@ -46,7 +29,7 @@ case ":$PATH:" in
   *) export PATH="$HOME/.scripts:$PATH" ;;
 esac
 
-export CDPATH=.:~:/etc:/var
+export CDPATH=.:~
 
 # Default applications
 export EDITOR="nvim"
@@ -54,14 +37,16 @@ export VISUAL="nvim"
 export PAGER="less -FRX"
 export MANPAGER="less -FRX"
 
-# mozilla environment variables
-export MOZ_ENABLED_WAYLAND=1
+# mozilla environment variables (Linux/Wayland only)
+if [[ "$OSTYPE" == "linux-gnu"* ]]; then
+    export MOZ_ENABLED_WAYLAND=1
+fi
 
 # Locale
 export LANG=en_CA.UTF-8
 export LC_ALL=en_CA.UTF-8
 
-export HISTIGNORE="ls:cd:pwd:exit:date:* --help"
+export HISTIGNORE="ls:cd:pwd:exit:date:clear:history:bg:fg:* --help"
 export LESSHISTFILE=-
 
 # enable fzf key bindings and auto-completion
@@ -79,12 +64,13 @@ export FZF_CTRL_T_OPTS="
 export FZF_ALT_C_OPTS="
   --walker-skip .git,node_modules,target
   --preview 'tree -C {}'"
-  
-export FZF_COMPLETION_TRIGGER='**'
-# export FZF_COMPLETION_OPTS='--border --info=inline'
 
-# bemenu options
-export BEMENU_OPTS='--fb "#1e1e2e" --ff "#cdd6f4" --nb "#1e1e2e" --nf "#cdd6f4" --tb "#1e1e2e" --hb "#1e1e2e" --tf "#f38ba8" --hf "#f9e2af" --af "#cdd6f4" --ab "#1e1e2e"'
+export FZF_COMPLETION_TRIGGER='**'
+
+# bemenu options (Linux/Wayland only)
+if [[ "$OSTYPE" == "linux-gnu"* ]]; then
+    export BEMENU_OPTS='--fb "#1e1e2e" --ff "#cdd6f4" --nb "#1e1e2e" --nf "#cdd6f4" --tb "#1e1e2e" --hb "#1e1e2e" --tf "#f38ba8" --hf "#f9e2af" --af "#cdd6f4" --ab "#1e1e2e"'
+fi
  
 # pnpm
 export PNPM_HOME="$XDG_DATA_HOME/pnpm"
@@ -100,16 +86,6 @@ case ":$PATH:" in
   *) export PATH="$NPM_HOME/bin:$PATH" ;;
 esac
 
-# nvm - only load if directory exists
-if [[ -d "$XDG_CONFIG_HOME/nvm" ]]; then
-    export NVM_DIR="$XDG_CONFIG_HOME/nvm"
-    [ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"
-    [ -s "$NVM_DIR/bash_completion" ] && \. "$NVM_DIR/bash_completion"
-fi
-
-# Colored grep output
-export GREP_OPTIONS='--color=auto'
- 
 # GPG TTY
 export GPG_TTY=$(tty)
 
@@ -135,9 +111,6 @@ case ":$PATH:" in
   *) export PATH="$GOPATH/bin:$PATH" ;;
 esac
 
-# PYTHON
-export PYTHONWARNINGS="ignore::SyntaxWarning"
-
 # GLAMOUR
 export GLAMOUR_STYLE="$XDG_CONFIG_HOME/glamour/catppuccin-mocha.json"
 
@@ -146,7 +119,3 @@ export GLAMOUR_STYLE="$XDG_CONFIG_HOME/glamour/catppuccin-mocha.json"
 # export ANTHROPIC_MODEL='us.anthropic.claude-opus-4-20250514-v1:0'
 # export ANTHROPIC_SMALL_FAST_MODEL='us.anthropic.claude-3-5-haiku-20241022-v1:0'
 # export DISABLE_PROMPT_CACHING=1
-
-# Clean the PATH at the end to remove any duplicates
-clean_path
-export PATH

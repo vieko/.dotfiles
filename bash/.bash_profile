@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
-# source global definitions
-if [ -f /etc/bashrc ]; then
+# source global definitions (Linux only - macOS doesn't need this)
+if [[ "$OSTYPE" == "linux-gnu"* ]] && [ -f /etc/bashrc ]; then
     . /etc/bashrc
 fi
 
@@ -9,6 +9,4 @@ fi
 if [ -f "$HOME/.bashrc" ]; then
     . "$HOME/.bashrc"
 fi
- 
-# . "$HOME/.deno/env"
-# . "$HOME/.cargo/env"
+. "$HOME/.cargo/env"

@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 
 # Get the current layout using hyprctl getoption
 CURRENT_LAYOUT=$(hyprctl getoption general:layout | awk '{print $2}')

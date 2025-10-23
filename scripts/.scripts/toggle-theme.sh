@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 
 # Toggle dark and light themes for pop-os, tmux, kitty, fish and neovim.
 

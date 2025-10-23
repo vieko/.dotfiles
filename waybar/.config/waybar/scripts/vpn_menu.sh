@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 
 # List available VPN connections
 vpns=$(nmcli connection show --active | grep vpn | awk '{print $1}')

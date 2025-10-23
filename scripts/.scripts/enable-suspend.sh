@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 
 # Enable system suspend and restore normal hypridle configuration
 # Usage: enable_suspend.sh
