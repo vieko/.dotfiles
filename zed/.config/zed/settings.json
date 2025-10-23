@@ -17,9 +17,13 @@
   "theme": {
     "dark": "One Dark",
     "light": "One Light",
-    "mode": "system"
+    "mode": "dark"
   },
-  "icon_theme": "Zed (Default)",
+  "icon_theme": {
+    "mode": "dark",
+    "light": "Zed (Default)",
+    "dark": "Zed (Default)"
+  },
   "ui_font_family": "Zed Plex Sans",
   "ui_font_size": 14,
   "ui_font_weight": 400,
