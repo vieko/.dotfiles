@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 # Script to start EasyEffects with a specific configuration
 
 check_command() {

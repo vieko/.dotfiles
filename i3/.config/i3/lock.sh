@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 
 hostname=$(hostname)
 rosewater='#f5e0dc'

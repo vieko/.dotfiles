@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 
 # Present Bluetooth actions
 action=$(echo -e "Toggle Bluetooth\nList Devices\nConnect Device\nDisconnect Device" | rofi -dmenu -p "Bluetooth Menu")

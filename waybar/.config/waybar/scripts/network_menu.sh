@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 
 # Present options for Wi-Fi and VPN management
 action=$(echo -e "Connect to Wi-Fi\nManage VPN" | rofi -dmenu -p "Network Menu")

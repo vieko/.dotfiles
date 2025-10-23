@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 # Installation script for Real Programmers Qwerty keyboard layout
 
 set -e

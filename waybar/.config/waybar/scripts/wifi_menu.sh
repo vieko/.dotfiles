@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 
 # Get available Wi-Fi networks
 networks=$(nmcli device wifi list | awk 'NR>1 {print $2 " (" $8 ")"}')
