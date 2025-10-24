@@ -71,35 +71,6 @@
           ]
         }
       ]
-    },
-    {
-      "description": "Cmd+K in Spotify → Focus action panel (prevent Aerospace focus up)",
-      "manipulators": [
-        {
-          "type": "basic",
-          "from": {
-            "key_code": "k",
-            "modifiers": {
-              "mandatory": [
-                "command"
-              ]
-            }
-          },
-          "to": [
-            {
-              "shell_command": "~/.config/karabiner/scripts/spotify-search.sh"
-            }
-          ],
-          "conditions": [
-            {
-              "type": "frontmost_application_if",
-              "bundle_identifiers": [
-                "^com\\.spotify\\.client$"
-              ]
-            }
-          ]
-        }
-      ]
     }
   ]
 }

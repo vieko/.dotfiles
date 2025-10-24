@@ -2,7 +2,7 @@
   "title": "Ctrl→Cmd editing GLOBAL",
   "rules": [
     {
-      "description": "Ctrl→Cmd for editing (C/V/X/A/F/Z/Y) and common browser/app shortcuts (T/W/N/K/L/R/H/J/D/S/P) - exclude terminals. Strict mode preserves Shift/Option.",
+      "description": "Ctrl→Cmd for editing (C/V/X/A/F/Z/Y) and common browser/app shortcuts (T/W/N/R/D/S/P) - exclude terminals. Strict mode preserves Shift/Option. NOTE: H/J/K/L excluded - reserved for Aerospace navigation.",
       "manipulators": [
         {
           "type": "basic",
@@ -298,36 +298,7 @@
         {
           "type": "basic",
           "from": {
-            "key_code": "k",
-            "modifiers": {
-              "mandatory": [
-                "control"
-              ]
-            }
-          },
-          "to": [
-            {
-              "key_code": "k",
-              "modifiers": [
-                "command"
-              ]
-            }
-          ],
-          "conditions": [
-            {
-              "type": "frontmost_application_unless",
-              "bundle_identifiers": [
-                "^com\\.apple\\.Terminal$",
-                "^net\\.kovidgoyal\\.kitty$",
-                "^com\\.mitchellh\\.ghostty$"
-              ]
-            }
-          ]
-        },
-        {
-          "type": "basic",
-          "from": {
-            "key_code": "l",
+            "key_code": "r",
             "modifiers": {
               "mandatory": [
                 "control"
@@ -366,64 +337,6 @@
           "to": [
             {
               "key_code": "r",
-              "modifiers": [
-                "command"
-              ]
-            }
-          ],
-          "conditions": [
-            {
-              "type": "frontmost_application_unless",
-              "bundle_identifiers": [
-                "^com\\.apple\\.Terminal$",
-                "^net\\.kovidgoyal\\.kitty$",
-                "^com\\.mitchellh\\.ghostty$"
-              ]
-            }
-          ]
-        },
-        {
-          "type": "basic",
-          "from": {
-            "key_code": "h",
-            "modifiers": {
-              "mandatory": [
-                "control"
-              ]
-            }
-          },
-          "to": [
-            {
-              "key_code": "h",
-              "modifiers": [
-                "command"
-              ]
-            }
-          ],
-          "conditions": [
-            {
-              "type": "frontmost_application_unless",
-              "bundle_identifiers": [
-                "^com\\.apple\\.Terminal$",
-                "^net\\.kovidgoyal\\.kitty$",
-                "^com\\.mitchellh\\.ghostty$"
-              ]
-            }
-          ]
-        },
-        {
-          "type": "basic",
-          "from": {
-            "key_code": "j",
-            "modifiers": {
-              "mandatory": [
-                "control"
-              ]
-            }
-          },
-          "to": [
-            {
-              "key_code": "j",
               "modifiers": [
                 "command"
               ]
