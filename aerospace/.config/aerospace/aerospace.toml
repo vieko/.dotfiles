@@ -3,6 +3,11 @@ start-at-login = true
 enable-normalization-flatten-containers = true
 enable-normalization-opposite-orientation-for-nested-containers = true
 
+# Window rules
+[[on-window-detected]]
+if.app-id = 'com.apple.systempreferences'
+run = ['layout floating']
+
 [gaps]
 inner.horizontal = 8
 inner.vertical   = 8
