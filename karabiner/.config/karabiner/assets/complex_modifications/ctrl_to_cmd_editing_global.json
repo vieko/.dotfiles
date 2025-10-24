@@ -2,7 +2,7 @@
   "title": "Ctrl→Cmd editing GLOBAL",
   "rules": [
     {
-      "description": "Ctrl→Cmd for editing (C/V/X/A/F/Z/Y) and common browser/app shortcuts (T/W/N/L/R/H/J/D/S/P) - exclude terminals. Strict mode preserves Shift/Option.",
+      "description": "Ctrl→Cmd for editing (C/V/X/A/F/Z/Y) and common browser/app shortcuts (T/W/N/K/L/R/H/J/D/S/P) - exclude terminals. Strict mode preserves Shift/Option.",
       "manipulators": [
         {
           "type": "basic",
@@ -279,6 +279,35 @@
           "to": [
             {
               "key_code": "n",
+              "modifiers": [
+                "command"
+              ]
+            }
+          ],
+          "conditions": [
+            {
+              "type": "frontmost_application_unless",
+              "bundle_identifiers": [
+                "^com\\.apple\\.Terminal$",
+                "^net\\.kovidgoyal\\.kitty$",
+                "^com\\.mitchellh\\.ghostty$"
+              ]
+            }
+          ]
+        },
+        {
+          "type": "basic",
+          "from": {
+            "key_code": "k",
+            "modifiers": {
+              "mandatory": [
+                "control"
+              ]
+            }
+          },
+          "to": [
+            {
+              "key_code": "k",
               "modifiers": [
                 "command"
               ]
