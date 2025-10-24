@@ -485,6 +485,26 @@
                                 "type": "basic"
                             }
                         ]
+                    },
+                    {
+                        "description": "Block Cmd+F in System Settings (prevent Aerospace fullscreen)",
+                        "manipulators": [
+                            {
+                                "conditions": [
+                                    {
+                                        "bundle_identifiers": [
+                                            "^com\\.apple\\.systempreferences$"
+                                        ],
+                                        "type": "frontmost_application_if"
+                                    }
+                                ],
+                                "from": {
+                                    "key_code": "f",
+                                    "modifiers": { "mandatory": ["command"] }
+                                },
+                                "type": "basic"
+                            }
+                        ]
                     }
                 ]
             },
