@@ -1,0 +1,47 @@
+{
+  "title": "System Shortcuts (Hyprland-style)",
+  "rules": [
+    {
+      "description": "Cmd+Return → New kitty window at ~/ (like Hyprland $mod+Return)",
+      "manipulators": [
+        {
+          "type": "basic",
+          "from": {
+            "key_code": "return_or_enter",
+            "modifiers": {
+              "mandatory": [
+                "command"
+              ]
+            }
+          },
+          "to": [
+            {
+              "shell_command": "~/.config/karabiner/scripts/new-kitty-window.sh"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "description": "Cmd+Escape → Toggle Mission Control (workspace overview)",
+      "manipulators": [
+        {
+          "type": "basic",
+          "from": {
+            "key_code": "escape",
+            "modifiers": {
+              "mandatory": [
+                "command"
+              ]
+            }
+          },
+          "to": [
+            {
+              "shell_command": "~/.config/karabiner/scripts/toggle-mission-control.sh"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}
