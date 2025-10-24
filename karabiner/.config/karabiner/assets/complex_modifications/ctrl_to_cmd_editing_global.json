@@ -144,9 +144,7 @@
               "bundle_identifiers": [
                 "^com\\.apple\\.Terminal$",
                 "^net\\.kovidgoyal\\.kitty$",
-                "^com\\.mitchellh\\.ghostty$",
-                "^com\\.apple\\.systempreferences$",
-                "^com\\.apple\\.Settings$"
+                "^com\\.mitchellh\\.ghostty$"
               ]
             }
           ]
