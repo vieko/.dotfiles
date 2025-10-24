@@ -44,7 +44,7 @@
       ]
     },
     {
-      "description": "Block Cmd+F in System Settings (prevent Aerospace fullscreen)",
+      "description": "Cmd+F in System Settings → Focus search field (prevent Aerospace fullscreen)",
       "manipulators": [
         {
           "type": "basic",
@@ -56,6 +56,11 @@
               ]
             }
           },
+          "to": [
+            {
+              "shell_command": "~/.config/karabiner/scripts/system-settings-search.sh"
+            }
+          ],
           "conditions": [
             {
               "type": "frontmost_application_if",
