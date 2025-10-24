@@ -56,6 +56,5 @@ cmd-shift-0 = ['move-node-to-workspace 10','workspace 10']
 # Float toggle (rough equivalent to $mod+SPACE)
 cmd-space = 'layout floating tiling'
 
-# Fullscreen toggle
-cmd-f        = 'fullscreen'
+# Fullscreen toggle (Cmd+F conflicts with find, use Cmd+Shift+F)
 cmd-shift-f  = 'fullscreen'
