@@ -111,6 +111,9 @@ case ":$PATH:" in
   *) export PATH="$GOPATH/bin:$PATH" ;;
 esac
 
+# HOMEBREW
+export HOMEBREW_NO_ENV_HINTS=1
+
 # GLAMOUR
 export GLAMOUR_STYLE="$XDG_CONFIG_HOME/glamour/catppuccin-mocha.json"
 
