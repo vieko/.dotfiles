@@ -17,7 +17,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 ### Cross-Platform Strategy
 
 **Cross-platform packages:** bash, git, kitty, tmux, nvim, starship, bat, btop, lazygit, yazi
-**macOS-only:** macos-keyboard
+**macOS-only:** macos, macos-keyboard, aerospace, sketchybar
 **Linux-only:** hypr, waybar, dunst, fuzzel, mako, rofi, sway, i3, polybar
 
 ### OS Detection Pattern
@@ -57,6 +57,26 @@ This pattern can be reused for other tools that don't support environment variab
 - Uses `tmux-yank` plugin (auto-detects OS)
 - Copy mode: `Space` to start selection, `y` to copy to system clipboard
 - Integrates seamlessly with system clipboard on both macOS and Linux
+
+### macOS Defaults Configuration
+
+**Setup:**
+1. Stow the macOS package: `stow macos`
+2. Run the configuration script: `~/.macos`
+3. Enter password when prompted for system-level changes
+
+**What it configures:**
+- Computer name (set to "phyrexia")
+- Dock permanently hidden (1000s delay, toggle with Option+Command+D)
+- Instant animations (dock toggle, window minimize/resize, Mission Control)
+- Scale effect for minimize (faster than genie)
+- Disabled dock launch animations
+
+**Adding new settings:**
+- Edit `macos/.macos` to add additional `defaults write` commands
+- Group related settings under section headers for organization
+- Test changes by running `~/.macos` again (safe to run multiple times)
+- Based on [Mathias Bynens' dotfiles](https://github.com/mathiasbynens/dotfiles/blob/main/.macos)
 
 ### Style Guidelines
 - **Organization**: Each application's configs belong in their own directory

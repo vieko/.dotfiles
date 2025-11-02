@@ -399,7 +399,7 @@
                         ]
                     },
                     {
-                        "description": "Cmd+Escape → Toggle Mission Control (workspace overview)",
+                        "description": "Cmd+Escape → Toggle SketchyBar visibility",
                         "manipulators": [
                             {
                                 "from": {
@@ -408,7 +408,7 @@
                                 },
                                 "to": [
                                     {
-                                        "shell_command": "~/.config/karabiner/scripts/toggle-mission-control.sh"
+                                        "shell_command": "~/.config/karabiner/scripts/toggle-sketchybar.sh"
                                     }
                                 ],
                                 "type": "basic"
@@ -443,6 +443,12 @@
                 ]
             },
             "name": "Default profile",
+            "simple_modifications": [
+                {
+                    "from": { "key_code": "caps_lock" },
+                    "to": [{ "key_code": "left_control" }]
+                }
+            ],
             "selected": true,
             "virtual_hid_keyboard": { "keyboard_type_v2": "ansi" }
         }
