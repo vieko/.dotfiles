@@ -8,6 +8,30 @@ enable-normalization-opposite-orientation-for-nested-containers = true
 if.app-id = 'com.apple.systempreferences'
 run = ['layout floating']
 
+[[on-window-detected]]
+if.app-id = 'us.zoom.xos'
+run = ['layout floating']
+
+[[on-window-detected]]
+if.app-id = 'org.keepassxc.keepassxc'
+run = ['layout floating']
+
+[[on-window-detected]]
+if.app-id = 'org.idrix.VeraCrypt'
+run = ['layout floating']
+
+[[on-window-detected]]
+if.app-id = 'com.1password.1password'
+run = ['layout floating']
+
+[[on-window-detected]]
+if.app-id = 'com.yubico.ykman'
+run = ['layout floating']
+
+[[on-window-detected]]
+if.app-id = 'com.kensington.kensingtonworks2.app'
+run = ['layout floating']
+
 [gaps]
 inner.horizontal = 8
 inner.vertical   = 8
