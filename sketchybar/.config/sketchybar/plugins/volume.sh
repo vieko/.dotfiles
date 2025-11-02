@@ -2,7 +2,7 @@
 
 # Base16 One Dark colors
 BASE07=0xffc8ccd4  # Foreground
-BASE0B=0xff98c379  # Green
+BASE0E=0xffc678dd  # Purple
 
 # The volume_change event supplies a $INFO variable in which the current volume
 # percentage is passed to the script.
@@ -20,5 +20,5 @@ if [ "$SENDER" = "volume_change" ]; then
     *) ICON="󰖁"
   esac
 
-  sketchybar --set "$NAME" icon="$ICON" icon.color="$BASE0B" label="$VOLUME%" label.color="$BASE07"
+  sketchybar --set "$NAME" icon="$ICON" icon.color="$BASE0E" label="$VOLUME%" label.color="$BASE07"
 fi

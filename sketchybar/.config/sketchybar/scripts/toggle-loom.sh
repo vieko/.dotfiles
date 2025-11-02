@@ -9,3 +9,6 @@ else
     # Loom is not running, launch it
     open -a "Loom"
 fi
+
+# Update the loom widget to reflect new state
+sketchybar --update loom

@@ -47,7 +47,7 @@ for sid in $(aerospace list-workspaces --all); do
              --subscribe space.$sid aerospace_workspace_change \
              --set space.$sid \
              background.color="$BASE0D" \
-             background.corner_radius=5 \
+             background.corner_radius=0 \
              background.height=20 \
              background.drawing=off \
              icon.drawing=off \
@@ -64,14 +64,16 @@ done
 sketchybar --add event keyboard_change
 sketchybar --add event clock_update
 
-# Keyboard layout indicator, Loom, Clock, Volume, Battery with Base16 One Dark colors
-# Note: Menu bar aliases don't work well at bottom position (menus open downward off-screen)
-sketchybar --add item loom right \
-           --set loom \
-           icon="󰕧" \
-           icon.color="$BASE08" \
-           label.drawing=off \
-           click_script="$CONFIG_DIR/scripts/toggle-loom.sh" \
+# Right side items (ordered right to left): Time/Date, Keyboard, Volume, Battery, Camera, Weather
+# Note: Items are added in order, first item appears rightmost
+sketchybar --add item clock right \
+           --set clock \
+           update_freq=10 \
+           icon.color="$BASE0A" \
+           label.color="$BASE07" \
+           script="$PLUGIN_DIR/clock.sh" \
+           click_script="$CONFIG_DIR/scripts/toggle-clock.sh" \
+           --subscribe clock clock_update \
            \
            --add item keyboard right \
            --set keyboard \
@@ -82,18 +84,9 @@ sketchybar --add item loom right \
            click_script="$CONFIG_DIR/scripts/toggle-keyboard.sh" \
            --subscribe keyboard keyboard_change \
            \
-           --add item clock right \
-           --set clock \
-           update_freq=10 \
-           icon.color="$BASE0B" \
-           label.color="$BASE07" \
-           script="$PLUGIN_DIR/clock.sh" \
-           click_script="$CONFIG_DIR/scripts/toggle-clock.sh" \
-           --subscribe clock clock_update \
-           \
            --add item volume right \
            --set volume \
-           icon.color="$BASE0B" \
+           icon.color="$BASE0E" \
            label.color="$BASE07" \
            script="$PLUGIN_DIR/volume.sh" \
            --subscribe volume volume_change \
@@ -104,7 +97,27 @@ sketchybar --add item loom right \
            icon.color="$BASE0E" \
            label.color="$BASE07" \
            script="$PLUGIN_DIR/battery.sh" \
-           --subscribe battery system_woke power_source_change
+           --subscribe battery system_woke power_source_change \
+           \
+           --add item loom right \
+           --set loom \
+           update_freq=5 \
+           icon="󰕧" \
+           icon.color="$BASE08" \
+           label.color="$BASE07" \
+           script="$PLUGIN_DIR/loom.sh" \
+           click_script="$CONFIG_DIR/scripts/toggle-loom.sh" \
+           \
+           --add item weather right \
+           --set weather \
+           update_freq=900 \
+           icon.color="$BASE0D" \
+           label.color="$BASE07" \
+           script="$PLUGIN_DIR/weather.sh" \
+           click_script="$CONFIG_DIR/scripts/click-weather.sh"
 
 ##### Force all scripts to run the first time (never do this in a script) #####
 sketchybar --update
+
+##### Switch to workspace 1 on startup/reload #####
+aerospace workspace 1
