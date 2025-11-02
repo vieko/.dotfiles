@@ -1,0 +1,60 @@
+#!/usr/bin/env bash
+
+# macOS System Defaults Configuration
+# Run this script to apply macOS preferences
+# Safe to run multiple times
+
+echo "Configuring macOS defaults..."
+
+# ============================================================================
+# Computer Name
+# ============================================================================
+echo "=> Setting computer name to 'phyrexia'..."
+
+sudo scutil --set ComputerName "phyrexia"
+sudo scutil --set HostName "phyrexia"
+sudo scutil --set LocalHostName "phyrexia"
+sudo defaults write /Library/Preferences/SystemConfiguration/com.apple.smb.server NetBIOSName -string "phyrexia"
+
+# ============================================================================
+# Dock
+# ============================================================================
+echo "=> Configuring Dock..."
+
+# Enable autohide
+defaults write com.apple.dock autohide -bool true
+
+# Set 1000 second delay before dock appears on hover (effectively permanent)
+defaults write com.apple.dock autohide-delay -float 1000
+
+# Remove dock autohide animation (instant show/hide when toggled)
+defaults write com.apple.dock autohide-time-modifier -float 0
+
+# Disable icon bouncing
+defaults write com.apple.dock no-bouncing -bool true
+
+# Change minimize/maximize window effect to scale (faster than genie)
+defaults write com.apple.dock mineffect -string "scale"
+
+# Don't animate opening applications from the Dock
+defaults write com.apple.dock launchanim -bool false
+
+# Speed up Mission Control animations
+defaults write com.apple.dock expose-animation-duration -float 0.1
+
+# Restart Dock to apply changes
+killall Dock
+
+# ============================================================================
+# Window Animations
+# ============================================================================
+echo "=> Disabling window animations..."
+
+# Increase window resize speed for Cocoa applications (nearly instant)
+defaults write NSGlobalDomain NSWindowResizeTime -float 0.001
+
+echo ""
+echo "Done: macOS defaults configured"
+echo ""
+echo "Note: Dock is now permanently hidden (toggle with Option+Command+D)"
+echo "      All animations set to instant/minimal for maximum responsiveness"

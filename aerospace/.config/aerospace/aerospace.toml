@@ -3,6 +3,11 @@ start-at-login = true
 enable-normalization-flatten-containers = true
 enable-normalization-opposite-orientation-for-nested-containers = true
 
+# SketchyBar integration
+exec-on-workspace-change = ['/bin/bash', '-c',
+    'sketchybar --trigger aerospace_workspace_change FOCUSED_WORKSPACE=$AEROSPACE_FOCUSED_WORKSPACE'
+]
+
 # Window rules
 [[on-window-detected]]
 if.app-id = 'com.apple.systempreferences'
@@ -32,13 +37,29 @@ run = ['layout floating']
 if.app-id = 'com.kensington.kensingtonworks2.app'
 run = ['layout floating']
 
+[[on-window-detected]]
+if.app-id = 'com.apple.FontBook'
+run = ['layout floating']
+
+[[on-window-detected]]
+if.app-id = 'org.pqrs.Karabiner-Elements.Settings'
+run = ['layout floating']
+
+[[on-window-detected]]
+if.app-id = 'org.pqrs.Karabiner-EventViewer'
+run = ['layout floating']
+
+[[on-window-detected]]
+if.app-id = 'com.apple.weather.menu'
+run = ['layout floating']
+
 [gaps]
 inner.horizontal = 8
 inner.vertical   = 8
 outer.left       = 8
 outer.right      = 8
 outer.top        = 8
-outer.bottom     = 8
+outer.bottom     = 40
 
 [mode.main.binding]
 # Focus with H/J/K/L
@@ -65,17 +86,17 @@ cmd-8 = 'workspace 8'
 cmd-9 = 'workspace 9'
 cmd-0 = 'workspace 10'
 
-# Send window to workspace + follow
-cmd-shift-1 = ['move-node-to-workspace 1', 'workspace 1']
-cmd-shift-2 = ['move-node-to-workspace 2', 'workspace 2']
-cmd-shift-3 = ['move-node-to-workspace 3', 'workspace 3']
-cmd-shift-4 = ['move-node-to-workspace 4', 'workspace 4']
-cmd-shift-5 = ['move-node-to-workspace 5', 'workspace 5']
-cmd-shift-6 = ['move-node-to-workspace 6', 'workspace 6']
-cmd-shift-7 = ['move-node-to-workspace 7', 'workspace 7']
-cmd-shift-8 = ['move-node-to-workspace 8', 'workspace 8']
-cmd-shift-9 = ['move-node-to-workspace 9', 'workspace 9']
-cmd-shift-0 = ['move-node-to-workspace 10','workspace 10']
+# Send window to workspace (without following)
+cmd-shift-1 = 'move-node-to-workspace 1'
+cmd-shift-2 = 'move-node-to-workspace 2'
+cmd-shift-3 = 'move-node-to-workspace 3'
+cmd-shift-4 = 'move-node-to-workspace 4'
+cmd-shift-5 = 'move-node-to-workspace 5'
+cmd-shift-6 = 'move-node-to-workspace 6'
+cmd-shift-7 = 'move-node-to-workspace 7'
+cmd-shift-8 = 'move-node-to-workspace 8'
+cmd-shift-9 = 'move-node-to-workspace 9'
+cmd-shift-0 = 'move-node-to-workspace 10'
 
 # Float toggle (rough equivalent to $mod+SPACE)
 cmd-space = 'layout floating tiling'

@@ -23,7 +23,7 @@
       ]
     },
     {
-      "description": "Cmd+Escape → Toggle Mission Control (workspace overview)",
+      "description": "Cmd+Escape → Toggle SketchyBar visibility",
       "manipulators": [
         {
           "type": "basic",
@@ -37,7 +37,7 @@
           },
           "to": [
             {
-              "shell_command": "~/.config/karabiner/scripts/toggle-mission-control.sh"
+              "shell_command": "~/.config/karabiner/scripts/toggle-sketchybar.sh"
             }
           ]
         }

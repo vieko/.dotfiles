@@ -1,0 +1,110 @@
+#!/bin/bash
+
+# SketchyBar configuration with AeroSpace workspace integration
+# Base16 One Dark color scheme
+
+PLUGIN_DIR="$CONFIG_DIR/plugins"
+
+# Base16 One Dark colors
+BASE00=0xff282c34  # Background
+BASE07=0xffc8ccd4  # Foreground
+BASE08=0xffe06c75  # Red
+BASE09=0xffd19a66  # Orange
+BASE0A=0xffe5c07b  # Yellow
+BASE0B=0xff98c379  # Green
+BASE0D=0xff61afef  # Blue
+BASE0E=0xffc678dd  # Purple
+
+##### Bar Appearance #####
+sketchybar --bar position=bottom \
+                 height=32 \
+                 blur_radius=50 \
+                 color=0xf0282c34 \
+                 topmost=window
+
+##### Changing Defaults #####
+default=(
+  padding_left=5
+  padding_right=5
+  icon.font="LigaSFMonoNerdFont:Bold:14.0"
+  label.font="LigaSFMonoNerdFont:Regular:13.0"
+  icon.color="$BASE07"
+  label.color="$BASE07"
+  icon.padding_left=4
+  icon.padding_right=4
+  label.padding_left=4
+  label.padding_right=4
+)
+sketchybar --default "${default[@]}"
+
+##### AeroSpace Workspace Indicators #####
+# Add event for aerospace workspace changes
+sketchybar --add event aerospace_workspace_change
+
+# Create workspace indicators for all aerospace workspaces
+for sid in $(aerospace list-workspaces --all); do
+  sketchybar --add item space.$sid left \
+             --subscribe space.$sid aerospace_workspace_change \
+             --set space.$sid \
+             background.color="$BASE0D" \
+             background.corner_radius=5 \
+             background.height=20 \
+             background.drawing=off \
+             icon.drawing=off \
+             label="$sid" \
+             label.color="$BASE07" \
+             label.align=center \
+             label.width=30 \
+             click_script="aerospace workspace $sid" \
+             script="$PLUGIN_DIR/aerospace.sh $sid"
+done
+
+##### Adding Right Items #####
+# Add keyboard change event and clock update event
+sketchybar --add event keyboard_change
+sketchybar --add event clock_update
+
+# Keyboard layout indicator, Loom, Clock, Volume, Battery with Base16 One Dark colors
+# Note: Menu bar aliases don't work well at bottom position (menus open downward off-screen)
+sketchybar --add item loom right \
+           --set loom \
+           icon="󰕧" \
+           icon.color="$BASE08" \
+           label.drawing=off \
+           click_script="$CONFIG_DIR/scripts/toggle-loom.sh" \
+           \
+           --add item keyboard right \
+           --set keyboard \
+           update_freq=5 \
+           icon.color="$BASE0B" \
+           label.color="$BASE07" \
+           script="$PLUGIN_DIR/keyboard.sh" \
+           click_script="$CONFIG_DIR/scripts/toggle-keyboard.sh" \
+           --subscribe keyboard keyboard_change \
+           \
+           --add item clock right \
+           --set clock \
+           update_freq=10 \
+           icon.color="$BASE0B" \
+           label.color="$BASE07" \
+           script="$PLUGIN_DIR/clock.sh" \
+           click_script="$CONFIG_DIR/scripts/toggle-clock.sh" \
+           --subscribe clock clock_update \
+           \
+           --add item volume right \
+           --set volume \
+           icon.color="$BASE0B" \
+           label.color="$BASE07" \
+           script="$PLUGIN_DIR/volume.sh" \
+           --subscribe volume volume_change \
+           \
+           --add item battery right \
+           --set battery \
+           update_freq=120 \
+           icon.color="$BASE0E" \
+           label.color="$BASE07" \
+           script="$PLUGIN_DIR/battery.sh" \
+           --subscribe battery system_woke power_source_change
+
+##### Force all scripts to run the first time (never do this in a script) #####
+sketchybar --update
