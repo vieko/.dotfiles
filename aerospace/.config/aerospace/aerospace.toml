@@ -63,7 +63,7 @@ inner.vertical   = 8
 outer.left       = 8
 outer.right      = 8
 outer.top        = 8
-outer.bottom     = 40
+outer.bottom     = 28
 
 [mode.main.binding]
 # Focus with H/J/K/L

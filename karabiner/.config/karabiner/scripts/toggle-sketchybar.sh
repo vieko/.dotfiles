@@ -15,12 +15,12 @@ if [ "$HIDDEN" = "off" ]; then
     # Hide SketchyBar
     $SKETCHYBAR --bar hidden=on
     # Reduce AeroSpace bottom gap
-    $SED -i '' 's/outer\.bottom[[:space:]]*=[[:space:]]*40/outer.bottom     = 8/' "$AEROSPACE_CONFIG"
+    $SED -i '' 's/outer\.bottom[[:space:]]*=[[:space:]]*28/outer.bottom     = 8/' "$AEROSPACE_CONFIG"
     $AEROSPACE reload-config >/dev/null 2>&1
 else
     # Show SketchyBar at bottom
     $SKETCHYBAR --bar hidden=off position=bottom topmost=window
-    # Increase AeroSpace bottom gap to accommodate bar
-    $SED -i '' 's/outer\.bottom[[:space:]]*=[[:space:]]*8/outer.bottom     = 40/' "$AEROSPACE_CONFIG"
+    # Increase AeroSpace bottom gap to accommodate bar (20px bar + 8px gap)
+    $SED -i '' 's/outer\.bottom[[:space:]]*=[[:space:]]*8/outer.bottom     = 28/' "$AEROSPACE_CONFIG"
     $AEROSPACE reload-config >/dev/null 2>&1
 fi
