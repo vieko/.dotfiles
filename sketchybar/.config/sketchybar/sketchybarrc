@@ -79,7 +79,6 @@ sketchybar --add item clock right \
            \
            --add item keyboard right \
            --set keyboard \
-           update_freq=5 \
            icon.color="$BASE0B" \
            label.color="$BASE07" \
            script="$PLUGIN_DIR/keyboard.sh" \
@@ -103,7 +102,7 @@ sketchybar --add item clock right \
            \
            --add item loom right \
            --set loom \
-           update_freq=5 \
+           update_freq=10 \
            icon="󰕧" \
            icon.color="$BASE08" \
            label.color="$BASE07" \

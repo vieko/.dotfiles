@@ -4,16 +4,19 @@
 BASE07=0xffc8ccd4  # Foreground
 BASE0D=0xff61afef  # Blue
 
-# Fetch weather condition and temperature separately
+# Fetch weather condition and temperature in one request (more efficient)
 # %C = weather condition text, %t = temperature
-CONDITION=$(curl -s 'wttr.in/?format=%C')
-TEMP=$(curl -s 'wttr.in/?format=%t')
+# Format: "Condition,Temperature"
+WEATHER=$(curl -s 'wttr.in/?format=%C,%t')
 
 # If curl fails or returns empty, show fallback
-if [ -z "$CONDITION" ] || [ -z "$TEMP" ]; then
+if [ -z "$WEATHER" ]; then
   ICON="?"
   LABEL="--"
 else
+  # Split the response into condition and temperature
+  CONDITION=$(echo "$WEATHER" | cut -d',' -f1)
+  TEMP=$(echo "$WEATHER" | cut -d',' -f2)
   # Map condition to Nerd Font weather icons
   case "$CONDITION" in
     *[Cc]lear*|*[Ss]unny*) ICON="󰖙" ;;  # nf-md-weather_sunny
