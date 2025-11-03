@@ -41,6 +41,16 @@ sketchybar --default "${default[@]}"
 # Add event for aerospace workspace changes
 sketchybar --add event aerospace_workspace_change
 
+# Fullscreen indicator (like tmux zoom indicator)
+sketchybar --add item fullscreen left \
+           --set fullscreen \
+           icon.color="$BASE0B" \
+           icon.padding_left=8 \
+           icon.padding_right=4 \
+           label.drawing=off \
+           script="$PLUGIN_DIR/fullscreen.sh" \
+           --subscribe fullscreen aerospace_workspace_change
+
 # Create workspace indicators for all aerospace workspaces
 for sid in $(aerospace list-workspaces --all); do
   sketchybar --add item space.$sid left \

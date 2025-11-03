@@ -106,4 +106,5 @@ cmd-shift-0 = 'move-node-to-workspace 10'
 cmd-space = 'layout floating tiling'
 
 # Fullscreen toggle (Cmd+F conflicts with find, use Cmd+Shift+F)
-cmd-shift-f  = 'fullscreen'
+# Also trigger sketchybar to update fullscreen indicator
+cmd-shift-f  = ['fullscreen', 'exec-and-forget sketchybar --trigger aerospace_workspace_change']
