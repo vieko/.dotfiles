@@ -74,6 +74,7 @@ This pattern can be reused for other tools that don't support environment variab
 **What it configures:**
 - Computer name (set to "phyrexia")
 - Dock permanently hidden (1000s delay, toggle with Option+Command+D)
+- Menu bar autohides on hover (Ctrl-Fn-F2 to toggle)
 - Instant animations (dock toggle, window minimize/resize, Mission Control)
 - Scale effect for minimize (faster than genie)
 - Disabled dock launch animations

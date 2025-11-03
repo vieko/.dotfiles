@@ -7,14 +7,13 @@
 echo "Configuring macOS defaults..."
 
 # ============================================================================
-# Computer Name
+# Computer Name (requires sudo, uncomment if desired)
 # ============================================================================
-echo "=> Setting computer name to 'phyrexia'..."
-
-sudo scutil --set ComputerName "phyrexia"
-sudo scutil --set HostName "phyrexia"
-sudo scutil --set LocalHostName "phyrexia"
-sudo defaults write /Library/Preferences/SystemConfiguration/com.apple.smb.server NetBIOSName -string "phyrexia"
+# echo "=> Setting computer name to 'phyrexia'..."
+# sudo scutil --set ComputerName "phyrexia"
+# sudo scutil --set HostName "phyrexia"
+# sudo scutil --set LocalHostName "phyrexia"
+# sudo defaults write /Library/Preferences/SystemConfiguration/com.apple.smb.server NetBIOSName -string "phyrexia"
 
 # ============================================================================
 # Dock
@@ -46,6 +45,14 @@ defaults write com.apple.dock expose-animation-duration -float 0.1
 killall Dock
 
 # ============================================================================
+# Menu Bar
+# ============================================================================
+echo "=> Configuring menu bar..."
+
+# Automatically hide and show the menu bar
+defaults write NSGlobalDomain _HIHideMenuBar -bool true
+
+# ============================================================================
 # Window Animations
 # ============================================================================
 echo "=> Disabling window animations..."
@@ -56,5 +63,6 @@ defaults write NSGlobalDomain NSWindowResizeTime -float 0.001
 echo ""
 echo "Done: macOS defaults configured"
 echo ""
-echo "Note: Dock is now permanently hidden (toggle with Option+Command+D)"
+echo "Note: Dock is permanently hidden (toggle with Option+Command+D)"
+echo "      Menu bar autohides on hover (Ctrl-Fn-F2 to toggle)"
 echo "      All animations set to instant/minimal for maximum responsiveness"
