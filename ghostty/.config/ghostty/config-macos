@@ -1,0 +1,15 @@
+# macOS-specific settings
+# Override base config defaults for macOS
+# Based on kitty/.config/kitty/os-macos.conf
+
+# macOS font size (larger for Retina displays)
+font-size = 14
+
+# macOS window and display options
+macos-non-native-fullscreen = false
+quit-after-last-window-closed = true
+macos-option-as-alt = true
+macos-titlebar-style = native
+
+# Window decoration (show full title bar on macOS)
+window-decoration = true

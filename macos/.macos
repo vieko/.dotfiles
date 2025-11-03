@@ -53,6 +53,31 @@ echo "=> Configuring menu bar..."
 defaults write NSGlobalDomain _HIHideMenuBar -bool true
 
 # ============================================================================
+# Keyboard
+# ============================================================================
+echo "=> Configuring keyboard..."
+
+# Set blazingly fast keyboard repeat rate (1 = 15ms between repeats, default: 6)
+defaults write NSGlobalDomain KeyRepeat -int 1
+
+# Set shorter delay until key repeat (10 = 150ms, default: 25)
+defaults write NSGlobalDomain InitialKeyRepeat -int 10
+
+# Disable press-and-hold for keys in favor of key repeat
+defaults write NSGlobalDomain ApplePressAndHoldEnabled -bool false
+
+# Enable full keyboard access for all controls (tab in modal dialogs)
+defaults write NSGlobalDomain AppleKeyboardUIMode -int 3
+
+# ============================================================================
+# Wallpaper
+# ============================================================================
+echo "=> Setting wallpaper..."
+
+# Set One Dark solid color wallpaper
+osascript -e "tell application \"System Events\" to tell every desktop to set picture to \"$HOME/Pictures/Wallpapers/one-dark-base-solid.png\""
+
+# ============================================================================
 # Window Animations
 # ============================================================================
 echo "=> Disabling window animations..."
@@ -65,4 +90,6 @@ echo "Done: macOS defaults configured"
 echo ""
 echo "Note: Dock is permanently hidden (toggle with Option+Command+D)"
 echo "      Menu bar autohides on hover (Ctrl-Fn-F2 to toggle)"
+echo "      Keyboard repeat set to fastest (requires logout to take effect)"
+echo "      Wallpaper set to One Dark solid color"
 echo "      All animations set to instant/minimal for maximum responsiveness"

@@ -1,16 +1,64 @@
+# FONT: FAMILY
 font-family = Berkeley Mono Retina
 font-family-bold = Berkeley Mono Medium
 font-family-italic = Berkeley Mono Retina Oblique
 font-family-bold-italic = Berkeley Mono Medium Oblique
-font-size = 11
+
+# FONT: SIZE (macOS: 14, Linux: 10.5, see config-macos/config-linux)
+font-size = 14
+
+# CURSOR
 cursor-style = block
 cursor-style-blink = false
+cursor-color = 74ade8
+cursor-text = 282c34
+
+# WINDOW
 window-decoration = false
 window-theme = dark
-window-padding-x = 0
-window-padding-y = 0
+window-padding-x = 4
+window-padding-y = 4
 window-padding-color = extend
 window-padding-balance = true
 window-inherit-working-directory = true
-theme = OneHalfDark 
+
+# THEME
+# Options: "One Half Dark", "Atom One Dark", "Doom One", "One Double Dark"
+theme = One Half Dark
+
+# SHELL
 shell-integration = bash
+
+# MOUSE
+mouse-hide-while-typing = true
+copy-on-select = clipboard
+
+# URL
+link-url = true
+
+# SCROLLBACK
+scrollback-limit = 10000
+
+# CLIPBOARD
+clipboard-read = allow
+clipboard-write = allow
+clipboard-trim-trailing-spaces = true
+
+# TMUX INTEGRATION
+# Enable true color support
+term = xterm-ghostty
+
+# Shell integration features
+# NOTE: Using "no-cursor" to prevent shell from overriding cursor-style setting
+# The cursor feature allows shell/vim to change cursor shape, but prevents
+# our cursor-style=block and cursor-style-blink=false from working on startup
+shell-integration-features = no-cursor
+
+# OS-SPECIFIC SETTINGS
+# Note: Ghostty does not currently support config includes like Kitty
+# To use OS-specific settings:
+# 1. Run ./setup-os-link.sh to create config-current symlink
+# 2. Use config-current as your config (if supported by Ghostty)
+# OR manually apply settings from config-macos/config-linux as needed
+#
+# For now on macOS, font-size should be 14 (set at line 8)

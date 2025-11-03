@@ -382,7 +382,7 @@
                         ]
                     },
                     {
-                        "description": "Cmd+Return → New kitty window at ~/ (like Hyprland $mod+Return)",
+                        "description": "Cmd+Return → New Ghostty window at ~/ (like Hyprland $mod+Return)",
                         "manipulators": [
                             {
                                 "from": {
@@ -391,7 +391,7 @@
                                 },
                                 "to": [
                                     {
-                                        "shell_command": "~/.config/karabiner/scripts/new-kitty-window.sh"
+                                        "shell_command": "~/.config/karabiner/scripts/new-ghostty-window.sh"
                                     }
                                 ],
                                 "type": "basic"

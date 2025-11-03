@@ -1,0 +1,13 @@
+# Linux-specific settings
+# Override base config defaults for Linux
+# Based on kitty/.config/kitty/os-linux.conf
+
+# Linux font size
+font-size = 10.5
+
+# Linux window decorations (for tiling WMs like Hyprland)
+window-decoration = false
+
+# Linux-specific options
+gtk-titlebar = false
+gtk-adwaita = false

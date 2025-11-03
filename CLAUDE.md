@@ -17,7 +17,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ### Cross-Platform Strategy
 
-**Cross-platform packages:** bash, git, kitty, tmux, nvim, starship, bat, btop, lazygit, yazi
+**Cross-platform packages:** bash, git, kitty, tmux, nvim, starship, bat, btop, lazygit, yazi, assets
 **macOS-only:** macos, macos-keyboard, aerospace, sketchybar
 **Linux-only:** hypr, waybar, dunst, fuzzel, mako, rofi, sway, i3, polybar
 
@@ -67,14 +67,17 @@ This pattern can be reused for other tools that don't support environment variab
 ### macOS Defaults Configuration
 
 **Setup:**
-1. Stow the macOS package: `stow macos`
-2. Run the configuration script: `~/.macos`
-3. Enter password when prompted for system-level changes
+1. Stow the assets package: `stow assets` (for wallpapers)
+2. Stow the macOS package: `stow macos`
+3. Run the configuration script: `~/.macos`
+4. Enter password when prompted for system-level changes
 
 **What it configures:**
-- Computer name (set to "phyrexia")
+- Computer name (set to "phyrexia") - commented out, requires sudo
 - Dock permanently hidden (1000s delay, toggle with Option+Command+D)
 - Menu bar autohides on hover (Ctrl-Fn-F2 to toggle)
+- Keyboard repeat rate (fastest: KeyRepeat=1, InitialKeyRepeat=10, requires logout)
+- Wallpaper (One Dark solid color from ~/Pictures/Wallpapers)
 - Instant animations (dock toggle, window minimize/resize, Mission Control)
 - Scale effect for minimize (faster than genie)
 - Disabled dock launch animations
