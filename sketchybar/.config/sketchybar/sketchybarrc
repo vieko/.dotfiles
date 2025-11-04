@@ -41,15 +41,21 @@ sketchybar --default "${default[@]}"
 # Add event for aerospace workspace changes
 sketchybar --add event aerospace_workspace_change
 
-# Fullscreen indicator (like tmux zoom indicator)
-sketchybar --add item fullscreen left \
-           --set fullscreen \
-           icon.color="$BASE0B" \
+# OS indicator (leftmost position)
+# Shows ▲ on macOS, ♜ on Linux
+if [[ "$OSTYPE" == "darwin"* ]]; then
+  OS_ICON="▲"
+else
+  OS_ICON="♜"
+fi
+
+sketchybar --add item os_indicator left \
+           --set os_indicator \
+           icon="$OS_ICON" \
+           icon.color="$BASE07" \
            icon.padding_left=8 \
            icon.padding_right=4 \
-           label.drawing=off \
-           script="$PLUGIN_DIR/fullscreen.sh" \
-           --subscribe fullscreen aerospace_workspace_change
+           label.drawing=off
 
 # Create workspace indicators for all aerospace workspaces
 for sid in $(aerospace list-workspaces --all); do
@@ -70,6 +76,17 @@ for sid in $(aerospace list-workspaces --all); do
              click_script="aerospace workspace $sid" \
              script="$PLUGIN_DIR/aerospace.sh $sid"
 done
+
+# Fullscreen indicator (right of workspaces)
+sketchybar --add item fullscreen left \
+           --set fullscreen \
+           icon.font="LigaSFMonoNerdFont:Bold:18.0" \
+           icon.color="$BASE0B" \
+           icon.padding_left=4 \
+           icon.padding_right=8 \
+           label.drawing=off \
+           script="$PLUGIN_DIR/fullscreen.sh" \
+           --subscribe fullscreen aerospace_workspace_change
 
 ##### Adding Right Items #####
 # Add keyboard change event and clock update event
