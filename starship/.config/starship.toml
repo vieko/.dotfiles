@@ -10,6 +10,9 @@ palette = "base16-onedark"
 
 scan_timeout = 30
 
+# Format with OS symbol first
+format = "$os$all"
+
 [palettes.base16-onedark]
 base00 = "#282c34"
 base01 = "#353b45"
@@ -183,6 +186,9 @@ disabled = true
 symbol = "opa "
 disabled = true
 
+[os]
+disabled = false
+
 [os.symbols]
 AIX = "aix "
 Alpaquita = "alq "
@@ -204,9 +210,9 @@ Gentoo = "gent "
 HardenedBSD = "hbsd "
 Illumos = "lum "
 Kali = "kali "
-Linux = "lnx "
+Linux = "♜ "
 Mabox = "mbox "
-Macos = "mac "
+Macos = "▲ "
 Manjaro = "mjo "
 Mariner = "mrn "
 MidnightBSD = "mid "
