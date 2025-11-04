@@ -113,6 +113,13 @@ esac
 
 # HOMEBREW
 export HOMEBREW_NO_ENV_HINTS=1
+# Add sbin to PATH (macOS only)
+if [[ "$OSTYPE" == "darwin"* ]]; then
+    case ":$PATH:" in
+      *":/opt/homebrew/sbin:"*) ;;
+      *) export PATH="/opt/homebrew/sbin:$PATH" ;;
+    esac
+fi
 
 # GLAMOUR
 export GLAMOUR_STYLE="$XDG_CONFIG_HOME/glamour/catppuccin-mocha.json"

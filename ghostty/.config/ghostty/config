@@ -14,7 +14,9 @@ cursor-color = 74ade8
 cursor-text = 282c34
 
 # WINDOW
-window-decoration = false
+# Use native macOS window frame with hidden titlebar (like Kitty)
+# This keeps borders and rounded corners while maximizing app space
+macos-titlebar-style = hidden
 window-theme = dark
 window-padding-x = 4
 window-padding-y = 4
