@@ -38,6 +38,21 @@ elif [[ "$OSTYPE" == "darwin"* ]]; then
 fi
 ```
 
+### OS-Specific Setup Scripts
+
+**Git GPG configuration** requires running a setup script when switching between operating systems:
+
+```bash
+~/.scripts/setup-git-gpg.sh
+```
+
+This script automatically detects the OS and updates the git `gpg.program` path to point to the correct location (`/Users/$USER` on macOS, `/home/$USER` on Linux).
+
+**When to run:**
+- After fresh stowing on a new system
+- When switching between macOS and Linux
+- If git commit signing fails with "gpg not found" errors
+
 ### OS-Specific Configuration Pattern
 
 **Kitty terminal** uses a symlink-based approach:

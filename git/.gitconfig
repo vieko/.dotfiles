@@ -134,7 +134,8 @@
     name = Vieko Franetovic
     signingkey = 16FBF1CF29A0CDAE
 [gpg]
-	program = /home/vieko/.dotfiles/scripts/.scripts/gpg-wrapper.sh
+	# Path is OS-specific, run: ~/.scripts/setup-git-gpg.sh when switching systems
+	program = /home/vieko/.scripts/gpg-wrapper.sh
 [filter "lfs"]
 	process = git-lfs filter-process
 	required = true
