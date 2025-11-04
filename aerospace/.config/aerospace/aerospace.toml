@@ -3,6 +3,12 @@ start-at-login = true
 enable-normalization-flatten-containers = true
 enable-normalization-opposite-orientation-for-nested-containers = true
 
+# JankyBorders integration - Base16 One Dark colors matching Hyprland
+# Disabled: overhead not justified, but configuration kept for future use
+# after-startup-command = [
+#   'exec-and-forget borders active_color=0xff545862 inactive_color=0xff3e4451 width=4.0'
+# ]
+
 # SketchyBar integration
 exec-on-workspace-change = ['/bin/bash', '-c',
     'sketchybar --trigger aerospace_workspace_change FOCUSED_WORKSPACE=$AEROSPACE_FOCUSED_WORKSPACE'

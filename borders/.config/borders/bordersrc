@@ -1,0 +1,14 @@
+#!/bin/bash
+
+# JankyBorders configuration
+# Base16 One Dark color scheme (matching Hyprland)
+
+options=(
+  style=round
+  width=4.0
+  hidpi=on
+  active_color=0xff545862
+  inactive_color=0xff3e4451
+)
+
+borders "${options[@]}"
