@@ -1,14 +1,8 @@
 #!/bin/bash
 
 # Toggle Loom - open if not running, activate if running
+open -a "Loom"
 
-if pgrep -x "Loom" > /dev/null; then
-    # Loom is running, activate it
-    open -a "Loom"
-else
-    # Loom is not running, launch it
-    open -a "Loom"
-fi
-
-# Update the loom widget to reflect new state
+# Update the loom widget immediately to reflect new state
+sleep 0.5
 sketchybar --update loom

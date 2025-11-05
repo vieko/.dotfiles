@@ -1,7 +1,7 @@
 #!/bin/sh
 
-# Open Weather app
+# Open Weather app and refresh weather data
 open -a Weather
 
-# Trigger weather update
-sketchybar --update weather
+# Force immediate weather update in sketchybar
+sketchybar --trigger weather_update 2>/dev/null || sketchybar --update weather

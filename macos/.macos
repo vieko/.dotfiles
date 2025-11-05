@@ -70,6 +70,35 @@ defaults write NSGlobalDomain ApplePressAndHoldEnabled -bool false
 defaults write NSGlobalDomain AppleKeyboardUIMode -int 3
 
 # ============================================================================
+# Keyboard Input Sources
+# ============================================================================
+echo "=> Configuring keyboard input sources..."
+
+# Configure input sources (Canadian and Programmers QWERTY)
+# Note: This requires a more complex approach due to nested dictionaries
+defaults delete com.apple.HIToolbox AppleEnabledInputSources 2>/dev/null || true
+
+defaults write com.apple.HIToolbox AppleEnabledInputSources -array \
+  -dict InputSourceKind "Keyboard Layout" "KeyboardLayout ID" -int 29 "KeyboardLayout Name" "Canadian" \
+  -dict InputSourceKind "Keyboard Layout" "KeyboardLayout ID" -int -27039 "KeyboardLayout Name" "Programmers QWERTY"
+
+# Set Control+Space as the keyboard layout switcher shortcut
+defaults write com.apple.symbolichotkeys AppleSymbolicHotKeys -dict-add 60 "
+  <dict>
+    <key>enabled</key><true/>
+    <key>value</key><dict>
+      <key>type</key><string>standard</string>
+      <key>parameters</key>
+      <array>
+        <integer>32</integer>
+        <integer>49</integer>
+        <integer>262144</integer>
+      </array>
+    </dict>
+  </dict>
+"
+
+# ============================================================================
 # Wallpaper
 # ============================================================================
 echo "=> Setting wallpaper..."

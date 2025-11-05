@@ -106,6 +106,7 @@ sketchybar --add item clock right \
            \
            --add item keyboard right \
            --set keyboard \
+           update_freq=3 \
            icon.color="$BASE0B" \
            label.color="$BASE07" \
            script="$PLUGIN_DIR/keyboard.sh" \
