@@ -69,8 +69,8 @@ if [ -f ~/.secrets ]; then
 fi
 
 
-# Load fnm if available
-if command -v fnm &>/dev/null; then
+# Load fnm if available (skip if already loaded in .bash_profile)
+if command -v fnm &>/dev/null && [[ -z "$FNM_MULTISHELL_PATH" ]]; then
     eval "$(fnm env --use-on-cd)"
 fi
 
@@ -79,9 +79,12 @@ if [[ "$OSTYPE" == "linux-gnu"* ]]; then
     [ -s "$HOME/.config/envman/load.sh" ] && source "$HOME/.config/envman/load.sh"
 fi
 
-# Ensure Homebrew bin is at the front of PATH (must be after fnm/envman)
+# Add Homebrew to PATH if not already present (but keep fnm's Node priority)
 if [[ "$OSTYPE" == "darwin"* ]]; then
-    export PATH="/opt/homebrew/bin:$PATH"
+    # Only add if not already in PATH, and append (not prepend) to preserve fnm priority
+    if [[ ":$PATH:" != *":/opt/homebrew/bin:"* ]]; then
+        export PATH="$PATH:/opt/homebrew/bin"
+    fi
 fi
 
 # Load zoxide at the very end to avoid configuration issues

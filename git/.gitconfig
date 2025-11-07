@@ -135,7 +135,7 @@
     signingkey = 16FBF1CF29A0CDAE
 [gpg]
 	# Path is OS-specific, run: ~/.scripts/setup-git-gpg.sh when switching systems
-	program = /home/vieko/.scripts/gpg-wrapper.sh
+	program = /Users/vieko/.scripts/gpg-wrapper.sh
 [filter "lfs"]
 	process = git-lfs filter-process
 	required = true
