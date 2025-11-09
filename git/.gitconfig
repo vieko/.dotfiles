@@ -133,11 +133,14 @@
     email = 48670+vieko@users.noreply.github.com
     name = Vieko Franetovic
     signingkey = 16FBF1CF29A0CDAE
-[gpg]
-	# Path is OS-specific, run: ~/.scripts/setup-git-gpg.sh when switching systems
-	program = /Users/vieko/.scripts/gpg-wrapper.sh
 [filter "lfs"]
 	process = git-lfs filter-process
 	required = true
 	clean = git-lfs clean -- %f
 	smudge = git-lfs smudge -- %f
+
+# OS-specific configuration
+# .gitconfig-os is a symlink created by ~/.scripts/setup-git-gpg.sh
+# Points to either .gitconfig-macos or .gitconfig-linux
+[include]
+	path = /home/vieko/.dotfiles/git/.gitconfig-os

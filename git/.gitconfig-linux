@@ -1,0 +1,5 @@
+# Linux-specific Git configuration
+# Automatically included via conditional include in .gitconfig
+
+[gpg]
+	program = /home/vieko/.scripts/gpg-wrapper.sh

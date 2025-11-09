@@ -1,0 +1,5 @@
+# macOS-specific Git configuration
+# Automatically included via conditional include in .gitconfig
+
+[gpg]
+	program = /Users/vieko/.scripts/gpg-wrapper.sh

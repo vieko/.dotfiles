@@ -15,3 +15,4 @@ hypridle.conf.no_suspend
 lazygit/.config/lazygit/state.yml
 zed/.config/zed/prompts/prompts-library-db.*.mdb/
 .DS_Store
+git/.gitconfig-os
