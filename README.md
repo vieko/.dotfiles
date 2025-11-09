@@ -36,6 +36,11 @@ stow hypr waybar dunst fuzzel mako rofi sway i3 polybar
 cd ~/.config/kitty && ./setup-os-link.sh
 ```
 
+**After stowing git (required for OS-specific GPG configuration):**
+```bash
+~/.scripts/setup-git-gpg.sh
+```
+
 **For system-wide packages:**
 ```bash
 stow -t / <folder>  # May need sudo
