@@ -103,6 +103,13 @@ case ":$PATH:" in
   *) export PATH="$CARGO_HOME/bin:$PATH" ;;
 esac
 
+# DENO
+export DENO_INSTALL="$HOME/.deno"
+case ":$PATH:" in
+  *":$DENO_INSTALL/bin:"*) ;;
+  *) export PATH="$DENO_INSTALL/bin:$PATH" ;;
+esac
+
 # GO
 export GOPATH="$HOME/go"
 # Use case statement like other PATH additions for consistency
