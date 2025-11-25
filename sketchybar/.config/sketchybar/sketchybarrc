@@ -128,14 +128,13 @@ sketchybar --add item clock right \
            script="$PLUGIN_DIR/battery.sh" \
            --subscribe battery system_woke power_source_change \
            \
-           --add item loom right \
-           --set loom \
+           --add item network right \
+           --set network \
            update_freq=10 \
-           icon="󰕧" \
-           icon.color="$BASE08" \
+           icon.color="$BASE0E" \
            label.color="$BASE07" \
-           script="$PLUGIN_DIR/loom.sh" \
-           click_script="$CONFIG_DIR/scripts/toggle-loom.sh" \
+           script="$PLUGIN_DIR/network.sh" \
+           click_script="open x-apple.systempreferences:com.apple.Network-Settings.extension" \
            \
            --add item weather right \
            --set weather \
