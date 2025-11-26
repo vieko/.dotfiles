@@ -4,10 +4,29 @@
 BASE07=0xffc8ccd4  # Foreground
 BASE0D=0xff61afef  # Blue
 
+# Get system location using geolocation API
+# Falls back to IP-based location if geolocation fails
+LOCATION=""
+LOCATION_SCRIPT="$CONFIG_DIR/scripts/get-location.sh"
+
+if [ -x "$LOCATION_SCRIPT" ]; then
+  # Get GPS coordinates (format: lat,lon)
+  COORDS=$("$LOCATION_SCRIPT" 2>/dev/null)
+  if [ -n "$COORDS" ]; then
+    LOCATION="$COORDS"
+  fi
+fi
+
 # Fetch weather condition and temperature in one request (more efficient)
 # %C = weather condition text, %t = temperature
 # Format: "Condition,Temperature"
-WEATHER=$(curl -s 'wttr.in/?format=%C,%t')
+if [ -n "$LOCATION" ]; then
+  # Use specific location coordinates
+  WEATHER=$(curl -s "wttr.in/$LOCATION?format=%C,%t")
+else
+  # Fall back to IP-based location
+  WEATHER=$(curl -s 'wttr.in/?format=%C,%t')
+fi
 
 # If curl fails or returns empty, show fallback
 if [ -z "$WEATHER" ]; then
