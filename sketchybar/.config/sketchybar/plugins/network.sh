@@ -34,7 +34,7 @@ fi
 
 if [ -n "$WIRED" ]; then
   ICON="󰈀"  # nf-md-ethernet
-  LABEL="WIRED"
+  LABEL="LAN"
 elif [ -n "$WIFI_ACTIVE" ]; then
   ICON="󰖩"  # nf-md-wifi
   LABEL="WIFI"
