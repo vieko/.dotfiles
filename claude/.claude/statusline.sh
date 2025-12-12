@@ -4,19 +4,16 @@ input=$(cat)
 # Extract JSON data
 MODEL=$(echo "$input" | jq -r '.model.display_name')
 INPUT_TOKENS=$(echo "$input" | jq -r '.context_window.total_input_tokens')
-OUTPUT_TOKENS=$(echo "$input" | jq -r '.context_window.total_output_tokens')
 CONTEXT_SIZE=$(echo "$input" | jq -r '.context_window.context_window_size')
 
-# Calculate usage from JSON data only
-TOTAL_TOKENS=$((INPUT_TOKENS + OUTPUT_TOKENS))
-TOKENS_REMAINING=$((CONTEXT_SIZE - TOTAL_TOKENS))
-PERCENT_USED=$((TOTAL_TOKENS * 100 / CONTEXT_SIZE))
+# Use input tokens only - output tokens don't consume context for next call
+PERCENT_USED=$((INPUT_TOKENS * 100 / CONTEXT_SIZE))
 
 # Format tokens (K for thousands)
-if [[ $TOTAL_TOKENS -ge 1000 ]]; then
-    USED_DISPLAY="$((TOTAL_TOKENS / 1000))K"
+if [[ $INPUT_TOKENS -ge 1000 ]]; then
+    USED_DISPLAY="$((INPUT_TOKENS / 1000))K"
 else
-    USED_DISPLAY="$TOTAL_TOKENS"
+    USED_DISPLAY="$INPUT_TOKENS"
 fi
 
 if [[ $CONTEXT_SIZE -ge 1000 ]]; then
@@ -25,18 +22,25 @@ else
     SIZE_DISPLAY="$CONTEXT_SIZE"
 fi
 
-# Progress bar settings (shows usage filling up)
+# Progress bar settings (20 chars: ~2.5% threshold tolerance on 200k, ~0.5% on 1M)
 BAR_WIDTH=20
 FILLED=$((PERCENT_USED * BAR_WIDTH / 100))
 
-# Autocompact threshold at 77.5% (155k/200k)
-THRESHOLD_POS=$((BAR_WIDTH * 775 / 1000))
+# Autocompact buffer is fixed at 45k tokens - threshold is dynamic based on context size
+AUTOCOMPACT_BUFFER=45000
+THRESHOLD_TOKENS=$((CONTEXT_SIZE - AUTOCOMPACT_BUFFER))
+THRESHOLD_POS=$((THRESHOLD_TOKENS * BAR_WIDTH / CONTEXT_SIZE))
 
 # Build progress bar with threshold marker
 BAR=""
 for ((i=0; i<BAR_WIDTH; i++)); do
     if [[ $i -eq $THRESHOLD_POS ]]; then
-        BAR+="│"
+        # Threshold marker - show state AND marker
+        if [[ $i -lt $FILLED ]]; then
+            BAR+="▓"  # Filled + threshold
+        else
+            BAR+="│"  # Empty + threshold
+        fi
     elif [[ $i -lt $FILLED ]]; then
         BAR+="█"
     else
