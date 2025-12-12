@@ -20,5 +20,5 @@ EMPTY=$((BAR_WIDTH - FILLED))
 FILLED_BAR=$(printf '%*s' "$FILLED" '' | tr ' ' '█')
 EMPTY_BAR=$(printf '%*s' "$EMPTY" '' | tr ' ' '░')
 
-# Output: SUMMONING DEMONS | Model | Context: [bar] XX%
-printf "SUMMONING DEMONS | %s | Context: %s%s %d%%" "$MODEL" "$FILLED_BAR" "$EMPTY_BAR" "$PERCENT_USED"
+# Output: SUMMONING DEMONS | Model | ⛶ [bar] XX%
+printf "SUMMONING DEMONS | %s | ⛶ %s%s %d%%" "$MODEL" "$FILLED_BAR" "$EMPTY_BAR" "$PERCENT_USED"
