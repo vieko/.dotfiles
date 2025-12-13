@@ -1,4 +1,15 @@
 {
   "includeCoAuthoredBy": false,
-  "alwaysThinkingEnabled": true
+  "permissions": {
+    "allow": [
+      "Bash(~/.claude/statusline.sh)"
+    ]
+  },
+  "model": "sonnet[1m]",
+  "statusLine": {
+    "type": "command",
+    "command": "~/.claude/statusline.sh",
+    "padding": 0
+  },
+  "alwaysThinkingEnabled": false
 }
