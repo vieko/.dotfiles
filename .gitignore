@@ -9,10 +9,7 @@ icons/.icons/
 themes/.themes/
 hypridle.conf.no_suspend
 .opencode/
-.claude/projects
-.claude/statsig
-.claude/todos
-claude/.claude/settings.json
+/.claude/
 lazygit/.config/lazygit/state.yml
 zed/.config/zed/prompts/prompts-library-db.*.mdb/
 .DS_Store

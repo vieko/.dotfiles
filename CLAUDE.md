@@ -170,3 +170,29 @@ External scripts referenced from `~/.scripts/`:
 - Debug issues: Check `hyprctl monitors` and `hyprctl clients`
 - Wacom tablet: Configuration in `input:tablet` section, currently set to left_handed = false
 
+
+
+## Sessions Pattern (Optional)
+
+If you've set up the Sessions Directory Pattern (`npx create-sessions-dir`):
+
+- `/start-session` - Read context, fetch GitHub/Linear issues
+- `/end-session` - Update context, detect merged PRs, auto-archive
+- `/plan` - Create structured implementation plans
+- `/document` - Topic-specific documentation with sub-agents
+- `/change-git-strategy` - Change git strategy for .sessions/
+
+Learn more: https://vieko.dev/sessions
+
+## External Tools (Optional)
+
+**For GitHub integration:**
+```bash
+gh auth login    # Required for PR/issue fetching
+```
+
+**For Linear integration:**
+Configure the Linear MCP server in your Claude settings.
+See: https://github.com/anthropics/claude-code/blob/main/docs/mcp.md
+
+Commands will gracefully handle missing tools and prompt for manual input.
