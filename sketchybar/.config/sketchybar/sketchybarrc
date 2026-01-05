@@ -57,8 +57,9 @@ sketchybar --add item os_indicator left \
            icon.padding_right=4 \
            label.drawing=off
 
-# Create workspace indicators for all aerospace workspaces
-for sid in $(aerospace list-workspaces --all); do
+# Create workspace indicators for workspaces 1-10
+# Hardcoded to avoid startup timing issues with AeroSpace
+for sid in {1..10}; do
   sketchybar --add item space.$sid left \
              --subscribe space.$sid aerospace_workspace_change \
              --set space.$sid \
