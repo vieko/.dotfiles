@@ -136,3 +136,6 @@ export GLAMOUR_STYLE="$XDG_CONFIG_HOME/glamour/catppuccin-mocha.json"
 # export ANTHROPIC_MODEL='us.anthropic.claude-opus-4-20250514-v1:0'
 # export ANTHROPIC_SMALL_FAST_MODEL='us.anthropic.claude-3-5-haiku-20241022-v1:0'
 # export DISABLE_PROMPT_CACHING=1
+
+# LINEAR CLI
+export LINEAR_API_KEY=$(cat ~/.linear_api_token 2>/dev/null)

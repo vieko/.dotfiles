@@ -2,6 +2,19 @@
 
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
+## Session Context
+
+Read `.bonfire/index.md` for current project state, recent work, and priorities.
+
+**Bonfire Commands:**
+- `/bonfire:start` - Start a session (reads context)
+- `/bonfire:end` - End session (updates context)
+- `/bonfire:spec` - Create implementation spec
+- `/bonfire:document` - Document a topic
+- `/bonfire:review` - Review work for blindspots
+- `/bonfire:archive` - Archive completed work
+- `/bonfire:configure` - Change project settings
+
 ## Dotfiles Management
 
 ### Commands
