@@ -1,7 +1,12 @@
 #!/usr/bin/env bash
 
-# Default session name
-DEFAULT_SESSION="SUMMONING DEMONS"
+# Default session name based on hostname
+HOSTNAME=$(hostname -s)
+if [[ "$HOSTNAME" == "chaos" ]]; then
+    DEFAULT_SESSION="CHAOS"
+else
+    DEFAULT_SESSION="PHYREXIA"
+fi
 TERMINAL_WINDOW="void"
 EDITOR_WINDOW="altar"
 RUNNER_WINDOW="invoke"

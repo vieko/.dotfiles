@@ -1,7 +1,15 @@
 #!/usr/bin/env bash
 # Launch tmux with a default session name if no name is given
 
-SESSION_NAME="${1:-SUMMONING DEMONS}"
+# Default session name based on hostname
+HOSTNAME=$(hostname -s)
+if [[ "$HOSTNAME" == "chaos" ]]; then
+    DEFAULT_NAME="CHAOS"
+else
+    DEFAULT_NAME="PHYREXIA"
+fi
+
+SESSION_NAME="${1:-$DEFAULT_NAME}"
 
 tmux has-session -t "$SESSION_NAME" 2>/dev/null
 
