@@ -20,7 +20,8 @@ sketchybar --bar position=bottom \
                  height=20 \
                  blur_radius=50 \
                  color=0xf0282c34 \
-                 topmost=window
+                 topmost=window \
+                 display=main
 
 ##### Changing Defaults #####
 default=(
