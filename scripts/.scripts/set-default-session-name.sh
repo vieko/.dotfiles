@@ -5,6 +5,8 @@
 HOSTNAME=$(hostname -s)
 if [[ "$HOSTNAME" == "chaos" ]]; then
     DEFAULT_NAME="CHAOS"
+elif [[ "$HOSTNAME" == "scourge" ]]; then
+    DEFAULT_NAME="SCOURGE"
 else
     DEFAULT_NAME="PHYREXIA"
 fi

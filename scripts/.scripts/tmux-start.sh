@@ -4,6 +4,8 @@
 HOSTNAME=$(hostname -s)
 if [[ "$HOSTNAME" == "chaos" ]]; then
     DEFAULT_SESSION="CHAOS"
+elif [[ "$HOSTNAME" == "scourge" ]]; then
+    DEFAULT_SESSION="SCOURGE"
 else
     DEFAULT_SESSION="PHYREXIA"
 fi

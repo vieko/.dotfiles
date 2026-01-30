@@ -7,13 +7,14 @@
 echo "Configuring macOS defaults..."
 
 # ============================================================================
-# Computer Name (requires sudo, uncomment if desired)
+# Computer Name (requires sudo)
 # ============================================================================
-# echo "=> Setting computer name to 'phyrexia'..."
-# sudo scutil --set ComputerName "phyrexia"
-# sudo scutil --set HostName "phyrexia"
-# sudo scutil --set LocalHostName "phyrexia"
-# sudo defaults write /Library/Preferences/SystemConfiguration/com.apple.smb.server NetBIOSName -string "phyrexia"
+HOSTNAME=$(hostname -s)
+echo "=> Setting computer name to '$HOSTNAME'..."
+sudo scutil --set ComputerName "$HOSTNAME"
+sudo scutil --set HostName "$HOSTNAME"
+sudo scutil --set LocalHostName "$HOSTNAME"
+sudo defaults write /Library/Preferences/SystemConfiguration/com.apple.smb.server NetBIOSName -string "$HOSTNAME"
 
 # ============================================================================
 # Dock
