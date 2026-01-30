@@ -5,13 +5,14 @@
       "Bash(~/.claude/statusline.sh)"
     ]
   },
-  "model": "opus",
   "statusLine": {
     "type": "command",
     "command": "~/.claude/statusline.sh",
     "padding": 0
   },
   "enabledPlugins": {
-    "bonfire@vieko": true
-  }
+    "bonfire@vieko": true,
+    "linear-cli@linear-cli": true
+  },
+  "syntaxHighlightingDisabled": true
 }

@@ -15,11 +15,6 @@ esac
 
 # PATH additions using consistent case statement pattern
 case ":$PATH:" in
-  *":$HOME/.local/bin:"*) ;;
-  *) export PATH="$HOME/.local/bin:$PATH" ;;
-esac
-
-case ":$PATH:" in
   *":$HOME/bin:"*) ;;
   *) export PATH="$HOME/bin:$PATH" ;;
 esac
@@ -139,3 +134,9 @@ export GLAMOUR_STYLE="$XDG_CONFIG_HOME/glamour/catppuccin-mocha.json"
 
 # LINEAR CLI
 export LINEAR_API_KEY=$(cat ~/.linear_api_token 2>/dev/null)
+
+# User-local bin (last to ensure highest priority)
+case ":$PATH:" in
+  *":$HOME/.local/bin:"*) ;;
+  *) export PATH="$HOME/.local/bin:$PATH" ;;
+esac
