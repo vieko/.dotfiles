@@ -1,6 +1,7 @@
 #!/bin/bash
 input=$(cat)
 
-MODEL=$(echo "$input" | jq -r '.model.display_name')
+CWD=$(echo "$input" | jq -r '.workspace.current_dir')
+CWD_TILDE="${CWD/#$HOME/~}"
 
-printf "\033[1mSUMMONING DEMONS\033[22m ▲ %s" "$MODEL"
+printf "\033[1mSUMMONING DEMONS\033[22m ▲ %s" "$CWD_TILDE"
