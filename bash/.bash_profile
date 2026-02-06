@@ -15,3 +15,6 @@ if [ -f "$HOME/.bashrc" ]; then
     . "$HOME/.bashrc"
 fi
 . "$HOME/.cargo/env"
+
+# Added by Hades
+export PATH="$PATH:$HOME/.hades/bin"

@@ -90,3 +90,6 @@ fi
 # Load zoxide at the very end to avoid configuration issues
 eval "$(zoxide init bash)"
 . "$HOME/.cargo/env"
+
+# Added by Hades
+export PATH="$PATH:$HOME/.hades/bin"

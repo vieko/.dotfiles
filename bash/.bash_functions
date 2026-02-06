@@ -314,3 +314,7 @@ if [[ $- == *i* ]]; then
 fi
 
 fi  # End bash 4.0+ check for abbreviations
+
+# ==> dangerous agent shortcuts
+xcc() { claude --dangerously-skip-permissions "$@"; }
+xcd() { codex --dangerously-bypass-approvals-and-sandbox "$@"; }

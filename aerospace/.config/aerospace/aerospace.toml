@@ -63,6 +63,10 @@ run = ['layout floating']
 if.app-id = 'com.apple.weather'
 run = ['layout floating']
 
+[[on-window-detected]]
+if.app-id = 'app.tuple.app'
+run = ['layout floating']
+
 [gaps]
 inner.horizontal = 8
 inner.vertical   = 8
