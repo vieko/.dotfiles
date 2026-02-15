@@ -7,7 +7,7 @@ if ((BASH_VERSINFO[0] < 4)); then
 fi
 
 # source additional configuration files
-for file in ~/.bash_{aliases,functions,exports,prompt}; do
+for file in ~/.bash_{aliases,functions,exports,ai,prompt}; do
     [[ -r "$file" ]] && [[ -f "$file" ]] && source "$file"
 done
 

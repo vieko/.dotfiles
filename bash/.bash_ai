@@ -1,0 +1,147 @@
+#!/usr/bin/env bash
+
+# AI shortcuts
+# c*  = claude code (normal mode)
+# f*  = forge (outcome-driven workflows)
+# xc* = claude code (dangerous: skips ALL permission prompts)
+
+# ==> model shortcuts
+ch() { claude --model haiku "$@"; }
+cs() { claude --model sonnet "$@"; }
+co() { claude --model opus "$@"; }
+
+# ==> session management
+ccont() { claude --continue "$@"; }
+cres() { claude --resume "$@"; }
+
+# ==> print mode (non-interactive, stdout output)
+ccat() {
+    local file="$1"
+    shift
+    cat "$file" | claude --print "$*"
+}
+
+ccmd() {
+    local cmd="$1"
+    shift
+    eval "$cmd" | claude --print "$*"
+}
+
+cpaste() {
+    if [[ "$OSTYPE" == "darwin"* ]]; then
+        pbpaste | claude --print "$*"
+    elif command -v wl-paste &>/dev/null; then
+        wl-paste | claude --print "$*"
+    elif command -v xclip &>/dev/null; then
+        xclip -selection clipboard -o | claude --print "$*"
+    else
+        echo "No clipboard tool found" >&2
+        return 1
+    fi
+}
+
+# ==> tool restrictions
+cresearch() {
+    claude --model haiku \
+        --allowedTools "WebSearch,WebFetch" \
+        --print "$*"
+}
+
+# ==> forge (outcome-driven workflows)
+frun() { forge run "$@"; }
+fspec() { forge run --spec "$@"; }
+freview() { forge review "$@"; }
+faudit() { forge audit "$@"; }
+fstatus() { forge status "$@"; }
+fwatch() { forge watch "$@"; }
+
+# ==> session intelligence
+csesh() {
+    local limit="${1:-10}"
+    local projects_dir="$HOME/.claude/projects"
+    [[ ! -d "$projects_dir" ]] && echo "No sessions found." && return 1
+
+    echo "Recent Claude sessions:"
+    echo "========================"
+
+    if [[ "$OSTYPE" == "darwin"* ]]; then
+        find "$projects_dir" -name "*.jsonl" -type f -print0 \
+            | xargs -0 stat -f '%m %N' \
+            | sort -rn \
+            | head -n "$limit" \
+            | while read -r _ts file; do
+                local project
+                project=$(basename "$(dirname "$file")")
+                local session
+                session=$(basename "$file" .jsonl)
+                local mod
+                mod=$(stat -f '%Sm' -t '%Y-%m-%d %H:%M' "$file")
+                echo "  $mod  ${project}  ${session:0:8}..."
+            done
+    else
+        find "$projects_dir" -name "*.jsonl" -type f -printf '%T@ %p\n' \
+            | sort -rn \
+            | head -n "$limit" \
+            | while read -r _ts file; do
+                local project
+                project=$(basename "$(dirname "$file")")
+                local session
+                session=$(basename "$file" .jsonl)
+                local mod
+                mod=$(stat -c '%y' "$file" | cut -d. -f1)
+                echo "  $mod  ${project}  ${session:0:8}..."
+            done
+    fi
+}
+
+cpick() {
+    if ! command -v fzf &>/dev/null; then
+        echo "fzf is required for cpick" >&2
+        return 1
+    fi
+
+    local projects_dir="$HOME/.claude/projects"
+    [[ ! -d "$projects_dir" ]] && echo "No sessions found." && return 1
+
+    local selected
+    if [[ "$OSTYPE" == "darwin"* ]]; then
+        selected=$(find "$projects_dir" -name "*.jsonl" -type f -print0 \
+            | xargs -0 stat -f '%m %N' \
+            | sort -rn \
+            | while read -r _ts file; do
+                local project
+                project=$(basename "$(dirname "$file")")
+                local session
+                session=$(basename "$file" .jsonl)
+                local mod
+                mod=$(stat -f '%Sm' -t '%Y-%m-%d %H:%M' "$file")
+                echo "$session  $mod  $project"
+            done \
+            | fzf --prompt="Resume session> " \
+            | awk '{print $1}')
+    else
+        selected=$(find "$projects_dir" -name "*.jsonl" -type f -printf '%T@ %p\n' \
+            | sort -rn \
+            | while read -r _ts file; do
+                local project
+                project=$(basename "$(dirname "$file")")
+                local session
+                session=$(basename "$file" .jsonl)
+                local mod
+                mod=$(stat -c '%y' "$file" | cut -d. -f1)
+                echo "$session  $mod  $project"
+            done \
+            | fzf --prompt="Resume session> " \
+            | awk '{print $1}')
+    fi
+
+    [[ -z "$selected" ]] && return 0
+    claude --resume "$selected"
+}
+
+# ==> dangerous mode (skips ALL permission prompts — use with caution)
+# WARNING: These bypass safety confirmations. Only use in trusted contexts.
+xcc() { claude --dangerously-skip-permissions "$@"; }
+xco() { claude --dangerously-skip-permissions --model opus "$@"; }
+xcont() { claude --dangerously-skip-permissions --continue "$@"; }
+xcd() { codex --dangerously-bypass-approvals-and-sandbox "$@"; }

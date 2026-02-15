@@ -15,5 +15,6 @@
     "bonfire@vieko": true,
     "linear-cli@linear-cli": true
   },
-  "syntaxHighlightingDisabled": true
+  "syntaxHighlightingDisabled": true,
+  "skipDangerousModePermissionPrompt": true
 }
