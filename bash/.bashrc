@@ -79,13 +79,6 @@ if [[ "$OSTYPE" == "linux-gnu"* ]]; then
     [ -s "$HOME/.config/envman/load.sh" ] && source "$HOME/.config/envman/load.sh"
 fi
 
-# Add Homebrew to PATH if not already present (but keep fnm's Node priority)
-if [[ "$OSTYPE" == "darwin"* ]]; then
-    # Only add if not already in PATH, and append (not prepend) to preserve fnm priority
-    if [[ ":$PATH:" != *":/opt/homebrew/bin:"* ]]; then
-        export PATH="$PATH:/opt/homebrew/bin"
-    fi
-fi
 
 # Load zoxide at the very end to avoid configuration issues
 eval "$(zoxide init bash)"
