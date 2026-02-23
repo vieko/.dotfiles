@@ -38,3 +38,4 @@ fi
 
 # ==> aliases for convenience
 alias agents="update-agents.sh"
+alias wacom="restart-wacom.sh"
