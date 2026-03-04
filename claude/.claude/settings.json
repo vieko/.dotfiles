@@ -12,8 +12,7 @@
     "padding": 0
   },
   "enabledPlugins": {
-    "bonfire@vieko": true,
-    "linear-cli@linear-cli": true
+    "bonfire@vieko": true
   },
   "syntaxHighlightingDisabled": true,
   "skipDangerousModePermissionPrompt": true

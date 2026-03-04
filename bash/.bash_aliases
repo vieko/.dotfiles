@@ -39,3 +39,4 @@ fi
 # ==> aliases for convenience
 alias agents="update-agents.sh"
 alias wacom="restart-wacom.sh"
+alias ccu="npx ccusage@latest"
