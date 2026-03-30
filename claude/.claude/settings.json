@@ -2,18 +2,180 @@
   "includeCoAuthoredBy": false,
   "permissions": {
     "allow": [
-      "Bash(~/.claude/statusline.sh)"
-    ]
+      "Bash(~/.claude/statusline.sh)",
+      "Bash(git:*)",
+      "Bash(gh:*)",
+      "Bash(tmux list-windows:*)",
+      "Bash(tmux list-sessions:*)",
+      "Bash(tmux capture-pane:*)",
+      "Bash(find:*)",
+      "Bash(ls:*)",
+      "Bash(mkdir:*)",
+      "Bash(cat:*)",
+      "Bash(wc:*)",
+      "Bash(sort:*)",
+      "Bash(xargs:*)",
+      "Bash(jq:*)",
+      "Bash(lsof:*)",
+      "Bash(ps:*)",
+      "Bash(kill:*)",
+      "Bash(date:*)",
+      "Bash(command:*)",
+      "Bash(source:*)",
+      "Bash(node:*)",
+      "Bash(python3:*)",
+      "Bash(test:*)",
+      "Bash(curl:*)",
+      "Bash(grep:*)",
+      "Bash(redis-cli:*)",
+      "Bash([ -n \"$TMUX\" ])",
+      "Bash(pnpm build:*)",
+      "Bash(pnpm install)",
+      "Bash(pnpm add:*)",
+      "Bash(pnpm list:*)",
+      "Bash(pnpm dev:*)",
+      "Bash(pnpm tsx:*)",
+      "Bash(pnpm exec tsx:*)",
+      "Bash(pnpm tsc:*)",
+      "Bash(pnpm turbo build:*)",
+      "Bash(pnpm turbo lint:*)",
+      "Bash(pnpm turbo run build:*)",
+      "Bash(pnpm drizzle-kit:*)",
+      "Bash(pnpm db:migrate:*)",
+      "Bash(pnpm db:generate:*)",
+      "Bash(pnpm db:branch:*)",
+      "Bash(pnpm db:utils test:*)",
+      "Bash(pnpm -C packages/db exec tsx:*)",
+      "Bash(pnpm --filter @repo/db exec tsx:*)",
+      "Bash(pnpm --filter @repo/db run db:branch:delete:*)",
+      "Bash(pnpm --filter recon build:*)",
+      "Bash(pnpm --filter recon exec tsx:*)",
+      "Bash(pnpm --filter gtm-prompt-bench build:*)",
+      "Bash(pnpm kb:search:*)",
+      "Bash(npx tsx:*)",
+      "Bash(npx next build:*)",
+      "Bash(SKIP_ENV_VALIDATION=1 npx next build:*)",
+      "Bash(TEST_EMAIL_OVERRIDE=vieko@vercel.com npx tsx:*)",
+      "Bash(linear issue:*)",
+      "Bash(linear team list:*)",
+      "Bash(neonctl:*)",
+      "Bash(vercel blob put:*)",
+      "Bash(vercel switch:*)",
+      "Bash(vercel project:*)",
+      "Bash(vercel logs:*)",
+      "Bash(vercel ls:*)",
+      "Bash(vercel env:*)",
+      "Bash(psql:*)",
+      "Bash(tsx apps/deal-bot/scripts/kb-search.ts:*)",
+      "Bash(agent-browser open:*)",
+      "Bash(agent-browser screenshot:*)",
+      "Bash(agent-browser snapshot:*)",
+      "Bash(agent-browser close:*)",
+      "Bash(source .env.local)",
+      "WebSearch",
+      "WebFetch(domain:docs.exa.ai)",
+      "WebFetch(domain:vercel.com)",
+      "WebFetch(domain:github.com)",
+      "WebFetch(domain:useworkflow.dev)",
+      "WebFetch(domain:v1.evalite.dev)",
+      "WebFetch(domain:docs.slack.dev)",
+      "WebFetch(domain:slack.dev)",
+      "WebFetch(domain:tray.ai)",
+      "WebFetch(domain:docs.tray.ai)",
+      "WebFetch(domain:linear.app)",
+      "WebFetch(domain:cal.com)",
+      "WebFetch(domain:ai-sdk.dev)",
+      "WebFetch(domain:neon.com)",
+      "Skill(bonfire)",
+      "Skill(agent-browser)",
+      "Skill(linear-cli)"
+    ],
+    "ask": [
+      "Bash(.claude/scripts/*:*)"
+    ],
+    "defaultMode": "default"
   },
   "model": "opus[1m]",
+  "hooks": {
+    "Stop": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "/Users/vieko/.claude/sounds/play-random.sh"
+          }
+        ]
+      },
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "[ -n \"$SUPERSET_HOME_DIR\" ] && [ -x \"$SUPERSET_HOME_DIR/hooks/notify.sh\" ] && \"$SUPERSET_HOME_DIR/hooks/notify.sh\" || true"
+          }
+        ]
+      }
+    ],
+    "UserPromptSubmit": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "[ -n \"$SUPERSET_HOME_DIR\" ] && [ -x \"$SUPERSET_HOME_DIR/hooks/notify.sh\" ] && \"$SUPERSET_HOME_DIR/hooks/notify.sh\" || true"
+          }
+        ]
+      }
+    ],
+    "PostToolUse": [
+      {
+        "matcher": "*",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "[ -n \"$SUPERSET_HOME_DIR\" ] && [ -x \"$SUPERSET_HOME_DIR/hooks/notify.sh\" ] && \"$SUPERSET_HOME_DIR/hooks/notify.sh\" || true"
+          }
+        ]
+      }
+    ],
+    "PostToolUseFailure": [
+      {
+        "matcher": "*",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "[ -n \"$SUPERSET_HOME_DIR\" ] && [ -x \"$SUPERSET_HOME_DIR/hooks/notify.sh\" ] && \"$SUPERSET_HOME_DIR/hooks/notify.sh\" || true"
+          }
+        ]
+      }
+    ],
+    "PermissionRequest": [
+      {
+        "matcher": "*",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "[ -n \"$SUPERSET_HOME_DIR\" ] && [ -x \"$SUPERSET_HOME_DIR/hooks/notify.sh\" ] && \"$SUPERSET_HOME_DIR/hooks/notify.sh\" || true"
+          }
+        ]
+      }
+    ]
+  },
   "statusLine": {
     "type": "command",
     "command": "~/.claude/statusline.sh",
     "padding": 0
   },
   "enabledPlugins": {
-    "bonfire@vieko": true
+    "typescript-lsp@claude-plugins-official": true
+  },
+  "extraKnownMarketplaces": {
+    "vercel-plugin": {
+      "source": {
+        "source": "directory",
+        "path": "/Users/vieko/.cache/add-plugin/https%3A%2F%2Fgithub.com%2Fvercel-labs%2Fvercel-plugin"
+      }
+    }
   },
   "syntaxHighlightingDisabled": true,
+  "effortLevel": "high",
   "skipDangerousModePermissionPrompt": true
 }

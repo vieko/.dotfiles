@@ -38,6 +38,10 @@ copy-on-select = clipboard
 # URL
 link-url = true
 
+# NOTIFICATIONS
+# Disable default bell sound — custom sounds via Claude Code Notification hook
+bell-features = no-system,no-audio,no-attention,no-title,no-border
+
 # SCROLLBACK
 scrollback-limit = 10000
 

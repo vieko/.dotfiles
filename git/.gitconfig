@@ -132,8 +132,8 @@
     showUntrackedFiles = all
 
 [user]
-    email = 48670+vieko@users.noreply.github.com
-    name = Vieko Franetovic
+	email = 48670+vieko@users.noreply.github.com
+	name = Vieko Franetovic
     signingkey = 16FBF1CF29A0CDAE
 [filter "lfs"]
 	process = git-lfs filter-process
