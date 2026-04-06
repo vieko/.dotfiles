@@ -86,5 +86,3 @@ eval "$(zoxide init bash)"
 
 # Added by Hades
 export PATH="$PATH:$HOME/.hades/bin"
-
-export FORGE_STATE_ROOT="$HOME/.forge"
