@@ -165,7 +165,8 @@
     "padding": 0
   },
   "enabledPlugins": {
-    "typescript-lsp@claude-plugins-official": true
+    "typescript-lsp@claude-plugins-official": true,
+    "vercel@claude-plugins-official": true
   },
   "extraKnownMarketplaces": {
     "vercel-plugin": {
@@ -175,9 +176,6 @@
       }
     }
   },
-  "syntaxHighlightingDisabled": true,
-  "effortLevel": "high",
-  "skipDangerousModePermissionPrompt": true,
   "spinnerVerbs": {
     "mode": "replace",
     "verbs": [
@@ -344,5 +342,8 @@
       "Nunn-Vassago",
       "Audi Nos Naberius"
     ]
-  }
+  },
+  "syntaxHighlightingDisabled": true,
+  "effortLevel": "high",
+  "skipDangerousModePermissionPrompt": true
 }
