@@ -125,11 +125,8 @@ export GLAMOUR_STYLE="$XDG_CONFIG_HOME/glamour/catppuccin-mocha.json"
 # export ANTHROPIC_SMALL_FAST_MODEL='us.anthropic.claude-3-5-haiku-20241022-v1:0'
 # export DISABLE_PROMPT_CACHING=1
 
-# LINEAR CLI
-export LINEAR_API_KEY=$(cat ~/.linear_api_token 2>/dev/null)
-
-# NPM (private registry auth for pnpm)
-export NPM_TOKEN=$(cat ~/.npm_token 2>/dev/null)
+# LINEAR_API_KEY and NPM_TOKEN are sourced from 1Password via
+# ~/.dotfiles/bash/env.op; see op-inject block in .bashrc.
 
 # User-local bin (last to ensure highest priority)
 case ":$PATH:" in

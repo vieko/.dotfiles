@@ -63,9 +63,15 @@ if command -v jj &>/dev/null; then
     source <(jj util completion bash)
 fi
 
-# source secrets
-if [ -f ~/.secrets ]; then
-    source ~/.secrets
+# Pre-load 1Password-managed secrets into the shell env.
+# Source of truth: ~/.dotfiles/bash/env.op (op:// refs only, safe to commit).
+# Resolves all refs in a single op call; silent no-op if op isn't signed in.
+if command -v op &>/dev/null \
+        && [[ -r "$HOME/.dotfiles/bash/env.op" ]] \
+        && op account list &>/dev/null 2>&1; then
+    set -a
+    eval "$(op inject -i "$HOME/.dotfiles/bash/env.op" 2>/dev/null)"
+    set +a
 fi
 
 

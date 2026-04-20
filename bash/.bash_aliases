@@ -40,3 +40,6 @@ fi
 alias agents="update-agents.sh"
 alias wacom="restart-wacom.sh"
 alias ccu="npx ccusage@latest"
+
+# ==> 1Password env injection — resolves op:// refs into child-process env only
+alias opr='op run --env-file=$HOME/.dotfiles/bash/env.op --'
