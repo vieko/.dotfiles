@@ -63,17 +63,9 @@ if command -v jj &>/dev/null; then
     source <(jj util completion bash)
 fi
 
-# Pre-load 1Password-managed secrets into the shell env.
-# Source of truth: ~/.dotfiles/bash/env.op (op:// refs only, safe to commit).
-# Resolves all refs in a single op call; silent no-op if op isn't signed in.
-if command -v op &>/dev/null \
-        && [[ -r "$HOME/.dotfiles/bash/env.op" ]] \
-        && op account list &>/dev/null 2>&1; then
-    set -a
-    eval "$(op inject -i "$HOME/.dotfiles/bash/env.op" 2>/dev/null)"
-    set +a
-fi
-
+# 1Password env injection lives in .bash_profile (login shells only) so
+# subshells (tmux panes etc.) inherit the resolved env from the login
+# shell instead of re-running `op inject` and re-prompting for auth.
 
 # Load fnm if available (skip if already loaded in .bash_profile)
 if command -v fnm &>/dev/null && [[ -z "$FNM_MULTISHELL_PATH" ]]; then
