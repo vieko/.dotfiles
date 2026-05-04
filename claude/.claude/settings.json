@@ -344,6 +344,7 @@
     ]
   },
   "syntaxHighlightingDisabled": true,
-  "effortLevel": "high",
-  "skipDangerousModePermissionPrompt": true
+  "effortLevel": "xhigh",
+  "skipDangerousModePermissionPrompt": true,
+  "editorMode": "vim"
 }
