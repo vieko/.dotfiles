@@ -30,9 +30,31 @@ Read `.bonfire/index.md` for current project state, recent work, and priorities.
 
 ### Cross-Platform Strategy
 
-**Cross-platform packages:** bash, git, kitty, tmux, nvim, starship, bat, btop, lazygit, yazi, assets
+**Cross-platform packages:** bash, git, kitty, ghostty, tmux, nvim, starship, bat, btop, lazygit, yazi, assets, claude, pi, agents
 **macOS-only:** macos, macos-keyboard, aerospace, sketchybar
 **Linux-only:** hypr, waybar, dunst, fuzzel, mako, rofi, sway, i3, polybar
+
+### Agent-related Packages
+
+**`pi/`** — Pi coding agent config. Stows to `~/.pi/agent/`. Tracks: `AGENTS.md`,
+`settings.json`, `keybindings.json`, `prompts/`, `themes/`. **Does NOT track**
+`auth.json`, `sessions/`, or `skills/` (auto-generated / machine-local).
+
+Note: Pi writes `lastChangelogVersion` into `settings.json` on update. Expect
+occasional churn in git status; commit when convenient.
+
+**`agents/`** — cross-agent shared skills. Stows to `~/.agents/`. Single source
+of truth for skills that any agent (Pi, Claude, Codex) should see.
+
+Some skills are symlinks to dev repos:
+- `~/.agents/skills/bonfire` → `~/dev/bonfire/skills/bonfire`
+- `~/.agents/skills/forge` → `~/dev/forge/skills/forge`
+
+On a fresh machine, those dev repos must be cloned (`~/dev/bonfire`, `~/dev/forge`)
+before the symlinks resolve. Other skills are self-contained directories.
+
+**`claude/`** — Claude Code config. Stows to `~/.claude/`. Tracks `settings.json`
+and `statusline.sh` only — matches the same "config not state" philosophy as `pi/`.
 
 ### OS Detection Pattern
 
