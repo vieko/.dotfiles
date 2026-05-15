@@ -31,6 +31,11 @@ theme = One Half Dark
 # SHELL
 shell-integration = bash
 
+# KEYBINDINGS
+# Send ESC+DEL on Alt+Backspace so TUIs (Pi, nvim, readline) see a word-delete
+# event instead of a single backspace. Recommended by pi.dev/docs/latest/terminal-setup.
+keybind = alt+backspace=text:\x1b\x7f
+
 # MOUSE
 mouse-hide-while-typing = true
 copy-on-select = clipboard
