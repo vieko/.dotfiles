@@ -38,3 +38,5 @@ fi
 
 # Added by Hades
 export PATH="$PATH:$HOME/.hades/bin"
+
+. "$HOME/.local/share/../bin/env"
