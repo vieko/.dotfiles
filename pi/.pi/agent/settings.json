@@ -15,5 +15,6 @@
   "skills": [
     "~/.claude/plugins/cache/claude-plugins-official/vercel/0.42.1/skills",
     "~/.claude/plugins/cache/claude-plugins-official/vercel/0.42.1/.claude/skills"
-  ]
+  ],
+  "editorPaddingX": 1
 }
