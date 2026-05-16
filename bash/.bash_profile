@@ -1,5 +1,19 @@
 #!/usr/bin/env bash
 
+# Login-shell entrypoint. Env / PATH / one-time auth lives here.
+#
+# Rule of thumb (established sessions 12 & 14):
+#   - .bash_profile  -> runs once per login shell. Env vars, PATH mutations,
+#                       1Password secret hydration, version-manager init.
+#                       Inherited by every child shell (tmux panes, subshells,
+#                       Pi's `bash -c` invocations).
+#   - .bashrc        -> runs per interactive shell. Aliases, prompt, completion,
+#                       anything that must re-apply in every pane.
+#
+# Putting env/PATH here (not in .bashrc) means tmux panes inherit the resolved
+# environment instead of re-running expensive bootstrap (op inject, fnm env,
+# brew shellenv) on every new pane.
+
 # source global definitions (Linux only - macOS doesn't need this)
 if [[ "$OSTYPE" == "linux-gnu"* ]] && [ -f /etc/bashrc ]; then
     . /etc/bashrc
