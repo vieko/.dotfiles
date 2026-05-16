@@ -53,6 +53,20 @@ Some skills are symlinks to dev repos:
 On a fresh machine, those dev repos must be cloned (`~/dev/bonfire`, `~/dev/forge`)
 before the symlinks resolve. Other skills are self-contained directories.
 
+**Skill layout convention:**
+
+- **Tracked skills** live as real directories under `agents/.agents/skills/<name>/`
+  in this repo. They ship via stow with the rest of the dotfiles. Use this for
+  stable, machine-agnostic skills that don't change often.
+- **Symlinked skills** live at `~/dev/<name>/skills/<name>/` and are symlinked
+  in from `agents/.agents/skills/<name>`. Use this for skills under active
+  development that benefit from their own git history, releases, and PRs.
+
+Both resolve to the same path at runtime (`~/.agents/skills/<name>`). The
+choice is purely about where the source of truth lives. Migrate a skill
+between modes by replacing the dotfiles entry with the opposite kind
+(symlink → directory or vice versa) and re-stowing `agents/`.
+
 **`claude/`** — Claude Code config. Stows to `~/.claude/`. Tracks `settings.json`
 and `statusline.sh` only — matches the same "config not state" philosophy as `pi/`.
 
