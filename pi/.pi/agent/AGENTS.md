@@ -65,3 +65,22 @@ Generally prefer Pi's `edit`/`write` tools over spawning nvim.
 This `AGENTS.md` covers both macOS and Linux setups (see `~/.dotfiles/CLAUDE.md`).
 Use `$OSTYPE` or the exported `$USER_OS` (`macos`/`linux`) to branch when
 platform-specific behavior is required.
+
+## Maintenance notes
+
+### Version-pinned skills path
+
+`settings.json` references the Claude vercel-plugin skills via a hard-coded
+version directory:
+
+```
+~/.claude/plugins/cache/claude-plugins-official/vercel/0.42.1/skills
+~/.claude/plugins/cache/claude-plugins-official/vercel/0.42.1/.claude/skills
+```
+
+When the plugin updates, this path goes stale and Pi silently loads zero
+skills from it. Symptom: the skill set shrinks at startup with no error.
+Fix: bump the version segment in both entries to match whatever
+`ls ~/.claude/plugins/cache/claude-plugins-official/vercel/` reports.
+Long-term: replace with a symlink (e.g. `vercel/current`) once the plugin
+cache layout stabilizes.
