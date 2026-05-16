@@ -31,7 +31,7 @@
     "thinkingText": "comment",
 
     "selectedBg": "bgSelection",
-    "userMessageBg": "bgAlt",
+    "userMessageBg": "bgSelection",
     "userMessageText": "",
     "customMessageBg": "bgAlt",
     "customMessageText": "",
@@ -39,17 +39,17 @@
     "toolPendingBg": "bgAlt",
     "toolSuccessBg": "#2b3328",
     "toolErrorBg": "#3a2a2c",
-    "toolTitle": "blue",
+    "toolTitle": "cyan",
     "toolOutput": "",
 
-    "mdHeading": "purple",
+    "mdHeading": "yellow",
     "mdLink": "blue",
     "mdLinkUrl": "comment",
     "mdCode": "cyan",
     "mdCodeBlock": "",
-    "mdCodeBlockBorder": "comment",
-    "mdQuote": "comment",
-    "mdQuoteBorder": "gutter",
+    "mdCodeBlockBorder": "gutter",
+    "mdQuote": "",
+    "mdQuoteBorder": "comment",
     "mdHr": "gutter",
     "mdListBullet": "orange",
 
@@ -60,7 +60,7 @@
     "syntaxComment": "comment",
     "syntaxKeyword": "purple",
     "syntaxFunction": "blue",
-    "syntaxVariable": "red",
+    "syntaxVariable": "",
     "syntaxString": "green",
     "syntaxNumber": "orange",
     "syntaxType": "yellow",
@@ -72,13 +72,13 @@
     "thinkingLow": "cyan",
     "thinkingMedium": "blue",
     "thinkingHigh": "purple",
-    "thinkingXhigh": "red",
+    "thinkingXhigh": "darkRed",
 
     "bashMode": "orange"
   },
   "export": {
     "pageBg": "#282c34",
     "cardBg": "#2c313a",
-    "infoBg": "#3e4451"
+    "infoBg": "#3c3328"
   }
 }
