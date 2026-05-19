@@ -35,6 +35,11 @@ Lowercase imperative with conventional-commits scope:
 Body wraps at ~72 chars. Explain *why*, not what. Reference issues by `#N`
 when applicable.
 
+## Tool & review notes
+
+- **`linear` CLI quirk**: `linear issue view -j` omits the `labels` field entirely. Default-checking `.labels.nodes` returns `[]` even when labels are attached. Verify label assignments via the UI or a raw GraphQL query, not the CLI's `-j` output.
+- **PR review style on vercel repos**: keep JSDoc and code-comment prose tight. State what + why; the code shows how. Multi-paragraph explanations on small helpers read as noise — file-level headers documenting non-obvious context are fine.
+
 ## Secrets
 
 This machine resolves secrets at login-shell startup via 1Password `op inject`
