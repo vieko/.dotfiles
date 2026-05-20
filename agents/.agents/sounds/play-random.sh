@@ -3,7 +3,7 @@
 # Used by Claude Code Stop hook and Pi sound-on-end extension.
 #
 # Usage: play-random.sh [category]
-#   category: death | what | attack | yes  (default: all)
+#   category: ready | death | pissed | what | attack | yes  (default: all)
 #
 # Catalog lives next to this script as catalog.json. Each category is a list
 # of { desc, file } entries; file paths are relative to this script's dir.

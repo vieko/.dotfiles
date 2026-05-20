@@ -1,37 +1,182 @@
 {
+  "ready": [
+    {
+      "desc": "The merging is complete",
+      "file": "archon/ready-00.mp3"
+    }
+  ],
   "death": [
-    { "desc": "Archon: agonized death cry, deep", "file": "archon/death-00.mp3" },
-    { "desc": "Archon: short death gasp",         "file": "archon/death-01.mp3" },
-    { "desc": "Archon: drawn-out death wail",     "file": "archon/death-02.mp3" },
-    { "desc": "Archon: final death rattle",       "file": "archon/death-03.mp3" }
+    {
+      "desc": "agonized death cry",
+      "file": "archon/death-00.mp3"
+    },
+    {
+      "desc": "short death gasp",
+      "file": "archon/death-01.mp3"
+    },
+    {
+      "desc": "drawn-out death wail",
+      "file": "archon/death-02.mp3"
+    },
+    {
+      "desc": "final death rattle",
+      "file": "archon/death-03.mp3"
+    }
+  ],
+  "pissed": [
+    {
+      "desc": "Break on through",
+      "file": "archon/pissed-01.mp3"
+    },
+    {
+      "desc": "It's beautiful!",
+      "file": "archon/pissed-02.mp3"
+    },
+    {
+      "desc": "Energy never dies",
+      "file": "archon/pissed-04.mp3"
+    },
+    {
+      "desc": "I'm... lit!",
+      "file": "archon/pissed-08.mp3"
+    }
   ],
   "what": [
-    { "desc": "Archon: 'what is thy bidding?'",   "file": "archon/what-00.mp3" },
-    { "desc": "Archon: 'speak'",                  "file": "archon/what-01.mp3" },
-    { "desc": "Archon: 'power overwhelming'",     "file": "archon/what-02.mp3" },
-    { "desc": "Immortal: query 1",                "file": "immortal/what-00.mp3" },
-    { "desc": "Immortal: query 2",                "file": "immortal/what-01.mp3" },
-    { "desc": "Immortal: query 3",                "file": "immortal/what-02.mp3" },
-    { "desc": "Immortal: query 4",                "file": "immortal/what-03.mp3" },
-    { "desc": "Immortal: query 5",                "file": "immortal/what-04.mp3" },
-    { "desc": "Immortal: query 6",                "file": "immortal/what-05.mp3" },
-    { "desc": "Immortal: query 7",                "file": "immortal/what-06.mp3" }
+    {
+      "desc": "We... burn!",
+      "file": "archon/what-00.mp3"
+    },
+    {
+      "desc": "We need focus",
+      "file": "archon/what-01.mp3"
+    },
+    {
+      "desc": "Power overwhelming",
+      "file": "archon/what-02.mp3"
+    },
+    {
+      "desc": "What guidance?",
+      "file": "archon/what-03.mp3"
+    },
+    {
+      "desc": "I heed the call",
+      "file": "immortal/what-00.mp3"
+    },
+    {
+      "desc": "I feel your presence",
+      "file": "immortal/what-01.mp3"
+    },
+    {
+      "desc": "(Khalani language)",
+      "file": "immortal/what-02.mp3"
+    },
+    {
+      "desc": "Glory is eternal",
+      "file": "immortal/what-03.mp3"
+    },
+    {
+      "desc": "Our duty is unending",
+      "file": "immortal/what-04.mp3"
+    },
+    {
+      "desc": "(Khalani language)",
+      "file": "immortal/what-05.mp3"
+    },
+    {
+      "desc": "We shall server forever!",
+      "file": "immortal/what-06.mp3"
+    }
   ],
   "attack": [
-    { "desc": "Immortal: attack callout 1", "file": "immortal/attack-00.mp3" },
-    { "desc": "Immortal: attack callout 2", "file": "immortal/attack-01.mp3" },
-    { "desc": "Immortal: attack callout 3", "file": "immortal/attack-02.mp3" },
-    { "desc": "Immortal: attack callout 4", "file": "immortal/attack-03.mp3" },
-    { "desc": "Immortal: attack callout 5", "file": "immortal/attack-04.mp3" },
-    { "desc": "Immortal: attack callout 6", "file": "immortal/attack-05.mp3" },
-    { "desc": "Immortal: attack callout 7", "file": "immortal/attack-06.mp3" }
+    {
+      "desc": "Dominate!",
+      "file": "archon/attack-00.mp3"
+    },
+    {
+      "desc": "Decimate!",
+      "file": "archon/attack-01.mp3"
+    },
+    {
+      "desc": "Vaporize!",
+      "file": "archon/attack-02.mp3"
+    },
+    {
+      "desc": "For the ancients!",
+      "file": "immortal/attack-00.mp3"
+    },
+    {
+      "desc": "Let darkness be parted",
+      "file": "immortal/attack-01.mp3"
+    },
+    {
+      "desc": "En Taro Adun!",
+      "file": "immortal/attack-02.mp3"
+    },
+    {
+      "desc": "Woe to our enemies",
+      "file": "immortal/attack-03.mp3"
+    },
+    {
+      "desc": "Fury unyielding!",
+      "file": "immortal/attack-04.mp3"
+    },
+    {
+      "desc": "(Khalani language)",
+      "file": "immortal/attack-05.mp3"
+    },
+    {
+      "desc": "The battle is ours!",
+      "file": "immortal/attack-06.mp3"
+    }
   ],
   "yes": [
-    { "desc": "Immortal: acknowledgment 1", "file": "immortal/yes-00.mp3" },
-    { "desc": "Immortal: acknowledgment 2", "file": "immortal/yes-01.mp3" },
-    { "desc": "Immortal: acknowledgment 3", "file": "immortal/yes-02.mp3" },
-    { "desc": "Immortal: acknowledgment 4", "file": "immortal/yes-03.mp3" },
-    { "desc": "Immortal: acknowledgment 5", "file": "immortal/yes-04.mp3" },
-    { "desc": "Immortal: acknowledgment 6", "file": "immortal/yes-05.mp3" }
+    {
+      "desc": "Destroy!",
+      "file": "archon/yes-00.mp3"
+    },
+    {
+      "desc": "Annihilate!",
+      "file": "archon/yes-01.mp3"
+    },
+    {
+      "desc": "Obliterate!",
+      "file": "archon/yes-02.mp3"
+    },
+    {
+      "desc": "Eradicate!",
+      "file": "archon/yes-03.mp3"
+    },
+    {
+      "desc": "It will be!",
+      "file": "archon/yes-04.mp3"
+    },
+    {
+      "desc": "(Khalani language)",
+      "file": "archon/yes-05.mp3"
+    },
+    {
+      "desc": "It is destined",
+      "file": "immortal/yes-00.mp3"
+    },
+    {
+      "desc": "(Khalani language)",
+      "file": "immortal/yes-01.mp3"
+    },
+    {
+      "desc": "There shall be a reckoning",
+      "file": "immortal/yes-02.mp3"
+    },
+    {
+      "desc": "(Khalani language)",
+      "file": "immortal/yes-03.mp3"
+    },
+    {
+      "desc": "Our cannons shall sing",
+      "file": "immortal/yes-04.mp3"
+    },
+    {
+      "desc": "We march to victory",
+      "file": "immortal/yes-05.mp3"
+    }
   ]
 }
