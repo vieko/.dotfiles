@@ -1,5 +1,5 @@
 {
-  "lastChangelogVersion": "0.75.3",
+  "lastChangelogVersion": "0.75.4",
   "defaultProvider": "vercel-ai-gateway",
   "defaultModel": "anthropic/claude-opus-4.7",
   "theme": "one-dark",
@@ -18,6 +18,6 @@
   ],
   "editorPaddingX": 1,
   "packages": [
-    "git:github.com/vieko/bonfire@v7.0.1"
+    "git:github.com/vieko/bonfire@v7.1.0"
   ]
 }
