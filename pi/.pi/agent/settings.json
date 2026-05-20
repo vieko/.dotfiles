@@ -16,5 +16,8 @@
     "~/.claude/plugins/cache/claude-plugins-official/vercel/0.42.1/skills",
     "~/.claude/plugins/cache/claude-plugins-official/vercel/0.42.1/.claude/skills"
   ],
-  "editorPaddingX": 1
+  "editorPaddingX": 1,
+  "packages": [
+    "git:github.com/vieko/bonfire@v7.0.1"
+  ]
 }

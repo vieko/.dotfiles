@@ -4,16 +4,18 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Session Context
 
-Read `.bonfire/index.md` for current project state, recent work, and priorities.
+Read `<project>/.bonfire/index.md` for current state. The file is kept current
+automatically by host-native bonfire adapters — no commands to run.
 
-**Bonfire Commands:**
-- `/bonfire:start` - Start a session (reads context)
-- `/bonfire:end` - End session (updates context)
-- `/bonfire:spec` - Create implementation spec
-- `/bonfire:document` - Document a topic
-- `/bonfire:review` - Review work for blindspots
-- `/bonfire:archive` - Archive completed work
-- `/bonfire:configure` - Change project settings
+- **Pi**: extension loaded via symlink at `~/.pi/agent/extensions/bonfire-dev`
+  pointing to `~/dev/bonfire/pi`. Hooks `session_compact` + `session_shutdown`.
+- **Claude Code**: Stop hook in `~/.claude/settings.json` pointing to
+  `~/dev/bonfire/claude/update-bonfire.mjs`.
+- **Other agents (Codex, OpenCode, …)**: fallback skill via
+  `/skill:bonfire end` only, has `disable-model-invocation: true`.
+
+Opt in per repo with `mkdir <repo>/.bonfire`. Without that directory, all
+adapters and the skill no-op silently.
 
 ## Dotfiles Management
 
@@ -52,6 +54,20 @@ Some skills are symlinks to dev repos:
 
 On a fresh machine, those dev repos must be cloned (`~/dev/bonfire`, `~/dev/forge`)
 before the symlinks resolve. Other skills are self-contained directories.
+
+**Bonfire adapter installation:**
+
+The Pi adapter is tracked as a `pi install` package entry in
+`pi/.pi/agent/settings.json` (`packages: ["git:github.com/vieko/bonfire@vX.Y.Z"]`).
+On a fresh machine, run `pi update` after stowing to materialize it. Pi
+clones to `~/.pi/agent/git/github.com/vieko/bonfire/` and the root
+`package.json` manifest points at `./pi/extension.ts`.
+
+The Claude Code adapter is wired via a `Stop` hook entry in
+`claude/.claude/settings.json` pointing to
+`/Users/vieko/dev/bonfire/claude/update-bonfire.mjs`. This requires
+`~/dev/bonfire/` cloned (see the deploy checklist) and the absolute path
+tracked in dotfiles — update it if your home dir layout differs on Linux.
 
 **Skill layout convention:**
 
