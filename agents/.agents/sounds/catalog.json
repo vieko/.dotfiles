@@ -1,0 +1,37 @@
+{
+  "death": [
+    { "desc": "Archon: agonized death cry, deep", "file": "archon/death-00.mp3" },
+    { "desc": "Archon: short death gasp",         "file": "archon/death-01.mp3" },
+    { "desc": "Archon: drawn-out death wail",     "file": "archon/death-02.mp3" },
+    { "desc": "Archon: final death rattle",       "file": "archon/death-03.mp3" }
+  ],
+  "what": [
+    { "desc": "Archon: 'what is thy bidding?'",   "file": "archon/what-00.mp3" },
+    { "desc": "Archon: 'speak'",                  "file": "archon/what-01.mp3" },
+    { "desc": "Archon: 'power overwhelming'",     "file": "archon/what-02.mp3" },
+    { "desc": "Immortal: query 1",                "file": "immortal/what-00.mp3" },
+    { "desc": "Immortal: query 2",                "file": "immortal/what-01.mp3" },
+    { "desc": "Immortal: query 3",                "file": "immortal/what-02.mp3" },
+    { "desc": "Immortal: query 4",                "file": "immortal/what-03.mp3" },
+    { "desc": "Immortal: query 5",                "file": "immortal/what-04.mp3" },
+    { "desc": "Immortal: query 6",                "file": "immortal/what-05.mp3" },
+    { "desc": "Immortal: query 7",                "file": "immortal/what-06.mp3" }
+  ],
+  "attack": [
+    { "desc": "Immortal: attack callout 1", "file": "immortal/attack-00.mp3" },
+    { "desc": "Immortal: attack callout 2", "file": "immortal/attack-01.mp3" },
+    { "desc": "Immortal: attack callout 3", "file": "immortal/attack-02.mp3" },
+    { "desc": "Immortal: attack callout 4", "file": "immortal/attack-03.mp3" },
+    { "desc": "Immortal: attack callout 5", "file": "immortal/attack-04.mp3" },
+    { "desc": "Immortal: attack callout 6", "file": "immortal/attack-05.mp3" },
+    { "desc": "Immortal: attack callout 7", "file": "immortal/attack-06.mp3" }
+  ],
+  "yes": [
+    { "desc": "Immortal: acknowledgment 1", "file": "immortal/yes-00.mp3" },
+    { "desc": "Immortal: acknowledgment 2", "file": "immortal/yes-01.mp3" },
+    { "desc": "Immortal: acknowledgment 3", "file": "immortal/yes-02.mp3" },
+    { "desc": "Immortal: acknowledgment 4", "file": "immortal/yes-03.mp3" },
+    { "desc": "Immortal: acknowledgment 5", "file": "immortal/yes-04.mp3" },
+    { "desc": "Immortal: acknowledgment 6", "file": "immortal/yes-05.mp3" }
+  ]
+}

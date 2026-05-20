@@ -102,7 +102,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "/Users/vieko/.claude/sounds/play-random.sh"
+            "command": "$HOME/.agents/sounds/play-random.sh yes"
           }
         ]
       },
@@ -110,7 +110,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "node /Users/vieko/dev/bonfire/claude/update-bonfire.mjs"
+            "command": "node $HOME/dev/bonfire/claude/update-bonfire.mjs"
           }
         ]
       }
