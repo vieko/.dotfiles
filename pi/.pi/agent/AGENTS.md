@@ -11,10 +11,15 @@ It lives in `<project>/.bonfire/index.md` (NOT `.sessions/`).
 Bonfire 7.0 is a file convention + per-host adapters — no rituals to run. The
 file is kept current automatically by:
 
-- **Pi adapter** (`~/dev/bonfire/pi/`, loaded via symlink at
-  `~/.pi/agent/extensions/bonfire-dev`). Hooks `session_compact` for rich
-  Goal/Progress/Next/Blocked summaries and `session_shutdown` for a
-  first-user-prompt fallback when compaction is broken or doesn't fire.
+- **Pi adapter** (`~/dev/bonfire/pi/`, published as
+  `github.com/vieko/bonfire` and loaded via the `packages` array in
+  `~/.pi/agent/settings.json`, currently pinned to `@v7.2.0`). Hooks
+  `session_compact` for rich Goal/Progress/Next/Blocked summaries and
+  `session_shutdown` for a first-user-prompt fallback when compaction is
+  broken or doesn't fire. Note: this runs the tagged release from GitHub,
+  not your local working copy. To test in-flight changes, either bump and
+  retag, or temporarily swap the entry for a local path / restore a dev
+  symlink under `~/.pi/agent/extensions/`.
 - **Claude Code adapter** (`~/dev/bonfire/claude/`, wired via a `Stop` hook in
   `~/.claude/settings.json`). Reads `ai-title` entries from the session JSONL.
 - **Skill fallback** (`/skill:bonfire end`) for Codex / OpenCode / any agent
