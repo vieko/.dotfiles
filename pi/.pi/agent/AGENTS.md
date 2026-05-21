@@ -13,7 +13,7 @@ file is kept current automatically by:
 
 - **Pi adapter** (`~/dev/bonfire/pi/`, published as
   `github.com/vieko/bonfire` and loaded via the `packages` array in
-  `~/.pi/agent/settings.json`, currently pinned to `@v7.2.2`). Hooks
+  `~/.pi/agent/settings.json`, currently pinned to `@v7.3.0`). Hooks
   `session_compact` for rich Goal/Progress/Next/Blocked summaries and
   `session_shutdown` for a first-user-prompt fallback when compaction is
   broken or doesn't fire. Note: this runs the tagged release from GitHub,
