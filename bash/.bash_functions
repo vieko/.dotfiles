@@ -285,23 +285,23 @@ EOF
 __expand_abbr() {
     local line words word
     line="$READLINE_LINE"
-    words=($line)
-    
-    # Get the last word
-    if [[ ${#words[@]} -gt 0 ]]; then
-        word="${words[-1]}"
-        
-        # Check if it's an abbreviation
-        if [[ -n "${__bash_abbr_list[$word]:-}" ]]; then
-            # Replace the abbreviation with its expansion
-            local new_line="${line%$word}${__bash_abbr_list[$word]}"
-            READLINE_LINE="$new_line"
-            READLINE_POINT=${#new_line}
+
+    # Only attempt abbreviation expansion when typing at the end of the line.
+    # Editing mid-line should just insert a space at the cursor.
+    if [[ $READLINE_POINT -eq ${#line} ]]; then
+        words=($line)
+        if [[ ${#words[@]} -gt 0 ]]; then
+            word="${words[-1]}"
+            if [[ -n "${__bash_abbr_list[$word]:-}" ]]; then
+                local new_line="${line%$word}${__bash_abbr_list[$word]}"
+                READLINE_LINE="$new_line"
+                READLINE_POINT=${#new_line}
+            fi
         fi
     fi
-    
-    # Insert the space
-    READLINE_LINE="$READLINE_LINE "
+
+    # Insert the space at the cursor position (not the end of the line)
+    READLINE_LINE="${READLINE_LINE:0:$READLINE_POINT} ${READLINE_LINE:$READLINE_POINT}"
     READLINE_POINT=$((READLINE_POINT + 1))
 }
 
