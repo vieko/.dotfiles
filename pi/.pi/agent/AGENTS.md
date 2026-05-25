@@ -82,10 +82,10 @@ override):
    - `verb` is the conventional-commits type (`feat`, `fix`, `chore`,
      `docs`, `refactor`).
    - `PROJECT` is the Linear project name in ALL CAPS with spaces
-     (e.g. `LEAD AGENT`, `PROMPT BENCH`, `VOLTRON`). For unticketed
-     work, fall back to the conventional-commits scope uppercased with
-     hyphens-to-spaces (e.g. `AGENTS`, `LEAD WEB`).
-   - Drop the `(LINEAR-ID)` chunk entirely when there's no ticket.
+     (e.g. `LEAD AGENT`, `PROMPT BENCH`, `VOLTRON`). For work without
+     a Linear issue, fall back to the conventional-commits scope
+     uppercased with hyphens-to-spaces (e.g. `AGENTS`, `LEAD WEB`).
+   - Drop the `(LINEAR-ID)` chunk entirely when there's no Linear issue.
    - `+xxx` / `-xxx` are `additions` / `deletions` from
      `gh pr view <n> --json additions,deletions`.
 
