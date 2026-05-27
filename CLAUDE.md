@@ -32,7 +32,7 @@ adapters and the skill no-op silently.
 
 ### Cross-Platform Strategy
 
-**Cross-platform packages:** bash, git, kitty, ghostty, tmux, nvim, starship, bat, btop, lazygit, yazi, assets, claude, pi, agents
+**Cross-platform packages:** bash, git, kitty, ghostty, tmux, nvim, starship, bat, btop, lazygit, yazi, assets, claude, pi, agents, slack
 **macOS-only:** macos, macos-keyboard, aerospace, sketchybar
 **Linux-only:** hypr, waybar, dunst, fuzzel, mako, rofi, sway, i3, polybar
 
