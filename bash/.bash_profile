@@ -32,10 +32,17 @@ fi
 
 # Pre-load 1Password-managed secrets into the shell env.
 # Source of truth: ~/.dotfiles/bash/env.op (op:// refs only, safe to commit).
+#
 # This lives in .bash_profile (login shells only), not .bashrc, so it runs
 # once per terminal session — not per pane. tmux/subshells inherit the
 # resolved env from the login shell instead of re-running `op inject`,
 # which avoids re-prompting for 1Password authorization on every pane.
+#
+# NOTE: this only works if tmux is configured with `default-command` set
+# to a non-login $SHELL invocation (see ~/.dotfiles/tmux/.config/tmux/
+# tmux.conf). With tmux's stock default (empty default-command), every
+# pane is a login shell, this block re-runs, and the 1Password desktop
+# app re-prompts on every split.
 if command -v op &>/dev/null \
         && [[ -r "$HOME/.dotfiles/bash/env.op" ]] \
         && op account list &>/dev/null 2>&1; then
