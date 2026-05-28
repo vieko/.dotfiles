@@ -44,9 +44,10 @@ function pickVerb(): string {
 function applyVerb(ctx: ExtensionContext, verb: string) {
 	const { theme } = ctx.ui;
 	ctx.ui.setWorkingIndicator({
-		frames: SPINNER_FRAMES.map((g) => `${theme.fg("accent", verb)} ${theme.fg("dim", g)}`),
+		frames: SPINNER_FRAMES.map((g) => theme.fg("accent", g)),
 		intervalMs: 80,
 	});
+	ctx.ui.setWorkingMessage(theme.fg("muted", `${verb}...`));
 }
 
 export default function (pi: ExtensionAPI) {
