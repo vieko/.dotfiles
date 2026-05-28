@@ -1,0 +1,269 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "total": 163,
+  "sections": [
+    {
+      "name": "Metallurgy",
+      "verbs": [
+        "Forging",
+        "Hammering",
+        "Shaping",
+        "Tempering",
+        "Smelting",
+        "Annealing",
+        "Transmuting",
+        "Quenching",
+        "Alloying"
+      ]
+    },
+    {
+      "name": "Alchemy",
+      "verbs": [
+        "Calcinating",
+        "Putrefying",
+        "Coagulating",
+        "Sublimating",
+        "Congealing",
+        "Cibating"
+      ]
+    },
+    {
+      "name": "Sorcery",
+      "verbs": [
+        "Working",
+        "Thinking",
+        "Conjuring",
+        "Summoning",
+        "Invoking",
+        "Channeling",
+        "Hexing",
+        "Cursing",
+        "Ensorcelling",
+        "Beguiling",
+        "Bewitching",
+        "Binding",
+        "Banishing",
+        "Evoking"
+      ]
+    },
+    {
+      "name": "Necromancy",
+      "verbs": [
+        "Reanimating",
+        "Exhuming",
+        "Entombing",
+        "Withering"
+      ]
+    },
+    {
+      "name": "Ritual",
+      "verbs": [
+        "Scrying",
+        "Divining",
+        "Incanting",
+        "Anointing",
+        "Sacrificing",
+        "Consecrating",
+        "Desecrating",
+        "Immolating"
+      ]
+    },
+    {
+      "name": "Grimoire",
+      "verbs": [
+        "Inscribing",
+        "Intoning",
+        "Supplicating",
+        "Beseeching",
+        "Warding",
+        "Entreating",
+        "Vibrating",
+        "Equilibrating",
+        "Oblating",
+        "Profaning",
+        "Lustrating",
+        "Propitating",
+        "Thurifying",
+        "Exsufflating",
+        "Defixing",
+        "Asperging",
+        "Execrating",
+        "Flagellating"
+      ]
+    },
+    {
+      "name": "Goetic Operations",
+      "verbs": [
+        "Constraining",
+        "Adjuring",
+        "Abjuring",
+        "Exorcising",
+        "Circumscribing",
+        "Suffumigating",
+        "Sealing",
+        "Compelling",
+        "Licensing"
+      ]
+    },
+    {
+      "name": "Esoteric",
+      "verbs": [
+        "Communing",
+        "Auguring",
+        "Attuning",
+        "Manifesting",
+        "Ascending"
+      ]
+    },
+    {
+      "name": "Old Norse",
+      "verbs": [
+        "Galdering",
+        "Seithing",
+        "Risting",
+        "Wyrding"
+      ]
+    },
+    {
+      "name": "Kabbalistic",
+      "verbs": [
+        "Davening",
+        "Tzimtzuming"
+      ]
+    },
+    {
+      "name": "Greek",
+      "verbs": [
+        "Theurging",
+        "Nekying"
+      ]
+    },
+    {
+      "name": "Dark Archaic",
+      "verbs": [
+        "Ululating",
+        "Keening",
+        "Gibbering",
+        "Blaspheming"
+      ]
+    },
+    {
+      "name": "Hellboy",
+      "verbs": [
+        "Harrowing",
+        "Sundering",
+        "Rending",
+        "Unshackling",
+        "Smoldering",
+        "Smiting",
+        "Devouring",
+        "Razing",
+        "Unsealing",
+        "Unmaking",
+        "Kindling",
+        "Loosing",
+        "Crowning"
+      ]
+    },
+    {
+      "name": "Lovecraftian",
+      "verbs": [
+        "Dreaming",
+        "Slumbering",
+        "Writhing",
+        "Coalescing",
+        "Gestating",
+        "Festering",
+        "Shambling",
+        "Piping",
+        "Fluting",
+        "Droning",
+        "Deciphering",
+        "Warping",
+        "Maddening",
+        "Dissolving",
+        "Degenerating"
+      ]
+    },
+    {
+      "name": "Incantations",
+      "verbs": [
+        "Abrahadabra",
+        "Ablanathanalba",
+        "Klaatu Barada Nikto",
+        "Eko Eko Azarak",
+        "Pluto Orcus Dis",
+        "Ol Sonuf Vaorsagi",
+        "Fhtagn",
+        "Tekeli-li"
+      ]
+    },
+    {
+      "name": "R'lyehian",
+      "verbs": [
+        "Barra! Barra!",
+        "Kakammu!",
+        "Zi Kia Kanpa",
+        "Maskim Xul",
+        "Ph'nglui mglw'nafh",
+        "Cthulhu fhtagn"
+      ]
+    },
+    {
+      "name": "Guttural",
+      "verbs": [
+        "Skreeee",
+        "Krek Krek Krek"
+      ]
+    },
+    {
+      "name": "Invocations — Lovecraftian",
+      "verbs": [
+        "Ya Cthulhu",
+        "Ya Azathoth",
+        "Ya Hastur",
+        "Ya Dagon",
+        "Ya Shub-Niggurath",
+        "Ya Yog-Sothoth",
+        "Ya Nyarlathotep",
+        "Ya Tsathoggua"
+      ]
+    },
+    {
+      "name": "Invocations — Hellboy",
+      "verbs": [
+        "Nunn-Ogdru Jahad",
+        "Audi Nos Anung Un Rama",
+        "Hail Hecate",
+        "Nunn-Azzael",
+        "Audi Nos Koshchei",
+        "Hail Nimue"
+      ]
+    },
+    {
+      "name": "Invocations — Ars Goetia",
+      "verbs": [
+        "Hail Paimon",
+        "Ave Astaroth",
+        "Nunn-Belial",
+        "Audi Nos Asmodeus",
+        "Hail Bael",
+        "Ave Marchosias",
+        "Nunn-Glasya-Labolas",
+        "Audi Nos Dantalion",
+        "Hail Phenex",
+        "Ave Barbatos",
+        "Nunn-Furfur",
+        "Audi Nos Murmur",
+        "Hail Stolas",
+        "Ave Decarabia",
+        "Nunn-Amdusias",
+        "Audi Nos Bifrons",
+        "Hail Gremory",
+        "Ave Andras",
+        "Nunn-Vassago",
+        "Audi Nos Naberius"
+      ]
+    }
+  ]
+}
