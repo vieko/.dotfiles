@@ -39,8 +39,13 @@ adapters and the skill no-op silently.
 ### Agent-related Packages
 
 **`pi/`** — Pi coding agent config. Stows to `~/.pi/agent/`. Tracks: `AGENTS.md`,
-`settings.json`, `keybindings.json`, `prompts/`, `themes/`. **Does NOT track**
-`auth.json`, `sessions/`, or `skills/` (auto-generated / machine-local).
+`settings.json`, `models.json`, `keybindings.json`, `prompts/`, `themes/`. **Does NOT
+track** `auth.json`, `sessions/`, or `skills/` (auto-generated / machine-local).
+
+`models.json` registers custom models (or models newer than Pi's built-in registry)
+for the configured providers. See `docs/models.md` in the pi package. Merges into
+built-in providers — most useful for adding bleeding-edge gateway models that
+Pi's bundled registry doesn't know about yet.
 
 Note: Pi writes `lastChangelogVersion` into `settings.json` on update. Expect
 occasional churn in git status; commit when convenient.
