@@ -110,6 +110,49 @@ Pi spawns. Do not:
 If a secret is missing, the source of truth is the `env.op` manifest. Add an
 `op://` reference there.
 
+## Destructive command guard
+
+Agents must not invoke commands that overwrite or destroy local state without
+explicit user instruction in the active turn. The most common traps:
+
+### `vercel env pull` is forbidden
+
+**Never run `vercel env pull`, `vercel env pull --overwrite`, or any variant.**
+The command writes to `.env.local` by default and will clobber whatever is
+there — including 1Password-injected values, locally-configured DATABASE_URLs,
+feature flags, and dev-only overrides. The clobber is silent and complete; the
+file is rewritten, not merged.
+
+If an agent needs to know what env vars exist in a Vercel project, use
+`vercel env ls` (read-only listing of keys + scopes, no values, no file writes)
+or the Vercel dashboard. There is no legitimate agent-driven use case for
+`vercel env pull` in this machine's setup — 1Password is the source of truth
+for secrets and the dashboard is the source of truth for project config.
+
+### Other destructive patterns
+
+Similar discipline applies to:
+
+- **Database migrations / schema mutations** — `pnpm db:migrate`, `db:push`,
+  `drizzle-kit push`, `prisma db push`, raw `psql` writes against `DATABASE_URL`.
+  These hit whichever DB the env points at. Default in many repos is
+  production. Project-level `AGENTS.md` (e.g. `~/dev/gtm/docs/db/local-development.md`)
+  has the per-project rules; the global principle is *never apply a migration
+  the user did not ask for in this turn*.
+- **Deployments** — `vercel deploy`, `vercel --prod`, `pnpm deploy`, anything
+  that ships code beyond the local workspace. Never invoke without an explicit
+  user instruction in the current turn.
+- **Package publishes** — `npm publish`, `pnpm publish`, `bun publish`.
+- **Force-push and history rewrites** — `git push --force`, `git push --force-with-lease`,
+  `git reset --hard origin/...`, interactive rebase that would lose local commits.
+  Always confirm with the user before any operation that could lose work.
+
+Generating a migration *file* (`drizzle-kit generate`, `prisma migrate dev --create-only`)
+is fine — the file is reviewable artifact. Applying it is the line.
+
+When in doubt, ask. The cost of a confirmation round-trip is much smaller than
+the cost of a clobbered `.env.local` or an unintended prod deploy.
+
 ## Shell behavior
 
 Pi runs `bash -c` non-interactively. User shell aliases (`cat=bat`, `ls=eza`)
