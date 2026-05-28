@@ -128,6 +128,9 @@ export GLAMOUR_STYLE="$XDG_CONFIG_HOME/glamour/catppuccin-mocha.json"
 # LINEAR_API_KEY and NPM_TOKEN are sourced from 1Password via
 # ~/.dotfiles/bash/env.op; see op-inject block in .bashrc.
 
+# FORGE
+export FORGE_API_TIER=enterprise
+
 # User-local bin (last to ensure highest priority)
 case ":$PATH:" in
   *":$HOME/.local/bin:"*) ;;
