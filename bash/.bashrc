@@ -82,8 +82,8 @@ fi
 eval "$(zoxide init bash)"
 . "$HOME/.cargo/env"
 
-# Added by Hades
-export PATH="$PATH:$HOME/.hades/bin"
+# (Hades PATH entry lives in .bash_profile, guarded, to avoid duplicate
+#  prepends when this file is re-sourced by subshells.)
 
 # BEGIN: socket firewall aliases (managed by Iru)
 #alias npm="sfw npm"

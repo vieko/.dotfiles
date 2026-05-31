@@ -58,7 +58,10 @@ fi
 . "$HOME/.cargo/env"
 
 # Added by Hades
-export PATH="$PATH:$HOME/.hades/bin"
+case ":$PATH:" in
+  *":$HOME/.hades/bin:"*) ;;
+  *) export PATH="$PATH:$HOME/.hades/bin" ;;
+esac
 
 . "$HOME/.local/share/../bin/env"
 
