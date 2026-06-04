@@ -136,6 +136,9 @@ export FORGE_API_TIER=enterprise
 # default, so multi-turn sessions hit cache more often (lower TTFT). Safe
 # on a Vercel seat where the cache-write premium is a non-issue.
 export PI_CACHE_RETENTION=long
+# Opt out of install/update telemetry. Env var overrides settings.json so
+# it survives Pi rewriting the file on version updates.
+export PI_TELEMETRY=0
 
 # User-local bin (last to ensure highest priority)
 case ":$PATH:" in
