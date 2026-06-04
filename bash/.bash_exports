@@ -131,6 +131,12 @@ export GLAMOUR_STYLE="$XDG_CONFIG_HOME/glamour/catppuccin-mocha.json"
 # FORGE
 export FORGE_API_TIER=enterprise
 
+# PI (coding agent)
+# Keep the Anthropic prompt-prefix cache warm for 1h instead of the 5m
+# default, so multi-turn sessions hit cache more often (lower TTFT). Safe
+# on a Vercel seat where the cache-write premium is a non-issue.
+export PI_CACHE_RETENTION=long
+
 # User-local bin (last to ensure highest priority)
 case ":$PATH:" in
   *":$HOME/.local/bin:"*) ;;
