@@ -302,7 +302,7 @@
     ]
   },
   "syntaxHighlightingDisabled": true,
-  "effortLevel": "xhigh",
+  "effortLevel": "high",
   "skipDangerousModePermissionPrompt": true,
   "editorMode": "vim"
 }
