@@ -145,3 +145,6 @@ case ":$PATH:" in
   *":$HOME/.local/bin:"*) ;;
   *) export PATH="$HOME/.local/bin:$PATH" ;;
 esac
+
+# ngrok — fixed domain for portless --ngrok and stripe:listen:tunnel
+export NGROK_DOMAIN=vieko.ngrok.dev
