@@ -173,19 +173,29 @@ platform-specific behavior is required.
 
 ## Maintenance notes
 
-### Version-pinned skills path
+### vercel-plugin skills path (`current` symlink)
 
-`settings.json` references the Claude vercel-plugin skills via a hard-coded
-version directory:
+`settings.json` points the vercel-plugin skills at a stable `current`
+symlink, not a version directory:
 
 ```
-~/.claude/plugins/cache/claude-plugins-official/vercel/0.42.1/skills
-~/.claude/plugins/cache/claude-plugins-official/vercel/0.42.1/.claude/skills
+~/.claude/plugins/cache/claude-plugins-official/vercel/current/skills
+~/.claude/plugins/cache/claude-plugins-official/vercel/current/.claude/skills
 ```
 
-When the plugin updates, this path goes stale and Pi silently loads zero
-skills from it. Symptom: the skill set shrinks at startup with no error.
-Fix: bump the version segment in both entries to match whatever
-`ls ~/.claude/plugins/cache/claude-plugins-official/vercel/` reports.
-Long-term: replace with a symlink (e.g. `vercel/current`) once the plugin
-cache layout stabilizes.
+`current` -> the installed version dir (e.g. `0.43.0`), so `settings.json`
+never changes on a plugin bump. BUT the symlink lives inside the
+plugin-managed cache: a plugin update creates a new version dir and removes
+the old one, which leaves `current` dangling (or clobbers it). Symptom: the
+skill set shrinks at startup with no error.
+
+Fix on plugin update — re-point the symlink (no `settings.json` edit needed):
+
+```
+cd ~/.claude/plugins/cache/claude-plugins-official/vercel
+ln -sfn "$(ls -d [0-9]* | sort -V | tail -1)" current   # newest version dir
+```
+
+Caveat: `current` is NOT tracked in dotfiles (it lives in the runtime cache),
+so a fresh machine must recreate it after the plugin installs — add the
+`ln -sfn` above to the deployment checklist / bootstrap.
