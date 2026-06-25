@@ -1,4 +1,6 @@
 gui:
+  # Match the single-border aesthetic used across the nvim UI.
+  border: single
   theme:
     activeBorderColor:
       - "#61afef"
@@ -21,8 +23,14 @@ gui:
       - "#e06c75"
     defaultFgColor:
       - "#abb2bf"
+# Don't prompt to create a repo when launched outside one — just skip.
+notARepository: skip
+os:
+  # `e` opens the selected file in nvim (built-in preset).
+  editPreset: nvim
 git:
   overrideGpg: true
   paging:
     colorArg: always
-    pager: delta --dark --paging=never --syntax-theme TwoDark -s
+    # OneHalfDark tracks the One Dark palette used above; TwoDark clashed.
+    pager: delta --dark --paging=never --syntax-theme OneHalfDark -s
