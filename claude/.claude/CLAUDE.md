@@ -62,3 +62,11 @@ Bad: `cat file.json | python3 -c "import json, sys; ..."`
 Also avoid `jq` date math (`fromdateiso8601`) — it fails on ISO 8601
 timestamps with milliseconds. Stick to string comparison for dates
 (lexicographic sort works for ISO 8601).
+
+## PHYREXIA session lexicon (this machine)
+
+Personal multi-agent naming for this host -- **not a team convention**. A
+**Summoner** (the directing session, Pi or Claude Code) scopes work and
+delegates to **Familiars** (same-runtime workers) and **Golems** (Anvil runs). Use this vocabulary when coordinating
+multi-session work. Source of truth (topology + full role defs):
+`~/.dotfiles/PHYREXIA.md` -- read it before summoning.

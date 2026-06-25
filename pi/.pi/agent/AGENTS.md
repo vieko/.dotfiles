@@ -49,6 +49,14 @@ Forge is the verification-boundary delegate; this is a focused interactive shell
 (or the forge MCP tools); the `claude -p` wrapper-in-tmux pattern bypasses
 forge's verification boundary.
 
+## PHYREXIA session lexicon (this machine)
+
+Personal multi-agent naming for this host -- **not a team convention**. A
+**Summoner** (the directing session, Pi or Claude Code) scopes work and
+delegates to **Familiars** (same-runtime workers) and **Golems** (Anvil runs). Use this vocabulary when coordinating
+multi-session work. Source of truth (topology + full role defs):
+`~/.dotfiles/PHYREXIA.md` -- read it before summoning.
+
 ## Commit message style
 
 Lowercase imperative with conventional-commits scope:
@@ -95,6 +103,7 @@ are the deliverables; anything else is supplementary.
 ## Tool & review notes
 
 - **`linear` CLI quirk**: `linear issue view -j` omits the `labels` field entirely. Default-checking `.labels.nodes` returns `[]` even when labels are attached. Verify label assignments via the UI or a raw GraphQL query, not the CLI's `-j` output.
+- **`linear issue update` is unreliable — prints `✓ Updated issue` while silently no-op'ing.** Observed for both `--state <name>` (resolves the state by name across the *entire workspace* and can bind to the wrong team's same-named state, e.g. "Done") and `--description`/`--description-file` (drops the body change entirely). Mutate deterministically via the API instead: `linear api 'mutation { issueUpdate(id: "<issueUUID>", input: { stateId: "<stateUUID>" }) { success } }'`. Fetch the issue UUID (and any state UUID) first via an `issues`/`workflowStates` query scoped to the team. For `description`, JSON-escape the markdown with `jq -Rs .` and inject it (`input: { description: $desc }`). Verify with a fresh API read — allow a few seconds for read-replica lag, since an immediate re-read can still show stale values.
 - **PR review style on vercel repos**: keep JSDoc and code-comment prose tight. State what + why; the code shows how. Multi-paragraph explanations on small helpers read as noise — file-level headers documenting non-obvious context are fine.
 
 ## Secrets
