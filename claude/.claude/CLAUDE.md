@@ -63,6 +63,17 @@ Also avoid `jq` date math (`fromdateiso8601`) — it fails on ISO 8601
 timestamps with milliseconds. Stick to string comparison for dates
 (lexicographic sort works for ISO 8601).
 
+## Issue-tracker writing (Linear comments & descriptions)
+
+The *description* is the canonical spec — put durable scope/design there.
+*Comments* are the decision trail (decisions, deltas, answers), not a place for
+analysis that really belongs in the description. Lead with the decision
+(BLUF: first line = takeaway / next action). Right-size to stakes: an ack is one
+line; a real fork (architecture, scope split) is verdict + 2–3 bullets + links
+— never an essay. Keep only the 1–2 non-obvious facts a future reader (human or
+agent) can't quickly re-derive, and cite files/IDs over re-explaining. Long
+comments get skimmed past or truncated and cost agents context to re-ingest.
+
 ## PHYREXIA session lexicon (this machine)
 
 Personal multi-agent naming for this host -- **not a team convention**. A
