@@ -42,12 +42,13 @@ They are complementary, not redundant.
 ## Delegating autonomous work
 
 For complex multi-step refactors, large rewrites, or anything that wants to run
-unattended for a while: use the `forge` skill rather than doing it inline.
-Forge is the verification-boundary delegate; this is a focused interactive shell.
+unattended for a while: use the `anvil` skill rather than doing it inline.
+Anvil is the verification-boundary delegate — it works in an isolated git
+worktree and only succeeds when a deterministic gate (build/typecheck/test, or a
+command you supply) passes; this is a focused interactive shell.
 
-**Never spawn `claude -p` in tmux to run forge.** Use the forge CLI directly
-(or the forge MCP tools); the `claude -p` wrapper-in-tmux pattern bypasses
-forge's verification boundary.
+**Never spawn `claude -p` in tmux to run anvil.** Use the anvil CLI directly;
+the `claude -p` wrapper-in-tmux pattern bypasses anvil's verification boundary.
 
 ## PHYREXIA session lexicon (this machine)
 

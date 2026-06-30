@@ -5,7 +5,6 @@
  * Source of truth: ~/.dotfiles/agents/.agents/verbs.json (structured by section).
  *
  * Targets:
- *   - ~/dev/forge/src/display.ts          AGENT_VERBS array (with section comments)
  *   - ~/.dotfiles/claude/.claude/settings.json   spinnerVerbs.verbs (flat array)
  *
  * Pi reads verbs.json at runtime via the spinner-verbs extension; nothing to
@@ -22,7 +21,6 @@ import { join } from "node:path";
 
 const ROOT = homedir();
 const SRC = join(ROOT, ".dotfiles/agents/.agents/verbs.json");
-const FORGE = join(ROOT, "dev/forge/src/display.ts");
 const CLAUDE = join(ROOT, ".dotfiles/claude/.claude/settings.json");
 
 const check = process.argv.includes("--check");
@@ -31,34 +29,6 @@ function loadVerbs() {
 	const data = JSON.parse(readFileSync(SRC, "utf8"));
 	const flat = data.sections.flatMap((s) => s.verbs);
 	return { data, flat };
-}
-
-function tsEscape(v) {
-	return v.replace(/\\/g, "\\\\").replace(/'/g, "\\'");
-}
-
-function renderForgeBlock({ sections }) {
-	const lines = ["export const AGENT_VERBS = ["];
-	for (const sec of sections) {
-		lines.push(`  // ${sec.name} (${sec.verbs.length})`);
-		for (const v of sec.verbs) lines.push(`  '${tsEscape(v)}',`);
-	}
-	lines.push("];");
-	return lines.join("\n");
-}
-
-function syncForge({ data }) {
-	if (!existsSync(FORGE)) {
-		console.log(`[skip] ${FORGE} not found`);
-		return { changed: false, skipped: true };
-	}
-	const src = readFileSync(FORGE, "utf8");
-	const re = /export const AGENT_VERBS = \[[\s\S]*?\n\];/;
-	if (!re.test(src)) throw new Error("AGENT_VERBS block not found in display.ts");
-	const next = src.replace(re, renderForgeBlock(data));
-	if (next === src) return { changed: false };
-	if (!check) writeFileSync(FORGE, next);
-	return { changed: true };
 }
 
 function syncClaude({ flat }) {
@@ -80,7 +50,6 @@ const verbs = loadVerbs();
 console.log(`source: ${verbs.flat.length} verbs across ${verbs.data.sections.length} sections`);
 
 const results = {
-	forge: syncForge(verbs),
 	claude: syncClaude(verbs),
 };
 

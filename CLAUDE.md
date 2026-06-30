@@ -55,10 +55,13 @@ of truth for skills that any agent (Pi, Claude, Codex) should see.
 
 Some skills are symlinks to dev repos:
 - `~/.agents/skills/bonfire` → `~/dev/bonfire/skills/bonfire`
-- `~/.agents/skills/forge` → `~/dev/forge/skills/forge`
+- `~/.agents/skills/anvil` → `~/dev/anvil/packages/cli/skills/anvil`
 
-On a fresh machine, those dev repos must be cloned (`~/dev/bonfire`, `~/dev/forge`)
+On a fresh machine, those dev repos must be cloned (`~/dev/bonfire`, `~/dev/anvil`)
 before the symlinks resolve. Other skills are self-contained directories.
+
+(`anvil` is the successor to the now-frozen `forge`; the old
+`~/dev/forge/skills/forge` symlink is gone.)
 
 **Bonfire adapter installation:**
 
@@ -92,38 +95,33 @@ between modes by replacing the dotfiles entry with the opposite kind
 
 The occult/metallurgical agent-spinner verbs are centralized in one
 canonical file: `agents/.agents/verbs.json` (structured by section).
-Three consumers read it:
+Two consumers read it:
 
 - **Pi** — `pi/.pi/agent/extensions/spinner-verbs.ts` reads
   `~/.agents/verbs.json` at runtime. Always current; nothing to regenerate.
 - **Claude Code** — `claude/.claude/settings.json` `spinnerVerbs.verbs`
   (flat array, lives in dotfiles, synced).
-- **forge** — `~/dev/forge/src/display.ts` `AGENT_VERBS` (lives in the
-  *separate* forge repo, synced).
 
-The two synced copies are regenerated from the canonical JSON by
-`agents/.agents/scripts/sync-verbs.mjs`. There is intentionally **no**
-commit hook enforcing this (see below) — it's a manual discipline:
+(forge was a third consumer via `~/dev/forge/src/display.ts`; it's frozen and
+that file is gone. anvil, its successor, does not consume the shared verbs.)
+
+Claude's synced copy is regenerated from the canonical JSON by
+`agents/.agents/scripts/sync-verbs.mjs`. Both the canonical file and the synced
+copy now live in this repo, but there is intentionally **no** commit hook
+enforcing sync — it's a manual discipline:
 
 ```bash
 # 1. edit the canonical dictionary
 $EDITOR agents/.agents/verbs.json
 
-# 2. regenerate both synced copies
+# 2. regenerate the synced copy
 node agents/.agents/scripts/sync-verbs.mjs
 
 # 3. (optional) confirm no drift remains
 node agents/.agents/scripts/sync-verbs.mjs --check   # exit 1 on drift
 
-# 4. commit:
-#    - dotfiles: verbs.json + claude/settings.json together
-#    - forge:    src/display.ts in ITS OWN repo (~/dev/forge), separately
+# 4. commit dotfiles: verbs.json + claude/settings.json together
 ```
-
-The forge change lands in a different repo with its own commit lifecycle —
-that cross-repo split is exactly why a dotfiles pre-commit hook can't fully
-enforce sync, so we don't bother with one. If `~/dev/forge` isn't cloned,
-`sync-verbs.mjs` skips it gracefully.
 
 **`claude/`** — Claude Code config. Stows to `~/.claude/`. Tracks `settings.json`
 and `statusline.sh` only — matches the same "config not state" philosophy as `pi/`.
