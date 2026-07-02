@@ -1,0 +1,17 @@
+#!/usr/bin/env bash
+# anvil -- single source of truth for humans AND agents.
+#
+# Runs the working-tree SOURCE directly (Node type-stripping + the `source`
+# export condition, so @anvil/core resolves to src, no build). "Latest" therefore
+# means "whatever is committed/checked out in the anvil repo" -- no publish lag,
+# no reinstall ritual, no version skew between a global bin and your tree.
+#
+# A real executable (not a shell alias) on purpose: it must resolve under
+# non-interactive `bash -c`, dispatch scripts, and any agent (Pi, Claude Code,
+# Codex, summoners, familiars) that does a PATH lookup -- aliases do not.
+#
+# Do NOT cd: preserve the caller's cwd so `anvil run` targets THEIR project.
+# ANVIL_SRC overrides the checkout (e.g. to point a Golem at a worktree).
+set -euo pipefail
+ANVIL_SRC="${ANVIL_SRC:-$HOME/dev/anvil}"
+exec node --conditions=source "$ANVIL_SRC/packages/cli/src/bin.ts" "$@"
