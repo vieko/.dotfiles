@@ -139,9 +139,35 @@ cpick() {
     claude --resume "$selected"
 }
 
+# ==> AI Gateway credential guard
+# When ANTHROPIC_BASE_URL points at the Vercel AI Gateway, Claude Code sends
+# ANTHROPIC_AUTH_TOKEN as its credential. If that token is empty (classic
+# symptom: the OP_ENV_HYDRATED sentinel in .bash_profile skipped op-inject in
+# a tmux server that predates an env.op change), Claude Code falls back to its
+# OAuth bearer, the gateway rejects it, and you get a cryptic
+# "401 Authentication failed. Create an API key..." loop. Fail loudly instead.
+_cc_gateway_guard() {
+    [[ "$ANTHROPIC_BASE_URL" == *ai-gateway.vercel.sh* ]] || return 0
+    # Read the EXPORTED value (what the `claude` child process actually sees).
+    # A var set without `export`/`set -a` passes [[ -n ]] in this shell but
+    # never reaches the subprocess, so check via a child shell, not $VAR.
+    local tok; tok=$(sh -c 'printf %s "$ANTHROPIC_AUTH_TOKEN"')
+    local len=${#tok}
+    if [[ "$len" -eq 0 ]]; then
+        echo "xcc: ANTHROPIC_AUTH_TOKEN not exported, but ANTHROPIC_BASE_URL -> AI Gateway." >&2
+        echo "     Stale/un-exported 1Password env. Re-hydrate (note set -a), then retry:" >&2
+        echo '       set -a; eval "$(op inject -i ~/.dotfiles/bash/env.op)"; set +a' >&2
+        return 1
+    fi
+    # Vercel gateway keys are 60 chars; warn (don't block) on drift so a
+    # legit key-format change still runs.
+    [[ "$len" -ne 60 ]] && echo "xcc: warning — ANTHROPIC_AUTH_TOKEN len=$len (expected 60)." >&2
+    return 0
+}
+
 # ==> dangerous mode (skips ALL permission prompts — use with caution)
 # WARNING: These bypass safety confirmations. Only use in trusted contexts.
-xcc() { claude --dangerously-skip-permissions "$@"; }
-xco() { claude --dangerously-skip-permissions --model opus "$@"; }
-xcont() { claude --dangerously-skip-permissions --continue "$@"; }
+xcc() { _cc_gateway_guard || return 1; claude --dangerously-skip-permissions "$@"; }
+xco() { _cc_gateway_guard || return 1; claude --dangerously-skip-permissions --model opus "$@"; }
+xcont() { _cc_gateway_guard || return 1; claude --dangerously-skip-permissions --continue "$@"; }
 xcd() { codex --dangerously-bypass-approvals-and-sandbox "$@"; }
