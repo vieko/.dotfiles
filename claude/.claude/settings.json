@@ -304,6 +304,7 @@
   "syntaxHighlightingDisabled": true,
   "effortLevel": "xhigh",
   "skipDangerousModePermissionPrompt": true,
+  "theme": "dark",
   "editorMode": "vim",
   "autoCompactEnabled": true
 }
