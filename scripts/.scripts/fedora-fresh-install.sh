@@ -57,7 +57,7 @@ dnf install -y \
   ghostty kitty \
   btop htop eza fd-find fzf ripgrep zoxide git-delta gh stow neovim \
   xclip xsel httpie cloc inotify-tools socat p7zip p7zip-plugins unison \
-  restic speedtest-cli tree-sitter-cli wmctrl xdotool iotop-c \
+  restic speedtest-cli tree-sitter-cli starship wmctrl xdotool iotop-c \
   gcc gcc-c++ clang cmake make meson ninja-build golang zig luarocks \
   awscli2 nodejs-npm \
   tailscale nextdns syncthing \
