@@ -67,11 +67,11 @@ if [[ "$OSTYPE" == "linux-gnu"* ]]; then
     export BEMENU_OPTS='--fb "#1e1e2e" --ff "#cdd6f4" --nb "#1e1e2e" --nf "#cdd6f4" --tb "#1e1e2e" --hb "#1e1e2e" --tf "#f38ba8" --hf "#f9e2af" --af "#cdd6f4" --ab "#1e1e2e"'
 fi
  
-# pnpm
+# pnpm — bin/ subdir in newer pnpm, plain $PNPM_HOME in older; cover both
 export PNPM_HOME="$XDG_DATA_HOME/pnpm"
 case ":$PATH:" in
-  *":$PNPM_HOME:"*) ;;
-  *) export PATH="$PNPM_HOME:$PATH" ;;
+  *":$PNPM_HOME/bin:"*) ;;
+  *) export PATH="$PNPM_HOME/bin:$PNPM_HOME:$PATH" ;;
 esac
 
 # npm
