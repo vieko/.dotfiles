@@ -88,6 +88,13 @@ case ":$PATH:" in
   *) export PATH="$N_PREFIX/bin:$PATH" ;;
 esac
 
+# PORTLESS
+# Explicitly set the state dir so portless forwards it through its sudo
+# auto-elevation when binding :443. Without this the elevated (root) proxy
+# falls back to /root/.portless and 404s every route registered under
+# ~/.portless. Upstream bug: github.com/vercel-labs/portless/issues/258
+export PORTLESS_STATE_DIR="$HOME/.portless"
+
 # GPG TTY
 export GPG_TTY=$(tty)
 
