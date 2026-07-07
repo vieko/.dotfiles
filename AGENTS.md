@@ -45,9 +45,9 @@ adapters and the skill no-op silently.
 track** `auth.json`, `sessions/`, or `skills/` (auto-generated / machine-local).
 
 `models.json` registers custom models (or models newer than Pi's built-in registry)
-for the configured providers. See `docs/models.md` in the pi package. Merges into
-built-in providers — most useful for adding bleeding-edge gateway models that
-Pi's bundled registry doesn't know about yet.
+for the configured providers. It merges into the built-in providers — most useful
+for adding bleeding-edge gateway models that Pi's bundled registry doesn't know
+about yet.
 
 Note: Pi writes `lastChangelogVersion` into `settings.json` on update. Expect
 occasional churn in git status; commit when convenient.
@@ -75,9 +75,9 @@ clones to `~/.pi/agent/git/github.com/vieko/bonfire/` and the root
 
 The Claude Code adapter is wired via a `Stop` hook entry in
 `claude/.claude/settings.json` pointing to
-`/Users/vieko/dev/bonfire/claude/update-bonfire.mjs`. This requires
-`~/dev/bonfire/` cloned (see the deploy checklist) and the absolute path
-tracked in dotfiles — update it if your home dir layout differs on Linux.
+`$HOME/dev/bonfire/claude/update-bonfire.mjs`. This requires
+`~/dev/bonfire/` cloned (see the deploy checklist); the `$HOME`-relative path
+is portable across macOS and Linux, so no per-OS editing is needed.
 
 **Skill layout convention:**
 
@@ -170,6 +170,20 @@ This script automatically detects the OS and updates the git `gpg.program` path 
 4. Run `./setup-os-link.sh` after stowing to create the symlink
 5. Main config includes `os-current.conf` at the END (so it overrides defaults)
 
+**Ghostty terminal** uses the same symlink pattern (Ghostty supports config
+includes via `config-file`):
+
+1. Main config: `config` (shared defaults)
+2. OS-specific configs: `config-macos`, `config-linux`
+3. Symlink: `config-current` → points to the correct OS config (gitignored)
+4. Run `./setup-os-link.sh` after stowing to create the symlink
+5. `config` ends with `config-file = config-current` so OS values override the defaults
+
+**Required on a fresh machine (especially macOS):** if `setup-os-link.sh` is not
+run, `config-current` is missing and only the shared base config loads — non-fatal,
+but the OS-specific overrides (font size, `macos-option-as-alt`, single-instance,
+etc.) are silently skipped.
+
 This pattern can be reused for other tools that don't support environment variables.
 
 ### Clipboard Configuration
@@ -232,7 +246,7 @@ On Fedora: COPR `lionheartp/Hyprland` (see `scripts/.scripts/fedora-fresh-instal
 The Hyprland config (`hypr/.config/hypr/`) uses a modular approach:
 
 - `hyprland.conf`: Main config that sources other modules
-- `host.conf`: Auto-generated host-specific monitor settings (via `scripts/host.sh`)
+- `host.conf`: Auto-generated host-specific monitor settings (via `hypr/.config/hypr/scripts/host.sh`)
 - `nvidia.conf`: NVIDIA GPU specific settings
 - `colors.conf`: Base16 One Dark theme variables
 - `screens.conf`, `mirror.conf`: Multi-monitor configurations
@@ -244,9 +258,9 @@ The Hyprland config (`hypr/.config/hypr/`) uses a modular approach:
 The configuration automatically adapts based on hostname:
 
 - **havoc**: Laptop with eDP-1 display (2880x1920@120Hz, scale 2)
-- **chaos**: Desktop with DP-2 display (3840x2160@160Hz, scale 1.5)
+- **chaos**: Desktop with DP-2 display — Asus PA32QCV 6K (6016x3384@60Hz, scale 2)
 
-Host detection and DPI calculations are handled by `scripts/host.sh`.
+Host detection and DPI calculations are handled by `hypr/.config/hypr/scripts/host.sh`.
 
 ### Key Dependencies
 
@@ -259,10 +273,10 @@ Host detection and DPI calculations are handled by `scripts/host.sh`.
 
 ### Important Scripts
 
-- `scripts/host.sh`: Generates host-specific monitor configuration
-- `scripts/gtk.sh`: Synchronizes GTK theme settings
-- `scripts/xdg.sh`: Manages XDG desktop portal
-- `scripts/scratchpad.sh`: Advanced scratchpad window management
+- `hypr/.config/hypr/scripts/host.sh`: Generates host-specific monitor configuration
+- `hypr/.config/hypr/scripts/gtk.sh`: Synchronizes GTK theme settings
+- `hypr/.config/hypr/scripts/xdg.sh`: Manages XDG desktop portal
+- `hypr/.config/hypr/scripts/scratchpad.sh`: Advanced scratchpad window management
 
 External scripts referenced from `~/.scripts/`:
 
