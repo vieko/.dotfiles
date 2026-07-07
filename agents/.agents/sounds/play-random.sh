@@ -38,5 +38,7 @@ play() {
   esac
 }
 
-play
+# `|| :` — a missing player must not fail the hook (set -e would abort
+# before exit 0 when `command -v` misses; bit us on a fresh install).
+play || :
 exit 0
