@@ -83,13 +83,9 @@
     editor = nvim
     pager = delta
 
-[credential "https://gist.github.com"]
-	helper = 
-	helper = !/opt/homebrew/bin/gh auth git-credential
-
-[credential "https://github.com"]
-	helper = 
-	helper = !/opt/homebrew/bin/gh auth git-credential
+# GitHub credential helper (gh) is defined in the OS-specific include at the
+# bottom of this file, since the gh binary path differs by OS
+# (macOS: /opt/homebrew/bin/gh, Linux: /usr/bin/gh).
 
 [delta]
     dark = true
