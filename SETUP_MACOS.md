@@ -129,10 +129,12 @@ stow ghostty  # or whichever terminal you prefer (kitty/ghostty)
 stow claude  # Claude CLI settings
 ```
 
-### 2.3 OS-Specific Setup for Kitty
+### 2.3 OS-Specific Setup for Terminals (Kitty + Ghostty)
 
 ```bash
 cd ~/.config/kitty
+./setup-os-link.sh
+cd ~/.config/ghostty
 ./setup-os-link.sh
 cd ~/.dotfiles
 ```
@@ -575,6 +577,7 @@ tmux list-sessions  # Should show "SCOURGE" session
 | **Neovim** | `~/.config/nvim/` | Editor configuration |
 | **Tmux** | `~/.config/tmux/tmux.conf` | Terminal multiplexer |
 | **Kitty** | `~/.config/kitty/kitty.conf` | Terminal emulator |
+| **Ghostty** | `~/.config/ghostty/config` | Terminal emulator |
 | **Starship** | `~/.config/starship.toml` | Shell prompt |
 | **AeroSpace** | `~/.config/aerospace/aerospace.toml` | Window manager |
 | **SketchyBar** | `~/.config/sketchybar/sketchybarrc` | Status bar |

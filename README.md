@@ -18,7 +18,7 @@ Stow individual packages based on your OS and needs:
 
 **Cross-platform (macOS + Linux):**
 ```bash
-stow bash git kitty tmux nvim starship bat btop lazygit yazi
+stow bash git kitty ghostty tmux nvim starship bat btop lazygit yazi
 ```
 
 **macOS-only:**
@@ -39,6 +39,11 @@ stow hypr waybar dunst fuzzel mako rofi sway i3 polybar ptyxis
 **After stowing kitty (required for OS-specific settings):**
 ```bash
 cd ~/.config/kitty && ./setup-os-link.sh
+```
+
+**After stowing ghostty (required for OS-specific settings):**
+```bash
+cd ~/.config/ghostty && ./setup-os-link.sh
 ```
 
 **After stowing git (required for OS-specific GPG configuration):**
