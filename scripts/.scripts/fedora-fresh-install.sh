@@ -18,6 +18,7 @@ echo "==> COPRs"
 dnf copr enable -y lionheartp/Hyprland
 dnf copr enable -y scottames/ghostty
 dnf copr enable -y atim/lazygit
+dnf copr enable -y atim/starship   # starship isn't packaged in Fedora proper
 
 echo "==> Third-party repos + signing keys"
 if [ ! -f /etc/yum.repos.d/docker-ce.repo ]; then
