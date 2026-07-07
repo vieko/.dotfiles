@@ -34,7 +34,7 @@ adapters and the skill no-op silently.
 
 **Cross-platform packages:** bash, git, kitty, ghostty, tmux, nvim, starship, bat, btop, lazygit, yazi, assets, claude, pi, agents, slack
 **macOS-only:** macos, macos-keyboard, aerospace, sketchybar
-**Linux-only:** hypr, waybar, dunst, fuzzel, mako, rofi, sway, i3, polybar
+**Linux-only:** hypr, waybar, dunst, fuzzel, mako, rofi, sway, i3, polybar, ptyxis (run `ptyxis/setup-ptyxis.sh` once after stowing)
 
 ### Agent-related Packages
 

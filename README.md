@@ -28,7 +28,12 @@ stow macos-keyboard
 
 **Linux-only (Wayland/Hyprland):**
 ```bash
-stow hypr waybar dunst fuzzel mako rofi sway i3 polybar
+stow hypr waybar dunst fuzzel mako rofi sway i3 polybar ptyxis
+```
+
+**After stowing ptyxis (applies palette + system monospace font):**
+```bash
+~/.dotfiles/ptyxis/setup-ptyxis.sh
 ```
 
 **After stowing kitty (required for OS-specific settings):**
