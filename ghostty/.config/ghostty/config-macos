@@ -9,7 +9,9 @@ font-size = 14
 macos-non-native-fullscreen = false
 quit-after-last-window-closed = true
 macos-option-as-alt = true
-macos-titlebar-style = native
+# Hidden titlebar = native frame + rounded corners with no title bar (this was
+# the prior base-config behavior). Change to `native` for the full title bar.
+macos-titlebar-style = hidden
 
 # Window decoration (show full title bar on macOS)
 window-decoration = true

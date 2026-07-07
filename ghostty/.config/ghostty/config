@@ -4,8 +4,7 @@ font-family-bold = Berkeley Mono Medium
 font-family-italic = Berkeley Mono Retina Oblique
 font-family-bold-italic = Berkeley Mono Medium Oblique
 
-# FONT: SIZE (macOS: 14, Linux: 10.5, see config-macos/config-linux)
-font-size = 14
+# FONT: SIZE — set per-OS in config-linux (10.5) / config-macos (14)
 
 # CURSOR
 cursor-style = block
@@ -14,15 +13,17 @@ cursor-color = 74ade8
 cursor-text = 282c34
 
 # WINDOW
-# Use native macOS window frame with hidden titlebar (like Kitty)
-# This keeps borders and rounded corners while maximizing app space
-macos-titlebar-style = hidden
 window-theme = dark
 window-padding-x = 4
 window-padding-y = 4
 window-padding-color = extend
 window-padding-balance = true
 window-inherit-working-directory = true
+
+# Don't prompt "close this terminal?" when a process (e.g. tmux) is running.
+confirm-close-surface = false
+# No size-overlay popup when resizing (noise on tiling WMs; harmless on macOS).
+resize-overlay = never
 
 # THEME
 # Options: "One Half Dark", "Atom One Dark", "Doom One", "One Double Dark"
@@ -66,10 +67,9 @@ term = xterm-ghostty
 shell-integration-features = no-cursor
 
 # OS-SPECIFIC SETTINGS
-# Note: Ghostty does not currently support config includes like Kitty
-# To use OS-specific settings:
-# 1. Run ./setup-os-link.sh to create config-current symlink
-# 2. Use config-current as your config (if supported by Ghostty)
-# OR manually apply settings from config-macos/config-linux as needed
-#
-# For now on macOS, font-size should be 14 (set at line 8)
+# Ghostty supports config includes via `config-file`. This pulls in the
+# per-OS overrides (font-size, window decorations, single-instance, …).
+# config-current is a per-machine symlink (gitignored) created by
+# setup-os-link.sh, pointing at config-linux or config-macos.
+# Kept LAST so OS values override the shared defaults above.
+config-file = config-current

@@ -10,4 +10,12 @@ window-decoration = false
 
 # Linux-specific options
 gtk-titlebar = false
-gtk-adwaita = false
+# (gtk-adwaita was removed from Ghostty — libadwaita is mandatory now;
+#  window-decoration=false + gtk-titlebar=false already suppress the headerbar)
+
+# Single-instance: all `ghostty` invocations share one process (fast new
+# windows, shared state). On Hyprland gtk-single-instance defaults to off
+# (detect → non-GNOME = false), so enable it explicitly. Keep the process
+# alive after the last window closes so the next launch is instant/warm.
+gtk-single-instance = true
+quit-after-last-window-closed = false
