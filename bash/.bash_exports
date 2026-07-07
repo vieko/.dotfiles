@@ -133,12 +133,17 @@ export GLAMOUR_STYLE="$XDG_CONFIG_HOME/glamour/catppuccin-mocha.json"
 # export DISABLE_PROMPT_CACHING=1
 
 # Route Claude Code through Vercel AI Gateway for unified observability and
-# spend tracking. ANTHROPIC_AUTH_TOKEN is sourced from 1Password via
-# ~/.dotfiles/bash/env.op (see op-inject block in .bash_profile).
+# spend tracking — WORK MACHINE (phyrexia) ONLY. Personal machines (chaos,
+# havoc, …) must NOT touch these: without the gateway token (env.op is all
+# phyrexia-scoped 1Password URIs) a BASE_URL override just breaks auth.
+# ANTHROPIC_AUTH_TOKEN is sourced from 1Password via ~/.dotfiles/bash/env.op
+# (see op-inject block in .bash_profile).
 # ANTHROPIC_API_KEY must be an empty string -- Claude Code checks it first
 # and, if non-empty, uses it directly instead of ANTHROPIC_AUTH_TOKEN.
-export ANTHROPIC_BASE_URL="https://ai-gateway.vercel.sh"
-export ANTHROPIC_API_KEY=""
+if [[ "$(hostname -s)" == "phyrexia" ]]; then
+    export ANTHROPIC_BASE_URL="https://ai-gateway.vercel.sh"
+    export ANTHROPIC_API_KEY=""
+fi
 
 # LINEAR_API_KEY, NPM_TOKEN, and ANTHROPIC_AUTH_TOKEN are sourced from
 # 1Password via ~/.dotfiles/bash/env.op; see op-inject block in .bash_profile.
