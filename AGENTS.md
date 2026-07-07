@@ -34,8 +34,12 @@ adapters and the skill no-op silently.
 
 ### Cross-Platform Strategy
 
+Primary packages by platform. The repo also holds many smaller single-purpose
+packages not listed here (e.g. `aws`, `gh`, `gnupg`, `cargo`, `zed`, `picom`,
+`tofi`, GTK/Qt theming) — this list is not exhaustive; stow what you need.
+
 **Cross-platform packages:** bash, git, kitty, ghostty, tmux, nvim, starship, bat, btop, lazygit, yazi, assets, claude, pi, agents, slack
-**macOS-only:** macos, macos-keyboard, aerospace, sketchybar
+**macOS-only:** macos, macos-keyboard, aerospace, sketchybar, karabiner
 **Linux-only:** hypr, waybar, dunst, fuzzel, mako, rofi, sway, i3, polybar, ptyxis (run `ptyxis/setup-ptyxis.sh` once after stowing)
 
 ### Agent-related Packages
@@ -59,8 +63,12 @@ Some skills are symlinks to dev repos:
 - `~/.agents/skills/bonfire` → `~/dev/bonfire/skills/bonfire`
 - `~/.agents/skills/anvil` → `~/dev/anvil/packages/cli/skills/anvil`
 
-On a fresh machine, those dev repos must be cloned (`~/dev/bonfire`, `~/dev/anvil`)
-before the symlinks resolve. Other skills are self-contained directories.
+These point into machine-local `~/dev` clones, so their absolute target differs
+per OS (`/Users/...` on macOS, `/home/...` on Linux) — a single committed symlink
+can't be right for both. They are **gitignored and regenerated per machine**: on a
+fresh machine, clone the dev repos (`~/dev/bonfire`, `~/dev/anvil`), then run
+`agents/.agents/setup-skill-symlinks.sh` after stowing `agents/`. Other skills are
+self-contained directories.
 
 (`anvil` is the successor to the now-frozen `forge`; the old
 `~/dev/forge/skills/forge` symlink is gone.)
@@ -86,7 +94,9 @@ is portable across macOS and Linux, so no per-OS editing is needed.
   stable, machine-agnostic skills that don't change often.
 - **Symlinked skills** live at `~/dev/<name>/skills/<name>/` and are symlinked
   in from `agents/.agents/skills/<name>`. Use this for skills under active
-  development that benefit from their own git history, releases, and PRs.
+  development that benefit from their own git history, releases, and PRs. These
+  symlinks are gitignored and regenerated per machine via
+  `agents/.agents/setup-skill-symlinks.sh` (absolute `~/dev` targets differ by OS).
 
 Both resolve to the same path at runtime (`~/.agents/skills/<name>`). The
 choice is purely about where the source of truth lives. Migrate a skill
