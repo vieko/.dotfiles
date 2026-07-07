@@ -14,3 +14,5 @@ lazygit/.config/lazygit/state.yml
 zed/.config/zed/prompts/prompts-library-db.*.mdb/
 .DS_Store
 git/.gitconfig-os
+pi/.pi/agent/auth.json
+pi/.pi/agent/git/
