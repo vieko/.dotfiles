@@ -81,6 +81,13 @@ case ":$PATH:" in
   *) export PATH="$NPM_HOME/bin:$PATH" ;;
 esac
 
+# n (node version manager)
+export N_PREFIX="$HOME/.local/n"
+case ":$PATH:" in
+  *":$N_PREFIX/bin:"*) ;;
+  *) export PATH="$N_PREFIX/bin:$PATH" ;;
+esac
+
 # GPG TTY
 export GPG_TTY=$(tty)
 
