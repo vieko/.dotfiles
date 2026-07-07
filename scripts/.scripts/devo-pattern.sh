@@ -1,3 +1,3 @@
 #!/bin/sh
 
-hyprctl hyprpaper reload ,"~/.dotfiles/assets/Pictures/Wallpapers/pattern.png"
+hyprctl hyprpaper wallpaper ,"~/.dotfiles/assets/Pictures/Wallpapers/pattern.png"

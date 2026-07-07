@@ -1,4 +1,4 @@
 #!/bin/sh
 
-hyprctl hyprpaper reload ,"~/.dotfiles/assets/Pictures/Wallpapers/goblin.png"
+hyprctl hyprpaper wallpaper ,"~/.dotfiles/assets/Pictures/Wallpapers/goblin.png"
 
