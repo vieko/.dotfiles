@@ -223,7 +223,7 @@ This pattern can be reused for other tools that don't support environment variab
 
 ### Installation
 
-Install Hyprland manually from releases/source and hy3 using hyprpm to prevent version mismatches.
+On Fedora: COPR `lionheartp/Hyprland` (see `scripts/.scripts/fedora-fresh-install.sh`). Install hy3 via `hyprpm`; its version must match hyprland's.
 
 ### Configuration Structure
 

@@ -29,5 +29,5 @@
 
 ## Special Notes
 
-- Install Hyprland manually from releases/source to prevent version conflicts
+- Fedora: install Hyprland from COPR `lionheartp/Hyprland` (`scripts/.scripts/fedora-fresh-install.sh`)
 - Use `hyprpm` for hy3 plugin installation with matching versions

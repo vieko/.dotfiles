@@ -1,3 +1,5 @@
+> **Superseded** by `chaos-f44-setup.md` + `scripts/.scripts/fedora-fresh-install.sh` (2026-07). Kept as history.
+
 - install fedora workstation 40
 - `sudo dnf update`
 - `sudo dnf install fedora-workstation-repositories`

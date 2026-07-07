@@ -46,9 +46,19 @@ cd ~/.config/kitty && ./setup-os-link.sh
 stow -t / <folder>  # May need sudo
 ```
 
+## FRESH FEDORA INSTALL
+
+Repos + full package set (RPM Fusion, COPRs, Hyprland stack, CLI tools, snapper):
+
+```bash
+sudo bash scripts/.scripts/fedora-fresh-install.sh
+```
+
+Machine-specific notes: `chaos-f44-setup.md`.
+
 ## REGARDING HYPRLAND
 
-To prevent breaking hyprland when updating other packages, install [hyprland](https://wiki.hyprland.org/Getting-Started/Installation/) manually (from releases or from source) and [hy3](https://github.com/outfoxxed/hy3) using `hyprpm`. Make sure versions match!
+On Fedora, install from COPR `lionheartp/Hyprland` (handled by the script above). Install [hy3](https://github.com/outfoxxed/hy3) via `hyprpm` — versions must match hyprland's.
 
 ## KINESIS LAYOUT
 
