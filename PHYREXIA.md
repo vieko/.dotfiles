@@ -38,3 +38,22 @@ truth.
 - Worker panes still inherit per-window occult names from
   `~/.dotfiles/scripts/.scripts/tmux-name-window.sh` -- those are flavor, not
   roles.
+
+## Summoning discipline
+
+Encode the invariant (know what's summoned; runs must be discoverable), not
+the layout.
+
+- **Familiars run as panes in their project's window.** They are interactive;
+  the topology already says where they live. Never a separate window --
+  windows are projects, panes are agents.
+- **Golems run headless.** `anvil status` is their presence; a pane is
+  optional flavor for a human who wants to watch, never a requirement.
+- **Check work in flight before summoning:** `anvil status` (golems),
+  `git worktree list` (sibling checkouts, incl. stale anvil dirs), and
+  `tmux list-panes -s -F '#{window_name}: #{pane_current_command}'`
+  (familiars + dev servers). The collisions that matter are semantic --
+  two agents on one issue, or two open DB migrations -- not visual.
+- **Push, not poll:** prefer a completion notification (Slack,
+  `tmux display-message`) over watching a golem grind. Prune anvil
+  worktrees after merge; a stale worktree is a false "in flight" signal.
