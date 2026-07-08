@@ -110,16 +110,21 @@ are the deliverables; anything else is supplementary.
 
 ## Secrets
 
-This machine resolves secrets at login-shell startup via 1Password `op inject`
-from `~/.dotfiles/bash/env.op`. Resolved env vars are inherited by every shell
-Pi spawns. Do not:
+Pi's own provider credentials live in `~/.pi/agent/auth.json` (machine-local,
+0600, set via `/login`) — that is the source of truth for Pi's API keys.
 
-- look for `~/.secrets` (does not exist — migrated)
-- `cat` or `source` any plaintext credential file
-- attempt `op inject` from within agent tasks (will re-prompt for auth)
+Some env-based secrets are hydrated at login-shell startup via 1Password
+`op inject` from `~/.dotfiles/bash/env.op`, but only on machines with the `op`
+CLI installed (macOS). Linux machines may lack `op`; Pi's keys come from
+auth.json regardless. Do not:
 
-If a secret is missing, the source of truth is the `env.op` manifest. Add an
-`op://` reference there.
+- `cat` or `source` any plaintext credential file. `~/.secrets` exists but
+  belongs to app-cacahuate's homelab scripts — it is not Pi's and holds no
+  agentic keys.
+- run `op inject` from within agent tasks (re-prompts for auth).
+
+If a Pi provider key is missing, add it via `/login` (writes auth.json). For
+env-based secrets on op-enabled machines, the manifest is `env.op` (`op://` refs).
 
 ## Destructive command guard
 
