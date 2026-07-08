@@ -57,3 +57,8 @@ the layout.
 - **Push, not poll:** prefer a completion notification (Slack,
   `tmux display-message`) over watching a golem grind. Prune anvil
   worktrees after merge; a stale worktree is a false "in flight" signal.
+- **Hand-rolled golem gates on TS work include `tsc --noEmit`.** Explicit
+  `--verify` overrides anvil's auto-detection, and test+build alone has a
+  typecheck blind spot: vitest transpiles without checking, `next build`
+  skips test files. Moot per-repo once a `typecheck` script exists for
+  auto-detection to find (gtm: GTMENG-1994).
