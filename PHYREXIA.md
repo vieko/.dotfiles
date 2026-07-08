@@ -69,4 +69,4 @@ the layout.
   `--verify` overrides anvil's auto-detection, and test+build alone has a
   typecheck blind spot: vitest transpiles without checking, `next build`
   skips test files. Moot per-repo once a `typecheck` script exists for
-  auto-detection to find (gtm: GTMENG-1994).
+  auto-detection to find (gtm: retired -- GTMENG-1994 closed, all apps gated).
