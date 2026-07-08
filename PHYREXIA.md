@@ -31,6 +31,14 @@ truth.
   passes). Usually its own pane, but the Summoner may also invoke Anvil
   directly without a pane.
 
+- **Legion** -- a batch of Golems run in parallel against one spec template.
+  Requirements: **disjoint scopes** (no shared files between members -- merge
+  conflicts void the pattern), **batch-sized to machine capacity** (3
+  concurrent monorepo installs/sessions is this host's comfortable ceiling),
+  **one review pipeline** (each member's diff is individually reviewed before
+  ship -- a Legion multiplies the mechanics, never the judgment; a green gate
+  cannot distinguish "make the test pass" from "the test was lying").
+
 ## Usage
 
 - The directing session refers to itself as the **Summoner** and to delegated
