@@ -165,13 +165,22 @@ _cc_gateway_guard() {
     return 0
 }
 
+# Wrap the `claude` binary so the gateway guard runs on EVERY invocation —
+# plain `claude`, the model shortcuts (ch/cs/co), and the x* dangerous modes
+# all funnel through here. `command claude` skips this function, so there's no
+# recursion. Only affects interactive shells that source this file; scripts
+# calling the binary path directly are unaffected (fine — the guard is a UX
+# nicety to surface stale-token 401s early, not a security control).
+claude() { _cc_gateway_guard || return 1; command claude "$@"; }
+
 # ==> dangerous mode (skips ALL permission prompts — use with caution)
 # WARNING: These bypass safety confirmations. Only use in trusted contexts.
-xcc() { _cc_gateway_guard || return 1; claude --dangerously-skip-permissions "$@"; }
-xco() { _cc_gateway_guard || return 1; claude --dangerously-skip-permissions --model opus "$@"; }
+# (Guard runs via the `claude` wrapper above — no need to repeat it here.)
+xcc() { claude --dangerously-skip-permissions "$@"; }
+xco() { claude --dangerously-skip-permissions --model opus "$@"; }
 # Fable isn't in CC's model picker under gateway/API billing (that menu entry
 # came from the Enterprise subscription), but the gateway routes it fine.
 # Name it explicitly. In-session equivalent: /model claude-fable-5
-xcf() { _cc_gateway_guard || return 1; claude --dangerously-skip-permissions --model claude-fable-5 "$@"; }
-xcont() { _cc_gateway_guard || return 1; claude --dangerously-skip-permissions --continue "$@"; }
+xcf() { claude --dangerously-skip-permissions --model claude-fable-5 "$@"; }
+xcont() { claude --dangerously-skip-permissions --continue "$@"; }
 xcd() { codex --dangerously-bypass-approvals-and-sandbox "$@"; }
