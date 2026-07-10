@@ -29,6 +29,12 @@ resize-overlay = never
 # Options: "One Half Dark", "Atom One Dark", "Doom One", "One Double Dark"
 theme = One Half Dark
 
+# UPDATES
+# Ghostty is managed via Homebrew cask; disable Sparkle's built-in
+# self-updater to avoid it drifting out of sync with `brew upgrade`
+# and to cut down on background inter-app activity.
+auto-update = off
+
 # SHELL
 shell-integration = bash
 
@@ -36,6 +42,15 @@ shell-integration = bash
 # Send ESC+DEL on Alt+Backspace so TUIs (Pi, nvim, readline) see a word-delete
 # event instead of a single backspace. Recommended by pi.dev/docs/latest/terminal-setup.
 keybind = alt+backspace=text:\x1b\x7f
+
+# System-wide "new terminal window" hotkey (Hyprland $mod+Return style).
+# Uses Ghostty's native global keybind + new_window action so it opens a
+# window in the EXISTING single instance instead of launching a new process.
+# A new process re-triggers the macOS Screen Recording permission check on
+# every launch (denied by our Kandji MDM PPPC profile), which is what caused
+# the constant Ghostty + 1Password popups. See also: dropped the old
+# `open -n` Karabiner script (new-ghostty-window.sh) that spawned processes.
+keybind = global:super+enter=new_window
 
 # MOUSE
 mouse-hide-while-typing = true

@@ -1,6 +1,10 @@
 #!/bin/bash
-# Create a new Ghostty OS window (equivalent to Hyprland $mod+Return)
-# Opens a new window at home directory
-
-# Call Ghostty directly - creates new OS window at ~/ even if Ghostty is already running
-open -n -a Ghostty --args --working-directory="$HOME"
+# RETIRED 2026-07-07 — this used `open -n -a Ghostty`, which spawned a NEW
+# Ghostty PROCESS on every Cmd+Return. Each new process re-triggered the macOS
+# Screen Recording (kTCCServiceScreenCapture) check at launch, denied by the
+# Kandji MDM PPPC profile → the constant Ghostty + 1Password popups.
+#
+# Replaced by a native Ghostty global keybind (no new process, no prompt):
+#   ghostty config: keybind = global:super+return=new_window
+#   ghostty config-macos: quit-after-last-window-closed = false
+# The Karabiner Cmd+Return rule was removed so Ghostty owns the hotkey.

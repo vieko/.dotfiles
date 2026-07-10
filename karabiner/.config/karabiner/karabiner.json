@@ -382,23 +382,6 @@
                         ]
                     },
                     {
-                        "description": "Cmd+Return → New Ghostty window at ~/ (like Hyprland $mod+Return)",
-                        "manipulators": [
-                            {
-                                "from": {
-                                    "key_code": "return_or_enter",
-                                    "modifiers": { "mandatory": ["command"] }
-                                },
-                                "to": [
-                                    {
-                                        "shell_command": "~/.config/karabiner/scripts/new-ghostty-window.sh"
-                                    }
-                                ],
-                                "type": "basic"
-                            }
-                        ]
-                    },
-                    {
                         "description": "Cmd+Escape → Toggle SketchyBar visibility",
                         "manipulators": [
                             {
