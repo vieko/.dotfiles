@@ -50,6 +50,10 @@ command you supply) passes; this is a focused interactive shell.
 **Never spawn `claude -p` in tmux to run anvil.** Use the anvil CLI directly;
 the `claude -p` wrapper-in-tmux pattern bypasses anvil's verification boundary.
 
+**Always dispatch anvil with both `-v` (`--verbose`) and `--reasoning`** so the
+pane streams the agent's actions + gate progress in color *and* the thinking
+trace; without them the pane shows only a sparse header + quiet spinner.
+
 ## PHYREXIA session lexicon (this machine)
 
 Personal multi-agent naming for this host -- **not a team convention**. A
