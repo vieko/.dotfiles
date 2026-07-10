@@ -10,6 +10,7 @@
     "gutter": "#4b5263",
     "red": "#e06c75",
     "darkRed": "#be5046",
+    "brightRed": "#ff5c57",
     "green": "#98c379",
     "yellow": "#e5c07b",
     "orange": "#d19a66",
@@ -73,6 +74,7 @@
     "thinkingMedium": "blue",
     "thinkingHigh": "purple",
     "thinkingXhigh": "darkRed",
+    "thinkingMax": "brightRed",
 
     "bashMode": "orange"
   },

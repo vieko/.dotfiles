@@ -1,13 +1,15 @@
 {
-  "lastChangelogVersion": "0.80.3",
+  "lastChangelogVersion": "0.80.6",
   "defaultProvider": "vercel-ai-gateway",
   "defaultModel": "anthropic/claude-opus-4.8",
   "theme": "one-dark",
-  "defaultThinkingLevel": "xhigh",
+  "defaultThinkingLevel": "max",
   "enableInstallTelemetry": false,
   "quietStartup": true,
+  "showCacheMissNotices": true,
   "enabledModels": [
     "anthropic/claude-fable-5",
+    "anthropic/claude-opus-4.8:max",
     "anthropic/claude-opus-4.8:xhigh",
     "anthropic/claude-opus-4.8:high",
     "anthropic/claude-sonnet-5",
