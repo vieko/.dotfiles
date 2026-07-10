@@ -95,7 +95,7 @@
     ],
     "defaultMode": "default"
   },
-  "model": "opus[1m]",
+  "model": "claude-fable-5",
   "hooks": {
     "Stop": [
       {
