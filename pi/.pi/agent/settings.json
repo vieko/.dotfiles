@@ -1,7 +1,7 @@
 {
   "lastChangelogVersion": "0.80.6",
   "defaultProvider": "vercel-ai-gateway",
-  "defaultModel": "xai/grok-4.5",
+  "defaultModel": "anthropic/claude-fable-5",
   "theme": "one-dark",
   "defaultThinkingLevel": "high",
   "enableInstallTelemetry": false,
@@ -13,7 +13,7 @@
     "anthropic/claude-haiku-4.5:low",
     "anthropic/claude-fable-5:high",
     "openai/gpt-5.6-sol:high",
-    "xai/grok-4.5:high"
+    "deepseek/deepseek-v4-pro:high"
   ],
   "skills": [
     "~/.claude/plugins/cache/claude-plugins-official/vercel/current/skills",

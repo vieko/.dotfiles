@@ -23,8 +23,8 @@
         "openai/gpt-5.3-codex": {
           "compat": { "vercelGatewayRouting": { "order": ["openai"] } }
         },
-        "xai/grok-4.5": {
-          "compat": { "vercelGatewayRouting": { "order": ["xai"] } }
+        "deepseek/deepseek-v4-pro": {
+          "compat": { "vercelGatewayRouting": { "order": ["deepseek"] } }
         },
         "zai/glm-5.2": {
           "compat": { "vercelGatewayRouting": { "order": ["zai"] } }
