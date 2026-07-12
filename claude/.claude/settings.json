@@ -302,7 +302,7 @@
     ]
   },
   "syntaxHighlightingDisabled": true,
-  "effortLevel": "xhigh",
+  "effortLevel": "medium",
   "tui": "fullscreen",
   "skipDangerousModePermissionPrompt": true,
   "theme": "dark",
