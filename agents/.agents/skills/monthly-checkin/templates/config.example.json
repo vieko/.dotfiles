@@ -1,0 +1,13 @@
+{
+  "person_name": "Your name",
+  "repo": "~/dev/private-work-repo",
+  "window_start_day": 27,
+  "window_end_day": 26,
+  "due_day": 15,
+  "output_dir": "~/scratch/monthly-checkins",
+  "project_paths": [
+    "apps/product-a",
+    "apps/product-b",
+    "packages/shared"
+  ]
+}

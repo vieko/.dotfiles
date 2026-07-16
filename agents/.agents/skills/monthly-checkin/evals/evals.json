@@ -1,0 +1,23 @@
+{
+  "skill_name": "monthly-checkin",
+  "evals": [
+    {
+      "id": 1,
+      "prompt": "Draft my August monthly check-in from my work repo, issue tracker, PRs, and project memory. Report the proposed narrative, collaborators, and growth options before writing the final file.",
+      "expected_output": "Loads the private profile, resolves its configured work window and deadline, gathers evidence, reports before applying, and uses the private voice and golden example only after collaboration and growth confirmation.",
+      "files": []
+    },
+    {
+      "id": 2,
+      "prompt": "It's the check-in deadline today. Which month is due, and can you prepare it?",
+      "expected_output": "Uses the private cadence rather than assuming a calendar month, selects the correct named check-in, and reports the exact evidence window and deadline.",
+      "files": []
+    },
+    {
+      "id": 3,
+      "prompt": "Update my current month's check-in with everything I've shipped so far. The period isn't closed yet.",
+      "expected_output": "Marks the check-in as a draft through today, does not claim the open period is complete, and distinguishes evidence from inferred growth or collaboration claims.",
+      "files": []
+    }
+  ]
+}
