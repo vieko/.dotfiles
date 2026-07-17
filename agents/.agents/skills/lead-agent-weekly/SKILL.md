@@ -1,15 +1,15 @@
 ---
 name: lead-agent-weekly
-description: Compose the weekly "LEAD AGENT this week" status report for Slack, in Vieko's voice and format. Use this whenever the user asks to write, draft, compose, or update the LEAD AGENT weekly report, the "this week" Lead Agent update, the weekly Lead Agent status post, or any recurring Lead-Agent progress summary destined for Slack -- even if they don't say the exact phrase "this week." Gathers the week's merged work from git + the bonfire epic state, then renders it as raw Slack mrkdwn (value-first bullets, not a commit recap).
+description: Compose a recurring LEAD AGENT project update for Slack in Vieko's voice and format. Use this whenever the user asks to write, draft, compose, or update a Lead Agent project update, weekly or biweekly report, "this week" update, or recurring Lead-Agent progress summary destined for Slack. Gathers merged work from git + the bonfire epic state, then renders it as raw Slack mrkdwn (value-first bullets, not a commit recap).
 ---
 
-# LEAD AGENT — weekly report
+# LEAD AGENT — project update
 
-A recurring Friday-ish status post summarizing everything that shipped on Lead Agent
-since the last report. The audience is GTM stakeholders (MOPS, sales leadership, the
-VDR team) plus engineering peers -- they care about *what each change unlocks*, not
-the implementation. The output is **raw Slack mrkdwn**, pasted directly into the
-channel.
+A recurring project update summarizing everything that shipped on Lead Agent since
+the last report (often a two-week window). The audience is GTM stakeholders (MOPS,
+sales leadership, the VDR team) plus engineering peers -- they care about *what each
+change unlocks*, not the implementation. The output is **raw Slack mrkdwn**, pasted
+directly into the channel.
 
 This is a writing-style skill. The single most important reference is the golden
 example -- match its voice, rhythm, and structure before anything else.
@@ -25,10 +25,11 @@ the real epic state, not vibes.
 
 ### 1. Gather
 
-Establish the window first. The report is weekly, so the default cutoff is ~7 days
-back, but pin it precisely: ask the user when the last report went out, or infer it
-from the previous post's date. Everything merged *after* that cutoff is in scope;
-everything before is already reported and must not be repeated.
+Establish the window first. Use the user's requested cadence; otherwise infer it from
+the previous post (the current golden example uses two weeks). Pin the cutoff precisely:
+ask when the last report went out or infer it from the previous post's date. Everything
+merged *after* that cutoff is in scope; everything before is already reported and must
+not be repeated.
 
 Pull the merged work across the Lead Agent surface area:
 
@@ -50,23 +51,18 @@ For any commit whose value isn't obvious from the subject line, read the body --
 Then read `<repo>/.bonfire/index.md`. This is where the epic narrative lives -- which
 measurement windows opened/closed, which flags flipped, what's blocked, what's queued
 next. The git log tells you *what merged*; bonfire tells you *what it means for the
-epic* and feeds the intro line and WHAT'S NEXT. If the repo has no `.bonfire/`, ask the
+epic* and feeds the summary and What's next. If the repo has no `.bonfire/`, ask the
 user for the epic state instead.
 
 ### 2. Compose
 
-Group the week's work into sections, in this order, **including only the sections that
-have real content this week**:
+Default to the compact project-update structure in the golden example:
 
-1. `*LEAD AGENT*` — the scorer/gates/model core (classification, gates, model swaps, region, reliability)
-2. `*VDR DASHBOARD*` — the review UI/queue surface
-3. `*OUTREACH DELIVERY*` — the send pipeline + rollout work
-4. `*LEAD BOT*` — the Slack feedback/Linear-ticket agent
-5. `*LEAD LOGS*` — the lead-agent-log channel / logging surface
-6. `*FOUNDATIONS*` — infra, projections, cleanup, deletions
+1. `*What shipped in the last two weeks*`
+2. `*What's next*`
 
-Sections are stable scaffolding, not a checklist -- a quiet week drops a section
-entirely rather than padding it.
+Use themed subsections such as `*VDR DASHBOARD*` or `*OUTREACH DELIVERY*` only when the
+user requests a longer narrative report or the volume genuinely needs grouping.
 
 ## House style
 
@@ -75,13 +71,13 @@ The voice is the product. These rules reproduce it; the golden example shows it.
 **Slack mrkdwn, raw.** Output the literal characters the user will paste:
 - `_italic_`, `*bold*` (single asterisks -- NOT `**bold**`), `` `code` ``
 - Links as `[label](url)`. (Vieko's Slack composer auto-converts this; don't use `<url|label>` unless asked.)
-- Bullets are `• ` (literal bullet char), not `-` or `*`.
-- WHAT'S NEXT items are numbered with `:1-dark:` `:2-dark:` `:3-dark:` emoji, not `1.`
-- Title line: `:lead-agent: *LEAD AGENT this week*`
+- Bullets are `* `, matching the posted Slack source exactly.
+- Title line: `:update: :lead-agent: *PROJECT UPDATE*`
+- Section headings are bold sentence case, with no trailing colon.
 
-**Punctuation:** Use `--` for the em-dash role. Never use a literal em-dash (—). Better
-still, reach for a colon, semicolon, or comma when it fits the sentence -- the dash is
-the fallback, not the default. Avoid en-dashes too: write "0-100", "14 to 9".
+**Punctuation:** Vieko deliberately uses literal em dashes (`—`) in polished Slack
+prose. Use them sparingly for a meaningful turn in the sentence, as in the golden
+example; prefer a colon, semicolon, or comma when one reads more naturally.
 
 **"Stage", never "Chapter."** The epic's internal docs say "Chapter"; the report says
 "Stage." Translate on the way out (`Chapter 2.b` → `Stage 2`).
@@ -97,21 +93,18 @@ safe and correct:") with the sub-fixes folded into a single sentence. The reader
 outcomes, not commits. It's fine to mention the PR count as texture ("eight hardening
 PRs this week") in a section tagline.
 
-**Bullet structure:** `• *Bold lead-in phrase:* the explanation.` Trailing Linear links
-at the end of the bullet: `([GTMENG-1402](url))`. Multiple IDs comma-separated inside
-one paren.
+**Bullet structure:** `* Outcome-first sentence`, usually without a bold lead-in or
+trailing period. Trailing Linear links are optional when useful:
+`([GTMENG-1402](url))`. Multiple IDs are comma-separated inside one parenthesis.
 
-**Intro line:** one `_italic_` paragraph, 2-3 sentences, naming the week's headline(s)
--- the thing a skimmer should walk away with. Pull it from the most consequential items
-(a flag flip, a measurement window closing, a model swap, a big UX week).
+**Long-form exception:** when the user explicitly wants a narrative weekly report,
+an italic 2-3 sentence intro and themed section taglines can help. Do not add them to
+the default compact project-update format.
 
-**Section taglines:** a short `_italic_` line under a section header is good when the
-section has a theme ("_Biggest UX week since launch -- the queue is now a real work
-surface._"). Optional; use when it earns its place.
-
-**WHAT'S NEXT:** exactly three items, the genuine next priorities -- pulled from
-bonfire's "In flight" / "Next Steps" / blocked items. Lead with the outcome and name
-the gating dependency honestly (e.g. "gated on MOPS restoring field permissions").
+**What's next:** include the genuine next priorities pulled from bonfire's "In flight" /
+"Next Steps" / blocked items. Three is a useful default, not a hard limit; include a
+fourth when it is a real user priority. Lead with the outcome and name gating
+dependencies honestly.
 
 ## Output
 
