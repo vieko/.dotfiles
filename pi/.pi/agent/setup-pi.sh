@@ -22,8 +22,10 @@
 
 set -euo pipefail
 
-SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-cd "$SCRIPT_DIR"
+# `>/dev/null` suppresses the directory echo `cd` emits when CDPATH is set,
+# which would otherwise corrupt SCRIPT_DIR (double path). See macOS default shells.
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" >/dev/null 2>&1 && pwd)"
+cd "$SCRIPT_DIR" >/dev/null
 
 command -v jq >/dev/null 2>&1 || {
   echo "error: jq is required to generate settings.json" >&2
