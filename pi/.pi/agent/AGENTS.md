@@ -193,6 +193,18 @@ platform-specific behavior is required.
 
 ## Maintenance notes
 
+### Refreshing Pi's model catalog
+
+Pi (0.80.8+) keeps a dynamic model catalog in `~/.pi/agent/models-store.json`
+(machine-local, gitignored). `/model` refreshes it in the background, but if a
+newly added gateway model isn't showing up, force an immediate refresh with:
+
+```
+pi update --models
+```
+
+No pi/extension update happens — catalog only.
+
 ### vercel-plugin skills path (`current` symlink)
 
 `settings.json` points the vercel-plugin skills at a stable `current`
