@@ -16,3 +16,6 @@ zed/.config/zed/prompts/prompts-library-db.*.mdb/
 git/.gitconfig-os
 pi/.pi/agent/auth.json
 pi/.pi/agent/git/
+pi/.pi/agent/settings.json
+pi/.pi/agent/sessions/
+pi/.pi/agent/models-store.json

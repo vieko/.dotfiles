@@ -44,17 +44,35 @@ packages not listed here (e.g. `aws`, `gh`, `gnupg`, `cargo`, `zed`, `picom`,
 
 ### Agent-related Packages
 
-**`pi/`** — Pi coding agent config. Stows to `~/.pi/agent/`. Tracks: `AGENTS.md`,
-`settings.json`, `models.json`, `keybindings.json`, `prompts/`, `themes/`. **Does NOT
-track** `auth.json`, `sessions/`, or `skills/` (auto-generated / machine-local).
+**`pi/`** — Pi coding agent config. `~/.pi` is a whole-directory symlink into
+`pi/.pi`, so everything under `~/.pi/agent/` *is* the repo working tree (same
+inodes). Tracks: `AGENTS.md`, `settings.base.json`, `hosts/*.json`, `setup-pi.sh`,
+`models.json`, `keybindings.json`, `prompts/`, `themes/`. **Does NOT track**
+`auth.json`, `git/`, `sessions/`, `models-store.json`, `skills/`, or the generated
+`settings.json` (auto-generated / machine-local).
 
 `models.json` registers custom models (or models newer than Pi's built-in registry)
 for the configured providers. It merges into the built-in providers — most useful
 for adding bleeding-edge gateway models that Pi's bundled registry doesn't know
-about yet.
+about yet. It is shared across all hosts: `modelOverrides` are inert unless a
+model is actually used, so host-restricted models (e.g. Kimi K3, Grok 4.5) can
+carry routing/cost overrides everywhere without affecting hosts that lack access.
 
-Note: Pi writes `lastChangelogVersion` into `settings.json` on update. Expect
-occasional churn in git status; commit when convenient.
+**Per-host `settings.json` (generated, not tracked).** Pi has only two settings
+layers (global + per-project) with no env interpolation or includes, so
+per-machine differences can't live inside the tracked file. `enabledModels` (the
+`/model` picker + Ctrl+P cycle set) must differ per host because each machine's
+Vercel AI Gateway key has different model access — Chaos (unrestricted) enables
+Kimi K3 + Grok 4.5; Phyrexia (Vercel Team key) does not. `setup-pi.sh` switches
+on `hostname` (mirroring `hypr/scripts/host.sh`), merges `settings.base.json`
+with `hosts/enabledModels.<host>.json` via `jq`, and writes `settings.json`. An
+unknown host falls back to `hosts/enabledModels.default.json` (the restricted
+set). Add a host by dropping in a new `hosts/enabledModels.<host>.json` fragment.
+
+Run `pi/.pi/agent/setup-pi.sh` once after stowing on a fresh machine, and again
+whenever `settings.base.json` or a host fragment changes. Because the generated
+`settings.json` is gitignored, the old `lastChangelogVersion` churn is gone —
+Pi writes into a file git no longer tracks.
 
 **`agents/`** — cross-agent shared skills. Stows to `~/.agents/`. Single source
 of truth for skills that any agent (Pi, Claude, Codex) should see.
