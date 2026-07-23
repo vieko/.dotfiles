@@ -394,7 +394,23 @@ chmod 600 ~/.linear_api_token
 # Token is auto-loaded from bash/.bash_exports
 ```
 
-### 7.4 Claude CLI Setup (Optional)
+### 7.4 Private Notes Repo (vieko/private)
+
+```bash
+# Check-ins, roadmaps, and the private profiles behind the
+# monthly-checkin / half-year-roadmap agent skills.
+# PRIVATE repo -- never make public, never copy contents into this repo.
+git clone git@github.com:vieko/private.git ~/private
+
+# Skills resolve the profile through ~/.config/monthly-checkin:
+ln -s ~/private/profile/monthly-checkin ~/.config/monthly-checkin
+
+# Legacy scratch paths (optional, only if old references matter):
+mkdir -p ~/scratch
+ln -s ~/private/checkins/2026-bluf ~/scratch/monthly-checkins-2026-bluf
+```
+
+### 7.5 Claude CLI Setup (Optional)
 
 ```bash
 # Already stowed, verify installation:
