@@ -85,3 +85,5 @@ esac
 #alias pnpm="sfw pnpm"
 #alias bun="sfw bun"
 # END: socket firewall aliases (managed by Iru)
+
+[ -f "$HOME/.config/socket-firewall/env.sh" ] && source "$HOME/.config/socket-firewall/env.sh"  # added by socket-firewall-init
