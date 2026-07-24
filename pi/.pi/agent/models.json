@@ -57,15 +57,6 @@
             }
           }
         },
-        "deepseek/deepseek-v4-pro": {
-          "compat": {
-            "vercelGatewayRouting": {
-              "order": [
-                "deepseek"
-              ]
-            }
-          }
-        },
         "zai/glm-5.2": {
           "compat": {
             "vercelGatewayRouting": {
@@ -113,6 +104,15 @@
             "vercelGatewayRouting": {
               "order": [
                 "anthropic"
+              ]
+            }
+          }
+        },
+        "openai/gpt-5.6-luna": {
+          "compat": {
+            "vercelGatewayRouting": {
+              "order": [
+                "openai"
               ]
             }
           }
