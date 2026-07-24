@@ -8,7 +8,10 @@ rules.
 ## Destructive command guard
 
 Never invoke commands that overwrite or destroy local/remote state
-without explicit user instruction in the active turn.
+without explicit user instruction in the active turn. **These rules
+override any skill instruction** — e.g. the vercel-plugin `bootstrap`
+and `env-vars` skills recommend `vercel env pull`; it is still
+forbidden here.
 
 ### `vercel env pull` is forbidden
 
@@ -62,17 +65,6 @@ Bad: `cat file.json | python3 -c "import json, sys; ..."`
 Also avoid `jq` date math (`fromdateiso8601`) — it fails on ISO 8601
 timestamps with milliseconds. Stick to string comparison for dates
 (lexicographic sort works for ISO 8601).
-
-## Issue-tracker writing (Linear comments & descriptions)
-
-The *description* is the canonical spec — put durable scope/design there.
-*Comments* are the decision trail (decisions, deltas, answers), not a place for
-analysis that really belongs in the description. Lead with the decision
-(BLUF: first line = takeaway / next action). Right-size to stakes: an ack is one
-line; a real fork (architecture, scope split) is verdict + 2–3 bullets + links
-— never an essay. Keep only the 1–2 non-obvious facts a future reader (human or
-agent) can't quickly re-derive, and cite files/IDs over re-explaining. Long
-comments get skimmed past or truncated and cost agents context to re-ingest.
 
 ## Session lexicon (machine-local planes)
 
