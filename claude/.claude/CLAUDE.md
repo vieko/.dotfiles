@@ -79,5 +79,5 @@ Source of truth is per machine -- check `hostname` and read the matching
 plane file before summoning:
 
 - `PHYREXIA` (work machine) -> `~/.dotfiles/PHYREXIA.md`
-- `chaos` (personal) -> `~/.dotfiles/CHAOS.md` (inherits PHYREXIA's roles,
-  adds the steerability amendment + standing review-gate invariant)
+- `chaos` (personal) -> `~/.dotfiles/CHAOS.md` (inherits PHYREXIA's roles
+  and invariants; delta is capacity + extra vessels)

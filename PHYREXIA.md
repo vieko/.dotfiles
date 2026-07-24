@@ -22,14 +22,19 @@ truth.
   Linear issues, sequences work, and coordinates parallel sessions. It
   delegates implementation rather than doing it.
 
-- **Familiar** -- a worker session of the **same runtime as the Summoner**
+- **Familiar** -- a steerable worker of the **same runtime as the Summoner**
   (Pi Summoner -> Pi Familiars; Claude Code Summoner -> Claude Code Familiars).
-  Same-kind, to avoid mixing harnesses.
+  Defined by STEERABILITY, not by panes: an interactive pane session *or* an
+  in-band background dispatch (Agent-tool subagent in its own worktree) that
+  the Summoner can message mid-flight. Steering is the point -- correcting a
+  construct mid-run beats re-running from scratch. Same-kind, to avoid mixing
+  harnesses.
 
-- **Golem** -- an **Anvil** run: an isolated, gate-bound, autonomous construct
-  (its own git worktree, no conversation, grinds until its deterministic gate
-  passes). Usually its own pane, but the Summoner may also invoke Anvil
-  directly without a pane.
+- **Golem** -- the unsteerable kind: gate-bound, no conversation. Canonically
+  an **Anvil** run: an isolated, autonomous construct (its own git worktree,
+  grinds until its deterministic gate passes). Mechanism is flavor, the
+  property is identity. Usually its own pane, but the Summoner may also
+  invoke Anvil directly without a pane.
 
 - **Legion** -- a batch of Golems run in parallel against one spec template.
   Requirements: **disjoint scopes** (no shared files between members -- merge
@@ -38,6 +43,46 @@ truth.
   **one review pipeline** (each member's diff is individually reviewed before
   ship -- a Legion multiplies the mechanics, never the judgment; a green gate
   cannot distinguish "make the test pass" from "the test was lying").
+
+## Standing invariants
+
+- **The review gate applies to EVERY construct, not just Legions.** Each
+  construct's diff passes one review pipeline, and judgment sits with the
+  session holding the richest context (usually the Summoner). A green gate
+  cannot distinguish "make the test pass" from "the test was lying"; the
+  review catches what no gate can (planted probe strings, contracts that
+  enshrine the bug, prose that satisfies a grep).
+
+## Vessels
+
+Which model a construct is bound into. Available vessels are per-host
+(for Pi: `~/.pi/agent/hosts/enabledModels.<host>.json`); this is the
+PHYREXIA binding policy, grounded in session history (2026-06/07) and this
+host's work profile (production TS monorepo, gated prod migrations,
+governance-heavy coordination). Defaults, not law -- override per summoning
+when the work demands it.
+
+- **Summoner** -- `claude-fable-5:high` (the Pi default; the seat opus held
+  before it). The judgment seat gets the daily-driver frontier vessel.
+  Escalate to `claude-opus-5:medium` for the gnarliest architecture or
+  review passes -- that is its defined job.
+- **Familiar** -- `claude-sonnet-5:medium` by default; the sonnet tier is
+  the organic worker tier (~1/4 of all sessions). Bind UP to the Summoner's
+  vessel when a Familiar owns a whole phase -- scoped PRs still hit judgment
+  traps (lockfile drift, governance paths, prod-impact calls).
+- **Golem** -- anvil `--model luna` (gpt-5.6-luna) by default: a
+  cross-family golem under an Anthropic reviewer diversifies failure modes
+  -- same-family worker+reviewer share blind spots, and the review gate
+  exists to catch "the test was lying." Bind `--model opus` for deep
+  refactors where raw capability dominates. Note: anvil's aliases are
+  `haiku/sonnet/opus/luna` only -- there is no `fable` alias.
+- **Legion** -- `sonnet` members (`haiku` only for purely mechanical
+  batches -- historically unused). At a 3-member ceiling, member cost is
+  noise next to merge-conflict and review cost; the gate + review carry
+  the judgment, not the member.
+
+Cross-family consults (`glm-5.2`, `gpt-5.6-sol`) are conversations, not
+constructs -- a second read needs no binding.
 
 ## Usage
 
@@ -52,9 +97,12 @@ truth.
 Encode the invariant (know what's summoned; runs must be discoverable), not
 the layout.
 
-- **Familiars run as panes in their project's window.** They are interactive;
-  the topology already says where they live. Never a separate window --
+- **Interactive Familiars run as panes in their project's window.** The
+  topology already says where they live. Never a separate window --
   windows are projects, panes are agents.
+- **In-band Familiars get worktree isolation by default** when they touch
+  files -- two constructs in one checkout yank branches out from under each
+  other.
 - **Golems run headless.** `anvil status` is their presence; a pane is
   optional flavor for a human who wants to watch, never a requirement.
 - **Check work in flight before summoning:** `anvil status` (golems),
