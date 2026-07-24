@@ -59,6 +59,39 @@ linear issue comment add ENG-123 --body-file /tmp/comment.md
 
 **Only use inline flags** (`--description`, `--body`) for simple, single-line content.
 
+## Known Quirks (local additions — keep when regenerating from CLI docs)
+
+- **`linear issue view -j` omits the `labels` field entirely.** Default-checking
+  `.labels.nodes` returns `[]` even when labels are attached. Verify label
+  assignments via the UI or a raw GraphQL query, not the CLI's `-j` output.
+- **`linear issue update` is unreliable — prints `✓ Updated issue` while silently
+  no-op'ing.** Observed for both `--state <name>` (resolves the state by name
+  across the *entire workspace* and can bind to the wrong team's same-named
+  state, e.g. "Done") and `--description`/`--description-file` (drops the body
+  change entirely). Mutate deterministically via the API instead:
+
+  ```bash
+  linear api 'mutation { issueUpdate(id: "<issueUUID>", input: { stateId: "<stateUUID>" }) { success } }'
+  ```
+
+  Fetch the issue UUID (and any state UUID) first via an `issues`/`workflowStates`
+  query scoped to the team. For `description`, JSON-escape the markdown with
+  `jq -Rs .` and inject it (`input: { description: $desc }`). Verify with a fresh
+  API read — allow a few seconds for read-replica lag, since an immediate re-read
+  can still show stale values.
+
+## Writing Style: Comments vs Descriptions (local additions)
+
+The *description* is the canonical spec — put durable scope/design there.
+*Comments* are the decision trail (decisions, deltas, answers), not a place for
+analysis that really belongs in the description. Lead with the decision (BLUF:
+first line = takeaway / next action). Right-size to stakes: an ack is one line;
+a real fork (architecture, scope split) is verdict + 2–3 bullets + links — never
+an essay. Keep only the 1–2 non-obvious facts a future reader (human or agent)
+can't quickly re-derive, and cite files/IDs (`webhook/route.ts:565`,
+`GTMENG-1768`) over re-explaining. Long comments get skimmed past or truncated
+and cost agents context to re-ingest.
+
 ## Available Commands
 
 ```

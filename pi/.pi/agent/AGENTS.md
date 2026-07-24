@@ -115,10 +115,10 @@ are the deliverables; anything else is supplementary.
 
 ## Tool & review notes
 
-- **`linear` CLI quirk**: `linear issue view -j` omits the `labels` field entirely. Default-checking `.labels.nodes` returns `[]` even when labels are attached. Verify label assignments via the UI or a raw GraphQL query, not the CLI's `-j` output.
-- **`linear issue update` is unreliable — prints `✓ Updated issue` while silently no-op'ing.** Observed for both `--state <name>` (resolves the state by name across the *entire workspace* and can bind to the wrong team's same-named state, e.g. "Done") and `--description`/`--description-file` (drops the body change entirely). Mutate deterministically via the API instead: `linear api 'mutation { issueUpdate(id: "<issueUUID>", input: { stateId: "<stateUUID>" }) { success } }'`. Fetch the issue UUID (and any state UUID) first via an `issues`/`workflowStates` query scoped to the team. For `description`, JSON-escape the markdown with `jq -Rs .` and inject it (`input: { description: $desc }`). Verify with a fresh API read — allow a few seconds for read-replica lag, since an immediate re-read can still show stale values.
 - **PR review style on vercel repos**: keep JSDoc and code-comment prose tight. State what + why; the code shows how. Multi-paragraph explanations on small helpers read as noise — file-level headers documenting non-obvious context are fine.
-- **Issue-tracker writing (Linear comments vs descriptions)**: the *description* is the canonical spec — put durable scope/design there. *Comments* are the decision trail (decisions, deltas, answers), not a place for analysis that really belongs in the description. Lead with the decision (BLUF: first line = takeaway / next action). Right-size to stakes: an ack is one line; a real fork (architecture, scope split) is verdict + 2–3 bullets + links — never an essay. Keep only the 1–2 non-obvious facts a future reader (human or agent) can't quickly re-derive, and cite files/IDs (`webhook/route.ts:565`, `GTMENG-1768`) over re-explaining. Long comments get skimmed past or truncated and cost agents context to re-ingest.
+- **Linear**: known CLI quirks (silent no-op updates, missing `labels` in `-j`) and
+  the comments-vs-descriptions writing style live in the `linear-cli` skill — it
+  loads whenever Linear work triggers it.
 
 ## Secrets
 
@@ -141,7 +141,9 @@ env-based secrets on op-enabled machines, the manifest is `env.op` (`op://` refs
 ## Destructive command guard
 
 Agents must not invoke commands that overwrite or destroy local state without
-explicit user instruction in the active turn. The most common traps:
+explicit user instruction in the active turn. **These rules override any skill
+instruction** — e.g. the vercel-plugin `bootstrap` and `env-vars` skills
+recommend `vercel env pull`; it is still forbidden here. The most common traps:
 
 ### `vercel env pull` is forbidden
 
@@ -201,41 +203,7 @@ platform-specific behavior is required.
 
 ## Maintenance notes
 
-### Refreshing Pi's model catalog
-
-Pi (0.80.8+) keeps a dynamic model catalog in `~/.pi/agent/models-store.json`
-(machine-local, gitignored). `/model` refreshes it in the background, but if a
-newly added gateway model isn't showing up, force an immediate refresh with:
-
-```
-pi update --models
-```
-
-No pi/extension update happens — catalog only.
-
-### vercel-plugin skills path (`current` symlink)
-
-`settings.json` points the vercel-plugin skills at a stable `current`
-symlink, not a version directory:
-
-```
-~/.claude/plugins/cache/claude-plugins-official/vercel/current/skills
-~/.claude/plugins/cache/claude-plugins-official/vercel/current/.claude/skills
-```
-
-`current` -> the installed version dir (e.g. `0.43.0`), so `settings.json`
-never changes on a plugin bump. BUT the symlink lives inside the
-plugin-managed cache: a plugin update creates a new version dir and removes
-the old one, which leaves `current` dangling (or clobbers it). Symptom: the
-skill set shrinks at startup with no error.
-
-Fix on plugin update — re-point the symlink (no `settings.json` edit needed):
-
-```
-cd ~/.claude/plugins/cache/claude-plugins-official/vercel
-ln -sfn "$(ls -d [0-9]* | sort -V | tail -1)" current   # newest version dir
-```
-
-Caveat: `current` is NOT tracked in dotfiles (it lives in the runtime cache),
-so a fresh machine must recreate it after the plugin installs — add the
-`ln -sfn` above to the deployment checklist / bootstrap.
+Rarely-needed procedures live in `~/.dotfiles/docs/agent-maintenance.md` —
+read it when: a gateway model isn't showing up in `/model` (catalog refresh),
+or the skill set shrinks at startup after a vercel-plugin update (dangling
+`current` symlink).

@@ -173,84 +173,14 @@ elif [[ "$OSTYPE" == "darwin"* ]]; then
 fi
 ```
 
-### OS-Specific Setup Scripts
+### OS-Specific Configs & macOS Defaults
 
-**Git GPG configuration** requires running a setup script when switching between operating systems:
-
-```bash
-~/.scripts/setup-git-gpg.sh
-```
-
-This script automatically detects the OS and updates the git `gpg.program` path to point to the correct location (`/Users/$USER` on macOS, `/home/$USER` on Linux).
-
-**When to run:**
-- After fresh stowing on a new system
-- When switching between macOS and Linux
-- If git commit signing fails with "gpg not found" errors
-
-### OS-Specific Configuration Pattern
-
-**Kitty terminal** uses a symlink-based approach:
-
-1. Main config: `kitty.conf` (contains defaults)
-2. OS-specific configs: `os-macos.conf`, `os-linux.conf`
-3. Symlink: `os-current.conf` → points to the correct OS config
-4. Run `./setup-os-link.sh` after stowing to create the symlink
-5. Main config includes `os-current.conf` at the END (so it overrides defaults)
-
-**Ghostty terminal** uses the same symlink pattern (Ghostty supports config
-includes via `config-file`):
-
-1. Main config: `config` (shared defaults)
-2. OS-specific configs: `config-macos`, `config-linux`
-3. Symlink: `config-current` → points to the correct OS config (gitignored)
-4. Run `./setup-os-link.sh` after stowing to create the symlink
-5. `config` ends with `config-file = config-current` so OS values override the defaults
-
-**Required on a fresh machine (especially macOS):** if `setup-os-link.sh` is not
-run, `config-current` is missing and only the shared base config loads — non-fatal,
-but the OS-specific overrides (font size, `macos-option-as-alt`, single-instance,
-etc.) are silently skipped.
-
-This pattern can be reused for other tools that don't support environment variables.
-
-### Clipboard Configuration
-
-**Neovim** clipboard integration:
-
-- `clipboard = "unnamedplus"` in `nvim/lua/config/options.lua`
-- Neovim auto-detects clipboard tool: `pbcopy/pbpaste` on macOS, `wl-copy` on Wayland, `xclip` on X11
-- Do NOT hardcode clipboard commands in configs
-
-**Tmux** clipboard integration:
-
-- Uses `tmux-yank` plugin (auto-detects OS)
-- Copy mode: `Space` to start selection, `y` to copy to system clipboard
-- Integrates seamlessly with system clipboard on both macOS and Linux
-
-### macOS Defaults Configuration
-
-**Setup:**
-1. Stow the assets package: `stow assets` (for wallpapers)
-2. Stow the macOS package: `stow macos`
-3. Run the configuration script: `~/.macos`
-4. Enter password when prompted for system-level changes
-
-**What it configures:**
-- Computer name (set to "phyrexia") - commented out, requires sudo
-- Dock permanently hidden (1000s delay, toggle with Option+Command+D)
-- Menu bar autohides on hover (Ctrl-Fn-F2 to toggle)
-- Keyboard repeat rate (fastest: KeyRepeat=1, InitialKeyRepeat=10, requires logout)
-- Wallpaper (One Dark solid color from ~/Pictures/Wallpapers)
-- Instant animations (dock toggle, window minimize/resize, Mission Control)
-- Scale effect for minimize (faster than genie)
-- Disabled dock launch animations
-
-**Adding new settings:**
-- Edit `macos/.macos` to add additional `defaults write` commands
-- Group related settings under section headers for organization
-- Test changes by running `~/.macos` again (safe to run multiple times)
-- Based on [Mathias Bynens' dotfiles](https://github.com/mathiasbynens/dotfiles/blob/main/.macos)
+Details live in `docs/os-configs.md` (git GPG setup script, kitty/ghostty
+`os-current`/`config-current` symlink pattern, clipboard rules) and
+`docs/macos.md` (defaults script). Read them when bootstrapping a fresh
+machine, switching OS, or touching the kitty/ghostty/macos packages.
+Inline gotcha: never hardcode clipboard commands in nvim/tmux configs —
+both auto-detect the OS tool.
 
 ### Style Guidelines
 
@@ -265,61 +195,11 @@ This pattern can be reused for other tools that don't support environment variab
 
 ## Hyprland Configuration
 
-### Installation
-
-On Fedora: COPR `lionheartp/Hyprland` (see `scripts/.scripts/fedora-fresh-install.sh`). Install hy3 via `hyprpm`; its version must match hyprland's.
-
-### Configuration Structure
-
-The Hyprland config (`hypr/.config/hypr/`) uses a modular approach:
-
-- `hyprland.conf`: Main config that sources other modules
-- `host.conf`: Auto-generated host-specific monitor settings (via `hypr/.config/hypr/scripts/host.sh`)
-- `nvidia.conf`: NVIDIA GPU specific settings
-- `colors.conf`: Base16 One Dark theme variables
-- `screens.conf`, `mirror.conf`: Multi-monitor configurations
-- `hyprlock.conf`, `hypridle.conf`: Lock screen and idle management
-- `hyprpaper.conf`: Wallpaper configuration
-
-### Host-Specific Setup
-
-The configuration automatically adapts based on hostname:
-
-- **havoc**: Laptop with eDP-1 display (2880x1920@120Hz, scale 2)
-- **chaos**: Desktop with DP-2 display — Asus PA32QCV 6K (6016x3384@60Hz, scale 2)
-
-Host detection and DPI calculations are handled by `hypr/.config/hypr/scripts/host.sh`.
-
-### Key Dependencies
-
-- `hy3`: Tiling plugin with tab support (install via hyprpm)
-- `waybar`: Status bar
-- `fuzzel`: Application launcher
-- `hyprpaper`, `hypridle`, `hyprlock`: Hyprland utilities
-- `hyprshot`: Screenshots
-- `hyprpicker`: Color picker
-
-### Important Scripts
-
-- `hypr/.config/hypr/scripts/host.sh`: Generates host-specific monitor configuration
-- `hypr/.config/hypr/scripts/gtk.sh`: Synchronizes GTK theme settings
-- `hypr/.config/hypr/scripts/xdg.sh`: Manages XDG desktop portal
-- `hypr/.config/hypr/scripts/scratchpad.sh`: Advanced scratchpad window management
-
-External scripts referenced from `~/.scripts/`:
-
-- `reload-waybar.sh`: Restart waybar
-- `cycle-scratchpad-windows.sh`: Cycle through scratchpad windows
-- `toggle-tablet-mode.sh`: Toggle artist/tablet mode
-
-### Working with Hyprland Configs
-
-- Reload config: `hyprctl reload` or `$mod + SHIFT + R`
-- Test changes: Edit configs directly, they reload on save
-- Debug issues: Check `hyprctl monitors` and `hyprctl clients`
-- Wacom tablet: Configuration in `input:tablet` section, currently set to left_handed = false
-
-
+Full guide in `docs/hyprland.md` — installation (hy3 via hyprpm, version must
+match hyprland's), modular config structure, host detection (havoc/chaos via
+`hypr/.config/hypr/scripts/host.sh`), and key scripts. Read it before touching
+`hypr/`. Quick refs: reload with `hyprctl reload`, debug with
+`hyprctl monitors` / `hyprctl clients`.
 
 ## Sessions Pattern (Optional)
 
