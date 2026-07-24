@@ -74,10 +74,18 @@ line; a real fork (architecture, scope split) is verdict + 2–3 bullets + links
 agent) can't quickly re-derive, and cite files/IDs over re-explaining. Long
 comments get skimmed past or truncated and cost agents context to re-ingest.
 
-## PHYREXIA session lexicon (this machine)
+## Session lexicon (machine-local planes)
 
-Personal multi-agent naming for this host -- **not a team convention**. A
+Personal multi-agent naming, per host -- **not a team convention**. A
 **Summoner** (the directing session, Pi or Claude Code) scopes work and
-delegates to **Familiars** (same-runtime workers) and **Golems** (Anvil runs). Use this vocabulary when coordinating
-multi-session work. Source of truth (topology + full role defs):
-`~/.dotfiles/PHYREXIA.md` -- read it before summoning.
+delegates to **Familiars** (steerable same-runtime workers -- panes or
+in-band dispatches) and **Golems** (unsteerable gate-bound constructs,
+e.g. Anvil runs). Every construct's diff passes one review pipeline.
+Use this vocabulary when coordinating multi-session work.
+
+Source of truth is per machine -- check `hostname` and read the matching
+plane file before summoning:
+
+- `PHYREXIA` (work machine) -> `~/.dotfiles/PHYREXIA.md`
+- `chaos` (personal) -> `~/.dotfiles/CHAOS.md` (inherits PHYREXIA's roles,
+  adds the steerability amendment + standing review-gate invariant)
