@@ -1,0 +1,47 @@
+# Agent Maintenance Notes
+
+Rarely-needed procedures for the agent tooling on this machine. Referenced
+from `~/.pi/agent/AGENTS.md`.
+
+## Refreshing Pi's model catalog
+
+Pi (0.80.8+) keeps a dynamic model catalog in `~/.pi/agent/models-store.json`
+(machine-local, gitignored). `/model` refreshes it in the background, but if a
+newly added gateway model isn't showing up, force an immediate refresh with:
+
+```
+pi update --models
+```
+
+No pi/extension update happens — catalog only.
+
+## vercel-plugin skills path (`current` symlink)
+
+`settings.base.json` points the vercel-plugin skills at a stable `current`
+symlink, not a version directory:
+
+```
+~/.claude/plugins/cache/claude-plugins-official/vercel/current/skills
+```
+
+(The plugin's own dev skills under `current/.claude/skills` are intentionally
+NOT loaded globally — their trigger words are too generic, e.g. `release`.
+Re-add that path in a per-project `.pi/settings.json` when actively working
+on vercel-plugin itself.)
+
+`current` -> the installed version dir (e.g. `0.43.0`), so `settings.base.json`
+never changes on a plugin bump. BUT the symlink lives inside the
+plugin-managed cache: a plugin update creates a new version dir and removes
+the old one, which leaves `current` dangling (or clobbers it). Symptom: the
+skill set shrinks at startup with no error.
+
+Fix on plugin update — re-point the symlink (no settings edit needed):
+
+```
+cd ~/.claude/plugins/cache/claude-plugins-official/vercel
+ln -sfn "$(ls -d [0-9]* | sort -V | tail -1)" current   # newest version dir
+```
+
+Caveat: `current` is NOT tracked in dotfiles (it lives in the runtime cache),
+so a fresh machine must recreate it after the plugin installs — add the
+`ln -sfn` above to the deployment checklist / bootstrap.

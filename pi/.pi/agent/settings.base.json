@@ -1,5 +1,5 @@
 {
-  "lastChangelogVersion": "0.80.6",
+  "lastChangelogVersion": "0.82.0",
   "defaultProvider": "vercel-ai-gateway",
   "defaultModel": "anthropic/claude-fable-5",
   "theme": "one-dark",
@@ -8,8 +8,7 @@
   "quietStartup": true,
   "showCacheMissNotices": true,
   "skills": [
-    "~/.claude/plugins/cache/claude-plugins-official/vercel/current/skills",
-    "~/.claude/plugins/cache/claude-plugins-official/vercel/current/.claude/skills"
+    "~/.claude/plugins/cache/claude-plugins-official/vercel/current/skills"
   ],
   "editorPaddingX": 1,
   "treeFilterMode": "labeled-only",
