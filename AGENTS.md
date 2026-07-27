@@ -44,9 +44,10 @@ packages not listed here (e.g. `aws`, `gh`, `gnupg`, `cargo`, `zed`, `picom`,
 
 ### Agent-related Packages
 
-**`pi/`** — Pi coding agent config. `~/.pi` is a whole-directory symlink into
-`pi/.pi`, so everything under `~/.pi/agent/` *is* the repo working tree (same
-inodes). Tracks: `AGENTS.md`, `settings.base.json`, `hosts/*.json`, `setup-pi.sh`,
+**`pi/`** — Pi coding agent config. `~/.pi/agent/` is a real directory with
+per-file stow symlinks into `pi/.pi/agent/`, so tracked files *are* the repo
+working tree while untracked machine state (`sessions/`, `auth.json`,
+`models-store.json`, …) coexists alongside them. Tracks: `AGENTS.md`, `settings.base.json`, `hosts/*.json`, `setup-pi.sh`,
 `models.json`, `keybindings.json`, `prompts/`, `themes/`. **Does NOT track**
 `auth.json`, `git/`, `sessions/`, `models-store.json`, `skills/`, or the generated
 `settings.json` (auto-generated / machine-local).
