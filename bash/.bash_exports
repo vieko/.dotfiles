@@ -139,20 +139,14 @@ export GLAMOUR_STYLE="$XDG_CONFIG_HOME/glamour/catppuccin-mocha.json"
 # export ANTHROPIC_SMALL_FAST_MODEL='us.anthropic.claude-3-5-haiku-20241022-v1:0'
 # export DISABLE_PROMPT_CACHING=1
 
-# Route Claude Code through Vercel AI Gateway for unified observability and
-# spend tracking — WORK MACHINE (phyrexia) ONLY. Personal machines (chaos,
-# havoc, …) must NOT touch these: without the gateway token (env.op is all
-# phyrexia-scoped 1Password URIs) a BASE_URL override just breaks auth.
-# ANTHROPIC_AUTH_TOKEN is sourced from 1Password via ~/.dotfiles/bash/env.op
-# (see op-inject block in .bash_profile).
-# ANTHROPIC_API_KEY must be an empty string -- Claude Code checks it first
-# and, if non-empty, uses it directly instead of ANTHROPIC_AUTH_TOKEN.
-if [[ "$(hostname -s)" == "phyrexia" ]]; then
-    export ANTHROPIC_BASE_URL="https://ai-gateway.vercel.sh"
-    export ANTHROPIC_API_KEY=""
-fi
+# Claude Code -> Vercel AI Gateway routing moved to the `claude()` wrapper
+# in .bash_ai (2026-07-27). Exporting ANTHROPIC_BASE_URL/_AUTH_TOKEN/_API_KEY
+# globally poisoned other Anthropic-SDK tools (Pi honors AUTH_TOKEN but not
+# BASE_URL -> sent the gateway key to api.anthropic.com -> 401 on every new
+# session). The gateway key now hydrates as CLAUDE_GATEWAY_TOKEN (env.op),
+# and the wrapper injects the ANTHROPIC_* trio per-invocation on phyrexia.
 
-# LINEAR_API_KEY, NPM_TOKEN, and ANTHROPIC_AUTH_TOKEN are sourced from
+# LINEAR_API_KEY, NPM_TOKEN, and CLAUDE_GATEWAY_TOKEN are sourced from
 # 1Password via ~/.dotfiles/bash/env.op; see op-inject block in .bash_profile.
 
 # FORGE
