@@ -31,7 +31,6 @@
         },
         "anthropic/claude-fable-5": {
           "compat": {
-            "forceAdaptiveThinking": true,
             "vercelGatewayRouting": {
               "order": [
                 "anthropic"
