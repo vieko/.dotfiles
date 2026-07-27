@@ -127,28 +127,51 @@ PY
     fi
 fi
 
-# --- 4. Pi auth.json: gateway registered via env interpolation --------------
-if [[ -z "${!GATEWAY_ENV:-}" ]]; then
-    echo "[WARN] 4/5 auth: \$$GATEWAY_ENV is not set in this shell -- find how this host feeds"
-    echo "       its gateway key and re-run with --gateway-env <VAR> (nothing written)"
-    FAILS=$((FAILS + 1))
-else
-    NEED=$(python3 - "$AUTH" "$PROVIDER" "$GATEWAY_ENV" <<'PY'
+# --- 4. Pi auth.json: a usable gateway credential exists ---------------------
+# Hosts differ legitimately: PHYREXIA interpolates "$AI_GATEWAY_API_KEY" from
+# op-injected env; CHAOS (no op) stores a literal key via /login -- auth.json
+# is Pi's source of truth either way. Accept any usable entry; only fall back
+# to requiring the env var when nothing is configured at all.
+STATE=$(python3 - "$AUTH" "$PROVIDER" <<'PY'
 import json, sys, os
 try:
     d = json.load(open(sys.argv[1]))
 except Exception:
     d = {}
 cur = d.get(sys.argv[2], {})
-ok = cur.get("type") == "api_key" and cur.get("key") == "$" + sys.argv[3]
-print("ok" if ok else "fix")
+key = cur.get("key", "")
+if not cur:
+    print("missing")
+elif cur.get("type") != "api_key":
+    print("other")  # oauth or future types -- assume pi manages it
+elif key.startswith("$"):
+    print("env-ok" if os.environ.get(key[1:]) else "env-dangling:" + key[1:])
+elif key:
+    print("literal")
+else:
+    print("missing")
 PY
 )
-    if [[ "$NEED" == "ok" ]]; then
-        echo "[OK]   4/5 auth: $PROVIDER registered (env-interpolated, no secret on disk)"
-    elif [[ $APPLY -eq 1 ]]; then
-        [[ -f "$AUTH" ]] && cp "$AUTH" "$AUTH.bak"
-        python3 - "$AUTH" "$PROVIDER" "$GATEWAY_ENV" <<'PY'
+case "$STATE" in
+    literal)
+        echo "[OK]   4/5 auth: $PROVIDER has a stored key in auth.json (via /login) -- nothing to do" ;;
+    other)
+        echo "[OK]   4/5 auth: $PROVIDER has a non-api_key credential (pi-managed) -- nothing to do" ;;
+    env-ok)
+        echo "[OK]   4/5 auth: $PROVIDER registered (env-interpolated, no secret on disk)" ;;
+    env-dangling:*)
+        echo "[WARN] 4/5 auth: $PROVIDER interpolates \$${STATE#env-dangling:} but that var is unset"
+        echo "       in this shell -- fix the env or /login a literal key"
+        FAILS=$((FAILS + 1)) ;;
+    missing)
+        if [[ -z "${!GATEWAY_ENV:-}" ]]; then
+            echo "[WARN] 4/5 auth: no $PROVIDER credential in auth.json and \$$GATEWAY_ENV is not set --"
+            echo "       either run /login inside pi (stores a literal key), or re-run with"
+            echo "       --gateway-env <VAR> naming the env var this host uses (nothing written)"
+            FAILS=$((FAILS + 1))
+        elif [[ $APPLY -eq 1 ]]; then
+            [[ -f "$AUTH" ]] && cp "$AUTH" "$AUTH.bak"
+            python3 - "$AUTH" "$PROVIDER" "$GATEWAY_ENV" <<'PY'
 import json, sys
 p = sys.argv[1]
 try:
@@ -158,12 +181,12 @@ except Exception:
 d[sys.argv[2]] = {"type": "api_key", "key": "$" + sys.argv[3]}
 json.dump(d, open(p, "w"), indent=2)
 PY
-        chmod 600 "$AUTH"
-        echo "[OK]   4/5 auth: registered $PROVIDER -> \$$GATEWAY_ENV (backup at $AUTH.bak)"
-    else
-        echo "[WARN] 4/5 auth: would register $PROVIDER -> \$$GATEWAY_ENV in $AUTH"
-    fi
-fi
+            chmod 600 "$AUTH"
+            echo "[OK]   4/5 auth: registered $PROVIDER -> \$$GATEWAY_ENV (backup at $AUTH.bak)"
+        else
+            echo "[WARN] 4/5 auth: would register $PROVIDER -> \$$GATEWAY_ENV in $AUTH"
+        fi ;;
+esac
 
 # --- 5. smoke test -----------------------------------------------------------
 if [[ $APPLY -eq 1 ]]; then
