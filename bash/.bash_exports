@@ -149,6 +149,13 @@ export GLAMOUR_STYLE="$XDG_CONFIG_HOME/glamour/catppuccin-mocha.json"
 # LINEAR_API_KEY, NPM_TOKEN, and CLAUDE_GATEWAY_TOKEN are sourced from
 # 1Password via ~/.dotfiles/bash/env.op; see op-inject block in .bash_profile.
 
+# linearis (the installed `linear` CLI) reads LINEAR_API_TOKEN, not
+# LINEAR_API_KEY -- bridge the op-injected key so the CLI works without a
+# plaintext ~/.linearis/token or per-command --api-token.
+if [[ -n "$LINEAR_API_KEY" && -z "$LINEAR_API_TOKEN" ]]; then
+  export LINEAR_API_TOKEN="$LINEAR_API_KEY"
+fi
+
 # FORGE
 export FORGE_API_TIER=enterprise
 
