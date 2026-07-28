@@ -85,6 +85,14 @@ eval "$(zoxide init bash)"
 # (Hades PATH entry lives in .bash_profile, guarded, to avoid duplicate
 #  prepends when this file is re-sourced by subshells.)
 
+# Socket Firewall registry credentials -- ~/.npmrc references
+# ${SOCKET_PASSWORD_B64}, hydrated from this local file (written by
+# socket-firewall-init, 0600). The init script only hooked .bash_profile
+# (login shells); source here too so non-login shells -- tmux panes whose
+# server env predates the rollout -- don't WARN on every pnpm invocation.
+# Idempotent plain-file source: no 1Password prompt involved.
+[ -f "$HOME/.config/socket-firewall/env.sh" ] && source "$HOME/.config/socket-firewall/env.sh"
+
 # BEGIN: socket firewall aliases (managed by Iru)
 #alias npm="sfw npm"
 #alias pnpm="sfw pnpm"
