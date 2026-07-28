@@ -4,81 +4,129 @@ description: Manage Linear issues from the command line using the linear cli. Th
 allowed-tools: Bash(linear:*), Bash(curl:*)
 ---
 
-# Linear CLI
+# Linear CLI (linearis)
 
-A CLI to manage Linear issues from the command line, with git and jj integration.
+The installed `linear` command is **linearis** (https://github.com/czabaj/linearis
+lineage; `linear --version` prints a calver like `2026.6.0`), a JSON-output CLI
+for Linear.app. It is NOT schpet's `linear-cli`, which this skill previously
+documented — command syntax differs (`issues create` vs `issue create`, no
+`--description-file`, no `api`/`schema` subcommands).
 
-Generated from linear CLI v1.10.0
-
-## Prerequisites
-
-The `linear` command must be available on PATH. To check:
-
-```bash
-linear --version
-```
-
-If not installed, follow the instructions at:\
-https://github.com/schpet/linear-cli?tab=readme-ov-file#install
-
-## Best Practices for Markdown Content
-
-When working with issue descriptions or comment bodies that contain markdown, **always prefer using file-based flags** instead of passing content as command-line arguments:
-
-- Use `--description-file` for `issue create` and `issue update` commands
-- Use `--body-file` for `comment add` and `comment update` commands
-
-**Why use file-based flags:**
-
-- Ensures proper formatting in the Linear web UI
-- Avoids shell escaping issues with newlines and special characters
-- Prevents literal `\n` sequences from appearing in markdown
-- Makes it easier to work with multi-line content
-
-**Example workflow:**
+## Prerequisites & auth
 
 ```bash
-# Write markdown to a temporary file
-cat > /tmp/description.md <<'EOF'
-## Summary
-
-- First item
-- Second item
-
-## Details
-
-This is a detailed description with proper formatting.
-EOF
-
-# Create issue using the file
-linear issue create --title "My Issue" --description-file /tmp/description.md
-
-# Or for comments
-linear issue comment add ENG-123 --body-file /tmp/comment.md
+linear --version        # linearis calver, e.g. 2026.6.0
+linear auth status      # authenticated? which source?
 ```
 
-**Only use inline flags** (`--description`, `--body`) for simple, single-line content.
+Token resolution order: `--api-token <token>` flag, `LINEAR_API_TOKEN` env var,
+`~/.linearis/token` file (via `linear auth login`).
 
-## Known Quirks (local additions — keep when regenerating from CLI docs)
+**On this machine**: 1Password injects `LINEAR_API_KEY` (see
+`~/.dotfiles/bash/env.op`), and `~/.dotfiles/bash/.bash_exports` bridges it to
+`LINEAR_API_TOKEN`. Interactive shells just work. If a non-interactive context
+lacks the bridge, pass `--api-token "$LINEAR_API_KEY"` explicitly. Never write
+the token to `~/.linearis/token` (plaintext; 1Password is the source of truth).
 
-- **`linear issue view -j` omits the `labels` field entirely.** Default-checking
-  `.labels.nodes` returns `[]` even when labels are attached. Verify label
-  assignments via the UI or a raw GraphQL query, not the CLI's `-j` output.
-- **`linear issue update` is unreliable — prints `✓ Updated issue` while silently
-  no-op'ing.** Observed for both `--state <name>` (resolves the state by name
-  across the *entire workspace* and can bind to the wrong team's same-named
-  state, e.g. "Done") and `--description`/`--description-file` (drops the body
-  change entirely). Mutate deterministically via the API instead:
+The `scripts/linear/*.sh` helpers in the gtm repo use `LINEAR_API_KEY` directly
+against GraphQL — they are unaffected by any of this.
 
-  ```bash
-  linear api 'mutation { issueUpdate(id: "<issueUUID>", input: { stateId: "<stateUUID>" }) { success } }'
-  ```
+## Output & identifiers
 
-  Fetch the issue UUID (and any state UUID) first via an `issues`/`workflowStates`
-  query scoped to the team. For `description`, JSON-escape the markdown with
-  `jq -Rs .` and inject it (`input: { description: $desc }`). Verify with a fresh
-  API read — allow a few seconds for read-replica lag, since an immediate re-read
-  can still show stale values.
+- All output is JSON. `--compact` for single-line; `--fields <dot-paths>` to
+  trim (e.g. `--fields identifier,title,state.name`).
+- Commands accept UUIDs or human-readable identifiers: issue `ABC-123`, team
+  key (`GTMENG`), project/label/user names.
+
+## Command surface
+
+Domains: `issues`, `labels`, `projects`, `cycles`, `milestones`, `documents`,
+`files`, `attachments`, `teams`, `users`, `initiatives`, `auth`.
+
+Discovery is built in — prefer it over guessing:
+
+```bash
+linear usage                  # overview of all domains
+linear issues usage           # detailed per-domain usage (any domain)
+linear issues create --help   # flags for a specific command
+```
+
+Key issue commands: `list`, `search <query>`, `read <issue>`, `create <title>`,
+`update <issue>`, `archive`, `delete`, `relations add/list/remove`,
+`discuss <issue>` (start comment thread), `activity`, `discussions`, `reply`,
+`resolve`. The top-level `comments` domain is a deprecated facade — use the
+`issues` discussion commands.
+
+## Common workflows
+
+```bash
+# Find where existing work lives (project, state) before filing
+linear issues read GTMENG-2162 --fields identifier,title,project.name,state.name
+
+# Create an issue with a markdown body (no --description-file in linearis —
+# write the markdown to a file, then command-substitute; see below)
+linear issues create "Title here" \
+  --team GTMENG --project Coach --status Triage \
+  --description "$(cat /tmp/desc.md)" \
+  --relates-to GTMENG-2362 \
+  --fields identifier,title
+
+# List my in-progress issues on a team
+linear issues list --team GTMENG --assignee vieko --status "In Progress"
+
+# Full-text search
+linear issues search "account association" --team GTMENG --limit 10
+
+# Comment on an issue
+linear issues discuss GTMENG-2362 --body "$(cat /tmp/comment.md)"
+
+# Update state / assignee
+linear issues update GTMENG-2362 --status "In Progress" --assignee vieko
+```
+
+## Markdown content
+
+linearis has **no file-based flags** (`--description-file` / `--body-file` do
+not exist). For multi-line markdown, write to a temp file and pass
+`--description "$(cat /tmp/desc.md)"` / `--body "$(cat /tmp/comment.md)"`.
+This preserves newlines and avoids shell-escaping issues; the file content is
+data, not re-evaluated by the shell. Avoid heredocs inline in the command —
+they mangle easily in agent harnesses.
+
+## Raw GraphQL fallback
+
+linearis has **no `api`/`schema` subcommands**. For queries the CLI doesn't
+cover, hit the API directly:
+
+```bash
+curl -s -X POST https://api.linear.app/graphql \
+  -H "Content-Type: application/json" \
+  -H "Authorization: $LINEAR_API_TOKEN" \
+  -d '{"query": "{ viewer { id name } }"}'
+```
+
+For queries with variables, build the JSON body with `jq -n` to avoid escaping
+pitfalls:
+
+```bash
+jq -n --arg term "onboarding" '{query: "query($term: String!) { searchIssues(term: $term, first: 10) { nodes { identifier title } } }", variables: {term: $term}}' \
+  | curl -s -X POST https://api.linear.app/graphql \
+      -H "Content-Type: application/json" \
+      -H "Authorization: $LINEAR_API_TOKEN" \
+      -d @-
+```
+
+## Known quirks (local additions — keep when regenerating)
+
+- **Auth misses look like "No API token found"** even when `LINEAR_API_KEY` is
+  set — linearis only reads `LINEAR_API_TOKEN`. The dotfiles bridge fixes
+  interactive shells; pass `--api-token "$LINEAR_API_KEY"` elsewhere.
+- **`--fields` with a path into a nullable object** (e.g. `project.name` on an
+  issue with no project) can produce output `jq` chokes on if you assume shape —
+  handle nulls in your jq filter.
+- **Verify writes with a fresh read** (`linear issues read <id>`) when a
+  mutation matters — cheap insurance, and read-replica lag of a few seconds has
+  been observed on the API.
 
 ## Writing Style: Comments vs Descriptions (local additions)
 
@@ -91,109 +139,3 @@ an essay. Keep only the 1–2 non-obvious facts a future reader (human or agent)
 can't quickly re-derive, and cite files/IDs (`webhook/route.ts:565`,
 `GTMENG-1768`) over re-explaining. Long comments get skimmed past or truncated
 and cost agents context to re-ingest.
-
-## Available Commands
-
-```
-linear auth               # Manage Linear authentication
-linear issue              # Manage Linear issues
-linear team               # Manage Linear teams
-linear project            # Manage Linear projects
-linear project-update     # Manage project status updates
-linear milestone          # Manage Linear project milestones
-linear initiative         # Manage Linear initiatives
-linear initiative-update  # Manage initiative status updates (timeline posts)
-linear label              # Manage Linear issue labels
-linear document           # Manage Linear documents
-linear config             # Interactively generate .linear.toml configuration
-linear schema             # Print the GraphQL schema to stdout
-linear api                # Make a raw GraphQL API request
-```
-
-## Reference Documentation
-
-- [auth](references/auth.md) - Manage Linear authentication
-- [issue](references/issue.md) - Manage Linear issues
-- [team](references/team.md) - Manage Linear teams
-- [project](references/project.md) - Manage Linear projects
-- [project-update](references/project-update.md) - Manage project status updates
-- [milestone](references/milestone.md) - Manage Linear project milestones
-- [initiative](references/initiative.md) - Manage Linear initiatives
-- [initiative-update](references/initiative-update.md) - Manage initiative status updates (timeline posts)
-- [label](references/label.md) - Manage Linear issue labels
-- [document](references/document.md) - Manage Linear documents
-- [config](references/config.md) - Interactively generate .linear.toml configuration
-- [schema](references/schema.md) - Print the GraphQL schema to stdout
-- [api](references/api.md) - Make a raw GraphQL API request
-
-For curated examples of organization features (initiatives, labels, projects, bulk operations), see [organization-features](references/organization-features.md).
-
-## Discovering Options
-
-To see available subcommands and flags, run `--help` on any command:
-
-```bash
-linear --help
-linear issue --help
-linear issue list --help
-linear issue create --help
-```
-
-Each command has detailed help output describing all available flags and options.
-
-## Using the Linear GraphQL API Directly
-
-**Prefer the CLI for all supported operations.** The `api` command should only be used as a fallback for queries not covered by the CLI.
-
-### Check the schema for available types and fields
-
-Write the schema to a tempfile, then search it:
-
-```bash
-linear schema -o "${TMPDIR:-/tmp}/linear-schema.graphql"
-grep -i "cycle" "${TMPDIR:-/tmp}/linear-schema.graphql"
-grep -A 30 "^type Issue " "${TMPDIR:-/tmp}/linear-schema.graphql"
-```
-
-### Make a GraphQL request
-
-**Important:** GraphQL queries containing non-null type markers (e.g. `String` followed by an exclamation mark) must be passed via heredoc stdin to avoid escaping issues. Simple queries without those markers can be passed inline.
-
-```bash
-# Simple query (no type markers, so inline is fine)
-linear api '{ viewer { id name email } }'
-
-# Query with variables — use heredoc to avoid escaping issues
-linear api --variable teamId=abc123 <<'GRAPHQL'
-query($teamId: String!) { team(id: $teamId) { name } }
-GRAPHQL
-
-# Search issues by text
-linear api --variable term=onboarding <<'GRAPHQL'
-query($term: String!) { searchIssues(term: $term, first: 20) { nodes { identifier title state { name } } } }
-GRAPHQL
-
-# Numeric and boolean variables
-linear api --variable first=5 <<'GRAPHQL'
-query($first: Int!) { issues(first: $first) { nodes { title } } }
-GRAPHQL
-
-# Complex variables via JSON
-linear api --variables-json '{"filter": {"state": {"name": {"eq": "In Progress"}}}}' <<'GRAPHQL'
-query($filter: IssueFilter!) { issues(filter: $filter) { nodes { title } } }
-GRAPHQL
-
-# Pipe to jq for filtering
-linear api '{ issues(first: 5) { nodes { identifier title } } }' | jq '.data.issues.nodes[].title'
-```
-
-### Advanced: Using curl directly
-
-For cases where you need full HTTP control, use `linear auth token`:
-
-```bash
-curl -s -X POST https://api.linear.app/graphql \
-  -H "Content-Type: application/json" \
-  -H "Authorization: $(linear auth token)" \
-  -d '{"query": "{ viewer { id } }"}'
-```
