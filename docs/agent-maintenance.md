@@ -15,6 +15,11 @@ pi update --models
 
 No pi/extension update happens — catalog only.
 
+Since 0.82.0, `/model` also reloads `models.json` when the picker opens, so
+edits to custom model config (routing pins, cost overrides) take effect
+without restarting Pi. Restart is only needed for `settings.json` changes
+(e.g. `enabledModels` after re-running `setup-pi.sh`).
+
 ## vercel-plugin skills path (`current` symlink)
 
 `settings.base.json` points the vercel-plugin skills at a stable `current`
