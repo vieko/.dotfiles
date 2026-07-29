@@ -138,6 +138,12 @@ auth.json regardless. Do not:
 If a Pi provider key is missing, add it via `/login` (writes auth.json). For
 env-based secrets on op-enabled machines, the manifest is `env.op` (`op://` refs).
 
+On op-less hosts, `.bash_profile` hydrates `AI_GATEWAY_API_KEY` from Pi via
+`pi auth print-api-key` (Pi 0.83+), sourcing the literal key `/login` stored
+in auth.json. This is a fallback only — on op-enabled hosts auth.json holds an
+env-ref (`$AI_GATEWAY_API_KEY`) back to the op-injected env, so `pi auth`
+would be circular there; op remains primary.
+
 ## Destructive command guard
 
 Agents must not invoke commands that overwrite or destroy local state without

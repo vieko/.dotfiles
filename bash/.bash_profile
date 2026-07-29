@@ -66,6 +66,20 @@ if [[ -z "$OP_ENV_HYDRATED" ]] \
     export OP_ENV_HYDRATED=1
 fi
 
+# op-less hosts (e.g. chaos): hydrate the gateway key from Pi's auth.json,
+# where /login stores a literal key. On op-enabled hosts this is skipped --
+# op inject above already provided it (and Pi's auth.json holds an env-ref
+# back to it, so pi auth would be circular there). Consumers: anvil,
+# agent-browser, pi-gateway-doctor. Export only on non-empty output so a
+# failed lookup leaves the var unset for later shells to retry.
+if [[ -z "$AI_GATEWAY_API_KEY" ]] \
+        && ! command -v op &>/dev/null \
+        && command -v pi &>/dev/null; then
+    _piGatewayKey="$(pi auth print-api-key --provider vercel-ai-gateway --model anthropic/claude-fable-5 2>/dev/null)"
+    [[ -n "$_piGatewayKey" ]] && export AI_GATEWAY_API_KEY="$_piGatewayKey"
+    unset _piGatewayKey
+fi
+
 # source the user's bashrc if it exists
 if [ -f "$HOME/.bashrc" ]; then
     . "$HOME/.bashrc"
