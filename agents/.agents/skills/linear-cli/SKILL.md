@@ -37,6 +37,10 @@ against GraphQL — they are unaffected by any of this.
   trim (e.g. `--fields identifier,title,state.name`).
 - Commands accept UUIDs or human-readable identifiers: issue `ABC-123`, team
   key (`GTMENG`), project/label/user names.
+- **Do not name git branches from the `branchName` field.** Linear generates it
+  from the account's full-name slug plus the full issue title (SCIM prevents
+  changing the username), e.g. `viekofranetovic/gtmeng-2433-persist-botid-...`.
+  Repo convention is the short form: `vieko/<issue-id>` (e.g. `vieko/gtmeng-878`).
 
 ## Command surface
 
