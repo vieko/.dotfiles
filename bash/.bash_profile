@@ -100,4 +100,9 @@ esac
 #alias bun="sfw bun"
 # END: socket firewall aliases (managed by Iru)
 
-[ -f "$HOME/.config/socket-firewall/env.sh" ] && source "$HOME/.config/socket-firewall/env.sh"  # added by socket-firewall-init
+# Keep the socket-firewall-init line below byte-exact (absolute path and
+# all): the installer's idempotency check matches the literal text and
+# re-appends on every login shell if it's missing (it un-symlinked this
+# file once doing exactly that). Harmless no-op on other hosts -- .bashrc
+# sources the same env.sh portably via $HOME.
+[ -f "/Users/vieko/.config/socket-firewall/env.sh" ] && source "/Users/vieko/.config/socket-firewall/env.sh"  # added by socket-firewall-init
