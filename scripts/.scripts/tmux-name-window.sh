@@ -8,9 +8,8 @@
 # Behavior:
 #   - Only renames windows that still have automatic-rename enabled
 #     (i.e. the user did NOT pass `-n <name>` to new-window). This
-#     preserves explicit names like the ones set by tmux-start.sh
-#     (void / altar / invoke / coven / scry / arcana) while they
-#     are live.
+#     preserves explicit names like "void", set by tmux-start.sh,
+#     while they are live.
 #   - Picks a random name from the pool that is not already in use
 #     in the current session. Closed windows free their name up
 #     again. If every name is somehow in use, falls back to
@@ -19,9 +18,9 @@
 # Theme: occult / Phyrexian register matching the summon defaults.
 # Verb inspiration drawn from forge (run, audit, define, review,
 # proof, verify, watch, status) and coding-agent verbs (read, write,
-# edit, search) — restated in esoteric vocabulary. The summon names
-# (void / altar / invoke / coven / scry / arcana) are intentionally
-# included so they become available again when their windows close.
+# edit, search) — restated in esoteric vocabulary. The former summon
+# defaults (altar / invoke / coven / scry / arcana) live in the pool;
+# "void" is also included and frees up whenever its window closes.
 #
 # Compatibility: written for bash 3.2+ so it works under macOS's
 # system bash if /opt/homebrew/bin is not on the tmux server's PATH.
@@ -36,7 +35,7 @@ TARGET="${1:?usage: $0 <window-target>}"
 
 # Pool of candidate names.
 NAMES=(
-    # summon defaults — eligible when not currently in the session
+    # summon default + former defaults — eligible when not in use
     void altar invoke coven scry arcana
     # write / inscribe family
     sigil rune glyph scribe etch inscribe seal brand
