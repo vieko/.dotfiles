@@ -32,6 +32,7 @@
     "thinkingText": "comment",
 
     "selectedBg": "bgSelection",
+    "scrollbarThumb": "gutter",
     "userMessageBg": "bgSelection",
     "userMessageText": "",
     "customMessageBg": "bgAlt",

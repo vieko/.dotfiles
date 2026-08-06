@@ -1,5 +1,5 @@
 {
-  "lastChangelogVersion": "0.83.0",
+  "lastChangelogVersion": "0.84.0",
   "defaultProvider": "vercel-ai-gateway",
   "defaultModel": "anthropic/claude-fable-5",
   "theme": "one-dark",
