@@ -100,9 +100,13 @@ the layout.
 - **Interactive Familiars run as panes in their project's window.** The
   topology already says where they live. Never a separate window --
   windows are projects, panes are agents.
-- **In-band Familiars get worktree isolation by default** when they touch
-  files -- two constructs in one checkout yank branches out from under each
-  other.
+- **Any file-touching construct gets worktree isolation by default** --
+  in-band Familiars AND top-level sessions (Summoners included). Two
+  constructs in one checkout yank branches out from under each other
+  (observed 2026-08-06: a sibling session's `reset --hard` in ~/dev/gtm
+  wiped another session's uncommitted work mid-build). Before editing in a
+  main checkout, check the panes for other live sessions in that repo; when
+  in doubt, branch into `~/dev/<repo>-worktrees/<issue>`.
 - **Golems run headless.** `anvil status` is their presence; a pane is
   optional flavor for a human who wants to watch, never a requirement.
 - **Check work in flight before summoning:** `anvil status` (golems),
