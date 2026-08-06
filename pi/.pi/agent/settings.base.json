@@ -3,6 +3,7 @@
   "defaultProvider": "vercel-ai-gateway",
   "defaultModel": "anthropic/claude-fable-5",
   "theme": "one-dark",
+  "tuiMode": "fullscreen",
   "defaultThinkingLevel": "high",
   "enableInstallTelemetry": false,
   "quietStartup": true,
