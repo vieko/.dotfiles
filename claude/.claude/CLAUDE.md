@@ -54,6 +54,31 @@ When in doubt, ask. The cost of a confirmation round-trip is much
 smaller than the cost of a clobbered `.env.local` or an unintended
 prod deploy.
 
+## Scratch directory (`~/scratch`)
+
+Machine-local working area for session artifacts — specs, handoffs,
+reviews, run logs, exports. It is **ephemeral**: not project memory
+(that's Bonfire) and not durable docs (those belong in repos or
+dotfiles).
+
+Layout:
+
+- `logs/` — anvil/golem run logs and other write-once command output.
+- `data/` — exports, baselines, screenshots, datasets.
+- `*.md` flat at the root — working notes. No deeper nesting.
+
+Naming: lowercase, id-first, kind-last —
+`<issue|topic>-<desc>-<kind>[-<model>].md`, e.g.
+`gtmeng-2573-cache-key-review.md`, `gtmeng-2592-handoff.md`.
+Kinds: `spec`, `handoff`, `review`, `assessment`, `notes`.
+
+Lifecycle: two states — **live or gone**. There is no archive. On a
+sweep, anything untouched for ~30 days is either **deleted** or
+**promoted** into a real artifact (a script in dotfiles, a skill, a
+Bonfire entry, a repo doc, a Linear comment). If it's not worth
+promoting, it's not worth keeping. Agents may write freely here but
+must never treat stale scratch as authoritative.
+
 ## JSON Parsing
 
 **Don't use Python one-liners to parse JSON.** Use `jq` instead — it's
