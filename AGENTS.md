@@ -154,8 +154,11 @@ node agents/.agents/scripts/sync-verbs.mjs --check   # exit 1 on drift
 # 4. commit dotfiles: verbs.json + claude/settings.json together
 ```
 
-**`claude/`** — Claude Code config. Stows to `~/.claude/`. Tracks `settings.json`
-and `statusline.sh` only — matches the same "config not state" philosophy as `pi/`.
+**`claude/`** — Claude Code config. Stows to `~/.claude/`. Tracks `settings.json`,
+`statusline.sh`, and `output-styles/` (matter-of-fact and ste, ported from
+[pi-prose](https://github.com/vieko/pi-prose)) — matches the same "config not
+state" philosophy as `pi/`. Keep the style bodies in sync with pi-prose's
+built-ins by hand when they change; pi-prose is the source of truth.
 
 ### OS Detection Pattern
 
