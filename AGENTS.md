@@ -70,6 +70,17 @@ with `hosts/enabledModels.<host>.json` via `jq`, and writes `settings.json`. An
 unknown host falls back to `hosts/enabledModels.default.json` (the restricted
 set). Add a host by dropping in a new `hosts/enabledModels.<host>.json` fragment.
 
+**pi-prose** (`~/dev/pi-prose`, published as `pi-prose` on npm, installed via
+the `packages` array) follows the same dev pattern as the bonfire adapter: the
+installed package runs the pinned release, not the local working copy. Footgun:
+the package and a local copy cannot load simultaneously -- both register the
+`--style` flag, and flag collisions fail the extension load. To test in-flight
+changes, use `pi -ne -e ~/dev/pi-prose/extensions/pi-prose.ts` (isolated, no
+hot reload), or for longer dev bursts remove the package entry from
+`settings.base.json` + rerun `setup-pi.sh`, then symlink
+`~/.pi/agent/extensions/pi-prose-dev.ts` -> `~/dev/pi-prose/extensions/pi-prose.ts`
+(gitignored) for `/reload` support. Restore the package entry when done.
+
 Run `pi/.pi/agent/setup-pi.sh` once after stowing on a fresh machine, and again
 whenever `settings.base.json` or a host fragment changes. Because the generated
 `settings.json` is gitignored, the old `lastChangelogVersion` churn is gone —
