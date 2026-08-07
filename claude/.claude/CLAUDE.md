@@ -54,6 +54,17 @@ When in doubt, ask. The cost of a confirmation round-trip is much
 smaller than the cost of a clobbered `.env.local` or an unintended
 prod deploy.
 
+## Writing in Vieko's voice
+
+When asked to write *as* Vieko (posts, updates, check-ins,
+announcements), read `~/private/profile/voice.md` first — it holds the
+general voice guide and the precedence rules. Purpose-specific guidance
+wins over it: check-ins and performance writing → `monthly-checkin`
+skill; Lead Agent Slack updates → `lead-agent-weekly` skill. Long-form
+corpus for register-matching lives in `~/dev/vieko.dev`. Never copy
+voice-doc contents into public repos — the profile stays in
+`~/private`.
+
 ## Scratch directory (`~/scratch`)
 
 Machine-local working area for session artifacts — specs, handoffs,
