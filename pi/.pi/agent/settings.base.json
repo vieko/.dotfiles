@@ -15,8 +15,8 @@
   "treeFilterMode": "labeled-only",
   "packages": [
     "git:github.com/vieko/bonfire@v7.3.1",
-    "git:github.com/vieko/pi-prose@4539a4fbb38daf964d58f8ba2b87789721a86062",
-    "git:github.com/vieko/pi-post@919b9e5a2727c9337ebe28c0f7818c2bdfb3b7af"
+    "git:github.com/vieko/pi-prose@v0.1.4",
+    "git:github.com/vieko/pi-post@v0.1.0"
   ],
   "hideThinkingBlock": false,
   "retry": {
