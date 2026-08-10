@@ -16,7 +16,7 @@
   "packages": [
     "git:github.com/vieko/bonfire@v7.3.1",
     "git:github.com/vieko/pi-prose@4539a4fbb38daf964d58f8ba2b87789721a86062",
-    "git:github.com/vieko/pi-cast@aa68f3e27bcae53f3c00aaf2681ae898f3504caa"
+    "git:github.com/vieko/pi-post@919b9e5a2727c9337ebe28c0f7818c2bdfb3b7af"
   ],
   "hideThinkingBlock": false,
   "retry": {
