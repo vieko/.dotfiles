@@ -33,6 +33,8 @@
 
     "selectedBg": "bgSelection",
     "scrollbarThumb": "gutter",
+    "searchMatchBg": "#4d3a24",
+    "searchMatchText": "",
     "userMessageBg": "bgSelection",
     "userMessageText": "",
     "customMessageBg": "bgAlt",

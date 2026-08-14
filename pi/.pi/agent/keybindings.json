@@ -3,6 +3,7 @@
   "app.session.resume": ["ctrl+shift+r"],
   "app.session.tree": ["ctrl+shift+t"],
   "app.session.fork": ["ctrl+shift+f"],
+  "tui.altScreen.search": ["ctrl+shift+s"],
   "tui.altScreen.halfPageUp": ["shift+pageUp"],
   "tui.altScreen.halfPageDown": ["shift+pageDown"]
 }
