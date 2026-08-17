@@ -15,8 +15,9 @@ compatibility: Any assistant with access to a workplace chat search tool (e.g. S
 
 - Before drafting, read `~/private/profile/voice.md` and write in Vieko's voice.
 - No Slack/Notion connectors in this environment: skip the search steps and use the
-  interview-the-user path directly. Prior Culture Amp history under `~/private/` may hold
-  earlier upward feedback for continuity; ask for its location if not found.
+  interview-the-user path directly. H2 FY27 is Vieko's first official cycle; there is no
+  received Culture Amp history. Reviews Vieko previously wrote for others may exist under
+  `~/private/reviews/` — use them as register anchors only, never as evidence.
 
 Produces a grounded first-draft upward review for Culture Amp — ready to read, edit, and paste in. The non-negotiable rule: never invent specifics you weren't given evidence for. A partial draft with honest gaps is the right output. A polished-sounding draft built on guesses is not.
 

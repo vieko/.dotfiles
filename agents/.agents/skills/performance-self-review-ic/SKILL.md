@@ -18,9 +18,12 @@ description: Draft an evidence-grounded individual contributor self review for C
   `~/private/checkins/`. Treat those check-ins as the "PerfBot or check-in export" wherever
   this skill references one. Use the `monthly-checkin` skill's evidence gatherer (with a
   date-range roll-up) to corroborate or extend them.
-- **Previous review:** Vieko keeps downloaded Culture Amp history locally. Look under
-  `~/private/` (e.g. `~/private/reviews/`); if not found, ask for its location rather than
-  skipping the prior-review pass.
+- **Previous review:** H2 FY27 is Vieko's first official review cycle (started October
+  2025, too late for the prior cycle). There is no submitted Culture Amp history. The
+  prior-review analog is a practice self review at
+  `~/private/reviews/h1-fy27-self-review-practice.md` (Sep 2025 – Jan 2026): use it for
+  progress-on-development-areas continuity and as a voice anchor, but treat its claims as
+  leads, not corroborated evidence — it was never reviewed by anyone.
 - Connectors: this environment has `gh` and `linear-cli`, no Notion or Slack connectors.
   Degrade as the skill already prescribes; ask for uploads or pasted material instead.
 
