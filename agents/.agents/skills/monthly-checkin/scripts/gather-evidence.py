@@ -15,8 +15,8 @@ from pathlib import Path
 
 VIEWER_QUERY = "{ viewer { id name email } }"
 ISSUES_QUERY = """
-query($filter: IssueFilter!) {
-  issues(first: 250, filter: $filter) {
+query($filter: IssueFilter!, $after: String) {
+  issues(first: 250, filter: $filter, after: $after) {
     nodes {
       identifier
       title
@@ -25,6 +25,7 @@ query($filter: IssueFilter!) {
       creator { id name }
       assignee { id name }
     }
+    pageInfo { hasNextPage endCursor }
   }
 }
 """
@@ -38,6 +39,10 @@ REQUIRED_CONFIG_KEYS = {
     "output_dir",
     "project_paths",
 }
+
+
+def log(message: str) -> None:
+    print(f"[gather] {message}", file=sys.stderr)
 
 
 def run(args: list[str], *, cwd: Path | None = None, stdin: str | None = None) -> str:
@@ -181,7 +186,14 @@ def completed_issues(start: date, end_exclusive: date) -> list[dict]:
             "lt": f"{end_exclusive.isoformat()}T00:00:00.000Z",
         },
     }
-    return linear_graphql(ISSUES_QUERY, {"filter": filter_value})["issues"]["nodes"]
+    nodes: list[dict] = []
+    cursor: str | None = None
+    while True:
+        page = linear_graphql(ISSUES_QUERY, {"filter": filter_value, "after": cursor})["issues"]
+        nodes.extend(page["nodes"])
+        if not page["pageInfo"]["hasNextPage"]:
+            return nodes
+        cursor = page["pageInfo"]["endCursor"]
 
 
 def git_log(repo: Path, start: date, end_exclusive: date, author: str | None = None) -> list[str]:
@@ -261,17 +273,28 @@ def main() -> int:
     if not (repo / ".git").exists():
         parser.error(f"not a git repository: {repo}")
 
+    log(f"window {start.isoformat()} through {end.isoformat()} ({args.month})")
     repo_name = run(
         ["gh", "repo", "view", "--json", "nameWithOwner", "--jq", ".nameWithOwner"],
         cwd=repo,
     ).strip()
     own_name = run(["git", "config", "user.name"], cwd=repo).strip()
     own_email = run(["git", "config", "user.email"], cwd=repo).strip()
+    log(f"repository {repo_name}, identity {own_name} <{own_email}>")
 
+    log("searching authored merged PRs (gh)...")
     prs = github_prs(repo_name, start, end)
+    log(f"  {len(prs)} authored merged PRs")
+    log("searching PR reviews given (gh)...")
     reviews = github_reviews(repo_name, start, end)
+    log(f"  {len(reviews)} reviewed merged PRs by others")
+    log("querying completed issues (Linear GraphQL)...")
     issues = completed_issues(start, end_exclusive)
+    log(f"  {len(issues)} completed created-or-assigned issues")
+    log("collecting own commits (git log)...")
     own_commits = git_log(repo, start, end_exclusive, own_email or own_name)
+    log(f"  {len(own_commits)} own commits")
+    log("collecting collaboration candidates (git log on project paths)...")
     collaborator_commits = collaborator_log(
         repo,
         start,
@@ -279,6 +302,7 @@ def main() -> int:
         own_email,
         config["project_paths"],
     )
+    log(f"  {len(collaborator_commits)} other-authored commits")
 
     today = datetime.now(timezone.utc).date()
     period_status = f"open; evidence gathered through {today.isoformat()}" if today <= end else "closed"
@@ -369,6 +393,7 @@ Other-authored commits touching configured project paths in the same window. The
     output = output.expanduser()
     output.parent.mkdir(parents=True, exist_ok=True)
     output.write_text(body)
+    log(f"wrote {output}")
     print(output)
     return 0
 
