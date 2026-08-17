@@ -26,6 +26,26 @@ description: Draft an evidence-grounded individual contributor self review for C
   leads, not corroborated evidence — it was never reviewed by anyone.
 - Connectors: this environment has `gh` and `linear-cli`, no Notion or Slack connectors.
   Degrade as the skill already prescribes; ask for uploads or pasted material instead.
+- **Local template copy:** the official H2 FY27 questions + rating scale are saved at
+  `~/private/reviews/h2-fy27-self-review-template.md`. Use it instead of fetching Notion;
+  for a new cycle, ask the user for the updated template and save it alongside as
+  `~/private/reviews/<cycle>-self-review-template.md`.
+- **Local leveling framework:** the IC Job Leveling guide (2023-08 edition) is saved at
+  `~/private/profile/job-leveling-framework.md`. Use it for level calibration instead of
+  the Notion link below. If the user reports the framework changed, ask for a fresh export
+  and overwrite the local copy.
+- **Evidence roll-up:** a gathered half-year roll-up lives at
+  `~/private/checkins/evidence/2026-02..2026-08.md`. Its window (Jan 27 – Aug 26, from the
+  check-in cadence) is wider than the official cycle window — filter every item to the
+  official Feb–Jul window before using it as evidence.
+- **Draft/archive convention:** save working drafts as
+  `~/private/reviews/h2-fy27-self-review-draft.md`. Once Vieko submits, archive the
+  submitted text as `~/private/reviews/h2-fy27-self-review-submitted.md` — submitted text
+  outranks any draft as the next cycle's anchor.
+- **Rating scale reference (user-only):** the official score definitions are saved at
+  `~/private/reviews/performance-review-rating-scale.md`. When the user reaches the numeric
+  self-rating question, you may point them to that file to make their own choice. Never
+  read it back as guidance toward a number — the no-suggestion rule stands absolutely.
 
 Produce a first-person self-review draft that is easy to verify and copy into Culture Amp. Never invent accomplishments, feedback, dates, metrics, scope, or impact. Prefer a visibly incomplete draft over plausible filler.
 

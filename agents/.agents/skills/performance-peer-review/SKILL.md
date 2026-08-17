@@ -18,6 +18,14 @@ compatibility: Any assistant with access to a workplace chat search tool (e.g. S
   the interview-the-user path. Vieko's monthly check-ins (`~/private/checkins/`) often name
   collaborators and shared seams — use them as leads for the collaboration-only filter,
   then confirm specifics with Vieko.
+- **Local template copy:** the official H2 FY27 peer questions + sharing rules are saved
+  at `~/private/reviews/h2-fy27-peer-review-template.md`. Trust it over the inline
+  question text below if they ever disagree; for a new cycle, save the updated template
+  alongside as `~/private/reviews/<cycle>-peer-review-template.md`.
+- **Draft/archive convention:** save working drafts as
+  `~/private/reviews/h2-fy27-peer-review-given-<name>-draft.md`. Once submitted, archive
+  the final text as `~/private/reviews/h2-fy27-peer-review-given-<name>.md` (matching the
+  H1 archive naming).
 
 Produces a grounded first-draft peer review for Culture Amp — ready to read, edit, and paste in. The non-negotiable rule: never invent specifics you weren't given evidence for, and never include work the reviewee did independently — only include work the reviewer and reviewee did together. A partial draft with honest gaps is the right output. A polished-sounding draft built on guesses or solo work is not.
 

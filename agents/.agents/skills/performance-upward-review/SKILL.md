@@ -18,6 +18,19 @@ compatibility: Any assistant with access to a workplace chat search tool (e.g. S
   interview-the-user path directly. H2 FY27 is Vieko's first official cycle; there is no
   received Culture Amp history. Reviews Vieko previously wrote for others may exist under
   `~/private/reviews/` — use them as register anchors only, never as evidence.
+- **Local template copy:** the official H2 FY27 upward questions + per-question sharing
+  rules are saved at `~/private/reviews/h2-fy27-upward-review-template.md`. Trust it over
+  the inline question text below if they ever disagree; for a new cycle, save the updated
+  template alongside as `~/private/reviews/<cycle>-upward-review-template.md`.
+- **Manager Job Description:** saved locally at `~/private/profile/manager-job-description.md`
+  (the doc the official template links in Notion). Use it the way the self-review skill uses
+  the leveling framework: to calibrate wording about what a Vercel manager is expected to do
+  (qualifications + five responsibility areas). Never cite it as evidence of what the manager
+  actually did, and never use it to pick or hint at a Likert rating.
+- **Draft/archive convention:** save working drafts as
+  `~/private/reviews/h2-fy27-upward-review-given-<manager>-draft.md`. Once submitted,
+  archive the final text as `~/private/reviews/h2-fy27-upward-review-given-<manager>.md`
+  (matching the H1 archive naming).
 
 Produces a grounded first-draft upward review for Culture Amp — ready to read, edit, and paste in. The non-negotiable rule: never invent specifics you weren't given evidence for. A partial draft with honest gaps is the right output. A polished-sounding draft built on guesses is not.
 
