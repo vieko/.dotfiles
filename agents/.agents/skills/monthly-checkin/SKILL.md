@@ -37,6 +37,14 @@ Run:
 ~/.agents/skills/monthly-checkin/scripts/gather-evidence.py YYYY-MM
 ```
 
+For a multi-month roll-up (for example, to assemble half-year evidence for a self
+review), pass a range instead; the window spans the first month's start through the
+last month's end:
+
+```bash
+~/.agents/skills/monthly-checkin/scripts/gather-evidence.py YYYY-MM..YYYY-MM
+```
+
 The script reads its repo, cadence, output directory, and relevant project paths from the private `config.json`. It writes evidence under the configured output directory.
 
 If today falls before the work window closes, label the result as a draft through today's date. Never describe an open period as complete.
@@ -49,7 +57,7 @@ Use all available sources, but understand what each proves:
 - Completed issues created by or assigned to the user expose intent and project grouping.
 - The user's commits provide implementation detail when PR titles are too thin.
 - Other authors' commits in the configured project paths reveal collaboration opportunities and shared outcomes.
-- PR reviews prove review participation, not co-ownership by themselves.
+- PR reviews given (the "PR reviews given" section) prove review participation, not co-ownership by themselves. The search is bounded by merge date, so reviews on still-open PRs are absent.
 - Project memory provides rollout state, production measurements, reversals, incidents, and why the work mattered.
 - Existing check-ins are voice and continuity references, not evidence for a new claim.
 

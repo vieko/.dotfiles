@@ -6,8 +6,10 @@ from __future__ import annotations
 import argparse
 import calendar
 import json
+import os
 import subprocess
 import sys
+import urllib.request
 from datetime import date, datetime, timezone
 from pathlib import Path
 
@@ -50,6 +52,31 @@ def run(args: list[str], *, cwd: Path | None = None, stdin: str | None = None) -
         detail = result.stderr.strip() or result.stdout.strip()
         raise RuntimeError(f"{' '.join(args)} failed: {detail}")
     return result.stdout
+
+
+def linear_graphql(query: str, variables: dict | None = None) -> dict:
+    """POST to the Linear GraphQL API directly.
+
+    The linearis CLI has no `api` subcommand and cannot filter or return
+    completedAt, so evidence gathering talks to GraphQL itself. Token comes
+    from LINEAR_API_TOKEN (linearis convention) or LINEAR_API_KEY (1Password
+    injection), per the linear-cli skill.
+    """
+    token = os.environ.get("LINEAR_API_TOKEN") or os.environ.get("LINEAR_API_KEY")
+    if not token:
+        raise RuntimeError(
+            "no Linear token: set LINEAR_API_TOKEN or LINEAR_API_KEY in the environment"
+        )
+    request = urllib.request.Request(
+        "https://api.linear.app/graphql",
+        data=json.dumps({"query": query, "variables": variables or {}}).encode(),
+        headers={"Content-Type": "application/json", "Authorization": token},
+    )
+    with urllib.request.urlopen(request, timeout=60) as response:
+        payload = json.loads(response.read())
+    if payload.get("errors"):
+        raise RuntimeError(f"Linear GraphQL error: {payload['errors']}")
+    return payload["data"]
 
 
 def load_config(path: Path) -> dict:
@@ -118,8 +145,32 @@ def github_prs(repo: str, start: date, end: date) -> list[dict]:
     return [item for page in pages for item in page.get("items", [])]
 
 
+def github_reviews(repo: str, start: date, end: date) -> list[dict]:
+    query = (
+        f"repo:{repo} is:pr reviewed-by:@me -author:@me "
+        f"is:merged merged:{start.isoformat()}..{end.isoformat()}"
+    )
+    raw = run(
+        [
+            "gh",
+            "api",
+            "--paginate",
+            "--slurp",
+            "-X",
+            "GET",
+            "search/issues",
+            "-f",
+            f"q={query}",
+            "-f",
+            "per_page=100",
+        ]
+    )
+    pages = json.loads(raw)
+    return [item for page in pages for item in page.get("items", [])]
+
+
 def completed_issues(start: date, end_exclusive: date) -> list[dict]:
-    viewer = json.loads(run(["linear", "api", VIEWER_QUERY]))["data"]["viewer"]
+    viewer = linear_graphql(VIEWER_QUERY)["viewer"]
     filter_value = {
         "or": [
             {"creator": {"id": {"eq": viewer["id"]}}},
@@ -130,11 +181,7 @@ def completed_issues(start: date, end_exclusive: date) -> list[dict]:
             "lt": f"{end_exclusive.isoformat()}T00:00:00.000Z",
         },
     }
-    raw = run(
-        ["linear", "api", "--variables-json", json.dumps({"filter": filter_value})],
-        stdin=ISSUES_QUERY,
-    )
-    return json.loads(raw)["data"]["issues"]["nodes"]
+    return linear_graphql(ISSUES_QUERY, {"filter": filter_value})["issues"]["nodes"]
 
 
 def git_log(repo: Path, start: date, end_exclusive: date, author: str | None = None) -> list[str]:
@@ -181,7 +228,10 @@ def format_lines(lines: list[str]) -> str:
 
 def main() -> int:
     parser = argparse.ArgumentParser()
-    parser.add_argument("month", help="check-in month in YYYY-MM format")
+    parser.add_argument(
+        "month",
+        help="check-in month (YYYY-MM) or roll-up range (YYYY-MM..YYYY-MM)",
+    )
     parser.add_argument("--config", type=Path, default=DEFAULT_CONFIG)
     parser.add_argument("--repo", type=Path, help="override the private config repo")
     parser.add_argument("--output", type=Path, help="override the evidence output path")
@@ -190,7 +240,19 @@ def main() -> int:
     config_path = args.config.expanduser()
     try:
         config = load_config(config_path)
-        start, end, due, month_name = month_bounds(args.month, config)
+        if ".." in args.month:
+            first, last = args.month.split("..", 1)
+            start, _, _, first_name = month_bounds(first, config)
+            _, end, due, last_name = month_bounds(last, config)
+            if start >= end:
+                raise ValueError("range start month must precede end month")
+            first_year = int(first.split("-", 1)[0])
+            period_label = f"{first_name} {first_year} through {last_name} {end.year}"
+            title = f"Evidence roll-up: {period_label}"
+        else:
+            start, end, due, month_name = month_bounds(args.month, config)
+            period_label = f"{month_name} {end.year}"
+            title = f"Evidence: {period_label} monthly check-in"
     except (ValueError, json.JSONDecodeError) as error:
         parser.error(str(error))
 
@@ -207,6 +269,7 @@ def main() -> int:
     own_email = run(["git", "config", "user.email"], cwd=repo).strip()
 
     prs = github_prs(repo_name, start, end)
+    reviews = github_reviews(repo_name, start, end)
     issues = completed_issues(start, end_exclusive)
     own_commits = git_log(repo, start, end_exclusive, own_email or own_name)
     collaborator_commits = collaborator_log(
@@ -223,6 +286,10 @@ def main() -> int:
     pr_lines = [
         f"{item['closed_at'][:10]} #{item['number']} {item['title']} ({item['html_url']})"
         for item in sorted(prs, key=lambda item: item["closed_at"])
+    ]
+    review_lines = [
+        f"{item['closed_at'][:10]} #{item['number']} {item['title']} ({item['html_url']})"
+        for item in sorted(reviews, key=lambda item: item["closed_at"])
     ]
     issue_lines = [
         "\t".join(
@@ -245,20 +312,27 @@ def main() -> int:
     )
 
     person_name = config["person_name"]
-    body = f"""# Evidence: {month_name} {end.year} monthly check-in
+    body = f"""# {title}
 
-- Check-in month: `{args.month}`
+- Check-in period: `{args.month}`
 - Evidence window: `{start.isoformat()}` through `{end.isoformat()}` inclusive
 - Due: `{due.isoformat()}`
 - Period status: {period_status}
 - Repository: `{repo_name}`
 - Git identity: `{own_name} <{own_email}>`
 - Authored merged PR count: **{len(prs)}**
+- Reviewed merged PR count (others' PRs): **{len(reviews)}**
 - Completed created-or-assigned issue count: **{len(issues)}**
 
 ## Authored merged PRs
 
 {format_lines(pr_lines)}
+
+## PR reviews given
+
+Others' PRs merged in the window that {person_name} reviewed. This proves review participation only; approval alone does not establish co-ownership. Merge date bounds the search, so reviews on still-open or later-merged PRs are not listed.
+
+{format_lines(review_lines)}
 
 ## Completed issues
 
