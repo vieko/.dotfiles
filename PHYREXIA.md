@@ -84,6 +84,14 @@ when the work demands it.
 Cross-family consults (`glm-5.2`, `gpt-5.6-sol`) are conversations, not
 constructs -- a second read needs no binding.
 
+**CLI binding gotcha:** gateway model IDs contain a slash
+(`anthropic/claude-sonnet-5`), so `pi --model "anthropic/claude-sonnet-5"`
+parses as provider `anthropic` (direct API, no key on this host) and fails
+with "No API key found for anthropic." Always bind explicitly:
+`pi --provider vercel-ai-gateway --model "anthropic/claude-sonnet-5:medium"`.
+Interactive sessions don't hit this because `enabledModels` entries resolve
+against the configured provider's catalog.
+
 ## Usage
 
 - The directing session refers to itself as the **Summoner** and to delegated
