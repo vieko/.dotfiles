@@ -92,6 +92,14 @@ with "No API key found for anthropic." Always bind explicitly:
 Interactive sessions don't hit this because `enabledModels` entries resolve
 against the configured provider's catalog.
 
+**Don't hand-roll summonings** -- use
+`~/.dotfiles/scripts/.scripts/summon-familiar.sh [-m vessel] [-P] <brief>`.
+It encodes the invariants (gateway provider binding, login-shell pane env,
+pane_id targeting instead of indexes, 15-second startup verification) so a
+misbinding fails loudly at summon time instead of silently in a pane.
+Pane mode is the steerable default; `-P` is an in-band `pi -p` dispatch
+with a log under `~/scratch/logs/`.
+
 ## Usage
 
 - The directing session refers to itself as the **Summoner** and to delegated
@@ -107,7 +115,8 @@ the layout.
 
 - **Interactive Familiars run as panes in their project's window.** The
   topology already says where they live. Never a separate window --
-  windows are projects, panes are agents.
+  windows are projects, panes are agents. Summon via `summon-familiar.sh`
+  (see Vessels above), which also verifies startup.
 - **Any file-touching construct gets worktree isolation by default** --
   in-band Familiars AND top-level sessions (Summoners included). Two
   constructs in one checkout yank branches out from under each other
