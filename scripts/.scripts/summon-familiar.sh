@@ -13,12 +13,18 @@
 #      not silently in a background pane.
 #
 # Usage:
-#   summon-familiar.sh [-m alias] [-P] [-n] <brief-path> [prompt override]
+#   summon-familiar.sh [-m alias] [-P] [-n] [-w name] <brief-path> [prompt override]
 #
 #   -m alias   vessel: haiku|sonnet|opus|fable|luna|sol|glm (default: sonnet)
 #   -P         print mode: in-band `pi -p` dispatch (nohup + log) instead of
 #              an interactive tmux pane
 #   -n         dry run: print what would be executed, run nothing
+#   -w name    file-touching familiar: create a git worktree at
+#              <repo-parent>/<repo>-worktrees/<name> (new branch <name>) and
+#              summon there. Enforces the PHYREXIA.md isolation invariant
+#              (2026-08-06: sibling `reset --hard` in a shared checkout wiped
+#              another session's uncommitted work). Requires running inside
+#              the target repo. Fails loudly on a stale worktree or branch.
 #
 # Pane mode requires an active tmux session; the pane opens in the current
 # window (windows are projects, panes are agents).
@@ -44,18 +50,20 @@ alias_to_model() {
 vessel="sonnet"
 print_mode=0
 dry_run=0
+worktree_name=""
 
-while getopts "m:Pn" opt; do
+while getopts "m:Pnw:" opt; do
     case "$opt" in
         m) vessel="$OPTARG" ;;
         P) print_mode=1 ;;
         n) dry_run=1 ;;
+        w) worktree_name="$OPTARG" ;;
         *) exit 2 ;;
     esac
 done
 shift $((OPTIND - 1))
 
-[[ $# -ge 1 ]] || { echo "usage: summon-familiar.sh [-m alias] [-P] [-n] <brief-path> [prompt]" >&2; exit 2; }
+[[ $# -ge 1 ]] || { echo "usage: summon-familiar.sh [-m alias] [-P] [-n] [-w name] <brief-path> [prompt]" >&2; exit 2; }
 
 brief="$1"; shift
 brief_abs="$(cd "$(dirname "$brief")" 2>/dev/null && pwd)/$(basename "$brief")" || true
@@ -71,6 +79,27 @@ fi
 
 prompt="${*:-Read $brief_abs and execute it exactly.}"
 
+# -w: isolate a file-touching familiar in its own worktree.
+work_dir="$PWD"
+if [[ -n "$worktree_name" ]]; then
+    repo_root="$(git rev-parse --show-toplevel 2>/dev/null)" \
+        || { echo "error: -w requires running inside the target git repo" >&2; exit 1; }
+    wt_dir="$(dirname "$repo_root")/$(basename "$repo_root")-worktrees/$worktree_name"
+    if [[ $dry_run -eq 1 ]]; then
+        echo "dry-run (worktree): git -C $repo_root worktree add $wt_dir -b $worktree_name"
+    else
+        if [[ -e "$wt_dir" ]]; then
+            echo "error: worktree dir exists: $wt_dir" >&2
+            echo "       stale summon? review it, then: git -C $repo_root worktree remove $wt_dir" >&2
+            exit 1
+        fi
+        git -C "$repo_root" worktree add "$wt_dir" -b "$worktree_name" >/dev/null 2>&1 \
+            || { echo "error: git worktree add failed (branch '$worktree_name' already exists?)" >&2; exit 1; }
+        echo "worktree: $wt_dir (branch $worktree_name)"
+    fi
+    work_dir="$wt_dir"
+fi
+
 if [[ $print_mode -eq 1 ]]; then
     # In-band dispatch: inherits this shell's env (must be hydrated).
     if [[ -z "${AI_GATEWAY_API_KEY:-}" ]]; then
@@ -85,6 +114,7 @@ if [[ $print_mode -eq 1 ]]; then
         printf '  '; printf '%q ' "${cmd[@]}"; printf '\n  log: %s\n' "$log"
         exit 0
     fi
+    cd "$work_dir"
     nohup "${cmd[@]}" > "$log" 2>&1 &
     pid=$!
     echo "dispatched: pid $pid, vessel $vessel ($model)"
@@ -111,7 +141,7 @@ else
         echo "  $pi_cmd"
         exit 0
     fi
-    pane_id="$(tmux split-window -d -P -F '#{pane_id}' -c "$PWD")"
+    pane_id="$(tmux split-window -d -P -F '#{pane_id}' -c "$work_dir")"
     sleep 1
     tmux send-keys -t "$pane_id" "$pi_cmd" Enter
     echo "summoned: pane $pane_id, vessel $vessel ($model)"
