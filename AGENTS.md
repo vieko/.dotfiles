@@ -66,7 +66,11 @@ per-machine differences can't live inside the tracked file. `enabledModels` (the
 Vercel AI Gateway key has different model access — Chaos (unrestricted) enables
 Kimi K3 + Grok 4.5; Phyrexia (Vercel Team key) does not. `setup-pi.sh` switches
 on `hostname` (mirroring `hypr/scripts/host.sh`), merges `settings.base.json`
-with `hosts/enabledModels.<host>.json` via `jq`, and writes `settings.json`. An
+with `hosts/enabledModels.<host>.json` via `jq`, and writes
+`~/.pi/agent/settings.json` directly (the live file is a real file, not a
+stow symlink -- Pi's atomic writes replace symlinks). It preserves the
+Pi-managed `lastChangelogVersion` key and warns if live package pins drifted
+from the base (base wins; sync base first if live is newer after `pi update`). An
 unknown host falls back to `hosts/enabledModels.default.json` (the restricted
 set). Add a host by dropping in a new `hosts/enabledModels.<host>.json` fragment.
 

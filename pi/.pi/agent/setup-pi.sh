@@ -41,9 +41,33 @@ if [[ ! -f "$fragment" ]]; then
   fragment="hosts/enabledModels.default.json"
 fi
 
-out="settings.json"
+# Write directly to the live file. ~/.pi/agent/settings.json is a real file
+# (not a stow symlink): Pi's atomic writes replace symlinks, so a repo-dir
+# copy silently stops propagating. Machine-local keys Pi manages
+# (lastChangelogVersion) are preserved from the existing live file.
+out="${HOME}/.pi/agent/settings.json"
 tmp="$(mktemp)"
 jq --slurpfile models "$fragment" '.enabledModels = $models[0]' "$base" >"$tmp"
-mv "$tmp" "$out"
 
-echo "Generated ${SCRIPT_DIR}/${out} for host '${host}' from ${fragment}."
+if [[ -f "$out" ]]; then
+  # Warn if `pi update` bumped package pins in the live file but the tracked
+  # base is stale -- base wins, so stale base pins would downgrade packages.
+  livePkgs="$(jq -c '.packages // []' "$out")"
+  basePkgs="$(jq -c '.packages // []' "$base")"
+  if [[ "$livePkgs" != "$basePkgs" ]]; then
+    echo "warning: live package pins differ from settings.base.json (base wins)." >&2
+    echo "  live: ${livePkgs}" >&2
+    echo "  base: ${basePkgs}" >&2
+    echo "  If live is newer (pi update), sync settings.base.json and rerun." >&2
+  fi
+  tmp2="$(mktemp)"
+  jq --slurpfile live "$out" \
+    'if $live[0].lastChangelogVersion then .lastChangelogVersion = $live[0].lastChangelogVersion else . end' \
+    "$tmp" >"$tmp2"
+  mv "$tmp2" "$tmp"
+fi
+
+mv "$tmp" "$out"
+chmod 600 "$out"
+
+echo "Generated ${out} for host '${host}' from ${fragment}."
