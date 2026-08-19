@@ -115,6 +115,42 @@
               ]
             }
           }
+        },
+        "openai/gpt-5.6-terra": {
+          "compat": {
+            "vercelGatewayRouting": {
+              "order": [
+                "openai"
+              ]
+            }
+          }
+        },
+        "zai/glm-5.3": {
+          "compat": {
+            "vercelGatewayRouting": {
+              "order": [
+                "zai"
+              ]
+            }
+          }
+        },
+        "minimax/minimax-m3": {
+          "compat": {
+            "vercelGatewayRouting": {
+              "order": [
+                "minimax"
+              ]
+            }
+          }
+        },
+        "xai/grok-4.6": {
+          "compat": {
+            "vercelGatewayRouting": {
+              "order": [
+                "xai"
+              ]
+            }
+          }
         }
       }
     }
