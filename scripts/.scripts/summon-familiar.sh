@@ -98,10 +98,15 @@ prompt="${*:-Read $brief_abs and execute it exactly.}"
 # the brief author: concrete summoner session id, never a directory path.
 # Appended to the prompt (not the brief file) so it applies to pane and
 # print mode alike and never mutates the scratch artifact.
-if [[ -n "${PI_SESSION_ID:-}" ]]; then
-    prompt+=" MANDATORY REPORT-BACK: when you finish -- success, blocked, or giving up -- send your full report (summary, verification results, numbered deviations) with the send_message tool to session id ${PI_SESSION_ID} (your summoner). Never target a directory path. The transcript is not the delivery; the message is. If the send fails, retry once via list_sessions, then say so loudly in your final output."
+# Target preference: PI_SESSION_ADDRESS (s-... form, exported by pi-post
+# v0.6.3+ at session_start -- matches what list_sessions displays and is
+# prefix-ambiguity-proof), falling back to the raw PI_SESSION_ID for
+# sessions started before the pin bump. Both resolve as send_message targets.
+report_to="${PI_SESSION_ADDRESS:-${PI_SESSION_ID:-}}"
+if [[ -n "$report_to" ]]; then
+    prompt+=" MANDATORY REPORT-BACK: when you finish -- success, blocked, or giving up -- send your full report (summary, verification results, numbered deviations) with the send_message tool to ${report_to} (your summoner). Never target a directory path. The transcript is not the delivery; the message is. If the send fails, retry once via list_sessions, then say so loudly in your final output."
 else
-    echo "warn: PI_SESSION_ID not set -- no report-back address to inject; familiar will finish silently" >&2
+    echo "warn: no PI_SESSION_ADDRESS/PI_SESSION_ID in env -- no report-back address to inject; familiar will finish silently" >&2
 fi
 
 # -w: isolate a file-touching familiar in its own worktree.
