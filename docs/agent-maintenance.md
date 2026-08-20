@@ -20,6 +20,33 @@ edits to custom model config (routing pins, cost overrides) take effect
 without restarting Pi. Restart is only needed for `settings.json` changes
 (e.g. `enabledModels` after re-running `setup-pi.sh`).
 
+## Updating pinned git packages in Pi (pi-post, bonfire)
+
+Pi packages pinned via the `packages` array in `~/.pi/agent/settings.json`
+(e.g. `git:github.com/vieko/pi-post@vX.Y.Z`) are cloned to
+`~/.pi/agent/git/<host>/<path>`. Two gotchas when bumping the pin:
+
+1. **Editing the pin in settings.json does NOT move the clone.** Pi's startup
+   package resolution loads existing git clones as-checked-out and only
+   reconciles a pinned ref via `pi update` / `pi install` — restarting Pi
+   will silently keep running the old version. After changing (or to change)
+   the pin, run:
+
+   ```
+   pi install git:github.com/vieko/pi-post@vX.Y.Z
+   ```
+
+   Idempotent: writes the settings pin, fetches + hard-resets the managed
+   clone to the tag, and runs `npm install` in it. Verify with
+   `git -C ~/.pi/agent/git/github.com/vieko/pi-post log --oneline -1`.
+
+2. **Already-running sessions keep the old code.** Extensions load at session
+   start; only sessions started after the reconcile get the new version.
+
+Release procedure for pi-post itself (bump, tag, npm publish via OIDC) is in
+the repo: `~/dev/pi-post/docs/releasing.md`. Same pin-bump rules apply to the
+bonfire adapter (see `~/.pi/agent/AGENTS.md`).
+
 ## vercel-plugin skills path (`current` symlink)
 
 `settings.base.json` points the vercel-plugin skills at a stable `current`
