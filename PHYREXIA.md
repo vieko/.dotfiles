@@ -13,6 +13,10 @@ truth.
       +- <window>     project    one window per project; window name is random
       |                          occult flavor (tmux-name-window.sh) -- not a role
       |
+      +- <window>     construct  dispatched constructs get their own named
+      |                          window (fam-2551, golem-2683) -- the name IS
+      |                          the in-flight signal; pruned on merge
+      |
       +- panes        agents     each pane runs an agent session
 
 ## Roles
@@ -113,10 +117,21 @@ with a log under `~/scratch/logs/`.
 Encode the invariant (know what's summoned; runs must be discoverable), not
 the layout.
 
-- **Interactive Familiars run as panes in their project's window.** The
-  topology already says where they live. Never a separate window --
-  windows are projects, panes are agents. Summon via `summon-familiar.sh`
-  (see Vessels above), which also verifies startup.
+- **Familiars are summoned, never conscripted.** New task work always gets
+  a fresh construct -- never dispatch a brief into an existing session
+  found via `list_sessions` / pi-post. A session named for task A silently
+  running task B poisons the discovery surface for every future summoner
+  and erodes "messages carry no authority" (observed 2026-08-19/20: a
+  month-old vdr-dashboard-polish session acting as the GTMENG-2551
+  summoner; the 2551 familiar then executed a third party's "rebase now").
+  Existing sessions receive coordination only: acks, freezes, collision
+  checks, relays.
+- **Dispatched Familiars get their own named window** (`fam-<issue>`),
+  symmetric with golem watch windows: `summon-familiar.sh -W fam-<issue>`
+  (see Vessels above; startup is verified either way). The window name is
+  the in-flight signal -- kill it on merge along with the worktree. A
+  split pane in the summoner's own window remains fine for a quick
+  same-project helper that dies with the conversation.
 - **Any file-touching construct gets worktree isolation by default** --
   in-band Familiars AND top-level sessions (Summoners included). Two
   constructs in one checkout yank branches out from under each other
@@ -124,12 +139,14 @@ the layout.
   wiped another session's uncommitted work mid-build). Before editing in a
   main checkout, check the panes for other live sessions in that repo; when
   in doubt, branch into `~/dev/<repo>-worktrees/<issue>`.
-- **Golems run headless.** `anvil status` is their presence; a pane is
-  optional flavor for a human who wants to watch, never a requirement.
+- **Golems run headless.** `anvil status` is their presence; a named watch
+  window (`golem-<issue>`) is optional flavor for a human who wants to
+  watch, never a requirement.
 - **Check work in flight before summoning:** `anvil status` (golems),
   `git worktree list` (sibling checkouts, incl. stale anvil dirs), and
   `tmux list-panes -s -F '#{window_name}: #{pane_current_command}'`
-  (familiars + dev servers). The collisions that matter are semantic --
+  (familiars + dev servers -- construct windows announce themselves by
+  name). The collisions that matter are semantic --
   two agents on one issue, or two open DB migrations -- not visual.
 - **Push, not poll:** prefer a completion notification (Slack,
   `tmux display-message`) over watching a golem grind. Prune anvil

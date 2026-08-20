@@ -13,11 +13,16 @@
 #      not silently in a background pane.
 #
 # Usage:
-#   summon-familiar.sh [-m alias] [-P] [-n] [-w name] <brief-path> [prompt override]
+#   summon-familiar.sh [-m alias] [-P] [-n] [-w name] [-W name] <brief-path> [prompt override]
 #
 #   -m alias   vessel: haiku|sonnet|opus|fable|luna|sol|glm (default: sonnet)
 #   -P         print mode: in-band `pi -p` dispatch (nohup + log) instead of
 #              an interactive tmux pane
+#   -W name    construct window: open a new tmux window named <name>
+#              (convention: fam-<issue>, e.g. fam-2551) instead of a pane in
+#              the current window. The window name is the in-flight signal
+#              (PHYREXIA.md topology) -- kill it on merge with the worktree.
+#              Usually paired with -w for file-touching dispatches.
 #   -n         dry run: print what would be executed, run nothing
 #   -w name    file-touching familiar: create a git worktree at
 #              <repo-parent>/<repo>-worktrees/<name> (new branch <name>) and
@@ -26,8 +31,10 @@
 #              another session's uncommitted work). Requires running inside
 #              the target repo. Fails loudly on a stale worktree or branch.
 #
-# Pane mode requires an active tmux session; the pane opens in the current
-# window (windows are projects, panes are agents).
+# Pane and window modes require an active tmux session. Default pane mode
+# opens in the current window (quick same-project helpers); -W opens a named
+# construct window (dispatched task work -- familiars are summoned, never
+# conscripted; see PHYREXIA.md summoning discipline).
 
 set -euo pipefail
 
@@ -51,19 +58,23 @@ vessel="sonnet"
 print_mode=0
 dry_run=0
 worktree_name=""
+window_name=""
 
-while getopts "m:Pnw:" opt; do
+while getopts "m:Pnw:W:" opt; do
     case "$opt" in
         m) vessel="$OPTARG" ;;
         P) print_mode=1 ;;
         n) dry_run=1 ;;
         w) worktree_name="$OPTARG" ;;
+        W) window_name="$OPTARG" ;;
         *) exit 2 ;;
     esac
 done
 shift $((OPTIND - 1))
 
-[[ $# -ge 1 ]] || { echo "usage: summon-familiar.sh [-m alias] [-P] [-n] [-w name] <brief-path> [prompt]" >&2; exit 2; }
+[[ $print_mode -eq 1 && -n "$window_name" ]] && { echo "error: -P and -W are mutually exclusive" >&2; exit 2; }
+
+[[ $# -ge 1 ]] || { echo "usage: summon-familiar.sh [-m alias] [-P] [-n] [-w name] [-W name] <brief-path> [prompt]" >&2; exit 2; }
 
 brief="$1"; shift
 brief_abs="$(cd "$(dirname "$brief")" 2>/dev/null && pwd)/$(basename "$brief")" || true
@@ -133,18 +144,30 @@ if [[ $print_mode -eq 1 ]]; then
     fi
     echo "verified: running clean after 15s"
 else
-    # Pane familiar: default shell first (env hydration), command typed in.
-    [[ -n "${TMUX:-}" ]] || { echo "error: pane mode requires tmux (use -P for in-band)" >&2; exit 1; }
+    # Pane/window familiar: default shell first (env hydration), command typed in.
+    [[ -n "${TMUX:-}" ]] || { echo "error: pane/window mode requires tmux (use -P for in-band)" >&2; exit 1; }
     pi_cmd="pi --provider \"$PROVIDER\" --model \"$model\" \"$prompt\""
     if [[ $dry_run -eq 1 ]]; then
-        echo "dry-run (pane mode): split-window in current window, then send-keys:"
+        if [[ -n "$window_name" ]]; then
+            echo "dry-run (window mode): new-window -n $window_name, then send-keys:"
+        else
+            echo "dry-run (pane mode): split-window in current window, then send-keys:"
+        fi
         echo "  $pi_cmd"
         exit 0
     fi
-    pane_id="$(tmux split-window -d -P -F '#{pane_id}' -c "$work_dir")"
+    if [[ -n "$window_name" ]]; then
+        pane_id="$(tmux new-window -d -P -F '#{pane_id}' -n "$window_name" -c "$work_dir")"
+    else
+        pane_id="$(tmux split-window -d -P -F '#{pane_id}' -c "$work_dir")"
+    fi
     sleep 1
     tmux send-keys -t "$pane_id" "$pi_cmd" Enter
-    echo "summoned: pane $pane_id, vessel $vessel ($model)"
+    if [[ -n "$window_name" ]]; then
+        echo "summoned: window $window_name (pane $pane_id), vessel $vessel ($model)"
+    else
+        echo "summoned: pane $pane_id, vessel $vessel ($model)"
+    fi
     sleep 15
     if tmux capture-pane -t "$pane_id" -p 2>/dev/null | grep -qE "No API key found|Error:"; then
         echo "error: familiar reported a startup error -- pane $pane_id tail:" >&2

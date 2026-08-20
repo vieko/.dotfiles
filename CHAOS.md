@@ -11,6 +11,9 @@ convention -- never propagate into team repos. Surfaced via the pointer in
       |
       +- <window>     project    one window per project
       |
+      +- <window>     construct  named per task (fam-2551, golem-2683),
+      |                          pruned on merge
+      |
       +- panes        agents     each pane runs an agent session
 
 Same shape as PHYREXIA. `anvil` and `pi` are installed here.
