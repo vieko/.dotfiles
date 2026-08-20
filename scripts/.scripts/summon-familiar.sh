@@ -90,6 +90,20 @@ fi
 
 prompt="${*:-Read $brief_abs and execute it exactly.}"
 
+# Report-back injection (2026-08-20 post-mortem). Two observed failure modes:
+# fam-2649's brief omitted the report-back mechanism entirely (finished
+# silently; report lived only in its own transcript), and fam-2651's brief
+# addressed it to a directory path (~/dev/gtm -- ambiguous, 7 registered
+# sessions; first send bounced). The footer is injected HERE, not trusted to
+# the brief author: concrete summoner session id, never a directory path.
+# Appended to the prompt (not the brief file) so it applies to pane and
+# print mode alike and never mutates the scratch artifact.
+if [[ -n "${PI_SESSION_ID:-}" ]]; then
+    prompt+=" MANDATORY REPORT-BACK: when you finish -- success, blocked, or giving up -- send your full report (summary, verification results, numbered deviations) with the send_message tool to session id ${PI_SESSION_ID} (your summoner). Never target a directory path. The transcript is not the delivery; the message is. If the send fails, retry once via list_sessions, then say so loudly in your final output."
+else
+    echo "warn: PI_SESSION_ID not set -- no report-back address to inject; familiar will finish silently" >&2
+fi
+
 # -w: isolate a file-touching familiar in its own worktree.
 work_dir="$PWD"
 if [[ -n "$worktree_name" ]]; then
