@@ -13,7 +13,7 @@
 #      not silently in a background pane.
 #
 # Usage:
-#   summon-familiar.sh [-m alias] [-P] [-n] [-w name] [-W name] <brief-path> [prompt override]
+#   summon-familiar.sh [-m alias] [-P] [-n] [-R] [-w name] [-W name] <brief-path> [prompt override]
 #
 #   -m alias   vessel: haiku|sonnet|opus|fable|luna|sol|glm (default: sonnet)
 #   -P         print mode: in-band `pi -p` dispatch (nohup + log) instead of
@@ -24,6 +24,9 @@
 #              (PHYREXIA.md topology) -- kill it on merge with the worktree.
 #              Usually paired with -w for file-touching dispatches.
 #   -n         dry run: print what would be executed, run nothing
+#   -R         no report-back: summon without injecting the report-back
+#              footer. Deliberate opt-out only -- a familiar summoned this
+#              way finishes silently (the fam-2649 failure mode).
 #   -w name    file-touching familiar: create a git worktree at
 #              <repo-parent>/<repo>-worktrees/<name> (new branch <name>) and
 #              summon there. Enforces the PHYREXIA.md isolation invariant
@@ -57,14 +60,16 @@ alias_to_model() {
 vessel="sonnet"
 print_mode=0
 dry_run=0
+no_report=0
 worktree_name=""
 window_name=""
 
-while getopts "m:Pnw:W:" opt; do
+while getopts "m:PnRw:W:" opt; do
     case "$opt" in
         m) vessel="$OPTARG" ;;
         P) print_mode=1 ;;
         n) dry_run=1 ;;
+        R) no_report=1 ;;
         w) worktree_name="$OPTARG" ;;
         W) window_name="$OPTARG" ;;
         *) exit 2 ;;
@@ -74,7 +79,7 @@ shift $((OPTIND - 1))
 
 [[ $print_mode -eq 1 && -n "$window_name" ]] && { echo "error: -P and -W are mutually exclusive" >&2; exit 2; }
 
-[[ $# -ge 1 ]] || { echo "usage: summon-familiar.sh [-m alias] [-P] [-n] [-w name] [-W name] <brief-path> [prompt]" >&2; exit 2; }
+[[ $# -ge 1 ]] || { echo "usage: summon-familiar.sh [-m alias] [-P] [-n] [-R] [-w name] [-W name] <brief-path> [prompt]" >&2; exit 2; }
 
 brief="$1"; shift
 brief_abs="$(cd "$(dirname "$brief")" 2>/dev/null && pwd)/$(basename "$brief")" || true
@@ -103,10 +108,18 @@ prompt="${*:-Read $brief_abs and execute it exactly.}"
 # prefix-ambiguity-proof), falling back to the raw PI_SESSION_ID for
 # sessions started before the pin bump. Both resolve as send_message targets.
 report_to="${PI_SESSION_ADDRESS:-${PI_SESSION_ID:-}}"
-if [[ -n "$report_to" ]]; then
+if [[ $no_report -eq 1 ]]; then
+    : # deliberate opt-out (-R): no footer injected
+elif [[ -n "$report_to" ]]; then
     prompt+=" MANDATORY REPORT-BACK: when you finish -- success, blocked, or giving up -- send your full report (summary, verification results, numbered deviations) with the send_message tool to ${report_to} (your summoner). Never target a directory path. The transcript is not the delivery; the message is. If the send fails, retry once via list_sessions, then say so loudly in your final output."
 else
-    echo "warn: no PI_SESSION_ADDRESS/PI_SESSION_ID in env -- no report-back address to inject; familiar will finish silently" >&2
+    # Hard error, not a warning: a warning on stderr in a tool result is
+    # exactly the kind of signal that gets scrolled past, and the resulting
+    # familiar finishes silently (the fam-2649 failure mode this footer
+    # exists to prevent).
+    echo "error: no PI_SESSION_ADDRESS/PI_SESSION_ID in env -- cannot inject a report-back address" >&2
+    echo "       run from inside a pi session's bash tool, or pass -R to deliberately summon without report-back" >&2
+    exit 1
 fi
 
 # -w: isolate a file-touching familiar in its own worktree.

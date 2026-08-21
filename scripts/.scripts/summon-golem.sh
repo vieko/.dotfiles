@@ -1,0 +1,192 @@
+#!/usr/bin/env bash
+# summon-golem.sh -- dispatch an Anvil golem in a named tmux window with a
+# guaranteed completion ping back to the summoner via pi-post.
+#
+# Encodes the invariants from the 2026-08-21 golem-2055 dispatch review:
+#   1. The completion ping is wired HERE, at dispatch, not trusted to the
+#      spec or the summoner's memory. The spec describes the outcome; the
+#      wrapper owns logistics. The agent inside an anvil run is gate-bound
+#      and never does messaging.
+#   2. The summoner's address is captured from this shell's env and baked
+#      into the runner as a literal. tmux windows get the server's env, not
+#      the dispatching pane's -- interpolation-by-luck is not a mechanism.
+#   3. `anvil run --json` writes the result to a file; the ping reports the
+#      parsed verdict. No `$?`-through-tee: with --json the stream goes to
+#      stderr and stdout is the result, so anvil's exit status is direct.
+#   4. The ping fires on EVERY exit path (green, red, crash, killed window)
+#      via an EXIT trap, so silence always means "still running".
+#   5. -v --reasoning are on by default (AGENTS.md dispatch rule).
+#
+# The ping is a claim, not a review: every golem diff still passes the one
+# review pipeline (PHYREXIA.md standing invariant).
+#
+# Usage:
+#   summon-golem.sh [-m alias] [-n] [-R] <name> <spec-or-prompt> [anvil args...]
+#
+#   -m alias   vessel: haiku|sonnet|opus|luna (anvil's aliases; no fable).
+#              Default: luna (PHYREXIA golem binding -- cross-family worker
+#              under an Anthropic reviewer diversifies failure modes)
+#   -n         dry run: print the runner script and tmux command, run nothing
+#   -R         no report-back: skip the completion ping. Deliberate opt-out
+#              only -- the golem then finishes silently (golem-2055 mode:
+#              poll the pane or anvil status)
+#
+#   <name>     construct name; window becomes golem-<name> (convention:
+#              the issue number, e.g. 2055)
+#   <spec>     path to a spec file (absolutized) or a literal prompt string
+#   [args...]  passed to `anvil run` verbatim (--from, --verify, --scope,
+#              --contract, --effort, -C, ...)
+#
+# Requires an active tmux session. The window opens with a login shell
+# (env hydration), then runs a generated runner script; the pane stays open
+# after completion as the forensic artifact.
+
+set -euo pipefail
+
+LOG_DIR="$HOME/scratch/logs"
+PIPOST_CACHE="$HOME/.pi/agent/git/github.com/vieko/pi-post/bin/pi-post.mjs"
+
+alias_ok() {
+    case "$1" in
+        haiku|sonnet|opus|luna) return 0 ;;
+        *) return 1 ;;
+    esac
+}
+
+vessel="luna"
+dry_run=0
+no_report=0
+
+while getopts "m:nR" opt; do
+    case "$opt" in
+        m) vessel="$OPTARG" ;;
+        n) dry_run=1 ;;
+        R) no_report=1 ;;
+        *) exit 2 ;;
+    esac
+done
+shift $((OPTIND - 1))
+
+[[ $# -ge 2 ]] || { echo "usage: summon-golem.sh [-m alias] [-n] [-R] <name> <spec-or-prompt> [anvil args...]" >&2; exit 2; }
+
+alias_ok "$vessel" || { echo "error: unknown vessel alias: $vessel (anvil aliases: haiku|sonnet|opus|luna)" >&2; exit 2; }
+
+name="$1"; spec="$2"; shift 2
+
+# Spec: absolutize if it's a readable file, else pass through as a prompt.
+if [[ -r "$spec" ]]; then
+    spec="$(cd "$(dirname "$spec")" && pwd)/$(basename "$spec")"
+fi
+
+# Report-back address: captured here, where the summoner's env exists.
+# Hard error without one -- a silent golem is the failure mode this script
+# exists to prevent (symmetric with summon-familiar.sh).
+report_to=""
+if [[ $no_report -eq 0 ]]; then
+    report_to="${PI_SESSION_ADDRESS:-${PI_SESSION_ID:-}}"
+    if [[ -z "$report_to" ]]; then
+        echo "error: no PI_SESSION_ADDRESS/PI_SESSION_ID in env -- cannot wire the completion ping" >&2
+        echo "       run from inside a pi session's bash tool, or pass -R to deliberately summon without one" >&2
+        exit 1
+    fi
+    # Resolve the pi-post CLI now, not in the window (whose PATH we don't own).
+    if command -v pi-post >/dev/null 2>&1; then
+        pipost_cmd="pi-post"
+    elif [[ -f "$PIPOST_CACHE" ]]; then
+        pipost_cmd="node $(printf '%q' "$PIPOST_CACHE")"
+    else
+        echo "error: pi-post CLI not found (PATH or $PIPOST_CACHE) -- cannot wire the completion ping" >&2
+        echo "       pass -R to deliberately summon without one" >&2
+        exit 1
+    fi
+fi
+
+[[ $dry_run -eq 1 || -n "${TMUX:-}" ]] || { echo "error: summon-golem.sh requires an active tmux session" >&2; exit 1; }
+
+mkdir -p "$LOG_DIR"
+ts="$(date +%Y%m%d-%H%M%S)"
+log="$LOG_DIR/golem-$name-$ts.log"
+result="$LOG_DIR/golem-$name-$ts.json"
+runner="$LOG_DIR/golem-$name-$ts.runner.sh"
+window="golem-$name"
+
+# Build the anvil command with args quoted for the generated script.
+anvil_cmd="anvil run $(printf '%q' "$spec") --model $(printf '%q' "$vessel") --json -v --reasoning"
+for a in "$@"; do
+    anvil_cmd+=" $(printf '%q' "$a")"
+done
+
+# --- generate the runner -------------------------------------------------
+{
+    cat <<EOF
+#!/usr/bin/env bash
+# generated by summon-golem.sh -- golem $name, $ts (window $window)
+set -uo pipefail
+
+RESULT=$(printf '%q' "$result")
+LOG=$(printf '%q' "$log")
+PINGED=0
+EOF
+    if [[ $no_report -eq 0 ]]; then
+        cat <<EOF
+
+ping() {
+    [[ \$PINGED -eq 1 ]] && return 0
+    PINGED=1
+    local status="\$1"
+    local verdict="no JSON result (crashed or killed before anvil finished)"
+    if [[ -s "\$RESULT" ]]; then
+        verdict="\$(jq -r '"passed=\(.passed) attempts=\(.attempts) branch=\(.branch // "?") gate[\(.gate.source // "?")]=\((.gate.commands // []) | join("; "))"' "\$RESULT" 2>/dev/null)" \\
+            || verdict="result JSON present but unparseable: \$RESULT"
+    fi
+    $pipost_cmd send --to $(printf '%q' "$report_to") --from $(printf '%q' "golem:$name") --body "golem $name (anvil) finished: exit \${status}. \${verdict}
+result: \$RESULT
+log: \$LOG
+worktree: see anvil status (prune after merge)
+Gate green is a claim, not a review -- run the review pass before integrating." \\
+        || echo "warn: completion ping to $report_to failed -- report manually" >&2
+}
+trap 'ping "\${ANVIL_STATUS:-interrupted}"' EXIT
+EOF
+    else
+        printf '\nping() { :; }  # -R: report-back deliberately disabled at summon time\n'
+    fi
+    cat <<EOF
+
+$anvil_cmd >"\$RESULT" 2> >(tee "\$LOG" >&2)
+ANVIL_STATUS=\$?
+ping "\$ANVIL_STATUS"
+echo
+echo "[DONE] $window finished (exit \$ANVIL_STATUS). Pane stays open; result: \$RESULT"
+EOF
+} > "$runner"
+chmod +x "$runner"
+# -------------------------------------------------------------------------
+
+if [[ $dry_run -eq 1 ]]; then
+    echo "dry-run: would open window $window (login shell, cwd $PWD), then send-keys:"
+    echo "  bash $runner"
+    echo "--- runner ---"
+    cat "$runner"
+    rm -f "$runner"
+    exit 0
+fi
+
+# Login shell first (env hydration), then the runner via send-keys --
+# same discipline as summon-familiar.sh pane mode.
+pane_id="$(tmux new-window -d -P -F '#{pane_id}' -n "$window" -c "$PWD")"
+sleep 1
+tmux send-keys -t "$pane_id" "bash $(printf '%q' "$runner")" Enter
+echo "summoned: window $window (pane $pane_id), vessel $vessel"
+echo "log: $log"
+echo "result: $result"
+[[ $no_report -eq 0 ]] && echo "ping: wired to $report_to (fires on every exit path)"
+
+# Startup verification: fail loudly here, not silently in a pane.
+sleep 15
+if tmux capture-pane -t "$pane_id" -p 2>/dev/null | grep -qE "No API key found|error:|Error:|command not found"; then
+    echo "error: golem reported a startup error -- pane $pane_id tail:" >&2
+    tmux capture-pane -t "$pane_id" -p | grep -vE '^\s*$' | tail -6 >&2
+    exit 1
+fi
+echo "verified: pane $pane_id clean after 15s (watch: tmux capture-pane -t $pane_id -p; presence: anvil status)"

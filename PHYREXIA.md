@@ -96,13 +96,26 @@ with "No API key found for anthropic." Always bind explicitly:
 Interactive sessions don't hit this because `enabledModels` entries resolve
 against the configured provider's catalog.
 
-**Don't hand-roll summonings** -- use
-`~/.dotfiles/scripts/.scripts/summon-familiar.sh [-m vessel] [-P] <brief>`.
-It encodes the invariants (gateway provider binding, login-shell pane env,
-pane_id targeting instead of indexes, 15-second startup verification) so a
-misbinding fails loudly at summon time instead of silently in a pane.
-Pane mode is the steerable default; `-P` is an in-band `pi -p` dispatch
-with a log under `~/scratch/logs/`.
+**Don't hand-roll summonings** -- use the summon scripts in
+`~/.dotfiles/scripts/.scripts/`:
+
+- `summon-familiar.sh [-m vessel] [-P] [-W fam-<issue>] <brief>` -- encodes
+  gateway provider binding, login-shell pane env, pane_id targeting instead
+  of indexes, 15-second startup verification, and mandatory report-back
+  injection. Pane mode is the steerable default; `-P` is an in-band `pi -p`
+  dispatch with a log under `~/scratch/logs/`.
+- `summon-golem.sh [-m vessel] <name> <spec> [anvil args...]` -- wraps
+  `anvil run` in a named window (`golem-<name>`) with `--json` results,
+  `-v --reasoning` by default, logs under `~/scratch/logs/`, and a
+  pi-post completion ping wired at dispatch (fires on every exit path:
+  green, red, crash, killed window -- silence always means still running).
+  Never hand-roll `anvil run` inside a tmux window (observed 2026-08-21:
+  golem-2055 dispatched bare -- no ping, discovery by sleep-and-capture
+  polling). Running anvil inline in the summoner's own turn, blocking on
+  it, remains fine -- the wrapper exists for detached runs.
+
+Both fail loudly at summon time -- misbindings, and a missing report-back
+address (deliberate silent constructs need the explicit `-R` opt-out).
 
 ## Usage
 
@@ -139,18 +152,27 @@ the layout.
   wiped another session's uncommitted work mid-build). Before editing in a
   main checkout, check the panes for other live sessions in that repo; when
   in doubt, branch into `~/dev/<repo>-worktrees/<issue>`.
-- **Golems run headless.** `anvil status` is their presence; a named watch
-  window (`golem-<issue>`) is optional flavor for a human who wants to
-  watch, never a requirement.
+- **Report-back targets are concrete addresses, never directory paths.**
+  The summon scripts inject the target (`s-...` from `PI_SESSION_ADDRESS`)
+  at dispatch; any hand-written brief follows the same rule. Observed
+  2026-08-20: fam-2651's brief said "send_message to ~/dev/gtm" -- 7 live
+  sessions registered there, the send bounced, delivery happened by luck
+  of initiative; fam-2649's brief omitted the mechanism entirely and
+  finished silently. Directory paths stay fine for *human-directed* sends
+  where the cwd is unique (worktrees); injected report-back never uses
+  them. Script-level injection is the guarantee -- briefs are habit.
+- **Push, not poll -- and the push is structural.** Familiar reports and
+  golem completion pings arrive as pi-post messages wired at summon time,
+  not by watching panes grind. A ping is a claim, not a review (see the
+  standing invariant). Prune anvil worktrees after merge; a stale worktree
+  is a false "in flight" signal.
 - **Check work in flight before summoning:** `anvil status` (golems),
   `git worktree list` (sibling checkouts, incl. stale anvil dirs), and
   `tmux list-panes -s -F '#{window_name}: #{pane_current_command}'`
   (familiars + dev servers -- construct windows announce themselves by
   name). The collisions that matter are semantic --
   two agents on one issue, or two open DB migrations -- not visual.
-- **Push, not poll:** prefer a completion notification (Slack,
-  `tmux display-message`) over watching a golem grind. Prune anvil
-  worktrees after merge; a stale worktree is a false "in flight" signal.
+
 - **Hand-rolled golem gates on TS work include `tsc --noEmit`.** Explicit
   `--verify` overrides anvil's auto-detection, and test+build alone has a
   typecheck blind spot: vitest transpiles without checking, `next build`
