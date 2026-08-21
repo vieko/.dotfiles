@@ -55,6 +55,12 @@ the `claude -p` wrapper-in-tmux pattern bypasses anvil's verification boundary.
 pane streams the agent's actions + gate progress in color *and* the thinking
 trace; without them the pane shows only a sparse header + quiet spinner.
 
+**Detached runs go through `~/.dotfiles/scripts/.scripts/summon-golem.sh`**
+(named window, `--json` result file, `-v --reasoning` defaults, and a pi-post
+completion ping wired at dispatch so the summoner is messaged on every exit
+path instead of polling the pane). Running anvil inline in your own turn and
+blocking on it stays direct. Never hand-roll `anvil run` inside a tmux window.
+
 ## Session lexicon (machine-local planes)
 
 Personal multi-agent naming, per host -- **not a team convention**. A
