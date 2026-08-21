@@ -136,7 +136,7 @@ ping() {
     local status="\$1"
     local verdict="no JSON result (crashed or killed before anvil finished)"
     if [[ -s "\$RESULT" ]]; then
-        verdict="\$(jq -r '"passed=\(.passed) attempts=\(.attempts) branch=\(.branch // "?") gate[\(.gate.source // "?")]=\((.gate.commands // []) | join("; "))"' "\$RESULT" 2>/dev/null)" \\
+        verdict="\$(jq -r '"passed=\(.passed) attempts=\(.attempts) branch=\(.branch // "?") gate[\(.gate.source // "?")]=\((.gate.commands // []) | join("; "))" + (if .errors then "\nerrors: \(.errors)" else "" end)' "\$RESULT" 2>/dev/null)" \\
             || verdict="result JSON present but unparseable: \$RESULT"
     fi
     $pipost_cmd send --to $(printf '%q' "$report_to") --from $(printf '%q' "golem:$name") --body "golem $name (anvil) finished: exit \${status}. \${verdict}
