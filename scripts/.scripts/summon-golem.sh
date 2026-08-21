@@ -44,7 +44,8 @@
 set -euo pipefail
 
 LOG_DIR="$HOME/scratch/logs"
-PIPOST_CACHE="$HOME/.pi/agent/git/github.com/vieko/pi-post/bin/pi-post.mjs"
+PIPOST_SHIM="$HOME/.pi/agent/post/bin/pi-post"   # stable, extension-owned (pi-post v0.7.0+, issue #6)
+PIPOST_CACHE="$HOME/.pi/agent/git/github.com/vieko/pi-post/bin/pi-post.mjs"  # last resort: pi's cache layout is not a contract
 
 alias_ok() {
     case "$1" in
@@ -92,6 +93,8 @@ if [[ $no_report -eq 0 ]]; then
     # Resolve the pi-post CLI now, not in the window (whose PATH we don't own).
     if command -v pi-post >/dev/null 2>&1; then
         pipost_cmd="pi-post"
+    elif [[ -x "$PIPOST_SHIM" ]]; then
+        pipost_cmd="$(printf '%q' "$PIPOST_SHIM")"
     elif [[ -f "$PIPOST_CACHE" ]]; then
         pipost_cmd="node $(printf '%q' "$PIPOST_CACHE")"
     else
