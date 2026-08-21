@@ -41,6 +41,9 @@ fi
 export LANG=en_CA.UTF-8
 export LC_ALL=en_CA.UTF-8
 
+# explicit timezone: some tools default to UTC when TZ is unset
+export TZ="America/Edmonton"
+
 export HISTIGNORE="ls:cd:pwd:exit:date:clear:history:bg:fg:* --help"
 export LESSHISTFILE=-
 

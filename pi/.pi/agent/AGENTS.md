@@ -229,6 +229,12 @@ is fine — the file is reviewable artifact. Applying it is the line.
 When in doubt, ask. The cost of a confirmation round-trip is much smaller than
 the cost of a clobbered `.env.local` or an unintended prod deploy.
 
+## Timestamps
+
+Report times to the user in Mountain Time (America/Edmonton), not raw UTC ISO
+strings. Session files and bonfire entries store UTC internally -- convert
+before quoting them.
+
 ## Shell behavior
 
 Pi runs `bash -c` non-interactively. User shell aliases (`cat=bat`, `ls=eza`)
