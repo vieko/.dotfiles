@@ -13,9 +13,9 @@
   "editorPaddingX": 1,
   "treeFilterMode": "labeled-only",
   "packages": [
-    "git:github.com/vieko/bonfire@v7.4.0",
+    "git:github.com/vieko/bonfire@v7.5.0",
     "git:github.com/vieko/pi-prose@v0.2.0",
-    "git:github.com/vieko/pi-post@v0.6.2"
+    "git:github.com/vieko/pi-post@v0.7.0"
   ],
   "hideThinkingBlock": false,
   "retry": {
