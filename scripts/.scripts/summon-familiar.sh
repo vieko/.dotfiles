@@ -128,17 +128,28 @@ if [[ -n "$worktree_name" ]]; then
     repo_root="$(git rev-parse --show-toplevel 2>/dev/null)" \
         || { echo "error: -w requires running inside the target git repo" >&2; exit 1; }
     wt_dir="$(dirname "$repo_root")/$(basename "$repo_root")-worktrees/$worktree_name"
+    # Branch from origin's default branch, never the checkout's HEAD: the main
+    # checkout is often parked on another session's branch, and a worktree
+    # branched from it inherits stray commits (the fam-2902-pr2 / fam-2967
+    # contamination incidents, 2026-08-24/25). Falls back to HEAD only when
+    # there is no origin (local-only repos).
+    wt_base="HEAD"
+    if git -C "$repo_root" remote get-url origin >/dev/null 2>&1; then
+        git -C "$repo_root" fetch origin >/dev/null 2>&1 || true
+        default_branch="$(git -C "$repo_root" symbolic-ref --short refs/remotes/origin/HEAD 2>/dev/null || echo origin/main)"
+        git -C "$repo_root" rev-parse --verify -q "$default_branch" >/dev/null && wt_base="$default_branch"
+    fi
     if [[ $dry_run -eq 1 ]]; then
-        echo "dry-run (worktree): git -C $repo_root worktree add $wt_dir -b $worktree_name"
+        echo "dry-run (worktree): git -C $repo_root worktree add $wt_dir -b $worktree_name $wt_base"
     else
         if [[ -e "$wt_dir" ]]; then
             echo "error: worktree dir exists: $wt_dir" >&2
             echo "       stale summon? review it, then: git -C $repo_root worktree remove $wt_dir" >&2
             exit 1
         fi
-        git -C "$repo_root" worktree add "$wt_dir" -b "$worktree_name" >/dev/null 2>&1 \
+        git -C "$repo_root" worktree add "$wt_dir" -b "$worktree_name" "$wt_base" >/dev/null 2>&1 \
             || { echo "error: git worktree add failed (branch '$worktree_name' already exists?)" >&2; exit 1; }
-        echo "worktree: $wt_dir (branch $worktree_name)"
+        echo "worktree: $wt_dir (branch $worktree_name, base $wt_base)"
     fi
     work_dir="$wt_dir"
 fi
