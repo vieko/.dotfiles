@@ -1,5 +1,12 @@
 credentials
 *.log
+# Dev-repo skill symlinks are machine-local (absolute ~/dev paths differ per OS).
+# Regenerate with agents/.agents/setup-skill-symlinks.sh after cloning the dev repos.
+# These must live HERE, not in a .gitignore inside the skills tree: Pi's skill
+# loader honors .gitignore/.ignore/.fdignore files it finds while walking
+# ~/.agents/skills and would silently skip the ignored skills.
+agents/.agents/skills/bonfire
+agents/.agents/skills/anvil
 .config/tmux/plugins/*
 tmux/.config/tmux/plugins/*
 cargo/.cargo/*
