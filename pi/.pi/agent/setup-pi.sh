@@ -71,3 +71,16 @@ mv "$tmp" "$out"
 chmod 600 "$out"
 
 echo "Generated ${out} for host '${host}' from ${fragment}."
+
+# Self-heal the vercel-plugin skills `current` symlink that settings.base.json
+# points at (a plugin update dangles it, silently shrinking the Pi skill set).
+# Login shells also repair this (bash/.bash_profile); doing it here too covers
+# fresh-machine bootstrap. See docs/agent-maintenance.md.
+vercelPluginDir="${HOME}/.claude/plugins/cache/claude-plugins-official/vercel"
+if [[ -d "$vercelPluginDir" && ! -e "$vercelPluginDir/current" ]]; then
+  newestVersion="$(ls -d "$vercelPluginDir"/[0-9]* 2>/dev/null | sort -V | tail -1)"
+  if [[ -n "$newestVersion" ]]; then
+    ln -sfn "${newestVersion##*/}" "$vercelPluginDir/current"
+    echo "Re-pointed vercel-plugin skills symlink: current -> ${newestVersion##*/}"
+  fi
+fi

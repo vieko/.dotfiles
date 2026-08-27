@@ -17,10 +17,9 @@ file is kept current automatically by:
   holds the current pin). Hooks
   `session_compact` for rich Goal/Progress/Next/Blocked summaries and
   `session_shutdown` for a first-user-prompt fallback when compaction is
-  broken or doesn't fire. Note: this runs the tagged release from GitHub,
-  not your local working copy. To test in-flight changes, either bump and
-  retag, or temporarily swap the entry for a local path / restore a dev
-  symlink under `~/.pi/agent/extensions/`.
+  broken or doesn't fire. This runs the tagged release, not the local
+  working copy; testing in-flight changes is covered in
+  `~/.dotfiles/docs/agent-maintenance.md`.
 - **Claude Code adapter** (`~/dev/bonfire/claude/`, wired via a `Stop` hook in
   `~/.claude/settings.json`). Reads `ai-title` entries from the session JSONL.
 - **Skill fallback** (`/skill:bonfire end`) for Codex / OpenCode / any agent
@@ -30,11 +29,6 @@ file is kept current automatically by:
 Opt in per repo with `mkdir <repo>/.bonfire`. Without that directory, all
 adapters and the skill exit silently — globally configured hooks don't
 pollute random projects.
-
-The old `/skill:bonfire start` and `/skill:bonfire handoff` commands are gone.
-`start` was redundant (cwd discovery already loads `.bonfire/index.md`).
-Handoff is better served by Pi's first-party `handoff` extension, by Linear,
-or by `pi @file` injection of a notes file.
 
 Pi's own session tree (`/tree`, `/fork`, `/resume`) is for replaying conversation
 history. Bonfire is for portable project memory across agents/days/contributors.
@@ -257,5 +251,6 @@ platform-specific behavior is required.
 
 Rarely-needed procedures live in `~/.dotfiles/docs/agent-maintenance.md` —
 read it when: a gateway model isn't showing up in `/model` (catalog refresh),
-or the skill set shrinks at startup after a vercel-plugin update (dangling
-`current` symlink).
+vercel-plugin skills seem missing (`current` symlink; now self-healing via
+login shells and `setup-pi.sh`), you need to test in-flight bonfire adapter
+changes, or an old name (forge, bonfire start/handoff) needs context.

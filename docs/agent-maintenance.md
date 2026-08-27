@@ -67,13 +67,41 @@ plugin-managed cache: a plugin update creates a new version dir and removes
 the old one, which leaves `current` dangling (or clobbers it). Symptom: the
 skill set shrinks at startup with no error.
 
-Fix on plugin update — re-point the symlink (no settings edit needed):
+This now self-heals in two places (both act only when `current` is missing
+or dangling):
+
+- `bash/.bash_profile` — every login shell.
+- `pi/.pi/agent/setup-pi.sh` — covers fresh-machine bootstrap.
+
+Manual fix, if ever needed before a login shell runs:
 
 ```
 cd ~/.claude/plugins/cache/claude-plugins-official/vercel
 ln -sfn "$(ls -d [0-9]* | sort -V | tail -1)" current   # newest version dir
 ```
 
-Caveat: `current` is NOT tracked in dotfiles (it lives in the runtime cache),
-so a fresh machine must recreate it after the plugin installs — add the
-`ln -sfn` above to the deployment checklist / bootstrap.
+Caveat: `current` is NOT tracked in dotfiles (it lives in the runtime cache);
+on a fresh machine it appears after the plugin installs + the next login
+shell or `setup-pi.sh` run.
+
+## Testing in-flight bonfire adapter changes
+
+The Pi adapter runs the tagged release from GitHub (the `packages` pin in
+settings), not your local `~/dev/bonfire` working copy. To test in-flight
+changes, either bump and retag, or temporarily swap the entry for a local
+path / restore a dev symlink under `~/.pi/agent/extensions/`. Same pin-bump
+rules as pi-post (see above).
+
+## History & lineage
+
+Context for names that appear in old sessions, bonfire entries, or scratch
+notes. None of this shapes current behavior.
+
+- **bonfire 7.0 removed `/skill:bonfire start` and `/skill:bonfire handoff`.**
+  `start` was redundant: cwd discovery already loads `.bonfire/index.md`.
+  Handoff is better served by Pi's first-party `handoff` extension, by
+  Linear, or by `pi @file` injection of a notes file.
+- **forge is frozen; anvil is its successor.** The old `~/dev/forge/skills/forge`
+  symlink is gone. forge was also a third consumer of the shared spinner-verb
+  dictionary via `~/dev/forge/src/display.ts`; that file is gone, and anvil
+  does not consume the shared verbs.

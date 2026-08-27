@@ -80,6 +80,19 @@ if [[ -z "$AI_GATEWAY_API_KEY" ]] \
     unset _piGatewayKey
 fi
 
+# Self-heal the vercel-plugin skills `current` symlink. Pi's settings point
+# at .../vercel/current/skills; a plugin update replaces the version dir and
+# leaves `current` dangling, which silently shrinks the Pi skill set (no
+# error). Only acts when `current` is missing or dangling. See
+# ~/.dotfiles/docs/agent-maintenance.md.
+_vercelPluginDir="$HOME/.claude/plugins/cache/claude-plugins-official/vercel"
+if [[ -d "$_vercelPluginDir" && ! -e "$_vercelPluginDir/current" ]]; then
+    _newestVersion="$(command ls -d "$_vercelPluginDir"/[0-9]* 2>/dev/null | sort -V | tail -1)"
+    [[ -n "$_newestVersion" ]] && ln -sfn "${_newestVersion##*/}" "$_vercelPluginDir/current"
+    unset _newestVersion
+fi
+unset _vercelPluginDir
+
 # source the user's bashrc if it exists
 if [ -f "$HOME/.bashrc" ]; then
     . "$HOME/.bashrc"

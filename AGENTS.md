@@ -104,8 +104,8 @@ fresh machine, clone the dev repos (`~/dev/bonfire`, `~/dev/anvil`), then run
 `agents/.agents/setup-skill-symlinks.sh` after stowing `agents/`. Other skills are
 self-contained directories.
 
-(`anvil` is the successor to the now-frozen `forge`; the old
-`~/dev/forge/skills/forge` symlink is gone.)
+(Lineage notes for retired names — forge, old bonfire commands — live in
+`docs/agent-maintenance.md`.)
 
 **Bonfire adapter installation:**
 
@@ -147,9 +147,6 @@ Two consumers read it:
   `~/.agents/verbs.json` at runtime. Always current; nothing to regenerate.
 - **Claude Code** — `claude/.claude/settings.json` `spinnerVerbs.verbs`
   (flat array, lives in dotfiles, synced).
-
-(forge was a third consumer via `~/dev/forge/src/display.ts`; it's frozen and
-that file is gone. anvil, its successor, does not consume the shared verbs.)
 
 Claude's synced copy is regenerated from the canonical JSON by
 `agents/.agents/scripts/sync-verbs.mjs`. Both the canonical file and the synced
