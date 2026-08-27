@@ -1,6 +1,7 @@
 ---
 name: performance-mock-review-panel
-description: Simulate the performance reviews Vieko will receive in a Culture Amp cycle — mock peer reviews from each requested peer, a mock manager review with a speculative rating prediction, and a synthesis of themes and blind spots. Use whenever the user asks to mock, simulate, predict, red-team, or rehearse their incoming reviews, asks "what will my peers say about me," "how will Drew review me," "what rating will I get," or wants to prepare for review results or a calibration conversation. Not for writing reviews the user gives to others (use performance-peer-review / performance-upward-review) or their own self review (performance-self-review-ic).
+description: Simulate the reviews Vieko will receive in a Culture Amp cycle — mock peer reviews, a mock manager review with a rating prediction, and a synthesis of themes and blind spots. Use when the user wants to rehearse, red-team, or predict their incoming reviews or rating. Not for writing reviews the user gives to others, or their own self review.
+disable-model-invocation: true
 ---
 
 # Mock Review Panel

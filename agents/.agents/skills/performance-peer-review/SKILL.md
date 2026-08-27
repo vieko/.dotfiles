@@ -1,6 +1,7 @@
 ---
 name: performance-peer-review
-description: Drafts a peer review write-up for Culture Amp using workplace chat and docs context. Use when an employee says "write my peer review," "help me review [name]," "draft a peer review," or wants a first-pass answer to the Culture Amp peer review questions for the Feb 1 – July 31, 2026 cycle.
+description: Drafts a peer review write-up for Culture Amp. Use when the user wants to write or draft a peer review of a colleague, or a first-pass answer to the Culture Amp peer review questions. Cycle dates and template paths live in the skill body.
+disable-model-invocation: true
 compatibility: Any assistant with access to a workplace chat search tool (e.g. Slack, Teams) and/or a docs/wiki search tool (e.g. Notion, Confluence, Google Docs) is sufficient. A page-creation tool for the docs/wiki system is optional — the skill works without it, just skip Step 5.
 ---
 

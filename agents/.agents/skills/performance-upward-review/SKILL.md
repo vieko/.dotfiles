@@ -1,6 +1,7 @@
 ---
 name: performance-upward-review
-description: Drafts a direct report's upward review for Culture Amp using workplace chat and docs context. Use when someone says "write my upward review," "help me review my manager," "draft feedback for my manager," or wants a first-pass answer to the Culture Amp upward review questions for the Feb 2 – July 31, 2026 cycle.
+description: Drafts an upward review of the user's manager for Culture Amp. Use when the user wants to write or draft feedback for their manager, or a first-pass answer to the Culture Amp upward review questions. Cycle dates and template paths live in the skill body.
+disable-model-invocation: true
 compatibility: Any assistant with access to a workplace chat search tool (e.g. Slack, Teams) and/or a docs/wiki search tool (e.g. Notion, Confluence, Google Docs) is sufficient. A page-creation tool for the docs/wiki system is optional — the skill works without it, just skip Step 5.
 ---
 

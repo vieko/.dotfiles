@@ -1,6 +1,7 @@
 ---
 name: performance-self-review-ic
-description: Draft an evidence-grounded individual contributor self review for Culture Amp from PerfBot exports, prior reviews, 1:1 notes, Slack history, and engineering or product delivery records. Use when someone asks to write or revise their self review, performance review, Culture Amp answers, or uploads a PerfBot export for review drafting. Do not use for reviews written by a manager about a direct report.
+description: Draft an evidence-grounded IC self review for Culture Amp. Use when the user wants to write or revise their own self review or Culture Amp answers. Not for reviews written about someone else.
+disable-model-invocation: true
 ---
 
 # Performance Self Review for ICs
