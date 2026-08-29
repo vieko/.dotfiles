@@ -30,8 +30,8 @@ corrected mid-run instead of re-run from scratch).
 ## Vessels
 
 PHYREXIA's binding policy applies (fable Summoner, sonnet-default
-Familiars bound up per phase, luna-default Golems for cross-family
-anti-collusion, sonnet Legions). CHAOS deltas:
+Familiars with escalation only for a named reason, luna-default Golems
+for cross-family anti-collusion, sonnet Legions). CHAOS deltas:
 
 - **Wider pool (unrestricted gateway key):** `kimi-k3:high` and
   `grok-4.5:high` are also enabled here -- they join the consult pool and
