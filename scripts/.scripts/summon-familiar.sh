@@ -87,6 +87,18 @@ brief_abs="$(cd "$(dirname "$brief")" 2>/dev/null && pwd)/$(basename "$brief")" 
 
 model="$(alias_to_model "$vessel")" || { echo "error: unknown vessel alias: $vessel" >&2; exit 2; }
 
+# Escalation nag (2026-08-30 audit): ~11 of 14 script-summoned familiars
+# over three weeks ran -m fable, inverting the sonnet default in practice.
+# The nag is friction at the moment of decision, not a gate -- PHYREXIA.md
+# Vessels has the escalation test (brief tight enough to delegate with a
+# verify gate == sonnet work by definition).
+case "$vessel" in
+    fable|opus)
+        echo "nag: $vessel familiar -- escalation needs a named reason (governance, prod-impact," >&2
+        echo "     ambiguous spec); a tight brief with a verify gate is sonnet work. PHYREXIA.md Vessels." >&2
+        ;;
+esac
+
 # Warn if the resolved model is not in this host's enabled set.
 host_frag="$HOME/.pi/agent/hosts/enabledModels.$(hostname | tr '[:upper:]' '[:lower:]').json"
 if [[ -r "$host_frag" ]] && ! grep -q "\"$model\"" "$host_frag"; then

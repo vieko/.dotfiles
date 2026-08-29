@@ -71,9 +71,15 @@ when the work demands it.
   Escalate to `claude-opus-5:medium` for the gnarliest architecture or
   review passes -- that is its defined job.
 - **Familiar** -- `claude-sonnet-5:medium` by default; the sonnet tier is
-  the organic worker tier (~1/4 of all sessions). Bind UP to the Summoner's
-  vessel when a Familiar owns a whole phase -- scoped PRs still hit judgment
-  traps (lockfile drift, governance paths, prod-impact calls).
+  the organic worker tier (~1/4 of all sessions). Escalate to the
+  Summoner's vessel only when the summoning names WHY judgment dominates
+  (governance paths, prod-impact calls, ambiguous spec the familiar must
+  resolve alone) -- "owns a whole phase" is not by itself a reason. The
+  test: a brief tight enough to delegate with a verify gate is sonnet
+  work by definition. Observed 2026-08-30 audit: ~11 of 14 script-summoned
+  familiars over three weeks ran `-m fable` -- the escalation clause had
+  inverted the default in practice; that is the drift this wording exists
+  to stop.
 - **Golem** -- anvil `--model luna` (gpt-5.6-luna) by default: a
   cross-family golem under an Anthropic reviewer diversifies failure modes
   -- same-family worker+reviewer share blind spots, and the review gate
