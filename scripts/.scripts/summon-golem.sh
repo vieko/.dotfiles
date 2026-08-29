@@ -180,6 +180,9 @@ fi
 pane_id="$(tmux new-window -d -P -F '#{pane_id}' -n "$window" -c "$PWD")"
 sleep 1
 tmux send-keys -t "$pane_id" "bash $(printf '%q' "$runner")" Enter
+# Summon ledger: shared with summon-familiar.sh (one grep audits all
+# constructs' vessel bindings -- see the 2026-08-30 fable-drift audit).
+echo "$(date +%Y-%m-%dT%H:%M:%S%z) kind=golem vessel=$vessel window=$window pane=$pane_id spec=$spec" >> "$LOG_DIR/summons.log"
 echo "summoned: window $window (pane $pane_id), vessel $vessel"
 echo "log: $log"
 echo "result: $result"

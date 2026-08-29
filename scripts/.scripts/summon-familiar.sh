@@ -43,6 +43,16 @@ set -euo pipefail
 
 PROVIDER="vercel-ai-gateway"
 LOG_DIR="$HOME/scratch/logs"
+SUMMON_LEDGER="$LOG_DIR/summons.log"
+
+# Append a one-line summon record. Durable vessel audit trail: pane-mode
+# familiars otherwise leave no record of their binding (the 2026-08-30
+# fable-drift audit had to grep session jsonl to reconstruct three weeks
+# of summons). One line per dispatch; drift shows up in a single grep.
+log_summon() {
+    mkdir -p "$LOG_DIR"
+    echo "$(date +%Y-%m-%dT%H:%M:%S%z) kind=familiar vessel=$vessel model=$model $*" >> "$SUMMON_LEDGER"
+}
 
 alias_to_model() {
     case "$1" in
@@ -183,6 +193,7 @@ if [[ $print_mode -eq 1 ]]; then
     cd "$work_dir"
     nohup "${cmd[@]}" > "$log" 2>&1 &
     pid=$!
+    log_summon "mode=print pid=$pid brief=$brief_abs${worktree_name:+ worktree=$worktree_name}"
     echo "dispatched: pid $pid, vessel $vessel ($model)"
     echo "log: $log"
     sleep 15
@@ -219,8 +230,10 @@ else
     sleep 1
     tmux send-keys -t "$pane_id" "$pi_cmd" Enter
     if [[ -n "$window_name" ]]; then
+        log_summon "mode=window window=$window_name pane=$pane_id brief=$brief_abs${worktree_name:+ worktree=$worktree_name}"
         echo "summoned: window $window_name (pane $pane_id), vessel $vessel ($model)"
     else
+        log_summon "mode=pane pane=$pane_id brief=$brief_abs${worktree_name:+ worktree=$worktree_name}"
         echo "summoned: pane $pane_id, vessel $vessel ($model)"
     fi
     sleep 15
