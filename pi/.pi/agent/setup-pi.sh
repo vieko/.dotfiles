@@ -60,6 +60,19 @@ if [[ -f "$out" ]]; then
     echo "  base: ${basePkgs}" >&2
     echo "  If live is newer (pi update), sync settings.base.json and rerun." >&2
   fi
+  # Warn if model/thinking defaults drifted -- typically a Ctrl+S save from
+  # /model or /thinking that wrote into the live file. Base wins, so the
+  # save silently reverts unless promoted into settings.base.json first.
+  for key in defaultModel defaultThinkingLevel modelThinkingLevels; do
+    liveVal="$(jq -c --arg k "$key" '.[$k]' "$out")"
+    baseVal="$(jq -c --arg k "$key" '.[$k]' "$base")"
+    if [[ "$liveVal" != "$baseVal" ]]; then
+      echo "warning: live ${key} differs from settings.base.json (base wins)." >&2
+      echo "  live: ${liveVal}" >&2
+      echo "  base: ${baseVal}" >&2
+      echo "  If the live value is a Ctrl+S save you want to keep, add it to settings.base.json and rerun." >&2
+    fi
+  done
   tmp2="$(mktemp)"
   jq --slurpfile live "$out" \
     'if $live[0].lastChangelogVersion then .lastChangelogVersion = $live[0].lastChangelogVersion else . end' \
