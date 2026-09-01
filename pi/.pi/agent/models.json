@@ -1,156 +1,93 @@
 {
   "providers": {
     "vercel-ai-gateway": {
+      "models": [
+        {
+          "id": "anthropic/claude-fable-5.1",
+          "name": "Claude Fable 5.1",
+          "reasoning": true,
+          "input": ["text", "image"],
+          "cost": { "input": 10, "output": 50, "cacheRead": 0.25, "cacheWrite": 12.5 },
+          "contextWindow": 1000000,
+          "maxTokens": 128000,
+          "thinkingLevelMap": { "off": null, "xhigh": "xhigh", "max": "max" },
+          "compat": {
+            "forceAdaptiveThinking": true,
+            "vercelGatewayRouting": { "order": ["anthropic"] }
+          }
+        }
+      ],
       "modelOverrides": {
-        "anthropic/claude-opus-4.8": {
-          "compat": {
-            "vercelGatewayRouting": {
-              "order": [
-                "anthropic"
-              ]
-            }
-          }
-        },
-        "anthropic/claude-sonnet-5": {
-          "compat": {
-            "vercelGatewayRouting": {
-              "order": [
-                "anthropic"
-              ]
-            }
-          }
-        },
-        "anthropic/claude-haiku-4.5": {
-          "compat": {
-            "vercelGatewayRouting": {
-              "order": [
-                "anthropic"
-              ]
-            }
-          }
-        },
-        "anthropic/claude-fable-5": {
-          "compat": {
-            "vercelGatewayRouting": {
-              "order": [
-                "anthropic"
-              ]
-            }
-          }
-        },
+        "anthropic/claude-opus-4.8": { "compat": { "vercelGatewayRouting": { "order": ["anthropic"] } } },
+        "anthropic/claude-opus-5": { "compat": { "vercelGatewayRouting": { "order": ["anthropic"] } } },
+        "anthropic/claude-sonnet-5": { "compat": { "vercelGatewayRouting": { "order": ["anthropic"] } } },
+        "anthropic/claude-haiku-4.5": { "compat": { "vercelGatewayRouting": { "order": ["anthropic"] } } },
+        "anthropic/claude-fable-5": { "compat": { "vercelGatewayRouting": { "order": ["anthropic"] } } },
+        "openai/gpt-5.3-codex": { "compat": { "vercelGatewayRouting": { "order": ["openai"] } } },
         "openai/gpt-5.6-sol": {
-          "compat": {
-            "vercelGatewayRouting": {
-              "order": [
-                "openai"
-              ]
-            }
-          }
+          "cost": {
+            "input": 2,
+            "output": 10,
+            "cacheRead": 0.2,
+            "cacheWrite": 2.5,
+            "tiers": [
+              { "inputTokensAbove": 272000, "input": 4, "output": 15, "cacheRead": 0.4, "cacheWrite": 5 }
+            ]
+          },
+          "compat": { "vercelGatewayRouting": { "order": ["openai"] } }
         },
-        "openai/gpt-5.3-codex": {
-          "compat": {
-            "vercelGatewayRouting": {
-              "order": [
-                "openai"
-              ]
-            }
-          }
+        "openai/gpt-5.6-luna": {
+          "cost": {
+            "input": 0.2,
+            "output": 1.2,
+            "cacheRead": 0.02,
+            "cacheWrite": 0.25,
+            "tiers": [
+              { "inputTokensAbove": 272000, "input": 0.4, "output": 1.8, "cacheRead": 0.04, "cacheWrite": 0.5 }
+            ]
+          },
+          "compat": { "vercelGatewayRouting": { "order": ["openai"] } }
         },
-        "zai/glm-5.2": {
-          "compat": {
-            "vercelGatewayRouting": {
-              "order": [
-                "zai"
-              ]
-            }
-          }
+        "openai/gpt-5.6-terra": {
+          "cost": {
+            "input": 2,
+            "output": 12,
+            "cacheRead": 0.2,
+            "cacheWrite": 2.5,
+            "tiers": [
+              { "inputTokensAbove": 272000, "input": 4, "output": 18, "cacheRead": 0.4, "cacheWrite": 5 }
+            ]
+          },
+          "compat": { "vercelGatewayRouting": { "order": ["openai"] } }
         },
-        "moonshotai/kimi-k3": {
-          "compat": {
-            "vercelGatewayRouting": {
-              "order": [
-                "moonshotai"
-              ]
-            }
-          }
+        "zai/glm-5.2": { "compat": { "vercelGatewayRouting": { "order": ["zai"] } } },
+        "zai/glm-5.3": { "compat": { "vercelGatewayRouting": { "order": ["zai"] } } },
+        "zai/glm-5.3-flash": { "compat": { "vercelGatewayRouting": { "order": ["zai"] } } },
+        "moonshotai/kimi-k3": { "compat": { "vercelGatewayRouting": { "order": ["moonshotai"] } } },
+        "minimax/minimax-m3": { "compat": { "vercelGatewayRouting": { "order": ["minimax"] } } },
+        "spacexai/grok-4.5": {
+          "cost": {
+            "input": 2,
+            "output": 6,
+            "cacheRead": 0.3,
+            "cacheWrite": 0,
+            "tiers": [
+              { "inputTokensAbove": 200000, "input": 4, "output": 12, "cacheRead": 0.6, "cacheWrite": 0 }
+            ]
+          },
+          "compat": { "vercelGatewayRouting": { "order": ["spacexai"] } }
         },
-        "xai/grok-4.5": {
+        "spacexai/grok-4.6": {
           "cost": {
             "input": 2,
             "output": 6,
             "cacheRead": 0.5,
             "cacheWrite": 0,
             "tiers": [
-              {
-                "inputTokensAbove": 200000,
-                "input": 4,
-                "output": 12,
-                "cacheRead": 1,
-                "cacheWrite": 0
-              }
+              { "inputTokensAbove": 200000, "input": 4, "output": 12, "cacheRead": 1, "cacheWrite": 0 }
             ]
           },
-          "compat": {
-            "vercelGatewayRouting": {
-              "order": [
-                "xai"
-              ]
-            }
-          }
-        },
-        "anthropic/claude-opus-5": {
-          "compat": {
-            "vercelGatewayRouting": {
-              "order": [
-                "anthropic"
-              ]
-            }
-          }
-        },
-        "openai/gpt-5.6-luna": {
-          "compat": {
-            "vercelGatewayRouting": {
-              "order": [
-                "openai"
-              ]
-            }
-          }
-        },
-        "openai/gpt-5.6-terra": {
-          "compat": {
-            "vercelGatewayRouting": {
-              "order": [
-                "openai"
-              ]
-            }
-          }
-        },
-        "zai/glm-5.3": {
-          "compat": {
-            "vercelGatewayRouting": {
-              "order": [
-                "zai"
-              ]
-            }
-          }
-        },
-        "minimax/minimax-m3": {
-          "compat": {
-            "vercelGatewayRouting": {
-              "order": [
-                "minimax"
-              ]
-            }
-          }
-        },
-        "xai/grok-4.6": {
-          "compat": {
-            "vercelGatewayRouting": {
-              "order": [
-                "xai"
-              ]
-            }
-          }
+          "compat": { "vercelGatewayRouting": { "order": ["spacexai"] } }
         }
       }
     }
