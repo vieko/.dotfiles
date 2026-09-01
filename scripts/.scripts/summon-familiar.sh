@@ -59,7 +59,7 @@ alias_to_model() {
         haiku)  echo "anthropic/claude-haiku-4.5:low" ;;
         sonnet) echo "anthropic/claude-sonnet-5:medium" ;;
         opus)   echo "anthropic/claude-opus-5:medium" ;;
-        fable)  echo "anthropic/claude-fable-5:high" ;;
+        fable)  echo "anthropic/claude-fable-5.1:high" ;;
         luna)   echo "openai/gpt-5.6-luna:max" ;;
         sol)    echo "openai/gpt-5.6-sol:max" ;;
         glm)    echo "zai/glm-5.2:medium" ;;

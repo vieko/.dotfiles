@@ -66,7 +66,7 @@ host's work profile (production TS monorepo, gated prod migrations,
 governance-heavy coordination). Defaults, not law -- override per summoning
 when the work demands it.
 
-- **Summoner** -- `claude-fable-5:high` (the Pi default; the seat opus held
+- **Summoner** -- `claude-fable-5.1:high` (the Pi default; the seat opus held
   before it). The judgment seat gets the daily-driver frontier vessel.
   Escalate to `claude-opus-5:medium` for the gnarliest architecture or
   review passes -- that is its defined job.

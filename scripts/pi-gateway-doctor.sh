@@ -27,13 +27,13 @@
 #
 # Tunables (env or flags):
 #   --provider <id>      target provider        (default: vercel-ai-gateway)
-#   --model <id>         provider-local model id (default: anthropic/claude-fable-5)
+#   --model <id>         provider-local model id (default: anthropic/claude-fable-5.1)
 #   --gateway-env <VAR>  env var holding the gateway key (default: AI_GATEWAY_API_KEY)
 
 set -euo pipefail
 
 PROVIDER="${PROVIDER:-vercel-ai-gateway}"
-MODEL="${MODEL:-anthropic/claude-fable-5}"
+MODEL="${MODEL:-anthropic/claude-fable-5.1}"
 GATEWAY_ENV="${GATEWAY_ENV:-AI_GATEWAY_API_KEY}"
 APPLY=0
 
