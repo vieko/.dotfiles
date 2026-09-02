@@ -147,19 +147,21 @@ result: \$RESULT
 log: \$LOG
 worktree: see anvil status (prune after merge)
 Gate green is a claim, not a review -- run the review pass before integrating."
-    # Retry with backoff. Observed 2026-09-02 (golem-3251, golem-3251c): the
-    # first send right after anvil returns was SIGKILLed ("Killed: 9") in both
-    # runs, while the same command succeeds in a plain shell seconds later.
-    # Source not pinned (not anvil's code, not pi-post, not the runner); a
-    # short wait past anvil's exit dodges it.
+    # Retry with backoff. Observed 2026-09-02 (golem-3251, -3251c, -3256):
+    # every send in the ~20s after anvil returns is SIGKILLed ("Killed: 9",
+    # exit 137), yet the same command from the same shell succeeds a few
+    # minutes later. Something anvil leaves behind outlives it briefly and
+    # kills new node processes in the shell. Source not pinned (not anvil's
+    # own code, not pi-post, not the runner). Six attempts spanning ~105s
+    # cover the observed window; 4 attempts over 20s did not (golem-3256).
     local try rc
-    for try in 1 2 3 4; do
+    for try in 1 2 3 4 5 6; do
         $pipost_cmd send --to $(printf '%q' "$report_to") --from $(printf '%q' "golem:$name") --body "\$body" && return 0
         rc=\$?
-        echo "warn: completion ping attempt \$try failed (exit \$rc); retrying in \$((try * 2))s" >&2
-        sleep \$((try * 2))
+        echo "warn: completion ping attempt \$try failed (exit \$rc); retrying in \$((try * 5))s" >&2
+        sleep \$((try * 5))
     done
-    echo "warn: completion ping to $report_to failed after 4 attempts -- report manually" >&2
+    echo "warn: completion ping to $report_to failed after 6 attempts (~105s) -- report manually" >&2
 }
 trap 'ping "\${ANVIL_STATUS:-interrupted}"' EXIT
 EOF
