@@ -142,12 +142,24 @@ ping() {
         verdict="\$(jq -r '"passed=\(.passed) attempts=\(.attempts) branch=\(.branch // "?") gate[\(.gate.source // "?")]=\((.gate.commands // []) | join("; "))" + (if .errors then "\nerrors: \(.errors)" else "" end)' "\$RESULT" 2>/dev/null)" \\
             || verdict="result JSON present but unparseable: \$RESULT"
     fi
-    $pipost_cmd send --to $(printf '%q' "$report_to") --from $(printf '%q' "golem:$name") --body "golem $name (anvil) finished: exit \${status}. \${verdict}
+    local body="golem $name (anvil) finished: exit \${status}. \${verdict}
 result: \$RESULT
 log: \$LOG
 worktree: see anvil status (prune after merge)
-Gate green is a claim, not a review -- run the review pass before integrating." \\
-        || echo "warn: completion ping to $report_to failed -- report manually" >&2
+Gate green is a claim, not a review -- run the review pass before integrating."
+    # Retry with backoff. Observed 2026-09-02 (golem-3251, golem-3251c): the
+    # first send right after anvil returns was SIGKILLed ("Killed: 9") in both
+    # runs, while the same command succeeds in a plain shell seconds later.
+    # Source not pinned (not anvil's code, not pi-post, not the runner); a
+    # short wait past anvil's exit dodges it.
+    local try rc
+    for try in 1 2 3 4; do
+        $pipost_cmd send --to $(printf '%q' "$report_to") --from $(printf '%q' "golem:$name") --body "\$body" && return 0
+        rc=\$?
+        echo "warn: completion ping attempt \$try failed (exit \$rc); retrying in \$((try * 2))s" >&2
+        sleep \$((try * 2))
+    done
+    echo "warn: completion ping to $report_to failed after 4 attempts -- report manually" >&2
 }
 trap 'ping "\${ANVIL_STATUS:-interrupted}"' EXIT
 EOF
