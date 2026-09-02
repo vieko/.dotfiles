@@ -184,3 +184,16 @@ the layout.
   typecheck blind spot: vitest transpiles without checking, `next build`
   skips test files. Moot per-repo once a `typecheck` script exists for
   auto-detection to find (gtm: retired -- GTMENG-1994 closed, all apps gated).
+
+- **Gate commands run in the golem's login-shell env, not the summoner's
+  bash tool.** `CDPATH` is set there, so `cd` echoes the resolved path;
+  a `$(cd "$d" && cmd | grep -c x)` capture comes back as two lines and
+  `[ "$n" -le 2 ]` dies with "integer expression expected". Observed
+  2026-09-02 (golem-3251c): the gate was validated green in the summoner's
+  tool, burned all three attempts in the golem, and the golem correctly
+  diagnosed it and refused to touch the gate. Never `cd` inside a captured
+  substitution in a gate; pass paths to the tool (`tsc -p "$d/tsconfig.json"`)
+  or `unset CDPATH` first, as `scripts/verify-athena.sh` does. Validate
+  gates in a login shell (`tmux new-window`), not only in the bash tool.
+  Corollary: a gate the golem cannot satisfy is a summoner bug; read the
+  golem's diagnosis before re-dispatching.
