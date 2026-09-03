@@ -197,3 +197,36 @@ the layout.
   gates in a login shell (`tmux new-window`), not only in the bash tool.
   Corollary: a gate the golem cannot satisfy is a summoner bug; read the
   golem's diagnosis before re-dispatching.
+
+- **No code-like text on a command line. This host runs SentinelOne.** It
+  SIGKILLs processes whose argv looks like obfuscated shell: `grep -E`,
+  `sed "s/^/+/"`, `xargs`, `$(...)`, long regexes. The kill leaves no
+  kernel or syspolicyd trace, just `Killed: 9` / exit 137, and it is
+  content-triggered, so retries never help. Observed 2026-09-02 on every
+  golem completion ping (bodies carried the gate commands), on
+  `python3 - "$body"` with 2.5 KB of markdown, and reproduced on demand
+  with `pi-post send --body <2 KB shell>` (dies) vs the same over stdin
+  (delivers). Pass such content via stdin or a file: `printf '%s' "$x" |
+  pi-post send`, `python3 script.py` or a heredoc on stdin, `gh pr edit
+  --body-file`, `node script.mjs` not `node -e '<long>'`. summon-golem.sh
+  does this for the ping since ec819d4. Symptom to recognize: a fresh
+  process dies instantly, the same tool works with a short argument.
+
+- **A golem gate for a shared package builds its consumers.** golem-3256
+  fixed `import('./utils')` to `import('./utils.js')` in
+  `packages/bounty-scoring` (correct for tsc under NodeNext, correct under
+  vitest) and the gate passed typecheck + lint + tests. gtm-workflows'
+  Turbopack build then failed: raw `.ts` consumer, no `.js` remap. Caught
+  by the Vercel review bot, not the gate. When a spec touches source (not
+  tests) in `packages/*`, add `pnpm --filter <consumer> build` for at least
+  one bundler consumer to `--verify`, or the golem is proving the wrong
+  thing.
+
+- **Scry by the variable the decision turns on, not the one at hand.**
+  GTMENG-3262 measured lint memory on the four apps with the most
+  warnings, found lead-web at 2.9 GB, and called it the outlier. Nine apps
+  set `parserOptions.project`; athena was 4.4 GB. Dropping the CI heap
+  override on that reading OOM-killed the next wide PR. The cheap fix was
+  `grep -l 'project:' **/eslint.config.mjs` before measuring anything. A
+  sample chosen for convenience answers a different question than the one
+  being asked.
