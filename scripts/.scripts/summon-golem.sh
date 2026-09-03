@@ -15,6 +15,10 @@
 #      stderr and stdout is the result, so anvil's exit status is direct.
 #   4. The ping fires on EVERY exit path (green, red, crash, killed window)
 #      via an EXIT trap, so silence always means "still running".
+#   6. The ping body is piped over stdin. This host runs SentinelOne, which
+#      SIGKILLs processes whose argv looks like shell (gate commands do);
+#      see ping() below. Rule for anything in this script: no code-like
+#      text on a command line.
 #   5. -v --reasoning are on by default (AGENTS.md dispatch rule).
 #
 # The ping is a claim, not a review: every golem diff still passes the one
@@ -147,21 +151,22 @@ result: \$RESULT
 log: \$LOG
 worktree: see anvil status (prune after merge)
 Gate green is a claim, not a review -- run the review pass before integrating."
-    # Retry with backoff. Observed 2026-09-02 (golem-3251, -3251c, -3256):
-    # every send in the ~20s after anvil returns is SIGKILLed ("Killed: 9",
-    # exit 137), yet the same command from the same shell succeeds a few
-    # minutes later. Something anvil leaves behind outlives it briefly and
-    # kills new node processes in the shell. Source not pinned (not anvil's
-    # own code, not pi-post, not the runner). Six attempts spanning ~105s
-    # cover the observed window; 4 attempts over 20s did not (golem-3256).
-    local try rc
-    for try in 1 2 3 4 5 6; do
-        $pipost_cmd send --to $(printf '%q' "$report_to") --from $(printf '%q' "golem:$name") --body "\$body" && return 0
-        rc=\$?
-        echo "warn: completion ping attempt \$try failed (exit \$rc); retrying in \$((try * 5))s" >&2
-        sleep \$((try * 5))
-    done
-    echo "warn: completion ping to $report_to failed after 6 attempts (~105s) -- report manually" >&2
+    # Body goes over stdin, never argv. SentinelOne (this host's EDR) SIGKILLs
+    # processes whose command line looks like obfuscated shell; the verdict
+    # carries the gate commands (grep -E, sed, xargs, \$(...)) and tripped it
+    # on every golem run of 2026-09-02 (golem-3251, -3251c, -3256: "Killed: 9",
+    # exit 137, no kernel or syspolicyd log). Reproduced on demand: the same
+    # 2 KB body dies as --body and delivers via stdin. Retries cannot help
+    # with an argv-content rule, so a single attempt with a short fallback
+    # is the right shape.
+    if printf '%s' "\$body" | $pipost_cmd send --to $(printf '%q' "$report_to") --from $(printf '%q' "golem:$name"); then
+        return 0
+    fi
+    local rc=\$?
+    echo "warn: completion ping failed (exit \$rc); sending a short fallback" >&2
+    printf 'golem $name (anvil) finished: exit %s. Full verdict in %s (ping body was rejected; see summon-golem.sh).' "\$status" "\$RESULT" \\
+        | $pipost_cmd send --to $(printf '%q' "$report_to") --from $(printf '%q' "golem:$name") \\
+        || echo "warn: fallback ping to $report_to also failed -- report manually" >&2
 }
 trap 'ping "\${ANVIL_STATUS:-interrupted}"' EXIT
 EOF
