@@ -214,20 +214,6 @@ the layout.
   Corollary: a gate the golem cannot satisfy is a summoner bug; read the
   golem's diagnosis before re-dispatching.
 
-- **No code-like text on a command line. This host runs SentinelOne.** It
-  SIGKILLs processes whose argv looks like obfuscated shell: `grep -E`,
-  `sed "s/^/+/"`, `xargs`, `$(...)`, long regexes. The kill leaves no
-  kernel or syspolicyd trace, just `Killed: 9` / exit 137, and it is
-  content-triggered, so retries never help. Observed 2026-09-02 on every
-  golem completion ping (bodies carried the gate commands), on
-  `python3 - "$body"` with 2.5 KB of markdown, and reproduced on demand
-  with `pi-post send --body <2 KB shell>` (dies) vs the same over stdin
-  (delivers). Pass such content via stdin or a file: `printf '%s' "$x" |
-  pi-post send`, `python3 script.py` or a heredoc on stdin, `gh pr edit
-  --body-file`, `node script.mjs` not `node -e '<long>'`. summon-golem.sh
-  does this for the ping since ec819d4. Symptom to recognize: a fresh
-  process dies instantly, the same tool works with a short argument.
-
 - **A golem gate for a shared package builds its consumers.** golem-3256
   fixed `import('./utils')` to `import('./utils.js')` in
   `packages/bounty-scoring` (correct for tsc under NodeNext, correct under
