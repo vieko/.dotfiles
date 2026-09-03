@@ -57,6 +57,22 @@ truth.
   review catches what no gate can (planted probe strings, contracts that
   enshrine the bug, prose that satisfies a grep).
 
+## Host hazards
+
+- **SentinelOne SIGKILLs code-like argv.** This host runs SentinelOne
+  (sentineld + friends); it kills processes whose command line looks like
+  obfuscated shell -- instant "Killed: 9" (exit 137), nothing in the
+  kernel or syspolicyd logs, and no error a retry can get past (content
+  rule, not a race). Observed 2026-09-02: golem completion pings carrying
+  gate commands (grep -E, sed, xargs, `$(...)`) in a `--body` argument
+  died on every attempt across three runs; the identical 2 KB body
+  delivered over stdin; a `python3 -` call with 2.5 KB of markdown argv
+  died the same way (so not node- or anvil-specific). The rule: **never
+  put code-like or long generated text on a command line -- pass it via
+  stdin or a file.** Applies to `pi-post send --body`, `node -e`,
+  `python3 - "$x"`, `gh pr edit --body`, and anything similar.
+  summon-golem.sh pipes its ping body over stdin since ec819d4.
+
 ## Vessels
 
 Which model a construct is bound into. Available vessels are per-host
