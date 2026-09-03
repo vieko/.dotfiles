@@ -174,6 +174,35 @@ the layout.
   wiped another session's uncommitted work mid-build). Before editing in a
   main checkout, check the panes for other live sessions in that repo; when
   in doubt, branch into `~/dev/<repo>-worktrees/<issue>`.
+- **The Summoner's own tool commands are the leak, not just constructs.**
+  Three times on 2026-09-03 a summoner command landed in the shared
+  `~/dev/gtm` checkout while every construct was correctly isolated:
+  `git stash` / `stash pop` around an inspection popped another session's
+  entry (`refs/stash` is one ref for ALL worktrees of a repo, so a no-op
+  stash followed by a pop takes whatever is on top); the same pair a second
+  time in an anvil worktree; and a `cd <worktree> &&`-less multi-line
+  command whose `cd` failed, so `prettier --write` ran on `main`'s file.
+  Rules: never `git stash` in a repo with more than one worktree; inspect
+  other refs with `git show <ref>:<path>` or a throwaway
+  `git worktree add /tmp/x <ref>` (removed after), never `git checkout` in
+  the shared checkout; every multi-step bash tool call starts with
+  `cd <worktree> && ...` as one chain, so a failed `cd` stops the chain
+  instead of running the rest in the previous cwd.
+
+- **A gate must be satisfiable inside `--scope`, against the fork SHA.**
+  golem-14121 (2026-09-03) had `--scope apps/dse-platform/**` and a
+  `comment-lint --all` gate; `main` had grown two stale paths in
+  `apps/athena` between the summoner's zero-findings check and the fork, so
+  the only way to green was to edit out of scope, and anvil voided a
+  correct run. Same day, a `git diff --name-only <fork> | xargs prettier
+  --check` gate fed moved `.png` files to prettier, which errors on files
+  with no parser; the golem "fixed" `.prettierignore` (config drift to
+  satisfy a gate). Before dispatch: run every gate on the fork SHA itself
+  and confirm green; scope repo-wide lints to the changed files or the
+  scope; mirror CI's filters (quality.yml checks `*.ts *.tsx *.md` only).
+  A gate the golem satisfied by touching config or out-of-scope files is a
+  summoner bug, and the diff needs that part reverted before review.
+
 - **Report-back targets are concrete addresses, never directory paths.**
   The summon scripts inject the target (`s-...` from `PI_SESSION_ADDRESS`)
   at dispatch; any hand-written brief follows the same rule. Observed
