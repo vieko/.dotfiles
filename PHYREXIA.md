@@ -99,9 +99,13 @@ when the work demands it.
 - **Golem** -- anvil `--model luna` (gpt-5.6-luna) by default: a
   cross-family golem under an Anthropic reviewer diversifies failure modes
   -- same-family worker+reviewer share blind spots, and the review gate
-  exists to catch "the test was lying." Bind `--model opus` for deep
-  refactors where raw capability dominates. Note: anvil's aliases are
-  `haiku/sonnet/opus/luna` only -- there is no `fable` alias.
+  exists to catch "the test was lying." Bind `--model fable` for deep
+  refactors where raw capability dominates. Since anvil#37 the ladder's
+  strong tier (where a failed luna attempt escalates to) is `fable`, not
+  `opus`: on anvil's token profile (~65% cache reads) fable-5.1 costs the
+  same per strong rung as opus-5. Aliases: `haiku/sonnet/opus/fable/luna/
+  terra/glm`. The effort climb on the strong rung is a mid-conversation
+  effort change on one cache-warm session (pi 0.85 `supportsMidConvoEffort`).
 - **Legion** -- `sonnet` members (`haiku` only for purely mechanical
   batches -- historically unused). At a 3-member ceiling, member cost is
   noise next to merge-conflict and review cost; the gate + review carry
