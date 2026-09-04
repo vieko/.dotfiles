@@ -27,7 +27,7 @@
 # Usage:
 #   summon-golem.sh [-m alias] [-n] [-R] <name> <spec-or-prompt> [anvil args...]
 #
-#   -m alias   vessel: haiku|sonnet|opus|luna (anvil's aliases; no fable).
+#   -m alias   vessel: haiku|sonnet|opus|fable|luna|terra|glm (anvil's aliases).
 #              Default: luna (PHYREXIA golem binding -- cross-family worker
 #              under an Anthropic reviewer diversifies failure modes)
 #   -n         dry run: print the runner script and tmux command, run nothing
@@ -53,7 +53,7 @@ PIPOST_CACHE="$HOME/.pi/agent/git/github.com/vieko/pi-post/bin/pi-post.mjs"  # l
 
 alias_ok() {
     case "$1" in
-        haiku|sonnet|opus|luna) return 0 ;;
+        haiku|sonnet|opus|fable|luna|terra|glm) return 0 ;;
         *) return 1 ;;
     esac
 }
@@ -74,7 +74,7 @@ shift $((OPTIND - 1))
 
 [[ $# -ge 2 ]] || { echo "usage: summon-golem.sh [-m alias] [-n] [-R] <name> <spec-or-prompt> [anvil args...]" >&2; exit 2; }
 
-alias_ok "$vessel" || { echo "error: unknown vessel alias: $vessel (anvil aliases: haiku|sonnet|opus|luna)" >&2; exit 2; }
+alias_ok "$vessel" || { echo "error: unknown vessel alias: $vessel (anvil aliases: haiku|sonnet|opus|fable|luna|terra|glm)" >&2; exit 2; }
 
 name="$1"; spec="$2"; shift 2
 
