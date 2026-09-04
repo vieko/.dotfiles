@@ -32,7 +32,8 @@
     "thinkingText": "comment",
 
     "selectedBg": "bgSelection",
-    "scrollbarThumb": "gutter",
+    "scrollbarTrack": "bgSelection",
+    "scrollbarThumb": "comment",
     "searchMatchBg": "#4d3a24",
     "searchMatchText": "",
     "userMessageBg": "bgSelection",
