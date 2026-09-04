@@ -3,7 +3,12 @@
     "vercel-ai-gateway": {
       "modelOverrides": {
         "anthropic/claude-opus-4.8": { "compat": { "vercelGatewayRouting": { "order": ["anthropic"] } } },
-        "anthropic/claude-opus-5": { "compat": { "vercelGatewayRouting": { "order": ["anthropic"] } } },
+        "anthropic/claude-opus-5": {
+          "compat": {
+            "supportsMidConvoEffort": true,
+            "vercelGatewayRouting": { "order": ["anthropic"] }
+          }
+        },
         "anthropic/claude-sonnet-5": { "compat": { "vercelGatewayRouting": { "order": ["anthropic"] } } },
         "anthropic/claude-haiku-4.5": { "compat": { "vercelGatewayRouting": { "order": ["anthropic"] } } },
         "anthropic/claude-fable-5": { "compat": { "vercelGatewayRouting": { "order": ["anthropic"] } } },
