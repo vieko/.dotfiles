@@ -203,6 +203,19 @@ the layout.
   A gate the golem satisfied by touching config or out-of-scope files is a
   summoner bug, and the diff needs that part reverted before review.
 
+- **A gate must pass on a clean run, not just fail on a dirty one.**
+  golem-3307 (2026-09-03) had a gate written as
+  `tsc --noEmit | grep -v validator | { ! grep -q error; }` under
+  `set -o pipefail`. On a clean tree `grep -v` emits nothing and exits 1,
+  pipefail propagates it, and the gate reads "failed" precisely when the
+  code is correct; the golem burned its retries chasing a phantom. Grep
+  pipelines are exit-code traps: `grep -v` fails on empty output, `grep -q`
+  fails on no match, `! cmd` inside a group does not un-fail the pipe.
+  Write gates as explicit counts (`n=$(tsc ... | grep -vc validator);
+  [ "$n" -eq 0 ]`) or a script that exits on a boolean it computed, run
+  the gate on the fork SHA before dispatch, and check it is green there,
+  not only that it goes red when you plant an error.
+
 - **Report-back targets are concrete addresses, never directory paths.**
   The summon scripts inject the target (`s-...` from `PI_SESSION_ADDRESS`)
   at dispatch; any hand-written brief follows the same rule. Observed
