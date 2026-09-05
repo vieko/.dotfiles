@@ -25,7 +25,7 @@
 # review pipeline (PHYREXIA.md standing invariant).
 #
 # Usage:
-#   summon-golem.sh [-m alias] [-n] [-R] <name> <spec-or-prompt> [anvil args...]
+#   summon-golem.sh [-m alias] [-n] [-R] [-k] <name> <spec-or-prompt> [anvil args...]
 #
 #   -m alias   vessel: haiku|sonnet|opus|fable|astra|luna|terra|glm (anvil's aliases;
 #              astra needs anvil >= 0.3.1).
@@ -35,6 +35,10 @@
 #   -R         no report-back: skip the completion ping. Deliberate opt-out
 #              only -- the golem then finishes silently (golem-2055 mode:
 #              poll the pane or anvil status)
+#   -k         keep the window open after a green exit. Default: a green
+#              golem closes its window 10s after the ping (the log + result
+#              JSON on disk are the forensic artifacts; the pane adds
+#              nothing). Red or crashed golems always keep the window.
 #
 #   <name>     construct name; window becomes golem-<name> (convention:
 #              the issue number, e.g. 2055)
@@ -44,7 +48,8 @@
 #
 # Requires an active tmux session. The window opens with a login shell
 # (env hydration), then runs a generated runner script; the pane stays open
-# after completion as the forensic artifact.
+# after a red exit for inspection and closes itself after a green one (-k
+# to keep it).
 
 set -euo pipefail
 
@@ -62,18 +67,20 @@ alias_ok() {
 vessel="luna"
 dry_run=0
 no_report=0
+keep_window=0
 
-while getopts "m:nR" opt; do
+while getopts "m:nRk" opt; do
     case "$opt" in
         m) vessel="$OPTARG" ;;
         n) dry_run=1 ;;
         R) no_report=1 ;;
+        k) keep_window=1 ;;
         *) exit 2 ;;
     esac
 done
 shift $((OPTIND - 1))
 
-[[ $# -ge 2 ]] || { echo "usage: summon-golem.sh [-m alias] [-n] [-R] <name> <spec-or-prompt> [anvil args...]" >&2; exit 2; }
+[[ $# -ge 2 ]] || { echo "usage: summon-golem.sh [-m alias] [-n] [-R] [-k] <name> <spec-or-prompt> [anvil args...]" >&2; exit 2; }
 
 alias_ok "$vessel" || { echo "error: unknown vessel alias: $vessel (anvil aliases: haiku|sonnet|opus|fable|astra|luna|terra|glm)" >&2; exit 2; }
 
@@ -180,7 +187,12 @@ $anvil_cmd >"\$RESULT" 2> >(tee "\$LOG" >&2)
 ANVIL_STATUS=\$?
 ping "\$ANVIL_STATUS"
 echo
-echo "[DONE] $window finished (exit \$ANVIL_STATUS). Pane stays open; result: \$RESULT"
+if [[ \$ANVIL_STATUS -eq 0 && $keep_window -eq 0 && -n "\${TMUX_PANE:-}" ]]; then
+    echo "[DONE] $window green. Closing this window in 10s (Ctrl-C to keep). result: \$RESULT"
+    sleep 10 && tmux kill-window -t "\$TMUX_PANE"
+else
+    echo "[DONE] $window finished (exit \$ANVIL_STATUS). Pane stays open; result: \$RESULT"
+fi
 EOF
 } > "$runner"
 chmod +x "$runner"
