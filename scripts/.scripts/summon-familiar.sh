@@ -15,7 +15,7 @@
 # Usage:
 #   summon-familiar.sh [-m alias] [-P] [-n] [-R] [-w name] [-W name] <brief-path> [prompt override]
 #
-#   -m alias   vessel: haiku|sonnet|opus|fable|luna|sol|glm (default: sonnet)
+#   -m alias   vessel: haiku|sonnet|opus|fable|luna|sol|astra|glm (default: sonnet)
 #   -P         print mode: in-band `pi -p` dispatch (nohup + log) instead of
 #              an interactive tmux pane
 #   -W name    construct window: open a new tmux window named <name>
@@ -62,6 +62,7 @@ alias_to_model() {
         fable)  echo "anthropic/claude-fable-5.1:high" ;;
         luna)   echo "openai/gpt-5.6-luna:max" ;;
         sol)    echo "openai/gpt-5.6-sol:max" ;;
+        astra)  echo "openai/gpt-6-astra:high" ;;
         glm)    echo "zai/glm-5.2:medium" ;;
         *)      return 1 ;;
     esac
