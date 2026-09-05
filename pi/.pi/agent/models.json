@@ -111,7 +111,7 @@
               { "inputTokensAbove": 272000, "input": 20, "output": 75, "cacheRead": 2, "cacheWrite": 25 }
             ]
           },
-          "compat": { "vercelGatewayRouting": { "order": ["openai"] } }
+          "compat": { "forceAdaptiveThinking": true, "vercelGatewayRouting": { "order": ["openai"] } }
         }
       ]
     }
