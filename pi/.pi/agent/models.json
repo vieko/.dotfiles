@@ -55,6 +55,23 @@
           },
           "compat": { "vercelGatewayRouting": { "order": ["openai"] } }
         },
+        "openai/gpt-6-astra": {
+          "thinkingLevelMap": {
+            "off": null,
+            "minimal": null,
+            "low": "low",
+            "medium": "medium",
+            "high": "high",
+            "xhigh": "xhigh",
+            "max": "max"
+          },
+          "cost": {
+            "tiers": [
+              { "inputTokensAbove": 272000, "input": 20, "output": 75, "cacheRead": 2, "cacheWrite": 25 }
+            ]
+          },
+          "compat": { "forceAdaptiveThinking": true, "vercelGatewayRouting": { "order": ["openai"] } }
+        },
         "zai/glm-5.2": { "compat": { "vercelGatewayRouting": { "order": ["zai"] } } },
         "zai/glm-5.3": { "compat": { "vercelGatewayRouting": { "order": ["zai"] } } },
         "zai/glm-5.3-flash": { "compat": { "vercelGatewayRouting": { "order": ["zai"] } } },
@@ -84,36 +101,7 @@
           },
           "compat": { "vercelGatewayRouting": { "order": ["spacexai"] } }
         }
-      },
-      "models": [
-        {
-          "id": "openai/gpt-6-astra",
-          "name": "GPT-6 Astra",
-          "reasoning": true,
-          "input": ["text", "image"],
-          "contextWindow": 1050000,
-          "maxTokens": 128000,
-          "thinkingLevelMap": {
-            "off": null,
-            "minimal": null,
-            "low": "low",
-            "medium": "medium",
-            "high": "high",
-            "xhigh": "xhigh",
-            "max": "max"
-          },
-          "cost": {
-            "input": 10,
-            "output": 50,
-            "cacheRead": 1,
-            "cacheWrite": 12.5,
-            "tiers": [
-              { "inputTokensAbove": 272000, "input": 20, "output": 75, "cacheRead": 2, "cacheWrite": 25 }
-            ]
-          },
-          "compat": { "forceAdaptiveThinking": true, "vercelGatewayRouting": { "order": ["openai"] } }
-        }
-      ]
+      }
     }
   }
 }
