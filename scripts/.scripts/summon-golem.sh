@@ -25,7 +25,7 @@
 # review pipeline (PHYREXIA.md standing invariant).
 #
 # Usage:
-#   summon-golem.sh [-m alias] [-n] [-R] [-k] <name> <spec-or-prompt> [anvil args...]
+#   summon-golem.sh [-m alias] [-e K=V]... [-n] [-R] [-k] <name> <spec-or-prompt> [anvil args...]
 #
 #   -m alias   vessel: haiku|sonnet|opus|fable|astra|luna|terra|glm (anvil's aliases;
 #              astra needs anvil >= 0.3.1).
@@ -35,6 +35,16 @@
 #   -R         no report-back: skip the completion ping. Deliberate opt-out
 #              only -- the golem then finishes silently (golem-2055 mode:
 #              poll the pane or anvil status)
+#   -e K=V     export an env var into the golem's process tree only (anvil,
+#              its worktree install, the agent's shell, the gate). Repeatable.
+#              Canonical use: `-e npm_config_min_release_age=0` when the target
+#              repo's lockfile pins a package inside npm's release cooldown
+#              (npm/cli#9715: with omit-lockfile-registry-resolved the
+#              min-release-age-exclude list is ignored at extract time, so a
+#              fresh worktree install fails with ETARGET). Scoped here, not in
+#              .npmrc, so the cooldown stays on for everything else. Review the
+#              lockfile diff of such a run: transitives inside the cooldown
+#              can move too.
 #   -k         keep the window open after a green exit. Default: a green
 #              golem closes its window 10s after the ping (the log + result
 #              JSON on disk are the forensic artifacts; the pane adds
@@ -68,10 +78,13 @@ vessel="luna"
 dry_run=0
 no_report=0
 keep_window=0
+golem_env=()
 
-while getopts "m:nRk" opt; do
+while getopts "m:e:nRk" opt; do
     case "$opt" in
         m) vessel="$OPTARG" ;;
+        e) [[ "$OPTARG" == *=* ]] || { echo "error: -e expects KEY=VALUE, got: $OPTARG" >&2; exit 2; }
+           golem_env+=("$OPTARG") ;;
         n) dry_run=1 ;;
         R) no_report=1 ;;
         k) keep_window=1 ;;
@@ -80,7 +93,7 @@ while getopts "m:nRk" opt; do
 done
 shift $((OPTIND - 1))
 
-[[ $# -ge 2 ]] || { echo "usage: summon-golem.sh [-m alias] [-n] [-R] [-k] <name> <spec-or-prompt> [anvil args...]" >&2; exit 2; }
+[[ $# -ge 2 ]] || { echo "usage: summon-golem.sh [-m alias] [-e K=V]... [-n] [-R] [-k] <name> <spec-or-prompt> [anvil args...]" >&2; exit 2; }
 
 alias_ok "$vessel" || { echo "error: unknown vessel alias: $vessel (anvil aliases: haiku|sonnet|opus|fable|astra|luna|terra|glm)" >&2; exit 2; }
 
@@ -142,6 +155,9 @@ RESULT=$(printf '%q' "$result")
 LOG=$(printf '%q' "$log")
 PINGED=0
 EOF
+    for kv in "${golem_env[@]+"${golem_env[@]}"}"; do
+        printf 'export %s=%q   # -e: scoped to this golem\n' "${kv%%=*}" "${kv#*=}"
+    done
     if [[ $no_report -eq 0 ]]; then
         cat <<EOF
 
@@ -214,7 +230,7 @@ sleep 1
 tmux send-keys -t "$pane_id" "bash $(printf '%q' "$runner")" Enter
 # Summon ledger: shared with summon-familiar.sh (one grep audits all
 # constructs' vessel bindings -- see the 2026-08-30 fable-drift audit).
-echo "$(date +%Y-%m-%dT%H:%M:%S%z) kind=golem vessel=$vessel window=$window pane=$pane_id spec=$spec" >> "$LOG_DIR/summons.log"
+echo "$(date +%Y-%m-%dT%H:%M:%S%z) kind=golem vessel=$vessel window=$window pane=$pane_id spec=$spec${golem_env[*]+ env=${golem_env[*]}}" >> "$LOG_DIR/summons.log"
 echo "summoned: window $window (pane $pane_id), vessel $vessel"
 echo "log: $log"
 echo "result: $result"
