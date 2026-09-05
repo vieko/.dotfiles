@@ -145,6 +145,17 @@ else
     exit 1
 fi
 
+# Edit-tool shape guard (2026-09-05 week-36 audit): sonnet-5 familiars lost 18
+# of 134 edit calls to schema validation -- arguments arrived as
+# `edits: [{}]` or a trailing edit without newText; fable had 0 of 193. One
+# wasted turn each. Injected for sonnet only; the summoner's tail check
+# (below) still catches the generic failure modes.
+case "$model" in
+    anthropic/claude-sonnet-5*)
+        prompt+=" EDIT TOOL SHAPE: every entry in edits[] must be a complete object with both oldText and newText as strings; never emit an empty {} entry or an entry missing newText. If an edit tool call fails validation, re-read the file region and resend one complete edit at a time."
+        ;;
+esac
+
 # -w: isolate a file-touching familiar in its own worktree.
 work_dir="$PWD"
 if [[ -n "$worktree_name" ]]; then
