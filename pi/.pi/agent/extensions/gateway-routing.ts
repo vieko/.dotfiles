@@ -16,7 +16,7 @@
  * payload unless the payload already has one (so this becomes a no-op the day
  * pi's adapter sends it). Nothing else is touched.
  *
- * Upstream: earendil-works/pi issue filed 2026-09-05 (see dotfiles commit).
+ * Upstream: earendil-works/pi#9211.
  */
 
 import type { ExtensionAPI } from "@earendil-works/pi-coding-agent";
