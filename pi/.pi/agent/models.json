@@ -2,20 +2,20 @@
   "providers": {
     "vercel-ai-gateway": {
       "modelOverrides": {
-        "anthropic/claude-opus-4.8": { "compat": { "vercelGatewayRouting": { "order": ["anthropic"] } } },
+        "anthropic/claude-opus-4.8": { "compat": { "vercelGatewayRouting": { "only": ["anthropic"], "order": ["anthropic"] } } },
         "anthropic/claude-opus-5": {
           "compat": {
             "supportsMidConvoEffort": true,
-            "vercelGatewayRouting": { "order": ["anthropic"] }
+            "vercelGatewayRouting": { "only": ["anthropic"], "order": ["anthropic"] }
           }
         },
-        "anthropic/claude-sonnet-5": { "compat": { "vercelGatewayRouting": { "order": ["anthropic"] } } },
-        "anthropic/claude-haiku-4.5": { "compat": { "vercelGatewayRouting": { "order": ["anthropic"] } } },
-        "anthropic/claude-fable-5": { "compat": { "vercelGatewayRouting": { "order": ["anthropic"] } } },
+        "anthropic/claude-sonnet-5": { "compat": { "vercelGatewayRouting": { "only": ["anthropic"], "order": ["anthropic"] } } },
+        "anthropic/claude-haiku-4.5": { "compat": { "vercelGatewayRouting": { "only": ["anthropic"], "order": ["anthropic"] } } },
+        "anthropic/claude-fable-5": { "compat": { "vercelGatewayRouting": { "only": ["anthropic"], "order": ["anthropic"] } } },
         "anthropic/claude-fable-5.1": {
           "compat": {
             "supportsMidConvoEffort": true,
-            "vercelGatewayRouting": { "order": ["anthropic"] }
+            "vercelGatewayRouting": { "only": ["anthropic"], "order": ["anthropic"] }
           }
         },
         "openai/gpt-5.3-codex": { "compat": { "vercelGatewayRouting": { "order": ["openai"] } } },
