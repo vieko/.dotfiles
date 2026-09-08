@@ -22,5 +22,8 @@
     "enabled": true,
     "maxRetries": 3,
     "baseDelayMs": 2000
+  },
+  "compaction": {
+    "reserveTokens": 65536
   }
 }
