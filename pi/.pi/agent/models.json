@@ -9,7 +9,12 @@
             "vercelGatewayRouting": { "only": ["anthropic"], "order": ["anthropic"] }
           }
         },
-        "anthropic/claude-sonnet-5": { "compat": { "vercelGatewayRouting": { "only": ["anthropic"], "order": ["anthropic"] } } },
+        "anthropic/claude-sonnet-5": {
+          "compat": {
+            "supportsStrictTools": true,
+            "vercelGatewayRouting": { "only": ["anthropic"], "order": ["anthropic"] }
+          }
+        },
         "anthropic/claude-haiku-4.5": { "compat": { "vercelGatewayRouting": { "only": ["anthropic"], "order": ["anthropic"] } } },
         "anthropic/claude-fable-5": { "compat": { "vercelGatewayRouting": { "only": ["anthropic"], "order": ["anthropic"] } } },
         "anthropic/claude-fable-5.1": {

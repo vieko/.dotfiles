@@ -50,7 +50,10 @@ gateway, pi#9210); "true $" is the number to quote.
 5. **Tools.** `bash: nonzero exit` is normal work. Flag `schema validation`
    errors, and read the edit-health lines: a model above ~2% malformed edits
    is a provider/stream problem, not a prompt problem (sonnet-5 ran 12% in
-   week 36; pi#9212).
+   week 36; pi#9212). Fix in place since 2026-09-08: sonnet familiars run
+   with `PI_EXPERIMENTAL=1` (strict tool sampling) plus a
+   `supportsStrictTools` override in models.json. Expect sonnet malformed
+   edits at 0; if not, the strict path is not being taken.
 6. **Hard stops.** Aborts are the user; `error` rows are transport. Cluster in
    time with the unexplained misses.
 7. **Top sessions.** Anything above ~$100 deserves one sentence: was the

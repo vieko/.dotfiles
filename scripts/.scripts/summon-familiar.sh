@@ -151,15 +151,19 @@ else
     exit 1
 fi
 
-# Edit-tool shape guard (2026-09-05 week-36 audit): sonnet-5 familiars lost 18
+# Edit-tool shape fix (2026-09-05 week-36 audit): sonnet-5 familiars lost 18
 # of 134 edit calls to schema validation -- arguments arrived as
-# `edits: [{}]` or a trailing edit without newText; fable had 0 of 193. One
-# wasted turn each. Injected for sonnet only; the summoner's tail check
-# (below) still catches the generic failure modes.
+# `edits: [{}]` or a trailing edit without newText; fable had 0 of 193.
+# Known model-side issue (earendil-works/pi#9212); the fix is strict tool
+# sampling. PI_EXPERIMENTAL=1 makes pi's built-in tools request
+# `strict: true`, which only takes effect when the model's compat carries
+# `supportsStrictTools` -- the gateway catalog lacks it, so models.json adds
+# it on anthropic/claude-sonnet-5. Verified 2026-09-08 with `pi -ne`: all
+# four tools go out strict on the gateway route with the env var set.
+# Familiars only; golems run anvil's own tools.
+pi_env=""
 case "$model" in
-    anthropic/claude-sonnet-5*)
-        prompt+=" EDIT TOOL SHAPE: every entry in edits[] must be a complete object with both oldText and newText as strings; never emit an empty {} entry or an entry missing newText. If an edit tool call fails validation, re-read the file region and resend one complete edit at a time."
-        ;;
+    anthropic/claude-sonnet-5*) pi_env="PI_EXPERIMENTAL=1 " ;;
 esac
 
 # -w: isolate a file-touching familiar in its own worktree.
@@ -202,7 +206,7 @@ if [[ $print_mode -eq 1 ]]; then
     fi
     mkdir -p "$LOG_DIR"
     log="$LOG_DIR/familiar-$(date +%Y%m%d-%H%M%S)-$vessel.log"
-    cmd=(pi -p --provider "$PROVIDER" --model "$model" "$prompt")
+    cmd=(env ${pi_env}pi -p --provider "$PROVIDER" --model "$model" "$prompt")
     if [[ $dry_run -eq 1 ]]; then
         echo "dry-run (print mode):"
         printf '  '; printf '%q ' "${cmd[@]}"; printf '\n  log: %s\n' "$log"
@@ -230,7 +234,7 @@ if [[ $print_mode -eq 1 ]]; then
 else
     # Pane/window familiar: default shell first (env hydration), command typed in.
     [[ -n "${TMUX:-}" ]] || { echo "error: pane/window mode requires tmux (use -P for in-band)" >&2; exit 1; }
-    pi_cmd="pi --provider \"$PROVIDER\" --model \"$model\" \"$prompt\""
+    pi_cmd="${pi_env}pi --provider \"$PROVIDER\" --model \"$model\" \"$prompt\""
     if [[ $dry_run -eq 1 ]]; then
         if [[ -n "$window_name" ]]; then
             echo "dry-run (window mode): new-window -n $window_name, then send-keys:"
