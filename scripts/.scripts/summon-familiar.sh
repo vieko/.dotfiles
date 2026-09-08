@@ -15,7 +15,10 @@
 # Usage:
 #   summon-familiar.sh [-m alias] [-P] [-n] [-R] [-w name] [-W name] <brief-path> [prompt override]
 #
-#   -m alias   vessel: haiku|sonnet|opus|fable|luna|sol|astra|glm (default: sonnet)
+#   -m alias   vessel: haiku|sonnet|opus|fable|luna|sol|astra|glm (default: sonnet),
+#              or a raw gateway id with an explicit effort when the alias's
+#              default level is not what the summoning wants, e.g.
+#              openai/gpt-6-astra:xhigh (astra's ceiling; the alias binds :high)
 #   -P         print mode: in-band `pi -p` dispatch (nohup + log) instead of
 #              an interactive tmux pane
 #   -W name    construct window: open a new tmux window named <name>
@@ -64,6 +67,9 @@ alias_to_model() {
         sol)    echo "openai/gpt-5.6-sol:max" ;;
         astra)  echo "openai/gpt-6-astra:high" ;;
         glm)    echo "zai/glm-5.2:medium" ;;
+        # Raw gateway id passthrough (provider/model[:effort]). Still goes
+        # through the enabledModels warning below, so a typo surfaces.
+        */*)    echo "$1" ;;
         *)      return 1 ;;
     esac
 }
