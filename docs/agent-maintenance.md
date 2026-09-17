@@ -113,6 +113,11 @@ Learned on GTMENG-3352 (2026-09-17). Both cost a wasted dispatch.
   the contract does not stub them, the golem will "fix" it by editing
   `vitest.config.ts` (out of scope, run void) or by lazy-importing the
   clients in production code (in scope, wrong).
+- **A sweep that may add a workspace dependency needs `--scope pnpm-lock.yaml`.**
+  `pnpm add` in a package rewrites the root lockfile; without the scope
+  entry the run voids on a change the spec required. Verify each target
+  package's `package.json` for the dependency before writing "already
+  depends on X" into a spec.
 
 ## History & lineage
 
