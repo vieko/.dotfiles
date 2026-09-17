@@ -92,6 +92,28 @@ changes, either bump and retag, or temporarily swap the entry for a local
 path / restore a dev symlink under `~/.pi/agent/extensions/`. Same pin-bump
 rules as pi-post (see above).
 
+## Anvil worktree footguns (gtm)
+
+Learned on GTMENG-3352 (2026-09-17). Both cost a wasted dispatch.
+
+- **fnm's default Node is a 26.x alpha on this host.** A fresh anvil worktree
+  runs `pnpm install`, which rebuilds `better-sqlite3` from source against
+  headers that nodejs.org does not publish for alphas (404, `ELIFECYCLE`,
+  run dies before the agent starts). Pin a release Node into the golem's
+  tree at dispatch:
+  `summon-golem.sh -e "PATH=$HOME/.local/share/fnm/node-versions/v24.20.0/installation/bin:$PATH" ...`.
+  The main tree is unaffected because its `node_modules` already holds a
+  built binary. Permanent fix is `fnm default 24` if the alpha is not needed.
+- **`agents/feedback` contracts must be hermetic per file.** Server modules
+  there `import 'server-only'` (throws under vitest) and pull in clients that
+  parse env at import (`@/lib/db`, `product-categories/cache`,
+  `search/request-candidates`, `request-completion/flag`). A frozen contract
+  that imports one of them needs `vi.mock('server-only', () => ({}))` plus
+  stubs for those seams, the same way the sibling `*.test.ts` files do. If
+  the contract does not stub them, the golem will "fix" it by editing
+  `vitest.config.ts` (out of scope, run void) or by lazy-importing the
+  clients in production code (in scope, wrong).
+
 ## History & lineage
 
 Context for names that appear in old sessions, bonfire entries, or scratch
