@@ -122,6 +122,27 @@ jq -n --arg term "onboarding" '{query: "query($term: String!) { searchIssues(ter
 
 ## Known quirks (local additions — keep when regenerating)
 
+- **Any single argument of ~1000+ bytes gets the process SIGKILLed on PHYREXIA**
+  (`Killed: 9`, exit 137, within 50 ms, before any network call; `--help` dies
+  too). Not linearis-specific: `node <script.js> <arg >= ~1023 bytes>` is
+  killed at exec while `node -e`, python, and curl are untouched, which points
+  at an EDR exec rule (SentinelOne is installed). Symptom in practice: a long
+  `--description "$(cat file.md)"` / `--body "$(cat file.md)"` produces no
+  output and nothing is created or updated. Workaround: keep CLI text under
+  ~900 bytes, or send long markdown via the raw GraphQL fallback with
+  `jq --rawfile` (curl carries the body, not argv):
+
+  ```bash
+  jq -n --arg id GTMENG-1234 --rawfile desc /tmp/desc.md \
+    '{query: "mutation($id: String!, $desc: String!) { issueUpdate(id: $id, input: { description: $desc }) { success } }", variables: {id: $id, desc: $desc}}' \
+    | curl -s -X POST https://api.linear.app/graphql -H "Content-Type: application/json" -H "Authorization: $LINEAR_API_TOKEN" -d @-
+  ```
+
+  `issueCreate(input: { teamId, title, description, assigneeId, parentId, stateId })`
+  and `commentCreate(input: { issueId, body })` take the same shape; `id` on
+  `issueUpdate` accepts the identifier. Verify with `linear issues read <id>
+  --fields description`.
+
 - **Auth misses look like "No API token found"** even when `LINEAR_API_KEY` is
   set — linearis only reads `LINEAR_API_TOKEN`. The dotfiles bridge fixes
   interactive shells; pass `--api-token "$LINEAR_API_KEY"` elsewhere.

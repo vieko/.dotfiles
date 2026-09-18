@@ -72,6 +72,14 @@ truth.
   stdin or a file.** Applies to `pi-post send --body`, `node -e`,
   `python3 - "$x"`, `gh pr edit --body`, and anything similar.
   summon-golem.sh pipes its ping body over stdin since ec819d4.
+  Measured 2026-09-18: the trigger is a **single argv element of ~1000+
+  bytes on a `node <script>` exec**, prose included -- `'y'*1000` passed,
+  `'y'*1023` died, 300 short args totalling 1500 bytes passed, and
+  `node -e`, `python3 file.py`, and curl were untouched that day. So
+  `linear issues create --description "$(cat long.md)"` dies silently
+  (nothing created, no output; `--help` with the same argv dies too).
+  Long Linear bodies go through the jq `--rawfile` + curl GraphQL recipe
+  in the `linear-cli` skill.
 
 ## Vessels
 
@@ -192,6 +200,13 @@ the layout.
   the shared checkout; every multi-step bash tool call starts with
   `cd <worktree> && ...` as one chain, so a failed `cd` stops the chain
   instead of running the rest in the previous cwd.
+
+- **Privacy / deletion / redaction specs trip OpenAI moderation on luna.**
+  golem-3546 (2026-09-16, "purge call data, redact transcript text") had
+  every luna turn refused until the escalation clause moved it to fable;
+  the same spec ran clean on fable from the start (golem-3547). Bind
+  `-m fable` up front for any spec whose verbs are purge / delete / redact /
+  wipe personal data; the luna attempt is pure cost.
 
 - **A gate must be satisfiable inside `--scope`, against the fork SHA.**
   golem-14121 (2026-09-03) had `--scope apps/dse-platform/**` and a
