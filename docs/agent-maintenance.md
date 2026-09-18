@@ -118,6 +118,12 @@ Learned on GTMENG-3352 (2026-09-17). Both cost a wasted dispatch.
   entry the run voids on a change the spec required. Verify each target
   package's `package.json` for the dependency before writing "already
   depends on X" into a spec.
+- **A lint-only gate does not prove a new import resolves.** eslint never
+  resolves workspace packages; a file can import `@repo/shared` from a
+  package that does not depend on it and lint green. `tsc` and the test
+  runner both fail on it. When a sweep adds imports to a package, its gate
+  needs `check-types` (or `test`) for that package, not just `lint`
+  (#3776: `agents/revoa` shipped to CI missing the dep).
 
 ## History & lineage
 
