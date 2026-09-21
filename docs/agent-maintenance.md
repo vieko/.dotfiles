@@ -20,6 +20,42 @@ edits to custom model config (routing pins, cost overrides) take effect
 without restarting Pi. Restart is only needed for `settings.json` changes
 (e.g. `enabledModels` after re-running `setup-pi.sh`).
 
+## Adding a Claude model to the gateway overrides (`models.json`)
+
+Pi's `vercel-ai-gateway` catalog entries for Claude carry only
+`allowEmptySignature` / `forceAdaptiveThinking`. The native `anthropic`
+entries carry more, and because our overrides pin routing to
+`only: ["anthropic"]` the transport is the real Messages API, so the native
+flags hold. When a new Claude model lands, copy its native compat onto the
+gateway override in `pi/.pi/agent/models.json`:
+
+```bash
+cd /Users/vieko/.npm-global/lib/node_modules/@earendil-works/pi-coding-agent/node_modules/@earendil-works/pi-ai/dist
+node --input-type=module -e 'import * as m from "./models.generated.js"; console.log(JSON.stringify(m.MODELS.anthropic["claude-<id>"].compat))'
+```
+
+The override needs, as of pi 0.87:
+
+- `promptCache: { short: 300, long: 3600 }` -- without it cache warming
+  (`cacheWarming` in settings) is inert for the model ("cache lifetime
+  unavailable" in `/session`).
+- `compat.supportsStrictTools: true` -- strict tool sampling is the pi
+  default since 0.86 but only goes out when the model advertises it
+  (pi#9212 malformed-edit fix).
+- `compat.supportsMidConvoSystemMessages` + `supportsMidConvoToolChanges`
+  when the native entry has them -- turns prompt-section and tool-set changes
+  (e.g. a pi-prose `/style` switch) into a small system patch instead of a
+  full-prefix rewrite. Measured on fable-5.1: cacheWrite 14337 -> 50.
+- `compat.supportsMidConvoEffort` when the native entry has it.
+- `compat.vercelGatewayRouting: { only: ["anthropic"], order: ["anthropic"] }`
+  -- enforced by `extensions/gateway-routing.ts` until pi#9211 lands.
+
+Anvil keeps its own copy of this overlay in
+`~/dev/anvil/packages/core/src/node/model-resolver.ts` (`withGatewayCompat`);
+update both. Verify with a `-ne` probe that logs `ctx.model` on
+`session_start` using `--provider vercel-ai-gateway --model <id>` (without
+`--provider`, `anthropic/<id>` resolves the provider prefix, not the gateway).
+
 ## Updating pinned git packages in Pi (pi-post, bonfire)
 
 Pi packages pinned via the `packages` array in `~/.pi/agent/settings.json`
