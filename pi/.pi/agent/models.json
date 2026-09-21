@@ -4,11 +4,19 @@
       "modelOverrides": {
         "anthropic/claude-opus-4.8": {
           "promptCache": { "short": 300, "long": 3600 },
-          "compat": { "vercelGatewayRouting": { "only": ["anthropic"], "order": ["anthropic"] } }
+          "compat": {
+            "supportsMidConvoSystemMessages": true,
+            "supportsMidConvoToolChanges": true,
+            "supportsStrictTools": true,
+            "vercelGatewayRouting": { "only": ["anthropic"], "order": ["anthropic"] }
+          }
         },
         "anthropic/claude-opus-5": {
           "promptCache": { "short": 300, "long": 3600 },
           "compat": {
+            "supportsMidConvoSystemMessages": true,
+            "supportsMidConvoToolChanges": true,
+            "supportsStrictTools": true,
             "supportsMidConvoEffort": true,
             "vercelGatewayRouting": { "only": ["anthropic"], "order": ["anthropic"] }
           }
@@ -22,15 +30,26 @@
         },
         "anthropic/claude-haiku-4.5": {
           "promptCache": { "short": 300, "long": 3600 },
-          "compat": { "vercelGatewayRouting": { "only": ["anthropic"], "order": ["anthropic"] } }
+          "compat": {
+            "supportsStrictTools": true,
+            "vercelGatewayRouting": { "only": ["anthropic"], "order": ["anthropic"] }
+          }
         },
         "anthropic/claude-fable-5": {
           "promptCache": { "short": 300, "long": 3600 },
-          "compat": { "vercelGatewayRouting": { "only": ["anthropic"], "order": ["anthropic"] } }
+          "compat": {
+            "supportsMidConvoSystemMessages": true,
+            "supportsMidConvoToolChanges": true,
+            "supportsStrictTools": true,
+            "vercelGatewayRouting": { "only": ["anthropic"], "order": ["anthropic"] }
+          }
         },
         "anthropic/claude-fable-5.1": {
           "promptCache": { "short": 300, "long": 3600 },
           "compat": {
+            "supportsMidConvoSystemMessages": true,
+            "supportsMidConvoToolChanges": true,
+            "supportsStrictTools": true,
             "supportsMidConvoEffort": true,
             "vercelGatewayRouting": { "only": ["anthropic"], "order": ["anthropic"] }
           }
@@ -87,7 +106,10 @@
               { "inputTokensAbove": 272000, "input": 20, "output": 75, "cacheRead": 2, "cacheWrite": 25 }
             ]
           },
-          "compat": { "forceAdaptiveThinking": true, "vercelGatewayRouting": { "order": ["openai"] } }
+          "compat": {
+            "forceAdaptiveThinking": true,
+            "vercelGatewayRouting": { "order": ["openai"] }
+          }
         },
         "zai/glm-5.2": { "compat": { "vercelGatewayRouting": { "order": ["zai"] } } },
         "zai/glm-5.3": { "compat": { "vercelGatewayRouting": { "order": ["zai"] } } },
