@@ -23,3 +23,30 @@ old row so drift is visible.
   opus/fable rescued 10 on attempt 2.
 - Openers: "load details for GTMENG-…" x6, "check/investigate/assess this:
   <clipboard>" x12 -> `/issue` template added.
+
+## Weeks 37-38 (2026-09-06 to 2026-09-17, 12 days), PHYREXIA
+
+- 90 sessions with turns, 9,413 assistant turns, 771 user turns, 9,776 tool
+  calls (431 errors). pi-reported $2,088; true $2,362 (~$1,380/week).
+- Split (pi-reported): cacheRead $937, cacheWrite $948, output $201.
+- gpt-6-astra: 24% of turns, 50% of spend ($1,183). cacheRead $1/M vs
+  fable-5.1 $0.25/M; 175 of 197 turns >= 400K. Astra cache is OpenAI's:
+  miss rate 3.3% at <5m gaps, 12% at 5-15m, 29% at 15-60m. Do not model it
+  with a 1h TTL (audit.mjs fixed 2026-09-18; context-cost.ts still does).
+- 1h TTL (anthropic/* only): premium $274 vs $394 avoided; net +$120/12d
+  (fable-5.1 +$100). Thinner than week 36; keep `long`, re-check.
+- Context: 26% of turns >= 200K carried 58% of spend (week 36: 40% / 65%);
+  max ctx 523K; compaction 30 events in 17 sessions (week 36: 4).
+- Misses: idle 79 ($292, avg 183K); unexplained 208 ($670, avg 187K); rate
+  fable-5.1 1.86%, astra 3.80%, sonnet 1.25%, fable-5 2.73%; 20% clustered
+  cross-session (was 37%). Scales with ctx: 1.3% <100K -> 4.6% >=400K.
+  Routing pins (`only`) live all window and did not lower the rate.
+- Edit health: sonnet-5 24/224 schema failures (10.7%) AFTER the strict-tools
+  fix of 09-08; fable/astra 0. Strict is not landing on the gateway route.
+- Hard stops: 56 (30 in the 09-10 gateway storm, 16 user aborts).
+- Constructs: 62 golems (53 luna, 9 fable), 21 familiars (18 sonnet). anvil
+  56 runs: 51 passed / 4 failed / 1 stale verifying; 39 first-attempt passes,
+  12 fable rescues on attempt 2; $240 (fable $238.56). 2 crashes with empty
+  JSON (luna moderation, fnm alpha node).
+- Recurring messages: "draft a lede for" x43 (/lede), bare pi-clipboard path
+  x31 (57 incl. prefixed), "proceed[ with a|b]" x44, "posted, merge it" x13.

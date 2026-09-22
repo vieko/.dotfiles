@@ -45,9 +45,12 @@ const catalogPath = (() => {
 })();
 const catalog = catalogPath ? Object.assign({}, ...Object.values(JSON.parse(readFileSync(catalogPath, "utf8")))) : {};
 const longRetention = (process.env.PI_CACHE_RETENTION ?? "long") === "long";
+// Anthropic-served models only: the gateway exposes OpenAI models (gpt-6-astra) over
+// anthropic-messages too, but their cache is OpenAI's (no 1h TTL, no write premium).
+const isAnthropicServed = (m) => m.api === "anthropic-messages" && /^anthropic\//.test(m.model ?? "");
 const trueCostOf = (m, u) => {
 	const c = catalog[m.model]?.cost;
-	if (!c || m.api !== "anthropic-messages" || !longRetention) return u.cost.total;
+	if (!c || !isAnthropicServed(m) || !longRetention) return u.cost.total;
 	// replace pi's 5m-rate write charge with the 1h rate (2x input)
 	return u.cost.total - u.cost.cacheWrite + (u.cacheWrite * c.input * 2) / 1e6;
 };
@@ -71,6 +74,7 @@ const misses = { first: [], idle: [], unexplained: [], compaction: [], modelswit
 const ttl = { premium: 0, saved: 0 };
 const editByModel = {};
 const openers = [];
+const userMsgs = [];
 const gapHist = {};
 
 for (const dir of readdirSync(root)) {
@@ -109,7 +113,8 @@ for (const dir of readdirSync(root)) {
 				if (ts >= since && ts <= until) {
 					s.user++;
 					totals.user++;
-					if (!txt.startsWith("Message from process")) openers.push(txt.slice(0, 60));
+					if (!txt.startsWith("Message from process")) userMsgs.push(txt.slice(0, 60));
+					if (s.user === 1) openers.push(txt.slice(0, 60));
 				}
 				continue;
 			}
@@ -186,7 +191,7 @@ for (const dir of readdirSync(root)) {
 			ctxBuckets[b].tru += tru;
 			// cache economics
 			const c = catalog[m.model]?.cost;
-			if (c && m.api === "anthropic-messages" && longRetention) {
+			if (c && isAnthropicServed(m) && longRetention) {
 				ttl.premium += (u.cacheWrite * (c.input * 2 - c.cacheWrite)) / 1e6;
 				const gap = prev ? (ts - new Date(prev.timestamp).getTime()) / 60000 : null;
 				if (gap !== null && gap >= 5 && gap < 60 && u.cacheWrite <= 0.5 * ctx) ttl.saved += (u.cacheRead * (c.cacheWrite - c.cacheRead)) / 1e6;
@@ -278,13 +283,18 @@ P(`| start | dir | user | turns | tools | err | true $ | avg ctx | max ctx | mod
 P(`|---|---|---|---|---|---|---|---|---|---|---|`);
 for (const s of [...sessions].sort((a, b) => b.tru - a.tru).slice(0, topN)) P(`| ${mt(s.start).slice(5)} | ${s.dir} | ${s.user} | ${s.turns} | ${s.toolCalls} | ${s.toolErrors} | ${usd(s.tru)} | ${s.avgCtxK}K | ${s.maxCtxK}K | ${s.models.join(",")} | ${s.firstPrompt.slice(0, 70).replace(/\|/g, "/")} |`);
 P();
-P(`## Openers (first 4 words, top 12)`);
-const op = {};
-for (const o of openers) {
-	const k = o.toLowerCase().split(/\s+/).slice(0, 4).join(" ");
-	op[k] = (op[k] ?? 0) + 1;
-}
-for (const [k, v] of Object.entries(op).sort((a, b) => b[1] - a[1]).slice(0, 12)) if (v > 1) P(`- ${v}x "${k}"`);
+const topPhrases = (list, title) => {
+	P(`## ${title} (first 4 words, top 12)`);
+	const op = {};
+	for (const o of list) {
+		const k = o.toLowerCase().split(/\s+/).slice(0, 4).join(" ");
+		op[k] = (op[k] ?? 0) + 1;
+	}
+	for (const [k, v] of Object.entries(op).sort((a, b) => b[1] - a[1]).slice(0, 12)) if (v > 1) P(`- ${v}x "${k}"`);
+};
+topPhrases(openers, `Openers: first prompt of each session (${openers.length})`);
+P();
+topPhrases(userMsgs, `Recurring user messages, all turns (${userMsgs.length})`);
 P();
 P(`## Constructs`);
 const summons = join(homedir(), "scratch/logs/summons.log");
