@@ -42,8 +42,16 @@ truth.
 
 - **Legion** -- a batch of Golems run in parallel against one spec template.
   Requirements: **disjoint scopes** (no shared files between members -- merge
-  conflicts void the pattern), **batch-sized to machine capacity** (3
-  concurrent monorepo installs/sessions is this host's comfortable ceiling),
+  conflicts void the pattern), **batch-sized to machine capacity** --
+  measured 2026-09-22 on gtm (M4 Pro, 48 GB, 12 cores): `pnpm install`
+  peaks at 1.6 GB, a scoped gate (`--filter=./apps/<app>` check-types +
+  lint + test) at 2-2.7 GB, a repo-wide uncached `turbo run check-types`
+  at 11.4 GB; a pi session is 0.2-1.3 GB. With ~30 GB free (Chrome takes
+  ~19 GB), the ceiling is **6 concurrent golems on scoped gates**, bounded
+  by CPU not RAM (each turbo run spawns up to 10 workers; past 6 they only
+  get slower), and **2 on repo-wide gates** (3 with Chrome closed). Trade
+  wall time for memory with `turbo run ... --concurrency=4` when a wide
+  gate is unavoidable,
   **one review pipeline** (each member's diff is individually reviewed before
   ship -- a Legion multiplies the mechanics, never the judgment; a green gate
   cannot distinguish "make the test pass" from "the test was lying").
