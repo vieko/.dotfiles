@@ -56,7 +56,7 @@ working tree while untracked machine state (`sessions/`, `auth.json`,
 for the configured providers. It merges into the built-in providers — most useful
 for adding bleeding-edge gateway models that Pi's bundled registry doesn't know
 about yet. It is shared across all hosts: `modelOverrides` are inert unless a
-model is actually used, so host-restricted models (e.g. Kimi K3, Grok 4.5) can
+model is actually used, so host-restricted models (e.g. Kimi K3, Grok 4.7) can
 carry routing/cost overrides everywhere without affecting hosts that lack access.
 
 **Per-host `settings.json` (generated, not tracked).** Pi has only two settings
@@ -64,7 +64,7 @@ layers (global + per-project) with no env interpolation or includes, so
 per-machine differences can't live inside the tracked file. `enabledModels` (the
 `/model` picker + Ctrl+P cycle set) must differ per host because each machine's
 Vercel AI Gateway key has different model access — Chaos (unrestricted) enables
-Kimi K3 + Grok 4.5; Phyrexia (Vercel Team key) does not. `setup-pi.sh` switches
+Kimi K3 + Grok 4.7; Phyrexia (Vercel Team key) does not. `setup-pi.sh` switches
 on `hostname` (mirroring `hypr/scripts/host.sh`), merges `settings.base.json`
 with `hosts/enabledModels.<host>.json` via `jq`, and writes
 `~/.pi/agent/settings.json` directly (the live file is a real file, not a
