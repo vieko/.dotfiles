@@ -132,14 +132,17 @@ rules as pi-post (see above).
 
 Learned on GTMENG-3352 (2026-09-17). Both cost a wasted dispatch.
 
-- **fnm's default Node is a 26.x alpha on this host.** A fresh anvil worktree
+- **fnm's default Node must be a release build.** A fresh anvil worktree
   runs `pnpm install`, which rebuilds `better-sqlite3` from source against
   headers that nodejs.org does not publish for alphas (404, `ELIFECYCLE`,
-  run dies before the agent starts). Pin a release Node into the golem's
-  tree at dispatch:
-  `summon-golem.sh -e "PATH=$HOME/.local/share/fnm/node-versions/v24.20.0/installation/bin:$PATH" ...`.
-  The main tree is unaffected because its `node_modules` already holds a
-  built binary. Permanent fix is `fnm default 24` if the alpha is not needed.
+  run dies before the agent starts). Resolved 2026-09 by setting
+  `fnm default 24.21.0` and uninstalling the 26.x alpha. Two things keep it
+  fixed: do not `fnm install` a pre-release, and remember that
+  `FNM_RESOLVE_ENGINES=true` resolves gtm's `"node": ">=18"` to the
+  *newest installed* version, so any alpha on disk wins inside the repo
+  regardless of `fnm default`. If one is needed temporarily, pin a release
+  Node into the golem's tree at dispatch instead:
+  `summon-golem.sh -e "PATH=$HOME/.local/share/fnm/node-versions/v24.21.0/installation/bin:$PATH" ...`.
 - **`agents/feedback` contracts must be hermetic per file.** Server modules
   there `import 'server-only'` (throws under vitest) and pull in clients that
   parse env at import (`@/lib/db`, `product-categories/cache`,
