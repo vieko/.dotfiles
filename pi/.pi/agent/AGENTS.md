@@ -147,6 +147,23 @@ override):
 Don't substitute a longer recap for the pitch — the pitch + one-liner
 are the deliverables; anything else is supplementary.
 
+### "posted" closes the loop
+
+After the announcement the user pastes the one-liner to Slack and replies
+`posted` (often `posted, merge it` / `posted, merge when green`). That
+reply is the merge instruction; do not ask again. Sequence:
+
+1. Wait for required checks green and review approval (use the repo's
+   PR-wait mechanism if it has one; otherwise poll `gh pr checks`).
+2. `gh pr merge <n> --squash --delete-branch`, then confirm `MERGED`.
+3. Close the loop: move the Linear issue if the PR body didn't auto-close
+   it, prune the worktree and any construct window (`fam-*`, `golem-*`)
+   for that issue, and report the merge SHA in one line.
+
+Blockers (red check, changes requested, merge conflict) get reported once
+with the concrete cause; "posted" does not authorize force-pushes,
+admin-merges, or bypassing required checks.
+
 ## Tool & review notes
 
 - **PR review style on vercel repos**: keep JSDoc and code-comment prose tight. State what + why; the code shows how. Multi-paragraph explanations on small helpers read as noise — file-level headers documenting non-obvious context are fine.

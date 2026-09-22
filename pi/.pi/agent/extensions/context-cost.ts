@@ -28,8 +28,11 @@
  *   one costs about what a miss would.
  *
  * It never compacts or clears on its own. Thresholds: PI_CTX_WARN_TOKENS
- * (default 150000). TTL follows PI_CACHE_RETENTION: long = 1h on
- * anthropic-messages (30m on OpenAI Responses), otherwise 5m.
+ * (default 150000). TTL follows PI_CACHE_RETENTION: long = 1h on Anthropic
+ * models, otherwise 5m. Non-Anthropic models get ~10m regardless: gpt-6-astra
+ * rides the anthropic-messages transport on the gateway but its cache is
+ * OpenAI's best-effort one (measured 2026-09-18: 12% misses at 5-15m idle, 29%
+ * at 15-60m), so keying on the API would promise a TTL that does not exist.
  */
 
 import type { ExtensionAPI, ExtensionCommandContext, ExtensionContext } from "@earendil-works/pi-coding-agent";
@@ -62,10 +65,11 @@ function pricing(ctx: ExtensionContext, tokens: number): Pricing | undefined {
 	let rates: Rates = cost;
 	for (const tier of cost.tiers ?? []) if (tokens > tier.inputTokensAbove) rates = tier;
 	const longRetention = process.env.PI_CACHE_RETENTION === "long";
-	const anthropic = model.api === "anthropic-messages";
+	// Key on the model family, not the transport: astra is anthropic-messages on the gateway with an OpenAI cache.
+	const anthropic = model.id.startsWith("anthropic/") || model.provider === "anthropic";
 	// Anthropic bills 1h cache writes at 2x input; 5m writes at the table rate.
 	const writePerM = anthropic && longRetention ? rates.input * 2 : rates.cacheWrite;
-	const ttlMin = longRetention ? (anthropic ? 60 : 30) : 5;
+	const ttlMin = anthropic ? (longRetention ? 60 : 5) : 10;
 	return { readPerM: rates.cacheRead, writePerM, inputPerM: rates.input, ttlMin, longRetention };
 }
 

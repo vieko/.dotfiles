@@ -119,6 +119,19 @@ when the work demands it.
   noise next to merge-conflict and review cost; the gate + review carry
   the judgment, not the member.
 
+- **Astra (`gpt-6-astra`) is a bounded vessel, never an all-day
+  Summoner.** It rides the anthropic-messages transport on the gateway but
+  its prompt cache is OpenAI's best-effort one, not Anthropic's 1h TTL:
+  measured 2026-09-18, 12% of turns after a 5-15m idle and 29% after
+  15-60m were full-prefix misses (fable-5.1: 2.3% / 11%), and its cache
+  reads cost 4x fable-5.1's per token. Week 37-38 it took 50% of spend on
+  24% of turns; one 11-day astra Summoner at 520K cost $206 for 6 user
+  turns. Bind astra for work that starts fresh and finishes in one sitting
+  (review familiars, one-shot assessments, cross-family second reads).
+  Sessions expected to live past a few hours are fable-5.1. If astra is
+  the Summoner anyway: `/new` + `/recap` instead of resuming after a
+  break, and compact at 150K, not 300K.
+
 Cross-family consults (`glm-5.2`, `gpt-5.6-sol`) are conversations, not
 constructs -- a second read needs no binding.
 
@@ -207,6 +220,18 @@ the layout.
   the same spec ran clean on fable from the start (golem-3547). Bind
   `-m fable` up front for any spec whose verbs are purge / delete / redact /
   wipe personal data; the luna attempt is pure cost.
+
+- **Split repair specs before binding fable.** The review-repair loop
+  (luna pilot -> review -> fable `*-repair-spec`) works: week 37-38, 51 of
+  56 anvil runs passed, 39 on luna's first attempt, 12 rescued by fable.
+  The cost lives entirely in the rescues: every fable run above $10 (ten,
+  $10.88-$26.59, 8-29M cumulative ctx) was a repair spec carrying several
+  independent findings, and `arcade-221-completion` hit $26.59 at 28.7M
+  ctx. Rule: a repair spec carries at most two independent review
+  findings, or touches one app/package; more than that is two specs with
+  disjoint scopes (Legion rules apply). Luna attempt-1 passes 29/30 when it
+  finishes, so the split costs cents; a fable golem past ~10M cumulative
+  ctx in `anvil status` is the spec's fault, not the model's.
 
 - **A gate must be satisfiable inside `--scope`, against the fork SHA.**
   golem-14121 (2026-09-03) had `--scope apps/dse-platform/**` and a
