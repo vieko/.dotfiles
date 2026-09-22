@@ -25,6 +25,7 @@
           "promptCache": { "short": 300, "long": 3600 },
           "compat": {
             "supportsStrictTools": true,
+            "supportsEagerToolInputStreaming": false,
             "vercelGatewayRouting": { "only": ["anthropic"], "order": ["anthropic"] }
           }
         },

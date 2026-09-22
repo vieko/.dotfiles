@@ -42,6 +42,13 @@ The override needs, as of pi 0.87:
 - `compat.supportsStrictTools: true` -- strict tool sampling is the pi
   default since 0.86 but only goes out when the model advertises it
   (pi#9212 malformed-edit fix).
+- `compat.supportsEagerToolInputStreaming: false` on **sonnet-5 only**,
+  as an A/B started 2026-09-22. ~11% of sonnet edit calls arrive as
+  `edits:[{}]` with output tokens proving the body was generated (transit
+  truncation, not sampling; strict did not move it: 12.3% -> 10.7%). With
+  this off, pi sends the `fine-grained-tool-streaming` beta instead of
+  per-tool `eager_input_streaming`. Judge at the next session audit
+  (sonnet-edits script); drop the override if the rate does not fall.
 - `compat.supportsMidConvoSystemMessages` + `supportsMidConvoToolChanges`
   when the native entry has them -- turns prompt-section and tool-set changes
   (e.g. a pi-prose `/style` switch) into a small system patch instead of a
