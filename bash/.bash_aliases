@@ -23,9 +23,6 @@ alias qcd=fcd
 alias summon="tmux-start.sh"
 alias demons="nvim"
 
-# ==> aliases for agents
-alias opencode-dev="bun run $HOME/dev/opencode/packages/opencode/src/index.ts"
-
 # ==> aliases for wallpapers (Linux/Hyprland only)
 if [[ "$OSTYPE" == "linux-gnu"* ]]; then
     alias goat="goat-power.sh"
@@ -37,9 +34,15 @@ if [[ "$OSTYPE" == "linux-gnu"* ]]; then
 fi
 
 # ==> aliases for convenience
-alias agents="update-agents.sh"
-alias wacom="restart-wacom.sh"
 alias ccu="npx ccusage@latest"
 
+# ==> macOS-only service restarts
+if [[ "$OSTYPE" == "darwin"* ]]; then
+    alias wacom="restart-wacom.sh"
+    alias aero="restart-aerospace.sh"
+fi
+
 # ==> 1Password env injection — resolves op:// refs into child-process env only
-alias opr='op run --env-file=$HOME/.dotfiles/bash/env.op --'
+if command -v op &>/dev/null; then
+    alias opr='op run --env-file=$HOME/.dotfiles/bash/env.op --'
+fi
