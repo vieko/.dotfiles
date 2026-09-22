@@ -135,6 +135,29 @@ changes, either bump and retag, or temporarily swap the entry for a local
 path / restore a dev symlink under `~/.pi/agent/extensions/`. Same pin-bump
 rules as pi-post (see above).
 
+## Anvil runs from the working tree, not a global install
+
+`~/.scripts/anvil` (dotfiles `scripts/.scripts/anvil`) execs
+`node --conditions=anvil-source ~/dev/anvil/packages/cli/src/bin.ts`, so the
+`anvil` every human and agent sees is whatever `~/dev/anvil` has checked out.
+No build, no reinstall, no version skew. Consequences:
+
+- **Never `npm i -g @vieko/anvil` on a machine with the checkout.**
+  `~/.npm-global/bin` precedes `~/.scripts` in PATH, so a global install
+  shadows the shim and pins the machine to a stale release. It happened
+  2026-08-05 and again 2026-09-21 (both times as a workaround for anvil#39,
+  which the `anvil-source` condition fixed). Check with `type -a anvil`: only
+  `~/.scripts/anvil` should be listed. Undo with `npm rm -g @vieko/anvil`.
+- **Cutting an anvil release does not touch this machine.** The tag exists
+  for chaos-without-checkout, CI, and `npx`; after merging to `main`, the
+  update here is `git -C ~/dev/anvil pull`.
+- **Keep `~/dev/anvil` on `main`.** File-touching anvil work goes in
+  `~/dev/anvil-worktrees/<branch>` like any other repo; a WIP branch checked
+  out in `~/dev/anvil` is what every golem on the machine runs.
+- pi-prose, pi-post, and bonfire are different: those load through pi's
+  `packages` array as pinned release tags (`~/.dotfiles/AGENTS.md`, pi-prose
+  section), so for them a release plus pin bump is the update path.
+
 ## Anvil worktree footguns (gtm)
 
 Learned on GTMENG-3352 (2026-09-17). Both cost a wasted dispatch.

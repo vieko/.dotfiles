@@ -42,6 +42,12 @@ Anvil is the verification-boundary delegate — it works in an isolated git
 worktree and only succeeds when a deterministic gate (build/typecheck/test, or a
 command you supply) passes; this is a focused interactive shell.
 
+**`anvil` on this machine is `~/.scripts/anvil`, a shim over the working tree
+at `~/dev/anvil`** (see the shim header). Never `npm i -g @vieko/anvil` here:
+it lands in `~/.npm-global/bin`, which precedes `~/.scripts` in PATH and
+shadows the shim. After merging anvil changes, `git -C ~/dev/anvil pull` is
+the whole update; releases are for machines without the checkout.
+
 **Never spawn `claude -p` in tmux to run anvil.** Use the anvil CLI directly;
 the `claude -p` wrapper-in-tmux pattern bypasses anvil's verification boundary.
 

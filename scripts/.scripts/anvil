@@ -1,10 +1,17 @@
 #!/usr/bin/env bash
 # anvil -- single source of truth for humans AND agents.
 #
-# Runs the working-tree SOURCE directly (Node type-stripping + the `source`
-# export condition, so @anvil/core resolves to src, no build). "Latest" therefore
-# means "whatever is committed/checked out in the anvil repo" -- no publish lag,
-# no reinstall ritual, no version skew between a global bin and your tree.
+# Runs the working-tree SOURCE directly (Node type-stripping + the
+# `anvil-source` export condition, so @anvil/core resolves to src, no build).
+# "Latest" therefore means "whatever is checked out in the anvil repo" -- no
+# publish lag, no reinstall ritual, no version skew between a global bin and
+# your tree. The condition is namespaced (anvil#39): a plain `source` leaked
+# into @earendil-works/chord's export map and broke resolution on pi 0.85+.
+#
+# Never `npm i -g @vieko/anvil` on this machine: ~/.npm-global/bin precedes
+# ~/.scripts in PATH, so a global install silently shadows this shim (that is
+# what happened 2026-08-05 and again 2026-09-21). Releases are for machines
+# without the checkout. `type -a anvil` must list only ~/.scripts/anvil.
 #
 # A real executable (not a shell alias) on purpose: it must resolve under
 # non-interactive `bash -c`, dispatch scripts, and any agent (Pi, Claude Code,
@@ -14,4 +21,4 @@
 # ANVIL_SRC overrides the checkout (e.g. to point a Golem at a worktree).
 set -euo pipefail
 ANVIL_SRC="${ANVIL_SRC:-$HOME/dev/anvil}"
-exec node --conditions=source "$ANVIL_SRC/packages/cli/src/bin.ts" "$@"
+exec node --conditions=anvil-source "$ANVIL_SRC/packages/cli/src/bin.ts" "$@"
