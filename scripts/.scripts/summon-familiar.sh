@@ -15,7 +15,7 @@
 # Usage:
 #   summon-familiar.sh [-m alias] [-P] [-n] [-R] [-w name] [-W name] <brief-path> [prompt override]
 #
-#   -m alias   vessel: haiku|sonnet|opus|fable|luna|sol|astra|glm (default: sonnet),
+#   -m alias   vessel: haiku|sol|sonnet|opus|fable|luna|astra (default: sol),
 #              or a raw gateway id with an explicit effort when the alias's
 #              default level is not what the summoning wants, e.g.
 #              openai/gpt-6-astra:xhigh (astra's ceiling; the alias binds :high)
@@ -60,13 +60,12 @@ log_summon() {
 alias_to_model() {
     case "$1" in
         haiku)  echo "anthropic/claude-haiku-4.5:low" ;;
+        sol)    echo "openai/gpt-6-sol:high" ;;
         sonnet) echo "anthropic/claude-sonnet-5:medium" ;;
-        opus)   echo "anthropic/claude-opus-5:medium" ;;
+        opus)   echo "anthropic/claude-opus-5.5:medium" ;;
         fable)  echo "anthropic/claude-fable-5.1:high" ;;
-        luna)   echo "openai/gpt-5.6-luna:max" ;;
-        sol)    echo "openai/gpt-5.6-sol:max" ;;
+        luna)   echo "openai/gpt-6-luna:high" ;;
         astra)  echo "openai/gpt-6-astra:high" ;;
-        glm)    echo "zai/glm-5.2:medium" ;;
         # Raw gateway id passthrough (provider/model[:effort]). Still goes
         # through the enabledModels warning below, so a typo surfaces.
         */*)    echo "$1" ;;
@@ -74,7 +73,13 @@ alias_to_model() {
     esac
 }
 
-vessel="sonnet"
+# Default vessel moved sonnet -> sol (2026-09-22): same $2/$10 tier, but
+# sonnet-5 via the gateway still drops ~11% of edit tool bodies in transit
+# (edits: [{}]) after strict sampling and the fine-grained-streaming A/B;
+# gpt-6-sol has 0 malformed edits across 600+ GPT-family edit calls in the
+# same window. sonnet stays an alias for the A/B and for anything that needs
+# an Anthropic worker under a same-family summoner.
+vessel="sol"
 print_mode=0
 dry_run=0
 no_report=0
@@ -105,14 +110,14 @@ brief_abs="$(cd "$(dirname "$brief")" 2>/dev/null && pwd)/$(basename "$brief")" 
 model="$(alias_to_model "$vessel")" || { echo "error: unknown vessel alias: $vessel" >&2; exit 2; }
 
 # Escalation nag (2026-08-30 audit): ~11 of 14 script-summoned familiars
-# over three weeks ran -m fable, inverting the sonnet default in practice.
-# The nag is friction at the moment of decision, not a gate -- PHYREXIA.md
-# Vessels has the escalation test (brief tight enough to delegate with a
-# verify gate == sonnet work by definition).
+# over three weeks ran -m fable, inverting the worker-tier default in
+# practice. The nag is friction at the moment of decision, not a gate --
+# PHYREXIA.md Vessels has the escalation test (brief tight enough to
+# delegate with a verify gate == worker-tier (sol) work by definition).
 case "$vessel" in
     fable|opus)
         echo "nag: $vessel familiar -- escalation needs a named reason (governance, prod-impact," >&2
-        echo "     ambiguous spec); a tight brief with a verify gate is sonnet work. PHYREXIA.md Vessels." >&2
+        echo "     ambiguous spec); a tight brief with a verify gate is sol work. PHYREXIA.md Vessels." >&2
         ;;
 esac
 
@@ -151,15 +156,14 @@ else
     exit 1
 fi
 
-# Edit-tool shape fix (2026-09-05 week-36 audit): sonnet-5 familiars lost 18
-# of 134 edit calls to schema validation -- arguments arrived as
+# Edit-tool shape history (2026-09-05 week-36 audit): sonnet-5 familiars lost
+# 18 of 134 edit calls to schema validation -- arguments arrived as
 # `edits: [{}]` or a trailing edit without newText; fable had 0 of 193.
-# Known model-side issue (earendil-works/pi#9212); the fix is strict tool
-# sampling. Since pi 0.86 the built-in tools request `strict: true` by
-# default (no PI_EXPERIMENTAL needed), but it only takes effect when the
-# model's compat carries `supportsStrictTools` -- the gateway catalog lacks
-# it, so models.json adds it on anthropic/claude-sonnet-5. Nothing to set
-# here; kept as a pointer for the next audit.
+# Strict tool sampling (pi 0.86 default + `supportsStrictTools` in
+# models.json) did not move it (12.3% -> 10.7%), nor did the 2026-09-22
+# fine-grained-streaming A/B (2/22 so far). Resolution was to move the
+# default vessel to sol (above) rather than keep chasing the transport; the
+# sonnet-5 override stays in models.json so `-m sonnet` keeps feeding the A/B.
 
 # -w: isolate a file-touching familiar in its own worktree.
 work_dir="$PWD"

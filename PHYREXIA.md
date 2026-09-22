@@ -100,29 +100,46 @@ when the work demands it.
 
 - **Summoner** -- `claude-fable-5.1:high` (the Pi default; the seat opus held
   before it). The judgment seat gets the daily-driver frontier vessel.
-  Escalate to `claude-opus-5:medium` for the gnarliest architecture or
-  review passes -- that is its defined job.
-- **Familiar** -- `claude-sonnet-5:medium` by default; the sonnet tier is
-  the organic worker tier (~1/4 of all sessions). Escalate to the
-  Summoner's vessel only when the summoning names WHY judgment dominates
-  (governance paths, prod-impact calls, ambiguous spec the familiar must
-  resolve alone) -- "owns a whole phase" is not by itself a reason. The
-  test: a brief tight enough to delegate with a verify gate is sonnet
-  work by definition. Observed 2026-08-30 audit: ~11 of 14 script-summoned
-  familiars over three weeks ran `-m fable` -- the escalation clause had
-  inverted the default in practice; that is the drift this wording exists
-  to stop.
-- **Golem** -- anvil `--model luna` (gpt-5.6-luna) by default: a
+  Escalate to `claude-opus-5.5:medium` for the gnarliest architecture or
+  review passes -- that is its defined job. Opus 5.5 is also the standing
+  A/B against fable for Summoner work: 40% of fable's price on every axis
+  (in/out/cacheRead/cacheWrite), quality parity unproven as of 2026-09-22.
+- **Familiar** -- `gpt-6-sol:high` by default (was `claude-sonnet-5:medium`
+  until 2026-09-22). Same $2/$10 tier; the switch is because sonnet-5 via
+  the gateway drops ~11% of edit tool bodies in transit (`edits: [{}]`) and
+  neither strict sampling nor the fine-grained-streaming path moved it,
+  while gpt-6-sol has 0 malformed edits across 600+ GPT-family edit calls.
+  `-m sonnet` still resolves, for the A/B and for a same-family worker when
+  one is wanted. Escalate to the Summoner's vessel only when the summoning
+  names WHY judgment dominates (governance paths, prod-impact calls,
+  ambiguous spec the familiar must resolve alone) -- "owns a whole phase"
+  is not by itself a reason. The test: a brief tight enough to delegate
+  with a verify gate is worker-tier work by definition. Observed 2026-08-30
+  audit: ~11 of 14 script-summoned familiars over three weeks ran
+  `-m fable` -- the escalation clause had inverted the default in practice;
+  that is the drift this wording exists to stop.
+- **Golem** -- anvil `--model luna` (gpt-6-luna) by default: a
   cross-family golem under an Anthropic reviewer diversifies failure modes
   -- same-family worker+reviewer share blind spots, and the review gate
   exists to catch "the test was lying." Bind `--model fable` for deep
-  refactors where raw capability dominates. Since anvil#37 the ladder's
-  strong tier (where a failed luna attempt escalates to) is `fable`, not
-  `opus`: on anvil's token profile (~65% cache reads) fable-5.1 costs the
-  same per strong rung as opus-5. Aliases: `haiku/sonnet/opus/fable/luna/
-  terra/glm`. The effort climb on the strong rung is a mid-conversation
-  effort change on one cache-warm session (pi 0.85 `supportsMidConvoEffort`).
-- **Legion** -- `sonnet` members (`haiku` only for purely mechanical
+  refactors where raw capability dominates. The ladder's strong tier (where
+  a failed luna attempt escalates to) is `opus` = claude-opus-5.5 since the
+  2026-09-22 alias refresh: on anvil's token profile (~98% cache reads)
+  opus-5.5 undercuts fable-5.1 on cache-read (0.20 vs 0.25), cache-write (5
+  vs 12.5) and output (20 vs 50), so the 30-day strong rung reprices from
+  $291 to ~$140. Before that it was `fable` over opus-5 (anvil#37) on the
+  cache-read argument, which 5.5 inverted. Aliases: `haiku/sol/sonnet/opus/
+  fable/astra/luna/terra/glm`. The effort climb on the strong rung is a
+  mid-conversation effort change on one cache-warm session (pi 0.85
+  `supportsMidConvoEffort`). Luna's 30-day record to 2026-09-22 is 59/62
+  passed, all first attempt; the strong rung's $291 was 37 fable-bound runs,
+  11 of them `*-repair-spec` follow-ups to a reviewed luna pilot at $5-15
+  each. **Sol pilot (open):** bind the next ~10 repair specs `-m sol`
+  (gpt-6-sol, ~10x luna's token price, ~1/25 of fable's) instead of the
+  strong rung and compare pass rate and $ against those 11. Sol wins if it
+  clears repair specs at fable's rate; it loses if the review loop has to
+  go around again.
+- **Legion** -- `sol` members (`haiku` only for purely mechanical
   batches -- historically unused). At a 3-member ceiling, member cost is
   noise next to merge-conflict and review cost; the gate + review carry
   the judgment, not the member.
@@ -140,7 +157,7 @@ when the work demands it.
   the Summoner anyway: `/new` + `/recap` instead of resuming after a
   break, and compact at 150K, not 300K.
 
-Cross-family consults (`glm-5.2`, `gpt-5.6-sol`) are conversations, not
+Cross-family consults (`gpt-6-astra`, `gpt-6-sol`) are conversations, not
 constructs -- a second read needs no binding.
 
 **CLI binding gotcha:** gateway model IDs contain a slash
@@ -229,9 +246,11 @@ the layout.
   `-m fable` up front for any spec whose verbs are purge / delete / redact /
   wipe personal data; the luna attempt is pure cost.
 
-- **Split repair specs before binding fable.** The review-repair loop
-  (luna pilot -> review -> fable `*-repair-spec`) works: week 37-38, 51 of
-  56 anvil runs passed, 39 on luna's first attempt, 12 rescued by fable.
+- **Split repair specs before binding the strong rung.** The review-repair
+  loop (luna pilot -> review -> strong-rung `*-repair-spec`) works: week
+  37-38, 51 of 56 anvil runs passed, 39 on luna's first attempt, 12 rescued
+  by fable (the strong rung is opus-5.5 since 2026-09-22; the shape of the
+  rule is unchanged).
   The cost lives entirely in the rescues: every fable run above $10 (ten,
   $10.88-$26.59, 8-29M cumulative ctx) was a repair spec carrying several
   independent findings, and `arcade-221-completion` hit $26.59 at 28.7M
