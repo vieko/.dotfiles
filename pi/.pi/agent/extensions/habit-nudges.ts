@@ -119,7 +119,8 @@ export default function (pi: ExtensionAPI) {
 					return {
 						render: (width: number) => {
 							const innerW = Math.max(1, width - 2);
-							const lines = body.render(innerW);
+							// One blank row inside the frame at each end so text does not touch the border rows.
+							const lines = ["", ...body.render(innerW), ""];
 							// Frame = title row + footer row + 2 border rows. Cap to the terminal.
 							viewport = Math.max(3, Math.floor(tui.terminal.rows * 0.9) - 4);
 							const maxTop = Math.max(0, lines.length - viewport);

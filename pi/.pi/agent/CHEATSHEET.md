@@ -12,7 +12,7 @@
 ## Branching
 
 - `/fork` (Ctrl+Shift+F): new session from an earlier prompt; drift stays behind.
-- `/tree` (Ctrl+Shift+T): same, inside this session. Shift+L labels a node.
+- `/tree` (Ctrl+Shift+T, or Escape twice on an empty editor): same, inside this session. Shift+L labels a node.
 - `/clone`: copy the active branch to a new session.
 - `/new` (Ctrl+Shift+N) + `/recap`: restart after a long break.
 
@@ -39,6 +39,14 @@
 
 - Ctrl+X: copy last reply. `/copy`: whole conversation. `/export`: HTML or JSONL.
 - Ctrl+O: expand tool output. Ctrl+G: edit prompt in nvim.
+- Ctrl+Shift+S: search the transcript. Ctrl+Shift+Up/Down: jump between prompts.
+- Ctrl+P / Ctrl+N: prompt history.
+
+## Skills and setup
+
+- `/skill:<name> [request]`: force a skill the model did not pick up.
+- `/reload`: reload extensions, skills, and prompts after editing them.
+- `/hotkeys`: all keybindings. `/settings`: live settings.
 
 ## Models
 
