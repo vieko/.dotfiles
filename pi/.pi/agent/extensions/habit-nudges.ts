@@ -150,7 +150,7 @@ export default function (pi: ExtensionAPI) {
 						},
 					};
 				},
-				{ overlay: true, overlayOptions: { anchor: "center", width: "80%", maxHeight: "90%" } },
+				{ overlay: true, overlayOptions: { anchor: "center", width: 84, maxHeight: "90%" } },
 			);
 		},
 	});
