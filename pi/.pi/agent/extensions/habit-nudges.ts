@@ -24,8 +24,8 @@ import { existsSync, readFileSync } from "node:fs";
 import { homedir } from "node:os";
 import { join } from "node:path";
 import type { ExtensionAPI, ExtensionCommandContext, ExtensionContext } from "@earendil-works/pi-coding-agent";
-import { DynamicBorder, getMarkdownTheme } from "@earendil-works/pi-coding-agent";
-import { Container, Markdown, matchesKey, ScrollView, Text } from "@earendil-works/pi-tui";
+import { getMarkdownTheme } from "@earendil-works/pi-coding-agent";
+import { Markdown, matchesKey, truncateToWidth, visibleWidth } from "@earendil-works/pi-tui";
 
 const CHEATSHEET = join(homedir(), ".pi/agent/CHEATSHEET.md");
 const FORK_TURNS = 20;
@@ -106,24 +106,47 @@ export default function (pi: ExtensionAPI) {
 			}
 			await ctx.ui.custom<void>(
 				(tui, theme, _kb, done) => {
-					const container = new Container();
-					const border = new DynamicBorder((s: string) => theme.fg("accent", s));
-					const scroll = new ScrollView(new Markdown(md, 1, 1, getMarkdownTheme()), { scrollbar: "auto" });
-					container.addChild(border);
-					container.addChild(scroll);
-					container.addChild(new Text(theme.fg("dim", "Up/Down, PgUp/PgDn to scroll. Esc, Enter, or q to close"), 1, 0));
-					container.addChild(border);
+					// Full rounded frame, like pi's own overlays; top/bottom-only borders are
+					// the in-transcript idiom and bleed into the chat behind a floating box.
+					const body = new Markdown(md, 1, 0, getMarkdownTheme());
+					const border = (s: string) => theme.fg("border", s);
+					let top = 0;
+					let viewport = 1;
+					const scroll = (delta: number) => {
+						top = Math.max(0, top + delta);
+						tui.requestRender();
+					};
 					return {
-						render: (width: number) => container.render(width),
-						invalidate: () => container.invalidate(),
+						render: (width: number) => {
+							const innerW = Math.max(1, width - 2);
+							const lines = body.render(innerW);
+							// Frame = title row + footer row + 2 border rows. Cap to the terminal.
+							viewport = Math.max(3, Math.floor(tui.terminal.rows * 0.9) - 4);
+							const maxTop = Math.max(0, lines.length - viewport);
+							if (top > maxTop) top = maxTop;
+							const slice = lines.slice(top, top + viewport);
+							const pos = lines.length > viewport ? ` ${top + 1}-${top + slice.length}/${lines.length} ` : "";
+
+							const title = truncateToWidth(" pi cheatsheet ", innerW);
+							const tw = visibleWidth(title);
+							const left = "─".repeat(Math.floor((innerW - tw) / 2));
+							const right = "─".repeat(Math.max(0, innerW - tw - left.length));
+							const out: string[] = [border(`╭${left}`) + theme.fg("accent", title) + border(`${right}╮`)];
+							for (const line of slice) out.push(border("│") + truncateToWidth(line, innerW, "…", true) + border("│"));
+							const hint = theme.fg("dim", ` ↑↓ PgUp PgDn scroll · Esc Enter q close${pos ? " ·" + pos : ""}`);
+							out.push(border("│") + truncateToWidth(hint, innerW, "…", true) + border("│"));
+							out.push(border(`╰${"─".repeat(innerW)}╯`));
+							return out;
+						},
+						invalidate: () => body.invalidate(),
 						handleInput: (data: string) => {
 							if (matchesKey(data, "escape") || matchesKey(data, "enter") || data === "q") return done();
-							if (matchesKey(data, "up")) scroll.scrollBy(-1);
-							else if (matchesKey(data, "down")) scroll.scrollBy(1);
-							else if (matchesKey(data, "pageUp")) scroll.scrollBy(-Math.max(1, scroll.viewportHeight - 2));
-							else if (matchesKey(data, "pageDown")) scroll.scrollBy(Math.max(1, scroll.viewportHeight - 2));
-							else return;
-							tui.requestRender();
+							if (matchesKey(data, "up") || data === "k") scroll(-1);
+							else if (matchesKey(data, "down") || data === "j") scroll(1);
+							else if (matchesKey(data, "pageUp")) scroll(-(viewport - 1));
+							else if (matchesKey(data, "pageDown") || data === " ") scroll(viewport - 1);
+							else if (matchesKey(data, "home") || data === "g") scroll(-top);
+							else if (matchesKey(data, "end") || data === "G") scroll(Number.MAX_SAFE_INTEGER / 2);
 						},
 					};
 				},
