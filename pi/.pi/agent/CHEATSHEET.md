@@ -29,7 +29,11 @@
 
 ## Templates
 
-`/issue <id>` load and stop · `/lede` PR opening line · `/pr <n>` review PR · `/review` staged diff · `/recap` repo state
+- `/issue <id>`: load the issue, warm context, stop.
+- `/lede`: PR opening line, two candidates.
+- `/pr <n>`: review a PR.
+- `/review`: review the staged diff.
+- `/recap`: repo state for a fresh start.
 
 ## Copy, export, view
 
