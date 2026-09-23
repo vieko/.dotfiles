@@ -1,7 +1,3 @@
-# Pi cheatsheet
-
-The habits worth keeping. `/cheat` shows this; `habit-nudges.ts` surfaces the relevant line when the moment comes. Keys are this machine's bindings (`keybindings.json`), not pi defaults, where they differ.
-
 ## Shell without a model turn
 
 - `!git status` runs in the TUI; output lands in the transcript, so the model sees it next turn anyway. `!!cmd` runs it and keeps it out of context.
