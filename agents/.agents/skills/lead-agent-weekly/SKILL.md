@@ -36,11 +36,14 @@ Pull the merged work across the Lead Agent surface area:
 ```bash
 git log --format="%h %s (%ad)" --date=short --since="<cutoff>" -- \
   apps/lead-agent apps/lead-web apps/lead-bot \
-  packages/lead packages/lead-agent-framework packages/lead-cs \
+  agents/lead-cs agents/lead-startup \
+  packages/lead packages/lead-agent-framework \
   packages/enrichment packages/bounty-scoring
 ```
 
-`apps/lead-agent` + `apps/lead-web` + the `lead*` packages are the core. `apps/lead-bot`
+`apps/lead-agent` + `apps/lead-web` + `agents/lead-cs` + `agents/lead-startup` +
+the `lead*` packages are the core (the scorer agents live under `agents/`, not
+`packages/`). `apps/lead-bot`
 feeds the LEAD BOT section when it has activity. Check `apps/api` / `apps/athena` only
 if something there is Lead-Agent-adjacent (e.g. a shared DB table the queue reads).
 
@@ -58,8 +61,12 @@ user for the epic state instead.
 
 Default to the compact project-update structure in the golden example:
 
-1. `*What shipped in the last two weeks*`
+1. `*What shipped in the last two weeks*` (name the real window: "three weeks" when it is)
 2. `*What's next*`
+
+When the window runs past two weeks or the list is six-plus bullets, open with one
+italic `_TL;DR — ..._` line (two sentences max) before the first heading, as in the
+2026-08-07 golden example. Skip it for a normal two-week post.
 
 Use themed subsections such as `*VDR DASHBOARD*` or `*OUTREACH DELIVERY*` only when the
 user requests a longer narrative report or the volume genuinely needs grouping.
@@ -96,6 +103,11 @@ PRs this week") in a section tagline.
 **Bullet structure:** `* Outcome-first sentence`, usually without a bold lead-in or
 trailing period. Trailing Linear links are optional when useful:
 `([GTMENG-1402](url))`. Multiple IDs are comma-separated inside one parenthesis.
+UI labels the reader can see on screen go in inline code (`` `IN SEQUENCE` ``,
+`` `Unenroll` ``); a new page or surface gets a link (`[SPAM SURFACE](url)`). When a
+teammate owned a real part of a bullet, end it with their `@Name` mention rather than
+narrating the split. Cut trailing "so that..." clauses and row-count stats unless the
+number is the point. One dry aside per report is the ceiling.
 
 **Long-form exception:** when the user explicitly wants a narrative weekly report,
 an italic 2-3 sentence intro and themed section taglines can help. Do not add them to

@@ -173,9 +173,10 @@ admin-merges, or bypassing required checks.
 ## Tool & review notes
 
 - **PR review style on vercel repos**: keep JSDoc and code-comment prose tight. State what + why; the code shows how. Multi-paragraph explanations on small helpers read as noise — file-level headers documenting non-obvious context are fine.
-- **Linear**: known CLI quirks (silent no-op updates, missing `labels` in `-j`) and
-  the comments-vs-descriptions writing style live in the `linear-cli` skill — it
-  loads whenever Linear work triggers it.
+- **Linear**: the installed CLI is linearis (not schpet's `linear-cli`). Its
+  quirks (~1000-byte argv SIGKILL on PHYREXIA, `LINEAR_API_TOKEN` only, no
+  file flags) and the comments-vs-descriptions writing style live in the
+  `linear-cli` skill — it loads whenever Linear work triggers it.
 
 ## Secrets
 
