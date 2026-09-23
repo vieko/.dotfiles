@@ -99,6 +99,10 @@ gateway, pi#9210); "true $" is the number to quote.
   report the malformed-edit rate if any ran.
 - **1h TTL net**: +$362 (wk 36) then +$120/12d (wks 37-38). If it goes
   negative, `PI_CACHE_RETENTION=long` comes off.
+- **`cacheWarming: "idle"`** (settings.json since 2026-09-21) pings to keep
+  Anthropic caches warm between runs. Success = `idle` misses fall from
+  the 79/12d baseline; cost = the warming reads (check `showCacheMissNotices`
+  warming lines). Net negative means back to `"streaming"`.
 
 ## Write-up shape
 
