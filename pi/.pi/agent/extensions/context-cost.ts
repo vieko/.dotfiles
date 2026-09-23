@@ -162,7 +162,7 @@ export default function (pi: ExtensionAPI) {
 
 		const compactFirst = `Compact first (≈ ${usd(s.compactCost)} once, then ~${ktok(COMPACT_KEEP_TOKENS)} tokens/turn)`;
 		const sendAnyway = `Send anyway (rewrites ${ktok(s.tokens)} ≈ ${usd(s.missCost)}, then ≈ ${usd(s.readCost)}/turn)`;
-		const keep = "Keep my input in the editor, decide later (/new is free)";
+		const keep = "Keep my input in the editor, decide later (/new or /fork is free)";
 		const choice = await ctx.ui.select(
 			`Prompt cache expired: idle ${mins(s.idleMs)} > ${s.p.ttlMin}m TTL with ${ktok(s.tokens)} tokens of context`,
 			[compactFirst, sendAnyway, keep],
