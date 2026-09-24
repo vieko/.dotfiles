@@ -28,13 +28,27 @@ Token resolution order: `--api-token <token>` flag, `LINEAR_API_TOKEN` env var,
 lacks the bridge, pass `--api-token "$LINEAR_API_KEY"` explicitly. Never write
 the token to `~/.linearis/token` (plaintext; 1Password is the source of truth).
 
+**Credential types.** `LINEAR_API_KEY` holds either a personal API key
+(`lin_api_*`, the current setup) or an OAuth access token, which the API wants
+as `Bearer lin_oauth_*`. The bridge adds the `Bearer ` prefix when the value
+isn't a `lin_api_*` key, and linearis sends the header verbatim, so both work
+without touching the CLI. The workspace is phasing out personal-key minting;
+the OAuth path is `~/.scripts/linear-oauth` (`authorize` once, `refresh` when
+expired, `status` to check), which stores tokens in 1Password. If linearis
+starts returning 401s, the OAuth token has probably expired: run
+`linear-oauth refresh` and reload the shell. Never run it from an agent turn
+(it calls `op`, which prompts).
+
 The `scripts/linear/*.sh` helpers in the gtm repo use `LINEAR_API_KEY` directly
-against GraphQL — they are unaffected by any of this.
+against GraphQL with the same verbatim header — they follow whatever the bridge
+exports and need no change either.
 
 ## Output & identifiers
 
 - All output is JSON. `--compact` for single-line; `--fields <dot-paths>` to
-  trim (e.g. `--fields identifier,title,state.name`).
+  trim (e.g. `--fields identifier,title,state.name`). **On `list` commands the
+  paths must start with `nodes.`** (`--fields nodes.identifier,nodes.title`);
+  without the prefix the output is an empty `{}`, not an error.
 - Commands accept UUIDs or human-readable identifiers: issue `ABC-123`, team
   key (`GTMENG`), project/label/user names.
 - **Do not name git branches from the `branchName` field.** Linear generates it
@@ -76,7 +90,8 @@ linear issues create "Title here" \
   --fields identifier,title
 
 # List my in-progress issues on a team
-linear issues list --team GTMENG --assignee vieko --status "In Progress"
+linear issues list --team GTMENG --assignee vieko.franetovic@vercel.com --status "In Progress" \
+  --fields nodes.identifier,nodes.title,nodes.state.name
 
 # Full-text search
 linear issues search "account association" --team GTMENG --limit 10
@@ -85,7 +100,7 @@ linear issues search "account association" --team GTMENG --limit 10
 linear issues discuss GTMENG-2362 --body "$(cat /tmp/comment.md)"
 
 # Update state / assignee
-linear issues update GTMENG-2362 --status "In Progress" --assignee vieko
+linear issues update GTMENG-2362 --status "In Progress" --assignee vieko.franetovic@vercel.com
 ```
 
 ## Markdown content
@@ -143,15 +158,14 @@ jq -n --arg term "onboarding" '{query: "query($term: String!) { searchIssues(ter
   `issueUpdate` accepts the identifier. Verify with `linear issues read <id>
   --fields description`.
 
-- **`--assignee` resolves by UUID only in practice.** `vieko`, `me`, and the
-  full name `"Vieko Franetovic"` all return `User "..." not found`
-  (linearis 2026.6.0). Get the UUID once from the viewer query and pass that:
+- **`--assignee` resolves by exact `displayName`, then email, then UUID.**
+  `vieko`, `me`, and the full name `"Vieko Franetovic"` all return `User
+  "..." not found` (linearis 2026.6.0) because none is the displayName.
+  Email is the reliable human-readable form; the UUID also works:
 
   ```bash
-  jq -n '{query:"{ viewer { id name displayName } }"}' \
-    | curl -s -X POST https://api.linear.app/graphql -H "Content-Type: application/json" -H "Authorization: $LINEAR_API_TOKEN" -d @-
-  # Vieko: ed9c0bc0-0e38-44a6-a020-59d2fd7ac474
-  linear issues update GTMENG-1234 --assignee ed9c0bc0-0e38-44a6-a020-59d2fd7ac474
+  linear issues update GTMENG-1234 --assignee vieko.franetovic@vercel.com
+  # or: --assignee ed9c0bc0-0e38-44a6-a020-59d2fd7ac474  (Vieko's UUID)
   ```
 
   There is no `linear users me`; the `users` domain takes no positional arg.

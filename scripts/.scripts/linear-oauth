@@ -1,0 +1,179 @@
+#!/usr/bin/env bash
+# linear-oauth -- mint and refresh a Linear OAuth access token for CLI use.
+#
+# Replacement for personal API keys (lin_api_*) once the workspace stops
+# issuing them. Runs the authorization-code flow against a Linear OAuth app
+# and stores the resulting tokens in 1Password, where env.op picks the
+# access token up as LINEAR_API_KEY. The .bash_exports bridge adds the
+# "Bearer " prefix, so linearis and gtm's scripts/linear/*.sh need no change.
+#
+# Usage:
+#   linear-oauth authorize   # first run: browser consent -> tokens -> 1Password
+#   linear-oauth refresh     # rotate the access token via the refresh token
+#   linear-oauth status      # who does the stored token authenticate as
+#   linear-oauth revoke      # revoke the stored access token
+#
+# Requires in env (op-injected):
+#   LINEAR_OAUTH_CLIENT_ID, LINEAR_OAUTH_CLIENT_SECRET
+# Optional:
+#   LINEAR_OAUTH_OP_ITEM   1Password item title (default: linear-oauth-on-<host>)
+#   LINEAR_OAUTH_OP_VAULT  1Password vault (default: Employee)
+#   LINEAR_OAUTH_SCOPE     default: read,write
+#   LINEAR_OAUTH_PORT      local callback port (default: 8973)
+#
+# The OAuth app's redirect URI must include http://localhost:<port>/callback.
+# Interactive only: never call from an agent turn (op will prompt for auth).
+set -euo pipefail
+
+authorizeUrl="https://linear.app/oauth/authorize"
+tokenUrl="https://api.linear.app/oauth/token"
+revokeUrl="https://api.linear.app/oauth/revoke"
+graphqlUrl="https://api.linear.app/graphql"
+
+scope="${LINEAR_OAUTH_SCOPE:-read,write}"
+port="${LINEAR_OAUTH_PORT:-8973}"
+redirectUri="http://localhost:${port}/callback"
+opVault="${LINEAR_OAUTH_OP_VAULT:-Employee}"
+opItem="${LINEAR_OAUTH_OP_ITEM:-linear-oauth-on-$(hostname -s | tr '[:upper:]' '[:lower:]')}"
+
+die() { printf 'linear-oauth: %s\n' "$*" >&2; exit 1; }
+
+needCmd() { command -v "$1" >/dev/null 2>&1 || die "missing dependency: $1"; }
+
+needClient() {
+  [[ -n "${LINEAR_OAUTH_CLIENT_ID:-}" ]] || die "LINEAR_OAUTH_CLIENT_ID is not set"
+  [[ -n "${LINEAR_OAUTH_CLIENT_SECRET:-}" ]] || die "LINEAR_OAUTH_CLIENT_SECRET is not set"
+}
+
+opRead() { op read "op://${opVault}/${opItem}/$1" 2>/dev/null || true; }
+
+# storeTokens <token-json>: upsert access/refresh/expiry into the 1Password item.
+storeTokens() {
+  local json="$1" access refresh expiresIn expiresAt
+  access=$(jq -r '.access_token // empty' <<<"$json")
+  refresh=$(jq -r '.refresh_token // empty' <<<"$json")
+  expiresIn=$(jq -r '.expires_in // 0' <<<"$json")
+  [[ -n "$access" ]] || die "token response had no access_token: $json"
+  expiresAt=$(date -u -v+"${expiresIn}S" +%Y-%m-%dT%H:%M:%SZ 2>/dev/null \
+    || date -u -d "+${expiresIn} seconds" +%Y-%m-%dT%H:%M:%SZ)
+
+  local -a fields=("credential[password]=${access}" "expires_at[text]=${expiresAt}")
+  # Refresh responses may omit the refresh token; keep the stored one then.
+  [[ -n "$refresh" ]] && fields+=("refresh_token[password]=${refresh}")
+
+  if op item get "$opItem" --vault "$opVault" >/dev/null 2>&1; then
+    op item edit "$opItem" --vault "$opVault" "${fields[@]}" >/dev/null
+  else
+    op item create --category "API Credential" --vault "$opVault" \
+      --title "$opItem" "${fields[@]}" >/dev/null
+  fi
+  printf 'stored access token in op://%s/%s (expires %s)\n' "$opVault" "$opItem" "$expiresAt"
+  printf 'env.op should reference: LINEAR_API_KEY=op://%s/%s/credential\n' "$opVault" "$opItem"
+}
+
+# waitForCode: one-shot local HTTP listener; prints the ?code= from the callback.
+waitForCode() {
+  needCmd python3
+  python3 - "$port" <<'PY'
+import sys
+from http.server import BaseHTTPRequestHandler, HTTPServer
+from urllib.parse import urlparse, parse_qs
+
+port = int(sys.argv[1])
+result = {}
+
+class Handler(BaseHTTPRequestHandler):
+    def do_GET(self):
+        qs = parse_qs(urlparse(self.path).query)
+        result["code"] = qs.get("code", [""])[0]
+        result["state"] = qs.get("state", [""])[0]
+        result["error"] = qs.get("error", [""])[0]
+        self.send_response(200)
+        self.send_header("Content-Type", "text/plain")
+        self.end_headers()
+        self.wfile.write(b"linear-oauth: you can close this tab.\n")
+    def log_message(self, *args):
+        pass
+
+HTTPServer(("127.0.0.1", port), Handler).handle_request()
+if result.get("error"):
+    sys.exit("authorization denied: " + result["error"])
+print(result.get("code", ""))
+print(result.get("state", ""))
+PY
+}
+
+cmdAuthorize() {
+  needCmd curl; needCmd jq; needCmd op; needClient
+  local state url
+  state=$(head -c 16 /dev/urandom | od -An -tx1 | tr -d ' \n')
+  url="${authorizeUrl}?response_type=code&client_id=${LINEAR_OAUTH_CLIENT_ID}"
+  url+="&redirect_uri=$(jq -rn --arg v "$redirectUri" '$v|@uri')"
+  url+="&scope=$(jq -rn --arg v "$scope" '$v|@uri')&state=${state}&actor=user&prompt=consent"
+
+  printf 'opening browser for consent (listening on %s)...\n' "$redirectUri"
+  if command -v open >/dev/null 2>&1; then open "$url"
+  elif command -v xdg-open >/dev/null 2>&1; then xdg-open "$url"
+  else printf 'open this URL:\n%s\n' "$url"; fi
+
+  local code gotState
+  { read -r code; read -r gotState; } < <(waitForCode)
+  [[ -n "$code" ]] || die "no authorization code received"
+  [[ "$gotState" == "$state" ]] || die "state mismatch; aborting"
+
+  local resp
+  resp=$(curl -fsS -X POST "$tokenUrl" \
+    -H 'Content-Type: application/x-www-form-urlencoded' \
+    --data-urlencode grant_type=authorization_code \
+    --data-urlencode "code=${code}" \
+    --data-urlencode "redirect_uri=${redirectUri}" \
+    --data-urlencode "client_id=${LINEAR_OAUTH_CLIENT_ID}" \
+    --data-urlencode "client_secret=${LINEAR_OAUTH_CLIENT_SECRET}")
+  storeTokens "$resp"
+}
+
+cmdRefresh() {
+  needCmd curl; needCmd jq; needCmd op; needClient
+  local refresh resp
+  refresh=$(opRead refresh_token)
+  [[ -n "$refresh" ]] || die "no refresh_token stored in ${opItem}; run 'linear-oauth authorize'"
+  resp=$(curl -fsS -X POST "$tokenUrl" \
+    -H 'Content-Type: application/x-www-form-urlencoded' \
+    --data-urlencode grant_type=refresh_token \
+    --data-urlencode "refresh_token=${refresh}" \
+    --data-urlencode "client_id=${LINEAR_OAUTH_CLIENT_ID}" \
+    --data-urlencode "client_secret=${LINEAR_OAUTH_CLIENT_SECRET}")
+  storeTokens "$resp"
+  printf 'reload your shell (or re-run op inject) to pick up the new token\n'
+}
+
+cmdStatus() {
+  needCmd curl; needCmd jq; needCmd op
+  local access expiresAt
+  access=$(opRead credential)
+  [[ -n "$access" ]] || die "no access token stored in ${opItem}"
+  expiresAt=$(opRead expires_at)
+  curl -fsS "$graphqlUrl" \
+    -H "Authorization: Bearer ${access}" \
+    -H 'Content-Type: application/json' \
+    --data '{"query":"{ viewer { id name email } }"}' \
+    | jq --arg exp "${expiresAt:-unknown}" --arg item "op://${opVault}/${opItem}" \
+        '{item: $item, expires_at: $exp, viewer: .data.viewer, errors: .errors}'
+}
+
+cmdRevoke() {
+  needCmd curl; needCmd op
+  local access
+  access=$(opRead credential)
+  [[ -n "$access" ]] || die "no access token stored in ${opItem}"
+  curl -fsS -X POST "$revokeUrl" -H "Authorization: Bearer ${access}" >/dev/null
+  printf 'revoked; the 1Password item %s still holds the dead token -- delete or re-authorize\n' "$opItem"
+}
+
+case "${1:-}" in
+  authorize) cmdAuthorize ;;
+  refresh)   cmdRefresh ;;
+  status)    cmdStatus ;;
+  revoke)    cmdRevoke ;;
+  *) sed -n '2,25p' "$0" | sed 's/^# \{0,1\}//'; exit 2 ;;
+esac
