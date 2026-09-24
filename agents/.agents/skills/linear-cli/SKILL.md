@@ -143,6 +143,35 @@ jq -n --arg term "onboarding" '{query: "query($term: String!) { searchIssues(ter
   `issueUpdate` accepts the identifier. Verify with `linear issues read <id>
   --fields description`.
 
+- **`--assignee` resolves by UUID only in practice.** `vieko`, `me`, and the
+  full name `"Vieko Franetovic"` all return `User "..." not found`
+  (linearis 2026.6.0). Get the UUID once from the viewer query and pass that:
+
+  ```bash
+  jq -n '{query:"{ viewer { id name displayName } }"}' \
+    | curl -s -X POST https://api.linear.app/graphql -H "Content-Type: application/json" -H "Authorization: $LINEAR_API_TOKEN" -d @-
+  # Vieko: ed9c0bc0-0e38-44a6-a020-59d2fd7ac474
+  linear issues update GTMENG-1234 --assignee ed9c0bc0-0e38-44a6-a020-59d2fd7ac474
+  ```
+
+  There is no `linear users me`; the `users` domain takes no positional arg.
+  `--project` accepts the project UUID reliably; names may work but the UUID
+  is the safe path.
+- **`linear projects list` fails with `Query too complex`** in this workspace
+  even with `--fields name` (too many projects; no `--team` filter). Find a
+  project via GraphQL instead:
+
+  ```bash
+  jq -n '{query: "{ projects(filter: { name: { containsIgnoreCase: \"index\" } }, first: 10) { nodes { id name state teams { nodes { key } } } } }"}' \
+    | curl -s -X POST https://api.linear.app/graphql -H "Content-Type: application/json" -H "Authorization: $LINEAR_API_TOKEN" -d @- | jq -c '.data.projects.nodes[]'
+  # GTMENG "Index" project: 7f53b968-16db-4a15-aa8f-27fae00dc5d5
+  ```
+
+- **Only one `linear` binary should be on PATH.** schpet's `linear-cli` was
+  installed via Homebrew alongside linearis until 2026-07 (shadowed, but
+  `which -a linear` showed both). It is not in any Brewfile, so it will not
+  come back; if `which -a linear` ever lists `/opt/homebrew/bin/linear` again,
+  `brew uninstall --formula linear`.
 - **Auth misses look like "No API token found"** even when `LINEAR_API_KEY` is
   set — linearis only reads `LINEAR_API_TOKEN`. The dotfiles bridge fixes
   interactive shells; pass `--api-token "$LINEAR_API_KEY"` elsewhere.
