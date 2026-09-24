@@ -16,7 +16,8 @@
   "packages": [
     "git:github.com/vieko/bonfire@v7.5.0",
     "git:github.com/vieko/pi-prose@v0.3.1",
-    "git:github.com/vieko/pi-post@v0.8.1"
+    "git:github.com/vieko/pi-post@v0.8.1",
+    "npm:pi-mcp-adapter@2.36.0"
   ],
   "hideThinkingBlock": false,
   "retry": {

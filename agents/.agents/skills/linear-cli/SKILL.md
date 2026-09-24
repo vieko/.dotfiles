@@ -39,6 +39,12 @@ starts returning 401s, the OAuth token has probably expired: run
 `linear-oauth refresh` and reload the shell. Never run it from an agent turn
 (it calls `op`, which prompts).
 
+**Linear MCP is also available in Pi** (`~/.agents/mcp.json`, via pi-mcp-adapter,
+OAuth through `/mcp-auth linear`). It is the workspace-sanctioned agent route
+and works with no API key; reach it with `mcp({ search: "linear" })`. Prefer
+linearis when the shell key works (JSON output, cheaper, documented here) and
+fall back to MCP when it 401s or on a machine without the key.
+
 The `scripts/linear/*.sh` helpers in the gtm repo use `LINEAR_API_KEY` directly
 against GraphQL with the same verbatim header — they follow whatever the bridge
 exports and need no change either.
