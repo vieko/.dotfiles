@@ -121,24 +121,48 @@ when the work demands it.
 - **Golem** -- anvil `--model luna` (gpt-6-luna) by default: a
   cross-family golem under an Anthropic reviewer diversifies failure modes
   -- same-family worker+reviewer share blind spots, and the review gate
-  exists to catch "the test was lying." Bind `--model fable` for deep
-  refactors where raw capability dominates. The ladder's strong tier (where
-  a failed luna attempt escalates to) is `opus` = claude-opus-5.5 since the
-  2026-09-22 alias refresh: on anvil's token profile (~98% cache reads)
-  opus-5.5 undercuts fable-5.1 on cache-read (0.20 vs 0.25), cache-write (5
-  vs 12.5) and output (20 vs 50), so the 30-day strong rung reprices from
-  $291 to ~$140. Before that it was `fable` over opus-5 (anvil#37) on the
-  cache-read argument, which 5.5 inverted. Aliases: `haiku/sol/sonnet/opus/
-  fable/astra/luna/terra/glm`. The effort climb on the strong rung is a
-  mid-conversation effort change on one cache-warm session (pi 0.85
-  `supportsMidConvoEffort`). Luna's 30-day record to 2026-09-22 is 59/62
-  passed, all first attempt; the strong rung's $291 was 37 fable-bound runs,
-  11 of them `*-repair-spec` follow-ups to a reviewed luna pilot at $5-15
-  each. **Sol pilot (open):** bind the next ~10 repair specs `-m sol`
-  (gpt-6-sol, ~10x luna's token price, ~1/25 of fable's) instead of the
-  strong rung and compare pass rate and $ against those 11. Sol wins if it
-  clears repair specs at fable's rate; it loses if the review loop has to
-  go around again.
+  exists to catch "the test was lying." Luna is the base for everything,
+  including deep refactors: let the ladder climb. The one standing
+  exception is the moderation trap below (purge / delete / redact verbs ->
+  `-m fable` up front). Any other `-m fable` base names WHY in the
+  summoning; "raw capability" is not a reason on its own -- the record has
+  no spec that failed on luna and passed on fable that the ladder would not
+  have reached anyway, and the three specs that failed everything failed on
+  fable too. Ladder (anvil#45): `luna:high -> luna:xhigh -> opus:high ->
+  opus:xhigh`; under the default `-n 3` a luna golem ends on `opus:high`.
+  The luna:xhigh rung is a ~$0.02 retry with the gate errors, added because
+  a third of luna's gate failures were mechanical (formatter, lockfile,
+  stale comments) and were being paid for at the strong rung. The strong
+  tier is `opus` = claude-opus-5.5 since the 2026-09-22 alias refresh: on
+  anvil's token profile (~98% cache reads) opus-5.5 undercuts fable-5.1 on
+  cache-read (0.20 vs 0.25), cache-write (5 vs 12.5) and output (20 vs 50).
+  **Unproven as of 2026-09-29:** zero escalations have landed on opus-5.5
+  yet; the ~50% saving is fable's tokens repriced, not observed. Before that
+  it was `fable` over opus-5 (anvil#37) on the cache-read argument, which
+  5.5 inverted. Aliases: `haiku/sol/sonnet/opus/fable/astra/luna/terra/glm`.
+  Same-model effort climbs are a mid-conversation effort change on one
+  cache-warm session (pi 0.85 `supportsMidConvoEffort`); the luna->opus
+  switch is a fresh conversation over the same worktree, so luna's partial
+  work carries.
+
+  Record 2026-09-04..24 (anvil run files, 80 runs): luna base 63 runs, 43
+  passed on rung 0 (68%), 16 passed on the strong rung, 4 failed; luna's own
+  attempts cost ~$1.20 total ($0.02 avg), the strong rungs $74 ($3.18 avg).
+  Fable base 17 runs, 16 passed, $224 ($12 avg) -- 75% of all golem spend,
+  and luna was never tried on those specs. No run has ever passed on
+  attempt 3; every pass was rung 0 or 1. The strong model's own effort climb
+  (`fable:high -> fable:xhigh`) ran 3 times and rescued 0. An earlier
+  version of this entry claimed "59/62, all first attempt"; the 59 is right,
+  the "all first attempt" was not -- 30% of default golems hit the strong
+  rung.
+
+  Sol pilot: **dropped 2026-09-29** before it started. The premise ("~1/25
+  of fable's price") was list input price misread; on anvil's cache-read
+  profile sol and opus-5.5 share the 0.20 cache-read rate, and repricing
+  the 22 actual strong-rung attempts gives sol $0.98 vs opus $1.50 vs fable
+  $3.18 per attempt. $0.50 per rescue does not buy a second review loop.
+  `-m sol` stays available as a same-family-as-luna worker when one is
+  wanted.
 - **Legion** -- `sol` members (`haiku` only for purely mechanical
   batches -- historically unused). At a 3-member ceiling, member cost is
   noise next to merge-conflict and review cost; the gate + review carry
@@ -250,15 +274,18 @@ the layout.
   loop (luna pilot -> review -> strong-rung `*-repair-spec`) works: week
   37-38, 51 of 56 anvil runs passed, 39 on luna's first attempt, 12 rescued
   by fable (the strong rung is opus-5.5 since 2026-09-22; the shape of the
-  rule is unchanged).
+  rule is unchanged). Repair specs are luna-first like everything else;
+  the ladder reaches the strong rung on its own when luna cannot close the
+  findings.
   The cost lives entirely in the rescues: every fable run above $10 (ten,
   $10.88-$26.59, 8-29M cumulative ctx) was a repair spec carrying several
   independent findings, and `arcade-221-completion` hit $26.59 at 28.7M
   ctx. Rule: a repair spec carries at most two independent review
   findings, or touches one app/package; more than that is two specs with
-  disjoint scopes (Legion rules apply). Luna attempt-1 passes 29/30 when it
-  finishes, so the split costs cents; a fable golem past ~10M cumulative
-  ctx in `anvil status` is the spec's fault, not the model's.
+  disjoint scopes (Legion rules apply). A luna attempt costs cents whether
+  or not it passes (68% rung-0 pass rate over 63 runs), so the split is
+  free; a strong-rung golem past ~10M cumulative ctx in `anvil status` is
+  the spec's fault, not the model's.
 
 - **A gate must be satisfiable inside `--scope`, against the fork SHA.**
   golem-14121 (2026-09-03) had `--scope apps/dse-platform/**` and a
@@ -273,6 +300,14 @@ the layout.
   scope; mirror CI's filters (quality.yml checks `*.ts *.tsx *.md` only).
   A gate the golem satisfied by touching config or out-of-scope files is a
   summoner bug, and the diff needs that part reverted before review.
+  The other half of the dry run: the gate must *fail cleanly* on the fork
+  SHA when the work is not done, not crash. Anvil cannot tell a harness
+  crash (verify-script traceback, `gate.mjs` the spec expects the golem to
+  create, `.npmrc` env failures) from a model failure; it escalates and
+  pays the strong rung to hit the same broken gate. 4-5 of the 19
+  luna->fable escalations in 2026-09 were this. Until anvil classifies
+  harness crashes as inconclusive, a gate that has not been run once by
+  hand is not a gate.
 
 - **A gate must pass on a clean run, not just fail on a dirty one.**
   golem-3307 (2026-09-03) had a gate written as
