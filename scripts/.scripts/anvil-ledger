@@ -1,0 +1,331 @@
+#!/usr/bin/env python3
+"""anvil-ledger -- read anvil's run records and report how the vessel ladder
+is actually performing.
+
+Anvil persists one JSON per outcome under ~/.local/state/anvil/<repo>/runs/
+with a per-attempt timeline (model, effort, verdict, tokens, cost). This
+script turns those into the numbers the PHYREXIA.md "Vessels" policy is
+supposed to rest on:
+
+  * per base model: runs, rung-0 pass rate, rescues on later rungs, failures,
+    what the base attempts cost vs what the escalations cost
+  * per escalation rung (model:effort at attempt > 0): attempts, passes, cost
+    -- this is what proves or disproves a strong tier or a retry rung
+  * passes by attempt index (is the last rung ever doing anything?)
+  * strong-rung attempts repriced across candidate models on the observed
+    token profile (~98% cache reads), using pi's gateway catalog for prices
+  * repair-spec follow-ups joined to their parent run by name (heuristic),
+    as the review-quality signal per passing model
+
+Usage:
+  anvil-ledger [--since YYYY-MM-DD] [--until YYYY-MM-DD] [--repo SUBSTR]
+               [--escalations] [--failed] [--json]
+
+Reads only. Records without a per-attempt timeline (pre-2026-09 schema) are
+counted and skipped. Temp/probe repos are excluded.
+"""
+
+from __future__ import annotations
+
+import argparse
+import glob
+import json
+import os
+import sys
+from collections import defaultdict
+from datetime import datetime
+
+STATE_ROOT = os.path.join(os.environ.get("XDG_STATE_HOME", os.path.expanduser("~/.local/state")), "anvil")
+CATALOG = os.path.expanduser("~/.pi/agent/models-store.json")
+
+# Mirrors DEFAULT_MODEL_ALIASES in ~/dev/anvil/packages/core/src/node/model-resolver.ts.
+ALIASES = {
+    "haiku": "anthropic/claude-haiku-4.5",
+    "sonnet": "anthropic/claude-sonnet-5",
+    "opus": "anthropic/claude-opus-5.5",
+    "fable": "anthropic/claude-fable-5.1",
+    "luna": "openai/gpt-6-luna",
+    "sol": "openai/gpt-6-sol",
+    "terra": "openai/gpt-5.6-terra",
+    "glm": "zai/glm-5.3",
+    "astra": "openai/gpt-6-astra",
+}
+
+# Fallback $/M tokens if the catalog is unreadable: (input, output, cacheRead, cacheWrite).
+FALLBACK_PRICES = {
+    "anthropic/claude-fable-5.1": (10, 50, 0.25, 12.5),
+    "anthropic/claude-opus-5.5": (4, 20, 0.2, 5),
+    "openai/gpt-6-sol": (2, 10, 0.2, 2.5),
+    "openai/gpt-6-luna": (0.1, 0.5, 0.01, 0.125),
+    "anthropic/claude-sonnet-5": (2, 10, 0.2, 2.5),
+}
+
+REPRICE_CANDIDATES = ("fable", "opus", "sol")
+# Tokens that mark a follow-up spec to an earlier golem's reviewed diff.
+REPAIR_MARKERS = ("-repair", "-fix", "-followup")
+EXCLUDE_REPO_MARKERS = ("--var-folders", "tmp-probe", "/T-tmp", "--tmp-")
+
+
+def load_prices() -> dict[str, tuple[float, float, float, float]]:
+    prices = dict(FALLBACK_PRICES)
+    try:
+        with open(CATALOG) as fh:
+            store = json.load(fh)
+        gateway = store.get("vercel-ai-gateway") or {}
+        models = gateway.get("models", gateway) if isinstance(gateway, dict) else gateway
+        for entry in models or []:
+            if not isinstance(entry, dict):
+                continue
+            cost = entry.get("cost") or {}
+            if entry.get("id") and "input" in cost:
+                prices[entry["id"]] = (
+                    cost.get("input", 0),
+                    cost.get("output", 0),
+                    cost.get("cacheRead", 0),
+                    cost.get("cacheWrite", 0),
+                )
+    except (OSError, json.JSONDecodeError):
+        pass
+    return prices
+
+
+def reprice(usage: dict, model: str, prices: dict) -> float | None:
+    mid = ALIASES.get(model, model)
+    p = prices.get(mid)
+    if not p:
+        return None
+    return (
+        usage.get("input", 0) * p[0]
+        + usage.get("output", 0) * p[1]
+        + usage.get("cacheRead", 0) * p[2]
+        + usage.get("cacheWrite", 0) * p[3]
+    ) / 1e6
+
+
+def cfg_key(attempt: dict) -> str:
+    c = attempt.get("config") or {}
+    return f"{c.get('model', '?')}:{c.get('effort', '-')}"
+
+
+def cost_of(attempt: dict) -> float:
+    return float((attempt.get("usage") or {}).get("cost") or 0)
+
+
+def load_runs(args) -> tuple[list[dict], int]:
+    runs, skipped = [], 0
+    for path in glob.glob(os.path.join(STATE_ROOT, "*", "runs", "*.json")):
+        if any(m in path for m in EXCLUDE_REPO_MARKERS):
+            continue
+        repo = path.split(os.sep)[-3]
+        if args.repo and args.repo not in repo:
+            continue
+        try:
+            with open(path) as fh:
+                rec = json.load(fh)
+        except (OSError, json.JSONDecodeError):
+            continue
+        day = (rec.get("updatedAt") or "")[:10]
+        if not day or (args.since and day < args.since) or (args.until and day > args.until):
+            continue
+        if not rec.get("attempts"):
+            skipped += 1
+            continue
+        rec["_repo"] = repo
+        runs.append(rec)
+    runs.sort(key=lambda r: r.get("updatedAt", ""))
+    return runs, skipped
+
+
+def is_repair(outcome_id: str) -> bool:
+    return any(m in outcome_id for m in REPAIR_MARKERS)
+
+
+def repair_parent(outcome_id: str, ids: set[str]) -> str | None:
+    """Heuristic join: '<stem>-...-repair-spec' (or -fix / -followup) -> the
+    longest other id sharing the stem. Naming is a convention, not a schema, so
+    this is best-effort and undercounts when the follow-up was renamed."""
+    if not is_repair(outcome_id):
+        return None
+    cut = min(outcome_id.find(m) for m in REPAIR_MARKERS if m in outcome_id)
+    parts = outcome_id[:cut].split("-")
+    while parts:
+        prefix = "-".join(parts)
+        cands = [i for i in ids if i != outcome_id and i.startswith(prefix) and not is_repair(i)]
+        if cands:
+            return max(cands, key=len)
+        parts.pop()
+    return None
+
+
+def analyze(runs: list[dict], prices: dict) -> dict:
+    by_base = defaultdict(lambda: dict(runs=0, passed=0, rung0=0, rescued=0, failed=0, other=0, base_cost=0.0, esc_cost=0.0))
+    by_rung = defaultdict(lambda: dict(attempts=0, passed=0, cost=0.0))
+    pass_by_attempt = defaultdict(int)
+    reprice_tot = {m: 0.0 for m in REPRICE_CANDIDATES}
+    reprice_n = 0
+    escalations, failed = [], []
+
+    for r in runs:
+        atts = r["attempts"]
+        base = atts[0]["config"]["model"]
+        b = by_base[base]
+        b["runs"] += 1
+        state = r.get("state")
+        distinct = {cfg_key(a) for a in atts}
+        if state == "passed":
+            b["passed"] += 1
+            passing = next((a for a in atts if a.get("verdict") == "passed"), atts[-1])
+            pass_by_attempt[passing.get("attempt", len(atts) - 1)] += 1
+            if len(distinct) == 1:
+                b["rung0"] += 1
+            else:
+                b["rescued"] += 1
+        elif state == "failed":
+            b["failed"] += 1
+        else:
+            b["other"] += 1
+
+        for a in atts:
+            same_as_base = cfg_key(a) == cfg_key(atts[0])
+            c = cost_of(a)
+            if same_as_base:
+                b["base_cost"] += c
+            else:
+                b["esc_cost"] += c
+                k = by_rung[cfg_key(a)]
+                k["attempts"] += 1
+                k["cost"] += c
+                if a.get("verdict") == "passed":
+                    k["passed"] += 1
+                u = a.get("usage") or {}
+                if u.get("cacheRead") and a["config"]["model"] not in ("luna", "haiku"):
+                    reprice_n += 1
+                    for m in REPRICE_CANDIDATES:
+                        v = reprice(u, m, prices)
+                        if v is not None:
+                            reprice_tot[m] += v
+
+        if len(distinct) > 1:
+            escalations.append(r)
+        if state == "failed":
+            failed.append(r)
+
+    # Repair joins: which passing model's diffs came back for repair.
+    ids = {r["outcomeId"] for r in runs}
+    by_id = {r["outcomeId"]: r for r in runs}
+    repairs = defaultdict(lambda: dict(passed=0, repaired=0))
+    repaired_parents = set()
+    for r in runs:
+        parent = repair_parent(r["outcomeId"], ids)
+        if parent:
+            repaired_parents.add(parent)
+    for r in runs:
+        if r.get("state") != "passed" or is_repair(r["outcomeId"]):
+            continue
+        passing = next((a for a in r["attempts"] if a.get("verdict") == "passed"), r["attempts"][-1])
+        m = passing["config"]["model"]
+        repairs[m]["passed"] += 1
+        if r["outcomeId"] in repaired_parents:
+            repairs[m]["repaired"] += 1
+
+    return dict(
+        by_base=by_base,
+        by_rung=by_rung,
+        pass_by_attempt=pass_by_attempt,
+        reprice=dict(n=reprice_n, totals=reprice_tot),
+        escalations=escalations,
+        failed=failed,
+        repairs=repairs,
+    )
+
+
+def timeline(r: dict) -> str:
+    return " -> ".join(f"{cfg_key(a)}[{a.get('verdict', '?')},${cost_of(a):.2f}]" for a in r["attempts"])
+
+
+def print_report(runs, skipped, res, args):
+    if not runs:
+        print("no runs matched")
+        return
+    print(f"anvil-ledger  runs={len(runs)}  window={runs[0]['updatedAt'][:10]}..{runs[-1]['updatedAt'][:10]}"
+          f"  (skipped {skipped} pre-timeline records)")
+    print()
+    print("per base model")
+    print(f"  {'base':8}{'runs':>5}{'pass':>6}{'rung0':>11}{'rescue':>8}{'fail':>6}{'other':>6}{'base$':>9}{'esc$':>9}")
+    for m, b in sorted(res["by_base"].items(), key=lambda kv: -kv[1]["runs"]):
+        r0 = f"{b['rung0']} ({100 * b['rung0'] // b['runs']}%)"
+        print(f"  {m:8}{b['runs']:5}{b['passed']:6}{r0:>11}{b['rescued']:8}{b['failed']:6}{b['other']:6}"
+              f"{b['base_cost']:9.2f}{b['esc_cost']:9.2f}")
+    print()
+    print("per escalation rung (attempt > 0)")
+    print(f"  {'rung':16}{'attempts':>9}{'passed':>8}{'$':>9}{'avg$':>8}")
+    for k, v in sorted(res["by_rung"].items(), key=lambda kv: -kv[1]["attempts"]):
+        avg = v["cost"] / v["attempts"] if v["attempts"] else 0
+        print(f"  {k:16}{v['attempts']:9}{v['passed']:8}{v['cost']:9.2f}{avg:8.2f}")
+    print()
+    pba = res["pass_by_attempt"]
+    print("passes by attempt index: " + ", ".join(f"#{i}={pba[i]}" for i in sorted(pba)))
+    print()
+    rp = res["reprice"]
+    if rp["n"]:
+        print(f"strong-rung attempts repriced on their own tokens (n={rp['n']}):")
+        for m in REPRICE_CANDIDATES:
+            print(f"  as {m:6} ${rp['totals'][m]:8.2f}  avg ${rp['totals'][m] / rp['n']:.2f}")
+        print()
+    if res["repairs"]:
+        print("follow-up specs (-repair/-fix/-followup) joined to the passing model of the parent run (name heuristic)")
+        for m, v in sorted(res["repairs"].items(), key=lambda kv: -kv[1]["passed"]):
+            pct = 100 * v["repaired"] // v["passed"] if v["passed"] else 0
+            print(f"  {m:8} passed={v['passed']:3}  repaired={v['repaired']:3} ({pct}%)")
+        print()
+    if args.escalations:
+        print("escalated runs")
+        for r in res["escalations"]:
+            print(f"  {r['updatedAt'][:10]} {r['state'][:6]:6} {r['outcomeId'][:44]:44} {timeline(r)}")
+        print()
+    if args.failed:
+        print("failed runs")
+        for r in res["failed"]:
+            print(f"  {r['updatedAt'][:10]} {r['outcomeId'][:44]:44} {timeline(r)}")
+        print()
+
+
+def main() -> int:
+    ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
+    ap.add_argument("--since", help="YYYY-MM-DD inclusive")
+    ap.add_argument("--until", help="YYYY-MM-DD inclusive")
+    ap.add_argument("--repo", help="substring of the encoded repo dir (e.g. dev-gtm)")
+    ap.add_argument("--escalations", action="store_true", help="list every run that left rung 0")
+    ap.add_argument("--failed", action="store_true", help="list every failed run")
+    ap.add_argument("--json", action="store_true", help="machine-readable output")
+    args = ap.parse_args()
+
+    for d in (args.since, args.until):
+        if d:
+            datetime.strptime(d, "%Y-%m-%d")
+
+    runs, skipped = load_runs(args)
+    res = analyze(runs, load_prices())
+
+    if args.json:
+        out = dict(
+            runs=len(runs),
+            skipped=skipped,
+            by_base=res["by_base"],
+            by_rung=res["by_rung"],
+            pass_by_attempt=res["pass_by_attempt"],
+            reprice=res["reprice"],
+            repairs=res["repairs"],
+            escalations=[dict(id=r["outcomeId"], state=r["state"], updatedAt=r["updatedAt"], timeline=timeline(r))
+                         for r in res["escalations"]],
+            failed=[dict(id=r["outcomeId"], updatedAt=r["updatedAt"], timeline=timeline(r)) for r in res["failed"]],
+        )
+        json.dump(out, sys.stdout, indent=2, default=dict)
+        print()
+    else:
+        print_report(runs, skipped, res, args)
+    return 0
+
+
+if __name__ == "__main__":
+    sys.exit(main())

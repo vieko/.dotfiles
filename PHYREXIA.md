@@ -145,7 +145,7 @@ when the work demands it.
   switch is a fresh conversation over the same worktree, so luna's partial
   work carries.
 
-  Record 2026-09-04..24 (anvil run files, 80 runs): luna base 63 runs, 43
+  Record 2026-09-04..24 (`anvil-ledger --since 2026-09-04`, 80 runs): luna base 63 runs, 43
   passed on rung 0 (68%), 16 passed on the strong rung, 4 failed; luna's own
   attempts cost ~$1.20 total ($0.02 avg), the strong rungs $74 ($3.18 avg).
   Fable base 17 runs, 16 passed, $224 ($12 avg) -- 75% of all golem spend,
@@ -163,6 +163,22 @@ when the work demands it.
   $3.18 per attempt. $0.50 per rescue does not buy a second review loop.
   `-m sol` stays available as a same-family-as-luna worker when one is
   wanted.
+
+  **Open proofs** (read with `~/.scripts/anvil-ledger`, which aggregates
+  anvil's per-attempt run files; `--escalations` lists every run that left
+  rung 0). Criteria fixed before the data, 2026-09-29:
+  1. *luna:xhigh retry rung* -- over the next ~20 escalations, passes at
+     least 4 (the mechanical share was ~5/19). 0-1 means the rung is only
+     latency; revert anvil#45.
+  2. *opus-5.5 strong tier* -- over the first ~15 escalations that reach
+     it: gate pass rate at or above fable's 16/19, cost per rung attempt
+     at or below $2 (fable: $3.18), and follow-up (`-repair`/`-fix`) rate
+     on opus-passed diffs no worse than fable's ~12%.
+  3. *luna-first on former fable specs* -- over the next ~15 specs that
+     would have been `-m fable`: expected cost per spec under $6 (fable
+     base averaged $12). Holds if luna's rung-0 rate on them is above
+     ~40%; fails if rung-1 cost on luna's partial worktree exceeds a cold
+     fable base.
 - **Legion** -- `sol` members (`haiku` only for purely mechanical
   batches -- historically unused). At a 3-member ceiling, member cost is
   noise next to merge-conflict and review cost; the gate + review carry
