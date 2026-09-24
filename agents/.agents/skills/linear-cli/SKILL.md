@@ -1,10 +1,27 @@
 ---
 name: linear-cli
-description: Manage Linear issues from the command line using the linear cli. This skill allows automating linear management.
+description: Manage Linear issues from Pi or the shell. Covers the Linear MCP server (preferred in agent sessions) and the linearis CLI (scripts, cron, shell one-liners, fallback). Use for reading, creating, updating, or commenting on Linear issues, projects, and cycles.
 allowed-tools: Bash(linear:*), Bash(curl:*)
 ---
 
 # Linear CLI (linearis)
+
+## Which path to use
+
+**In a Pi session, prefer Linear MCP** (`mcp__linear` / `mcp({ search: "linear" })`,
+configured in `~/.agents/mcp.json` via pi-mcp-adapter). It is the
+workspace-sanctioned agent route now that personal API keys are disabled,
+needs no shell key, resolves `assignee: "me"`, and its default payloads are
+2-3x smaller than linearis's full-object dumps (measured 2026-09-24: list
+8.8 KB vs 23 KB, read 5 KB vs 11 KB; latency equal or better). Trim with
+`fields: [...]` on `list_issues`. If it reports "OAuth authentication
+required", ask the user to run `/mcp-auth linear`; don't try to authenticate
+for them.
+
+**Use linearis (the rest of this file) for shell scripts, cron, one-liners in
+`bash`, agents without MCP, or when MCP isn't authenticated.** It runs on the
+personal key described under auth. The gtm repo's `scripts/linear/*.sh` are
+linearis/curl territory; MCP has no shell surface.
 
 The installed `linear` command is **linearis** (https://github.com/czabaj/linearis
 lineage; `linear --version` prints a calver like `2026.6.0`), a JSON-output CLI
@@ -38,12 +55,6 @@ expired, `status` to check), which stores tokens in 1Password. If linearis
 starts returning 401s, the OAuth token has probably expired: run
 `linear-oauth refresh` and reload the shell. Never run it from an agent turn
 (it calls `op`, which prompts).
-
-**Linear MCP is also available in Pi** (`~/.agents/mcp.json`, via pi-mcp-adapter,
-OAuth through `/mcp-auth linear`). It is the workspace-sanctioned agent route
-and works with no API key; reach it with `mcp({ search: "linear" })`. Prefer
-linearis when the shell key works (JSON output, cheaper, documented here) and
-fall back to MCP when it 401s or on a machine without the key.
 
 The `scripts/linear/*.sh` helpers in the gtm repo use `LINEAR_API_KEY` directly
 against GraphQL with the same verbatim header — they follow whatever the bridge
