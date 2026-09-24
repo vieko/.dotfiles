@@ -1,5 +1,9 @@
 {
   "$comment": "Tool-agnostic global MCP config. Read by pi-mcp-adapter (pinned in pi/.pi/agent/settings.base.json); Pi-specific overrides go in ~/.pi/agent/mcp.json, which the adapter owns. Servers are lazy: nothing connects until a tool is called. Linear: sanctioned agent route now that personal API keys are disabled workspace-wide (ITT-22787); auth is OAuth via dynamic client registration, tokens live in the OS credential store. First use: run /mcp in Pi and authenticate 'linear'. linearis + the linear-cli skill stay for scripted work on the existing key.",
+  "settings": {
+    "showStatusIcon": false,
+    "mcpFooterStatus": "compact"
+  },
   "mcpServers": {
     "linear": {
       "url": "https://mcp.linear.app/mcp",
