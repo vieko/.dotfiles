@@ -317,13 +317,17 @@ the layout.
   A gate the golem satisfied by touching config or out-of-scope files is a
   summoner bug, and the diff needs that part reverted before review.
   The other half of the dry run: the gate must *fail cleanly* on the fork
-  SHA when the work is not done, not crash. Anvil cannot tell a harness
+  SHA when the work is not done, not crash. Before anvil v0.5.0 a harness
   crash (verify-script traceback, `gate.mjs` the spec expects the golem to
-  create, `.npmrc` env failures) from a model failure; it escalates and
-  pays the strong rung to hit the same broken gate. 4-5 of the 19
-  luna->fable escalations in 2026-09 were this. Until anvil classifies
-  harness crashes as inconclusive, a gate that has not been run once by
-  hand is not a gate.
+  create, `.npmrc` env failures) was fed back as errors and escalated;
+  4-5 of the 19 luna->fable escalations in 2026-09 were this. Since v0.5.0
+  anvil runs the gate on the fork SHA before attempt 0 and voids the run if
+  it is inconclusive, and a non-zero exit that names the gate's own
+  program/script is classified inconclusive rather than fail (pass
+  `--gate-crash-pattern <re>` for gates it cannot see through). The
+  dry-run habit still stands: the classifier is narrow by design, and an
+  install failure (npm cooldown, see the `golem-anvil-46` first summon)
+  still exits before any record is written, invisible to `anvil-ledger`.
 
 - **A gate must pass on a clean run, not just fail on a dirty one.**
   golem-3307 (2026-09-03) had a gate written as
