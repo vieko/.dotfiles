@@ -191,6 +191,23 @@ auto-discovered anyway). Skills, `AGENTS.md`, and `.opencode/` project dirs
 follow the same conventions as Pi; OpenCode reads `~/.agents/skills` and
 `~/.claude/skills` natively.
 
+Status (2026-09-26): OpenCode is a **bounded trial**, not a Summoner runtime.
+Use it for fresh-start, single-sitting work (cross-family second reads,
+one-shot reviews, `opencode run` in scripts, harness A/Bs against Pi); Pi
+remains the Summoner and constructs stay Pi/Anvil. Known gaps, investigated
+and deliberately not built yet: no Bonfire adapter (nothing native writes
+portable project memory; run `/skill:bonfire end` before closing a session in
+an opted-in repo), no pi-post bridge (the server has per-session inboxes with
+steer/queue delivery, but no addresses, registry, offline queue, or path to
+Pi/anvil senders, so `summon-golem.sh` refuses to dispatch from an OpenCode
+pane without `-R`), and no pi-prose (agent `system` replaces the base prompt
+rather than appending, so the native half-measure is not worth configuring).
+All three are buildable on the V2 plugin API (`@opencode/plugin`: `context` /
+`compaction` hooks, `session.prompt` steer, `command.transform`). Build
+trigger: OpenCode earns a standing weekly role. Build order if so: pi-post
+bridge, then Bonfire adapter; skip pi-prose. If the trial shows nothing Pi
+lacks, keep this package as maintained config and stop.
+
 ### OS Detection Pattern
 
 A `USER_OS` environment variable is exported in `bash/.bash_exports`:
