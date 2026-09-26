@@ -183,7 +183,9 @@ shell where the key is hydrated; if `opencode auth list` does not show
 `Vercel AI Gateway ... environment`, run `opencode service restart` from such a
 shell. An `experimental.policies` block denies every provider except `vercel` so
 stray stored accounts (e.g. the legacy Anthropic key in the SQLite db) stay out
-of `/models`. Not tracked: `service.json`, `package.json`/`node_modules`
+of `/models`. `AGENTS.md` is a relative symlink to `pi/.pi/agent/AGENTS.md`
+(one global instruction set for both agents; relative, so it is committed and
+works on both OSes). Not tracked: `service.json`, `package.json`/`node_modules`
 (plugin deps), and `skills/` (machine-local; `~/.agents/skills` is
 auto-discovered anyway). Skills, `AGENTS.md`, and `.opencode/` project dirs
 follow the same conventions as Pi; OpenCode reads `~/.agents/skills` and

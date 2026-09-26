@@ -1,7 +1,9 @@
 # Global Agent Instructions
 
-These apply to every Pi session. Project-level `AGENTS.md` and `CLAUDE.md` override
-or extend these.
+These apply to every Pi session, and to every OpenCode session via the
+`~/.config/opencode/AGENTS.md` symlink (OpenCode V2 loads only `AGENTS.md`,
+not `CLAUDE.md`). Project-level `AGENTS.md` and `CLAUDE.md` override or
+extend these.
 
 ## Session memory
 
