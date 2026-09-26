@@ -89,6 +89,19 @@ truth.
   Long Linear bodies go through the jq `--rawfile` + curl GraphQL recipe
   in the `linear-cli` skill.
 
+- **Salesforce from this host needs the `egress-pdx` Tailscale exit node.**
+  Every SFDC integration identity in `gtm-environments` (LEAD_AGENT,
+  LEAD_SURFACE, ...) is IP-restricted; the allowlisted static IP is
+  `5.78.100.55`, a Hetzner exit node (`~/.dotfiles/TAILSCALE_EXIT_NODE.md`).
+  Symptom when it is off: JWT auth returns `400 invalid_grant: ip
+  restricted` before any instance URL is known. Check before dispatching a
+  construct that reads SFDC (`tailscale status --json | jq
+  .ExitNodeStatus.Online`, or `curl -4 ifconfig.me` -> `5.78.100.55`); turn
+  on with `tailscale set --exit-node=egress-pdx --exit-node-allow-lan-access`
+  (a human toggle, not an agent one -- it reroutes all egress). Observed
+  2026-09-24: fam-3776 reported the SOQL leg blocked and the summoner
+  filed it as a permissions problem when the exit node was simply off.
+
 ## Vessels
 
 Which model a construct is bound into. Available vessels are per-host
