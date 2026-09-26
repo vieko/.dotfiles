@@ -16,9 +16,16 @@
   "agents": {
     "build": { "model": "vercel/anthropic/claude-fable-5.1#high" },
     "plan": { "model": "vercel/anthropic/claude-fable-5.1#high" },
+    // Worker vessel per PHYREXIA.md: sol has 0 malformed edit bodies via the
+    // gateway where sonnet-5 drops ~11%. `general` edits; `explore` only reads.
+    "general": { "model": "vercel/openai/gpt-6-sol#high" },
+    "explore": { "model": "vercel/openai/gpt-6-sol#high" },
     // Cheap model for session titles (V2 replacement for V1 `small_model`).
     "title": { "model": "vercel/anthropic/claude-haiku-4.5" },
   },
+
+  // Pi-only skills; ~/.agents/skills and ~/.claude/skills are auto-discovered.
+  "skills": ["~/.pi/agent/skills"],
 
   // Keep the /models picker gateway-only even when other provider accounts
   // (e.g. a stored Anthropic key) exist in the server database.
@@ -36,6 +43,15 @@
     { "action": "shell", "resource": "git push --force*", "effect": "ask" },
     { "action": "shell", "resource": "git push -f*", "effect": "ask" },
     { "action": "shell", "resource": "git reset --hard*", "effect": "ask" },
+    { "action": "shell", "resource": "vercel deploy*", "effect": "ask" },
+    { "action": "shell", "resource": "vercel --prod*", "effect": "ask" },
+    { "action": "shell", "resource": "npm publish*", "effect": "ask" },
+    { "action": "shell", "resource": "pnpm publish*", "effect": "ask" },
+    { "action": "shell", "resource": "bun publish*", "effect": "ask" },
+    { "action": "shell", "resource": "*db:migrate*", "effect": "ask" },
+    { "action": "shell", "resource": "*db:push*", "effect": "ask" },
+    { "action": "shell", "resource": "*drizzle-kit push*", "effect": "ask" },
+    { "action": "shell", "resource": "*prisma db push*", "effect": "ask" },
   ],
 
   "share": "manual",
