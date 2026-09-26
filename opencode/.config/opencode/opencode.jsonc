@@ -1,0 +1,43 @@
+{
+  // OpenCode V2 global config (native V2 shape). Docs: https://opencode.ai/v2/docs/config
+  //
+  // Models route through Vercel AI Gateway. `vercel` is a catalog provider
+  // (models.dev), so no custom provider block is needed: it activates when
+  // AI_GATEWAY_API_KEY is present in the background server's environment.
+  // On macOS that comes from `op inject` (bash/env.op); on op-less hosts
+  // bash/.bash_profile hydrates it from Pi's auth.json. Start the first
+  // opencode command from a login shell so the shared server inherits it.
+  "$schema": "https://opencode.ai/config.json",
+
+  // Root default keeps only provider/model (no #variant); the per-agent
+  // entries below carry the reasoning level. Mirrors pi settings.base.json.
+  "model": "vercel/anthropic/claude-fable-5.1",
+
+  "agents": {
+    "build": { "model": "vercel/anthropic/claude-fable-5.1#high" },
+    "plan": { "model": "vercel/anthropic/claude-fable-5.1#high" },
+    // Cheap model for session titles (V2 replacement for V1 `small_model`).
+    "title": { "model": "vercel/anthropic/claude-haiku-4.5" },
+  },
+
+  // Keep the /models picker gateway-only even when other provider accounts
+  // (e.g. a stored Anthropic key) exist in the server database.
+  "experimental": {
+    "policies": [
+      { "action": "provider.use", "resource": "*", "effect": "deny" },
+      { "action": "provider.use", "resource": "vercel", "effect": "allow" },
+    ],
+  },
+
+  // Destructive-command guard from ~/.pi/agent/AGENTS.md, enforced at the
+  // tool layer. Rules are ordered; the last match wins.
+  "permissions": [
+    { "action": "shell", "resource": "vercel env pull*", "effect": "deny" },
+    { "action": "shell", "resource": "git push --force*", "effect": "ask" },
+    { "action": "shell", "resource": "git push -f*", "effect": "ask" },
+    { "action": "shell", "resource": "git reset --hard*", "effect": "ask" },
+  ],
+
+  "share": "manual",
+  "update": "notify",
+}

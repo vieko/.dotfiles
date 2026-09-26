@@ -38,7 +38,7 @@ Primary packages by platform. The repo also holds many smaller single-purpose
 packages not listed here (e.g. `aws`, `gh`, `gnupg`, `cargo`, `zed`, `picom`,
 `tofi`, GTK/Qt theming) — this list is not exhaustive; stow what you need.
 
-**Cross-platform packages:** bash, git, kitty, ghostty, tmux, nvim, starship, bat, btop, lazygit, yazi, assets, claude, pi, agents, slack
+**Cross-platform packages:** bash, git, kitty, ghostty, tmux, nvim, starship, bat, btop, lazygit, yazi, assets, claude, pi, opencode, agents, slack
 **macOS-only:** macos, macos-keyboard, aerospace, sketchybar, karabiner
 **Linux-only:** hypr, waybar, dunst, fuzzel, mako, rofi, sway, i3, polybar, ptyxis (run `ptyxis/setup-ptyxis.sh` once after stowing)
 
@@ -171,6 +171,23 @@ node agents/.agents/scripts/sync-verbs.mjs --check   # exit 1 on drift
 [pi-prose](https://github.com/vieko/pi-prose)) — matches the same "config not
 state" philosophy as `pi/`. Keep the style bodies in sync with pi-prose's
 built-ins by hand when they change; pi-prose is the source of truth.
+
+**`opencode/`** — OpenCode V2 config. Stows to `~/.config/opencode/`. Tracks
+`opencode.jsonc` (server config: model, agents, permissions, policies) and
+`cli.json` (TUI theme/keybinds; V2 collapsed the old layered `tui.json` into
+this one global file). Models route through Vercel AI Gateway via the catalog
+provider `vercel`, which activates from `AI_GATEWAY_API_KEY` in the background
+server's environment -- no key is stored in OpenCode. Because every client
+attaches to one shared server, that server must have been started from a login
+shell where the key is hydrated; if `opencode auth list` does not show
+`Vercel AI Gateway ... environment`, run `opencode service restart` from such a
+shell. An `experimental.policies` block denies every provider except `vercel` so
+stray stored accounts (e.g. the legacy Anthropic key in the SQLite db) stay out
+of `/models`. Not tracked: `service.json`, `package.json`/`node_modules`
+(plugin deps), and `skills/` (machine-local; `~/.agents/skills` is
+auto-discovered anyway). Skills, `AGENTS.md`, and `.opencode/` project dirs
+follow the same conventions as Pi; OpenCode reads `~/.agents/skills` and
+`~/.claude/skills` natively.
 
 ### OS Detection Pattern
 
