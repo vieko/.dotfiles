@@ -4,7 +4,7 @@
             "complex_modifications": {
                 "rules": [
                     {
-                        "description": "Ctrl→Cmd for editing (C/V/X/A/F/Z/Y) and common browser/app shortcuts (T/W/N/R/D/S/P) - exclude terminals and Zed (vim mode + integrated terminal need raw Ctrl). Strict mode preserves Shift/Option. NOTE: H/J/K/L excluded - reserved for Aerospace navigation.",
+                        "description": "Ctrl→Cmd for editing (C/V/X/A/F/Z/Y) and common browser/app shortcuts (T/W/N/R) - exclude terminals and Zed (vim mode + integrated terminal need raw Ctrl). Strict mode preserves Shift/Option. NOTE: H/J/K/L excluded - reserved for Aerospace navigation. D/P/S excluded - Cmd+D is Spotlight and Cmd+P/Cmd+S pop dialogs; a stray Ctrl press should not.",
                         "manipulators": [
                             {
                                 "conditions": [
@@ -20,12 +20,18 @@
                                 ],
                                 "from": {
                                     "key_code": "c",
-                                    "modifiers": { "mandatory": ["control"] }
+                                    "modifiers": {
+                                        "mandatory": [
+                                            "control"
+                                        ]
+                                    }
                                 },
                                 "to": [
                                     {
                                         "key_code": "c",
-                                        "modifiers": ["command"]
+                                        "modifiers": [
+                                            "command"
+                                        ]
                                     }
                                 ],
                                 "type": "basic"
@@ -44,12 +50,18 @@
                                 ],
                                 "from": {
                                     "key_code": "v",
-                                    "modifiers": { "mandatory": ["control"] }
+                                    "modifiers": {
+                                        "mandatory": [
+                                            "control"
+                                        ]
+                                    }
                                 },
                                 "to": [
                                     {
                                         "key_code": "v",
-                                        "modifiers": ["command"]
+                                        "modifiers": [
+                                            "command"
+                                        ]
                                     }
                                 ],
                                 "type": "basic"
@@ -68,12 +80,18 @@
                                 ],
                                 "from": {
                                     "key_code": "x",
-                                    "modifiers": { "mandatory": ["control"] }
+                                    "modifiers": {
+                                        "mandatory": [
+                                            "control"
+                                        ]
+                                    }
                                 },
                                 "to": [
                                     {
                                         "key_code": "x",
-                                        "modifiers": ["command"]
+                                        "modifiers": [
+                                            "command"
+                                        ]
                                     }
                                 ],
                                 "type": "basic"
@@ -92,12 +110,18 @@
                                 ],
                                 "from": {
                                     "key_code": "a",
-                                    "modifiers": { "mandatory": ["control"] }
+                                    "modifiers": {
+                                        "mandatory": [
+                                            "control"
+                                        ]
+                                    }
                                 },
                                 "to": [
                                     {
                                         "key_code": "a",
-                                        "modifiers": ["command"]
+                                        "modifiers": [
+                                            "command"
+                                        ]
                                     }
                                 ],
                                 "type": "basic"
@@ -116,12 +140,18 @@
                                 ],
                                 "from": {
                                     "key_code": "f",
-                                    "modifiers": { "mandatory": ["control"] }
+                                    "modifiers": {
+                                        "mandatory": [
+                                            "control"
+                                        ]
+                                    }
                                 },
                                 "to": [
                                     {
                                         "key_code": "f",
-                                        "modifiers": ["command"]
+                                        "modifiers": [
+                                            "command"
+                                        ]
                                     }
                                 ],
                                 "type": "basic"
@@ -140,12 +170,18 @@
                                 ],
                                 "from": {
                                     "key_code": "z",
-                                    "modifiers": { "mandatory": ["control"] }
+                                    "modifiers": {
+                                        "mandatory": [
+                                            "control"
+                                        ]
+                                    }
                                 },
                                 "to": [
                                     {
                                         "key_code": "z",
-                                        "modifiers": ["command"]
+                                        "modifiers": [
+                                            "command"
+                                        ]
                                     }
                                 ],
                                 "type": "basic"
@@ -164,12 +200,19 @@
                                 ],
                                 "from": {
                                     "key_code": "y",
-                                    "modifiers": { "mandatory": ["control"] }
+                                    "modifiers": {
+                                        "mandatory": [
+                                            "control"
+                                        ]
+                                    }
                                 },
                                 "to": [
                                     {
                                         "key_code": "z",
-                                        "modifiers": ["command", "shift"]
+                                        "modifiers": [
+                                            "command",
+                                            "shift"
+                                        ]
                                     }
                                 ],
                                 "type": "basic"
@@ -188,12 +231,18 @@
                                 ],
                                 "from": {
                                     "key_code": "t",
-                                    "modifiers": { "mandatory": ["control"] }
+                                    "modifiers": {
+                                        "mandatory": [
+                                            "control"
+                                        ]
+                                    }
                                 },
                                 "to": [
                                     {
                                         "key_code": "t",
-                                        "modifiers": ["command"]
+                                        "modifiers": [
+                                            "command"
+                                        ]
                                     }
                                 ],
                                 "type": "basic"
@@ -212,12 +261,18 @@
                                 ],
                                 "from": {
                                     "key_code": "w",
-                                    "modifiers": { "mandatory": ["control"] }
+                                    "modifiers": {
+                                        "mandatory": [
+                                            "control"
+                                        ]
+                                    }
                                 },
                                 "to": [
                                     {
                                         "key_code": "w",
-                                        "modifiers": ["command"]
+                                        "modifiers": [
+                                            "command"
+                                        ]
                                     }
                                 ],
                                 "type": "basic"
@@ -236,12 +291,18 @@
                                 ],
                                 "from": {
                                     "key_code": "n",
-                                    "modifiers": { "mandatory": ["control"] }
+                                    "modifiers": {
+                                        "mandatory": [
+                                            "control"
+                                        ]
+                                    }
                                 },
                                 "to": [
                                     {
                                         "key_code": "n",
-                                        "modifiers": ["command"]
+                                        "modifiers": [
+                                            "command"
+                                        ]
                                     }
                                 ],
                                 "type": "basic"
@@ -260,84 +321,18 @@
                                 ],
                                 "from": {
                                     "key_code": "r",
-                                    "modifiers": { "mandatory": ["control"] }
+                                    "modifiers": {
+                                        "mandatory": [
+                                            "control"
+                                        ]
+                                    }
                                 },
                                 "to": [
                                     {
                                         "key_code": "r",
-                                        "modifiers": ["command"]
-                                    }
-                                ],
-                                "type": "basic"
-                            },
-                            {
-                                "conditions": [
-                                    {
-                                        "bundle_identifiers": [
-                                            "^com\\.apple\\.Terminal$",
-                                            "^net\\.kovidgoyal\\.kitty$",
-                                            "^com\\.mitchellh\\.ghostty$",
-                                            "^dev\\.zed\\.Zed$"
-                                        ],
-                                        "type": "frontmost_application_unless"
-                                    }
-                                ],
-                                "from": {
-                                    "key_code": "d",
-                                    "modifiers": { "mandatory": ["control"] }
-                                },
-                                "to": [
-                                    {
-                                        "key_code": "d",
-                                        "modifiers": ["command"]
-                                    }
-                                ],
-                                "type": "basic"
-                            },
-                            {
-                                "conditions": [
-                                    {
-                                        "bundle_identifiers": [
-                                            "^com\\.apple\\.Terminal$",
-                                            "^net\\.kovidgoyal\\.kitty$",
-                                            "^com\\.mitchellh\\.ghostty$",
-                                            "^dev\\.zed\\.Zed$"
-                                        ],
-                                        "type": "frontmost_application_unless"
-                                    }
-                                ],
-                                "from": {
-                                    "key_code": "s",
-                                    "modifiers": { "mandatory": ["control"] }
-                                },
-                                "to": [
-                                    {
-                                        "key_code": "s",
-                                        "modifiers": ["command"]
-                                    }
-                                ],
-                                "type": "basic"
-                            },
-                            {
-                                "conditions": [
-                                    {
-                                        "bundle_identifiers": [
-                                            "^com\\.apple\\.Terminal$",
-                                            "^net\\.kovidgoyal\\.kitty$",
-                                            "^com\\.mitchellh\\.ghostty$",
-                                            "^dev\\.zed\\.Zed$"
-                                        ],
-                                        "type": "frontmost_application_unless"
-                                    }
-                                ],
-                                "from": {
-                                    "key_code": "p",
-                                    "modifiers": { "mandatory": ["control"] }
-                                },
-                                "to": [
-                                    {
-                                        "key_code": "p",
-                                        "modifiers": ["command"]
+                                        "modifiers": [
+                                            "command"
+                                        ]
                                     }
                                 ],
                                 "type": "basic"
@@ -361,12 +356,19 @@
                                 ],
                                 "from": {
                                     "key_code": "c",
-                                    "modifiers": { "mandatory": ["control", "shift"] }
+                                    "modifiers": {
+                                        "mandatory": [
+                                            "control",
+                                            "shift"
+                                        ]
+                                    }
                                 },
                                 "to": [
                                     {
                                         "key_code": "c",
-                                        "modifiers": ["command"]
+                                        "modifiers": [
+                                            "command"
+                                        ]
                                     }
                                 ],
                                 "type": "basic"
@@ -385,12 +387,19 @@
                                 ],
                                 "from": {
                                     "key_code": "v",
-                                    "modifiers": { "mandatory": ["control", "shift"] }
+                                    "modifiers": {
+                                        "mandatory": [
+                                            "control",
+                                            "shift"
+                                        ]
+                                    }
                                 },
                                 "to": [
                                     {
                                         "key_code": "v",
-                                        "modifiers": ["command"]
+                                        "modifiers": [
+                                            "command"
+                                        ]
                                     }
                                 ],
                                 "type": "basic"
@@ -403,7 +412,11 @@
                             {
                                 "from": {
                                     "key_code": "escape",
-                                    "modifiers": { "mandatory": ["command"] }
+                                    "modifiers": {
+                                        "mandatory": [
+                                            "command"
+                                        ]
+                                    }
                                 },
                                 "to": [
                                     {
@@ -428,7 +441,11 @@
                                 ],
                                 "from": {
                                     "key_code": "f",
-                                    "modifiers": { "mandatory": ["command"] }
+                                    "modifiers": {
+                                        "mandatory": [
+                                            "command"
+                                        ]
+                                    }
                                 },
                                 "to": [
                                     {
@@ -444,12 +461,20 @@
             "name": "Default profile",
             "simple_modifications": [
                 {
-                    "from": { "key_code": "caps_lock" },
-                    "to": [{ "key_code": "left_control" }]
+                    "from": {
+                        "key_code": "caps_lock"
+                    },
+                    "to": [
+                        {
+                            "key_code": "left_control"
+                        }
+                    ]
                 }
             ],
             "selected": true,
-            "virtual_hid_keyboard": { "keyboard_type_v2": "ansi" }
+            "virtual_hid_keyboard": {
+                "keyboard_type_v2": "ansi"
+            }
         }
     ]
 }

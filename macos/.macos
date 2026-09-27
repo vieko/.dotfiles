@@ -97,6 +97,15 @@ defaults write com.apple.HIToolbox AppleEnabledInputSources -array \
 #          the Programmers QWERTY number row. Switch layouts from the menu bar.
 #   79-82  move left/right a Space (Ctrl+Left/Right). Aerospace replaced
 #          Spaces; Pi uses ctrl+left/right for word-nav and tree fold.
+#   65     Spotlight Finder window (Opt+Cmd+D). Collided with the Dock toggle.
+#   30/184 screenshot selection to file (Cmd+Shift+4), screenshot options
+#          (Cmd+Shift+5); 29 (Ctrl+Cmd+Shift+3). Aerospace owns cmd-shift-N
+#          for move-node-to-workspace.
+# Moved:
+#   64     Spotlight -> Cmd+D (Aerospace owns Cmd+Space for float toggle).
+#   28/31  screenshot to file -> Shift+F13, selection to clipboard ->
+#          Ctrl+Shift+F13. The Kinesis Adv360 `hk3` key sends PrintScreen,
+#          which macOS reports as F13, so this is the screenshot key there.
 # Helper: `symbolicHotkey <id> <enabled> [ascii keycode modifiers]`.
 symbolicHotkey() {
   local id="$1" enabled="$2" ascii="${3:-}" keycode="${4:-}" mods="${5:-}"
@@ -118,6 +127,13 @@ symbolicHotkey 79 false                # move left a Space (Ctrl+Left)
 symbolicHotkey 80 false                # move left a Space + Shift
 symbolicHotkey 81 false                # move right a Space (Ctrl+Right)
 symbolicHotkey 82 false                # move right a Space + Shift
+symbolicHotkey 64 true  100 2 1048576  # Spotlight (Cmd+D)
+symbolicHotkey 65 false 100 2 1179648  # Spotlight Finder window (Opt+Cmd+D)
+symbolicHotkey 28 true  65535 105 8519680  # screenshot to file (Shift+F13)
+symbolicHotkey 29 false 51 20 1441792      # screenshot to clipboard (Ctrl+Cmd+Shift+3)
+symbolicHotkey 30 false 65535 105 8650752  # selection to file (was Cmd+Shift+4)
+symbolicHotkey 31 true  65535 105 8781824  # selection to clipboard (Ctrl+Shift+F13)
+symbolicHotkey 184 false 53 23 1179648     # screenshot options (Cmd+Shift+5)
 
 # Push the new hotkey table to the running session. `activateSettings` was
 # removed in macOS 26; there the table is re-read at next login.
