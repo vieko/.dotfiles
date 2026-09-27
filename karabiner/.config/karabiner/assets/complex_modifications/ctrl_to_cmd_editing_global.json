@@ -2,7 +2,7 @@
   "title": "Ctrl→Cmd editing GLOBAL",
   "rules": [
     {
-      "description": "Ctrl→Cmd for editing (C/V/X/A/F/Z/Y) and common browser/app shortcuts (T/W/N/R/D/S/P) - exclude terminals. Strict mode preserves Shift/Option. NOTE: H/J/K/L excluded - reserved for Aerospace navigation.",
+      "description": "Ctrl→Cmd for editing (C/V/X/A/F/Z/Y) and common browser/app shortcuts (T/W/N/R/D/S/P) - exclude terminals and Zed (vim mode + integrated terminal need raw Ctrl). Strict mode preserves Shift/Option. NOTE: H/J/K/L excluded - reserved for Aerospace navigation.",
       "manipulators": [
         {
           "type": "basic",
@@ -28,7 +28,8 @@
               "bundle_identifiers": [
                 "^com\\.apple\\.Terminal$",
                 "^net\\.kovidgoyal\\.kitty$",
-                "^com\\.mitchellh\\.ghostty$"
+                "^com\\.mitchellh\\.ghostty$",
+                "^dev\\.zed\\.Zed$"
               ]
             }
           ]
@@ -57,7 +58,8 @@
               "bundle_identifiers": [
                 "^com\\.apple\\.Terminal$",
                 "^net\\.kovidgoyal\\.kitty$",
-                "^com\\.mitchellh\\.ghostty$"
+                "^com\\.mitchellh\\.ghostty$",
+                "^dev\\.zed\\.Zed$"
               ]
             }
           ]
@@ -86,7 +88,8 @@
               "bundle_identifiers": [
                 "^com\\.apple\\.Terminal$",
                 "^net\\.kovidgoyal\\.kitty$",
-                "^com\\.mitchellh\\.ghostty$"
+                "^com\\.mitchellh\\.ghostty$",
+                "^dev\\.zed\\.Zed$"
               ]
             }
           ]
@@ -115,7 +118,8 @@
               "bundle_identifiers": [
                 "^com\\.apple\\.Terminal$",
                 "^net\\.kovidgoyal\\.kitty$",
-                "^com\\.mitchellh\\.ghostty$"
+                "^com\\.mitchellh\\.ghostty$",
+                "^dev\\.zed\\.Zed$"
               ]
             }
           ]
@@ -144,7 +148,8 @@
               "bundle_identifiers": [
                 "^com\\.apple\\.Terminal$",
                 "^net\\.kovidgoyal\\.kitty$",
-                "^com\\.mitchellh\\.ghostty$"
+                "^com\\.mitchellh\\.ghostty$",
+                "^dev\\.zed\\.Zed$"
               ]
             }
           ]
@@ -173,7 +178,8 @@
               "bundle_identifiers": [
                 "^com\\.apple\\.Terminal$",
                 "^net\\.kovidgoyal\\.kitty$",
-                "^com\\.mitchellh\\.ghostty$"
+                "^com\\.mitchellh\\.ghostty$",
+                "^dev\\.zed\\.Zed$"
               ]
             }
           ]
@@ -203,7 +209,8 @@
               "bundle_identifiers": [
                 "^com\\.apple\\.Terminal$",
                 "^net\\.kovidgoyal\\.kitty$",
-                "^com\\.mitchellh\\.ghostty$"
+                "^com\\.mitchellh\\.ghostty$",
+                "^dev\\.zed\\.Zed$"
               ]
             }
           ]
@@ -232,7 +239,8 @@
               "bundle_identifiers": [
                 "^com\\.apple\\.Terminal$",
                 "^net\\.kovidgoyal\\.kitty$",
-                "^com\\.mitchellh\\.ghostty$"
+                "^com\\.mitchellh\\.ghostty$",
+                "^dev\\.zed\\.Zed$"
               ]
             }
           ]
@@ -261,7 +269,8 @@
               "bundle_identifiers": [
                 "^com\\.apple\\.Terminal$",
                 "^net\\.kovidgoyal\\.kitty$",
-                "^com\\.mitchellh\\.ghostty$"
+                "^com\\.mitchellh\\.ghostty$",
+                "^dev\\.zed\\.Zed$"
               ]
             }
           ]
@@ -290,7 +299,8 @@
               "bundle_identifiers": [
                 "^com\\.apple\\.Terminal$",
                 "^net\\.kovidgoyal\\.kitty$",
-                "^com\\.mitchellh\\.ghostty$"
+                "^com\\.mitchellh\\.ghostty$",
+                "^dev\\.zed\\.Zed$"
               ]
             }
           ]
@@ -319,7 +329,8 @@
               "bundle_identifiers": [
                 "^com\\.apple\\.Terminal$",
                 "^net\\.kovidgoyal\\.kitty$",
-                "^com\\.mitchellh\\.ghostty$"
+                "^com\\.mitchellh\\.ghostty$",
+                "^dev\\.zed\\.Zed$"
               ]
             }
           ]
@@ -348,7 +359,8 @@
               "bundle_identifiers": [
                 "^com\\.apple\\.Terminal$",
                 "^net\\.kovidgoyal\\.kitty$",
-                "^com\\.mitchellh\\.ghostty$"
+                "^com\\.mitchellh\\.ghostty$",
+                "^dev\\.zed\\.Zed$"
               ]
             }
           ]
@@ -377,7 +389,8 @@
               "bundle_identifiers": [
                 "^com\\.apple\\.Terminal$",
                 "^net\\.kovidgoyal\\.kitty$",
-                "^com\\.mitchellh\\.ghostty$"
+                "^com\\.mitchellh\\.ghostty$",
+                "^dev\\.zed\\.Zed$"
               ]
             }
           ]
@@ -406,7 +419,8 @@
               "bundle_identifiers": [
                 "^com\\.apple\\.Terminal$",
                 "^net\\.kovidgoyal\\.kitty$",
-                "^com\\.mitchellh\\.ghostty$"
+                "^com\\.mitchellh\\.ghostty$",
+                "^dev\\.zed\\.Zed$"
               ]
             }
           ]
@@ -435,7 +449,8 @@
               "bundle_identifiers": [
                 "^com\\.apple\\.Terminal$",
                 "^net\\.kovidgoyal\\.kitty$",
-                "^com\\.mitchellh\\.ghostty$"
+                "^com\\.mitchellh\\.ghostty$",
+                "^dev\\.zed\\.Zed$"
               ]
             }
           ]

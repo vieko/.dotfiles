@@ -46,11 +46,13 @@ keybind = alt+backspace=text:\x1b\x7f
 # System-wide "new terminal window" hotkey (Hyprland $mod+Return style).
 # Uses Ghostty's native global keybind + new_window action so it opens a
 # window in the EXISTING single instance instead of launching a new process.
+# Shift is deliberate: `global:` keybinds consume the chord in every app, and
+# plain Cmd+Enter is "submit" in Linear, GitHub, Gmail, the Chrome omnibox.
 # A new process re-triggers the macOS Screen Recording permission check on
 # every launch (denied by our Kandji MDM PPPC profile), which is what caused
 # the constant Ghostty + 1Password popups. See also: dropped the old
 # `open -n` Karabiner script (new-ghostty-window.sh) that spawned processes.
-keybind = global:super+enter=new_window
+keybind = global:super+shift+enter=new_window
 
 # MOUSE
 mouse-hide-while-typing = true

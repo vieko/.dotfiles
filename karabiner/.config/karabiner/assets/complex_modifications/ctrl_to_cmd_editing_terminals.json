@@ -2,7 +2,7 @@
   "title": "Ctrl+Shift+C/V clipboard for TERMINALS",
   "rules": [
     {
-      "description": "Map Ctrl+Shift+C/V to ⌘C/⌘V for clipboard in Terminal/Kitty/Ghostty. Preserves all other Ctrl shortcuts (C/A/Z/X/Y/F for shell/tmux).",
+      "description": "Map Ctrl+Shift+C/V to ⌘C/⌘V for clipboard in Terminal/Kitty/Ghostty/Zed. Preserves all other Ctrl shortcuts (C/A/Z/X/Y/F for shell/tmux).",
       "manipulators": [
         {
           "type": "basic",
@@ -29,7 +29,8 @@
               "bundle_identifiers": [
                 "^com\\.apple\\.Terminal$",
                 "^net\\.kovidgoyal\\.kitty$",
-                "^com\\.mitchellh\\.ghostty$"
+                "^com\\.mitchellh\\.ghostty$",
+                "^dev\\.zed\\.Zed$"
               ]
             }
           ]
@@ -59,7 +60,8 @@
               "bundle_identifiers": [
                 "^com\\.apple\\.Terminal$",
                 "^net\\.kovidgoyal\\.kitty$",
-                "^com\\.mitchellh\\.ghostty$"
+                "^com\\.mitchellh\\.ghostty$",
+                "^dev\\.zed\\.Zed$"
               ]
             }
           ]

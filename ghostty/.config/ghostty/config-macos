@@ -8,7 +8,7 @@ font-size = 14
 # macOS window and display options
 macos-non-native-fullscreen = false
 # Keep the single instance resident after the last window closes so the
-# `global:super+return=new_window` hotkey always has a process to target
+# `global:super+shift+enter=new_window` hotkey always has a process to target
 # (no cold relaunch = no new process = no Screen Recording prompt).
 quit-after-last-window-closed = false
 macos-option-as-alt = true

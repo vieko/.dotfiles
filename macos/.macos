@@ -83,21 +83,50 @@ defaults write com.apple.HIToolbox AppleEnabledInputSources -array \
   -dict InputSourceKind "Keyboard Layout" "KeyboardLayout ID" -int 29 "KeyboardLayout Name" "Canadian" \
   -dict InputSourceKind "Keyboard Layout" "KeyboardLayout ID" -int -27039 "KeyboardLayout Name" "Programmers QWERTY"
 
-# Set Control+Space as the keyboard layout switcher shortcut
-defaults write com.apple.symbolichotkeys AppleSymbolicHotKeys -dict-add 60 "
-  <dict>
-    <key>enabled</key><true/>
-    <key>value</key><dict>
-      <key>type</key><string>standard</string>
-      <key>parameters</key>
-      <array>
-        <integer>32</integer>
-        <integer>49</integer>
-        <integer>262144</integer>
-      </array>
+# ============================================================================
+# Symbolic hotkeys (system-wide chords)
+# ============================================================================
+# Principle on this machine: Cmd = OS / window manager (Aerospace), Ctrl =
+# terminal, tmux and TUIs. System hotkeys are intercepted before the app sees
+# the key, so any Ctrl-chord left enabled here is dead inside the terminal.
+#
+# Disabled:
+#   60/61  input-source switch (Ctrl+Space / Ctrl+Opt+Space). Stole <C-Space>
+#          from nvim/Zed, and with Caps=Ctrl (laptop) or home-row Ctrl on the
+#          Kinesis a slow "d " flipped to the Canadian layout, which scrambles
+#          the Programmers QWERTY number row. Switch layouts from the menu bar.
+#   79-82  move left/right a Space (Ctrl+Left/Right). Aerospace replaced
+#          Spaces; Pi uses ctrl+left/right for word-nav and tree fold.
+# Helper: `symbolicHotkey <id> <enabled> [ascii keycode modifiers]`.
+symbolicHotkey() {
+  local id="$1" enabled="$2" ascii="${3:-}" keycode="${4:-}" mods="${5:-}"
+  local params=""
+  if [[ -n "$ascii" ]]; then
+    params="<key>parameters</key><array><integer>$ascii</integer><integer>$keycode</integer><integer>$mods</integer></array>"
+  fi
+  defaults write com.apple.symbolichotkeys AppleSymbolicHotKeys -dict-add "$id" "
+    <dict>
+      <key>enabled</key><$enabled/>
+      <key>value</key><dict><key>type</key><string>standard</string>$params</dict>
     </dict>
-  </dict>
-"
+  "
+}
+
+symbolicHotkey 60 false 32 49 262144   # prev input source (Ctrl+Space)
+symbolicHotkey 61 false 32 49 786432   # next input source (Ctrl+Opt+Space)
+symbolicHotkey 79 false                # move left a Space (Ctrl+Left)
+symbolicHotkey 80 false                # move left a Space + Shift
+symbolicHotkey 81 false                # move right a Space (Ctrl+Right)
+symbolicHotkey 82 false                # move right a Space + Shift
+
+# Push the new hotkey table to the running session. `activateSettings` was
+# removed in macOS 26; there the table is re-read at next login.
+activateSettings=/System/Library/PrivateFrameworks/SystemUIServer.framework/Resources/activateSettings
+if [[ -x "$activateSettings" ]]; then
+  "$activateSettings" -u
+else
+  echo "   (symbolic hotkey changes apply at next login on this macOS)"
+fi
 
 # ============================================================================
 # Wallpaper
@@ -121,5 +150,6 @@ echo ""
 echo "Note: Dock is permanently hidden (toggle with Option+Command+D)"
 echo "      Menu bar autohides on hover (Ctrl-Fn-F2 to toggle)"
 echo "      Keyboard repeat set to fastest (requires logout to take effect)"
+echo "      Ctrl+Space / Ctrl+Left/Right system hotkeys disabled (Ctrl belongs to the terminal)"
 echo "      Wallpaper set to One Dark solid color"
 echo "      All animations set to instant/minimal for maximum responsiveness"
