@@ -50,3 +50,35 @@ old row so drift is visible.
   JSON (luna moderation, fnm alpha node).
 - Recurring messages: "draft a lede for" x43 (/lede), bare pi-clipboard path
   x31 (57 incl. prefixed), "proceed[ with a|b]" x44, "posted, merge it" x13.
+
+## Week 39 (2026-09-18 to 2026-09-26, 7 working days), PHYREXIA
+
+- 162 sessions with turns (52 of them one-shot sol image-batch familiars, 10
+  probes), 8,900 assistant turns, 770 user turns, 8,779 tool calls (323
+  errors). pi-reported $763; true $892 (~$640/week, from ~$1,380).
+- Split (pi-reported): cacheRead $345, cacheWrite $237, output $177.
+- gpt-6-astra: 165 turns, $30 (from $1,183). 8 of 9 sessions were one-sitting
+  review familiars. The "astra is a bounded vessel" rule held.
+- 1h TTL (anthropic/* only): premium $128 vs $563 avoided; net +$435.
+- Context: 20% of turns >= 200K carried 31% of spend (was 26% / 58%); max
+  ctx 565K; all 175 turns >= 400K in one $104 session (09-23 screenshots).
+- Misses: idle 35 ($70, avg 132K); unexplained 60 ($72, avg 124K), 14/60
+  clustered. fable-5.1 0.39% (22/5,587), 18 of 22 in two morning clusters
+  (09-18, 09-22); 09-23 onward 4 in ~3,000 turns. sonnet 1.42%, sol 1.57%,
+  astra 1.28%. Cause of the drop unproven (compat mirroring 09-21, pi 0.87.1
+  09-22, or cluster luck); next window decides.
+- Edit health: sonnet-5 28/233 (12.0%, 9 familiars, all before 09-22 15:00);
+  sol 0/272; fable-5.1 0/160; fable-5 0/43; astra 0/8. Sonnet question closed.
+- Hard stops: 15 (8 aborts, 2 `pi update` module-not-found, 2 Connection
+  error, 1 timeout, 1 413 on a 50-image sol familiar).
+- Constructs: 31 golem dispatches (28 luna, 3 fable) -> 22 anvil runs, 21
+  passed / 1 failed (spec assumption), 19 first-attempt passes (86%), 1 luna
+  same-model retry, 1 fable rescue; $7.41 total (luna $0.66). 93 familiars
+  (72 sol incl. 52 print-mode image batches, 9 sonnet, 8 astra, 4 fable).
+  5 infra crashes with empty JSON (2 runner PATH, 1 `.git/config` lock race
+  between parallel golems, 1 bad --contract path, 1 transient npm ETARGET).
+- `cacheWarming: "idle"` produced 0 `cache_warm` usage entries: the 54-min
+  refresh (90% of 1h TTL) is past pi's fixed 30-min idle cap. Inert.
+- Recurring messages: "proceed with (a)" x21 + "proceed with a" x10 +
+  "proceed" x8; "posted" x11 + "posted, merge it" x9; "draft a lede for" x14;
+  bare pi-clipboard path x17; "anything else for this" x8 (new).
