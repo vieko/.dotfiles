@@ -25,5 +25,8 @@
   },
   "compaction": {
     "reserveTokens": 65536
-  }
+  },
+  "defaultTools": [
+    "+codemode"
+  ]
 }

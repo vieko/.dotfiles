@@ -1,33 +1,8 @@
 {
   "providers": {
     "vercel-ai-gateway": {
-      "models": [
-        {
-          "id": "anthropic/claude-sonnet-5.5",
-          "name": "Claude Sonnet 5.5",
-          "api": "anthropic-messages",
-          "baseUrl": "https://ai-gateway.vercel.sh",
-          "reasoning": true,
-          "input": [
-            "text",
-            "image"
-          ],
-          "cost": {
-            "input": 2,
-            "output": 10,
-            "cacheRead": 0.2,
-            "cacheWrite": 2.5
-          },
-          "contextWindow": 1000000,
-          "maxTokens": 128000,
-          "thinkingLevelMap": {
-            "xhigh": "xhigh",
-            "max": "max"
-          },
-          "promptCache": {
-            "short": 300,
-            "long": 3600
-          },
+      "modelOverrides": {
+        "anthropic/claude-sonnet-5.5": {
           "inputLimits": {
             "images": {
               "resize": {
@@ -38,10 +13,11 @@
               }
             }
           },
+          "promptCache": {
+            "short": 300,
+            "long": 3600
+          },
           "compat": {
-            "allowEmptySignature": true,
-            "forceAdaptiveThinking": true,
-            "supportsTemperature": false,
             "supportsStrictTools": true,
             "vercelGatewayRouting": {
               "only": [
@@ -52,9 +28,7 @@
               ]
             }
           }
-        }
-      ],
-      "modelOverrides": {
+        },
         "anthropic/claude-opus-4.8": {
           "inputLimits": {
             "images": {
@@ -373,6 +347,36 @@
             "vercelGatewayRouting": {
               "order": [
                 "spacexai"
+              ]
+            }
+          }
+        },
+        "openai/gpt-6.1-sol": {
+          "inputLimits": {
+            "images": {
+              "resize": {
+                "maxWidth": 1568,
+                "maxHeight": 1568,
+                "maxBytes": 1048576,
+                "jpegQuality": 75
+              }
+            }
+          },
+          "cost": {
+            "tiers": [
+              {
+                "inputTokensAbove": 272000,
+                "input": 4,
+                "output": 20,
+                "cacheRead": 0.4,
+                "cacheWrite": 5
+              }
+            ]
+          },
+          "compat": {
+            "vercelGatewayRouting": {
+              "order": [
+                "openai"
               ]
             }
           }
