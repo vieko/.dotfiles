@@ -13,7 +13,7 @@
 #      not silently in a background pane.
 #
 # Usage:
-#   summon-familiar.sh [-m alias] [-P] [-n] [-R] [-w name] [-W name] <brief-path> [prompt override]
+#   summon-familiar.sh [-m alias] [-P] [-n] [-R] [-C] [-w name] [-W name] <brief-path> [prompt override]
 #
 #   -m alias   vessel: haiku|sol|sonnet|opus|fable|luna|astra (default: sol),
 #              or a raw gateway id with an explicit effort when the alias's
@@ -27,6 +27,9 @@
 #              (PHYREXIA.md topology) -- kill it on merge with the worktree.
 #              Usually paired with -w for file-touching dispatches.
 #   -n         dry run: print what would be executed, run nothing
+#   -C         allow counsel: familiars run with PI_COUNSEL=off so a worker
+#              cannot spend on pi-counsel consults; -C lifts that for a
+#              dispatch that should be able to ask for a second read
 #   -R         no report-back: summon without injecting the report-back
 #              footer. Deliberate opt-out only -- a familiar summoned this
 #              way finishes silently (the fam-2649 failure mode).
@@ -87,15 +90,17 @@ vessel="sol"
 print_mode=0
 dry_run=0
 no_report=0
+allow_counsel=0
 worktree_name=""
 window_name=""
 
-while getopts "m:PnRw:W:" opt; do
+while getopts "m:PnRCw:W:" opt; do
     case "$opt" in
         m) vessel="$OPTARG" ;;
         P) print_mode=1 ;;
         n) dry_run=1 ;;
         R) no_report=1 ;;
+        C) allow_counsel=1 ;;
         w) worktree_name="$OPTARG" ;;
         W) window_name="$OPTARG" ;;
         *) exit 2 ;;
@@ -105,7 +110,12 @@ shift $((OPTIND - 1))
 
 [[ $print_mode -eq 1 && -n "$window_name" ]] && { echo "error: -P and -W are mutually exclusive" >&2; exit 2; }
 
-[[ $# -ge 1 ]] || { echo "usage: summon-familiar.sh [-m alias] [-P] [-n] [-R] [-w name] [-W name] <brief-path> [prompt]" >&2; exit 2; }
+[[ $# -ge 1 ]] || { echo "usage: summon-familiar.sh [-m alias] [-P] [-n] [-R] [-C] [-w name] [-W name] <brief-path> [prompt]" >&2; exit 2; }
+
+# Familiars are workers, not summoners: the counsel tool (pi-counsel) stays
+# off unless -C says this dispatch may consult. Same env var for both modes.
+counsel_env="PI_COUNSEL=off"
+[[ $allow_counsel -eq 1 ]] && counsel_env=""
 
 brief="$1"; shift
 brief_abs="$(cd "$(dirname "$brief")" 2>/dev/null && pwd)/$(basename "$brief")" || true
@@ -209,7 +219,7 @@ if [[ $print_mode -eq 1 ]]; then
     fi
     mkdir -p "$LOG_DIR"
     log="$LOG_DIR/familiar-$(date +%Y%m%d-%H%M%S)-$vessel.log"
-    cmd=(pi -p --provider "$PROVIDER" --model "$model" "$prompt")
+    cmd=(env ${counsel_env:+"$counsel_env"} pi -p --provider "$PROVIDER" --model "$model" "$prompt")
     if [[ $dry_run -eq 1 ]]; then
         echo "dry-run (print mode):"
         printf '  '; printf '%q ' "${cmd[@]}"; printf '\n  log: %s\n' "$log"
@@ -237,7 +247,7 @@ if [[ $print_mode -eq 1 ]]; then
 else
     # Pane/window familiar: default shell first (env hydration), command typed in.
     [[ -n "${TMUX:-}" ]] || { echo "error: pane/window mode requires tmux (use -P for in-band)" >&2; exit 1; }
-    pi_cmd="pi --provider \"$PROVIDER\" --model \"$model\" \"$prompt\""
+    pi_cmd="${counsel_env:+$counsel_env }pi --provider \"$PROVIDER\" --model \"$model\" \"$prompt\""
     if [[ $dry_run -eq 1 ]]; then
         if [[ -n "$window_name" ]]; then
             echo "dry-run (window mode): new-window -n $window_name, then send-keys:"
