@@ -8,15 +8,17 @@ allowed-tools: Bash(linear:*), Bash(curl:*)
 
 ## Which path to use
 
-**In a Pi session, prefer Linear MCP** (`mcp__linear` / `mcp({ search: "linear" })`,
-configured in `~/.agents/mcp.json` via pi-mcp-adapter). It is the
+**In a Pi session, prefer Linear MCP** (pi's built-in MCP support, server
+`linear` in `~/.pi/agent/mcp.json`, exposed as `codemode`: call
+`mcp__linear__<tool>` from a `codemode` script, or load tools with
+`tool_search`). It is the
 workspace-sanctioned agent route now that personal API keys are disabled,
 needs no shell key, resolves `assignee: "me"`, and its default payloads are
 2-3x smaller than linearis's full-object dumps (measured 2026-09-24: list
 8.8 KB vs 23 KB, read 5 KB vs 11 KB; latency equal or better). Trim with
-`fields: [...]` on `list_issues`. If it reports "OAuth authentication
-required", ask the user to run `/mcp-auth linear`; don't try to authenticate
-for them.
+`fields: [...]` on `list_issues`. If the server shows as needing sign-in,
+ask the user to run `/mcp login linear` (or `pi mcp login linear` in a
+shell); don't try to authenticate for them.
 
 **Use linearis (the rest of this file) for shell scripts, cron, one-liners in
 `bash`, agents without MCP, or when MCP isn't authenticated.** It runs on the
