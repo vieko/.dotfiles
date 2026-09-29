@@ -270,6 +270,10 @@
                 "openai"
               ]
             }
+          },
+          "thinkingLevelMap": {
+            "xhigh": "xhigh",
+            "max": "max"
           }
         },
         "openai/gpt-6-luna": {
@@ -300,6 +304,10 @@
                 "openai"
               ]
             }
+          },
+          "thinkingLevelMap": {
+            "xhigh": "xhigh",
+            "max": "max"
           }
         },
         "moonshotai/kimi-k3": {
@@ -319,6 +327,9 @@
                 "moonshotai"
               ]
             }
+          },
+          "thinkingLevelMap": {
+            "max": "max"
           }
         },
         "spacexai/grok-4.7": {
@@ -336,9 +347,9 @@
             "tiers": [
               {
                 "inputTokensAbove": 200000,
-                "input": 2.4,
-                "output": 7.2,
-                "cacheRead": 0.6,
+                "input": 4,
+                "output": 12,
+                "cacheRead": 1,
                 "cacheWrite": 0
               }
             ]
@@ -349,6 +360,9 @@
                 "spacexai"
               ]
             }
+          },
+          "thinkingLevelMap": {
+            "xhigh": "xhigh"
           }
         },
         "openai/gpt-6.1-sol": {
@@ -379,6 +393,11 @@
                 "openai"
               ]
             }
+          },
+          "thinkingLevelMap": {
+            "off": null,
+            "xhigh": "xhigh",
+            "max": "max"
           }
         }
       }
