@@ -7,7 +7,6 @@
   "enableInstallTelemetry": false,
   "quietStartup": true,
   "showCacheMissNotices": true,
-  "cacheWarming": "idle",
   "skills": [
     "~/.claude/plugins/cache/claude-plugins-official/vercel/current/skills"
   ],

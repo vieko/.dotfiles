@@ -61,7 +61,7 @@ alias_to_model() {
     case "$1" in
         haiku)  echo "anthropic/claude-haiku-4.5:low" ;;
         sol)    echo "openai/gpt-6-sol:high" ;;
-        sonnet) echo "anthropic/claude-sonnet-5:medium" ;;
+        sonnet) echo "anthropic/claude-sonnet-5.5:medium" ;;
         opus)   echo "anthropic/claude-opus-5.5:medium" ;;
         fable)  echo "anthropic/claude-fable-5.1:high" ;;
         luna)   echo "openai/gpt-6-luna:high" ;;
@@ -78,7 +78,11 @@ alias_to_model() {
 # (edits: [{}]) after strict sampling and the fine-grained-streaming A/B;
 # gpt-6-sol has 0 malformed edits across 600+ GPT-family edit calls in the
 # same window. sonnet stays an alias for the A/B and for anything that needs
-# an Anthropic worker under a same-family summoner.
+# an Anthropic worker under a same-family summoner. Since 2026-09-28 the alias
+# is sonnet-5.5 (released that day; pi 0.87.1 does not ship it, so it is a
+# `models` entry in models.json). The sonnet-5 question is closed at 12.3 /
+# 10.7 / 12.0% across three audits; the open question is whether 5.5 drops
+# edits the same way. Read the edit-health line in the next audit.
 vessel="sol"
 print_mode=0
 dry_run=0

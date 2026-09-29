@@ -97,6 +97,19 @@ shift $((OPTIND - 1))
 
 alias_ok "$vessel" || { echo "error: unknown vessel alias: $vessel (anvil aliases: haiku|sol|sonnet|opus|fable|astra|luna|terra|glm)" >&2; exit 2; }
 
+# A scoped PATH must still reach the tools the runner needs. golem-gtmeng-3319
+# (2026-09-22) died twice with `anvil: command not found` / `pnpm: command not
+# found` because the dispatcher wrote `-e PATH=<fnm bin>:/usr/bin:/bin` and
+# dropped the `:$PATH` tail. Check here, where the mistake is cheap.
+for kv in "${golem_env[@]+"${golem_env[@]}"}"; do
+    [[ "${kv%%=*}" == "PATH" ]] || continue
+    scoped_path="${kv#*=}"
+    for tool in anvil node pnpm npm; do
+        PATH="$scoped_path" command -v "$tool" >/dev/null 2>&1 \
+            || { echo "error: -e PATH=... does not resolve '$tool'; append :\$PATH to the value (see docs/agent-maintenance.md)" >&2; exit 2; }
+    done
+done
+
 name="$1"; spec="$2"; shift 2
 
 # Spec: absolutize if it's a readable file, else pass through as a prompt.

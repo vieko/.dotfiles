@@ -1,8 +1,71 @@
 {
   "providers": {
     "vercel-ai-gateway": {
+      "models": [
+        {
+          "id": "anthropic/claude-sonnet-5.5",
+          "name": "Claude Sonnet 5.5",
+          "api": "anthropic-messages",
+          "baseUrl": "https://ai-gateway.vercel.sh",
+          "reasoning": true,
+          "input": [
+            "text",
+            "image"
+          ],
+          "cost": {
+            "input": 2,
+            "output": 10,
+            "cacheRead": 0.2,
+            "cacheWrite": 2.5
+          },
+          "contextWindow": 1000000,
+          "maxTokens": 128000,
+          "thinkingLevelMap": {
+            "xhigh": "xhigh",
+            "max": "max"
+          },
+          "promptCache": {
+            "short": 300,
+            "long": 3600
+          },
+          "inputLimits": {
+            "images": {
+              "resize": {
+                "maxWidth": 1568,
+                "maxHeight": 1568,
+                "maxBytes": 1048576,
+                "jpegQuality": 75
+              }
+            }
+          },
+          "compat": {
+            "allowEmptySignature": true,
+            "forceAdaptiveThinking": true,
+            "supportsTemperature": false,
+            "supportsStrictTools": true,
+            "vercelGatewayRouting": {
+              "only": [
+                "anthropic"
+              ],
+              "order": [
+                "anthropic"
+              ]
+            }
+          }
+        }
+      ],
       "modelOverrides": {
         "anthropic/claude-opus-4.8": {
+          "inputLimits": {
+            "images": {
+              "resize": {
+                "maxWidth": 1568,
+                "maxHeight": 1568,
+                "maxBytes": 1048576,
+                "jpegQuality": 75
+              }
+            }
+          },
           "promptCache": {
             "short": 300,
             "long": 3600
@@ -22,6 +85,16 @@
           }
         },
         "anthropic/claude-opus-5.5": {
+          "inputLimits": {
+            "images": {
+              "resize": {
+                "maxWidth": 1568,
+                "maxHeight": 1568,
+                "maxBytes": 1048576,
+                "jpegQuality": 75
+              }
+            }
+          },
           "promptCache": {
             "short": 300,
             "long": 3600
@@ -42,6 +115,16 @@
           }
         },
         "anthropic/claude-sonnet-5": {
+          "inputLimits": {
+            "images": {
+              "resize": {
+                "maxWidth": 1568,
+                "maxHeight": 1568,
+                "maxBytes": 1048576,
+                "jpegQuality": 75
+              }
+            }
+          },
           "promptCache": {
             "short": 300,
             "long": 3600
@@ -60,6 +143,16 @@
           }
         },
         "anthropic/claude-haiku-4.5": {
+          "inputLimits": {
+            "images": {
+              "resize": {
+                "maxWidth": 1568,
+                "maxHeight": 1568,
+                "maxBytes": 1048576,
+                "jpegQuality": 75
+              }
+            }
+          },
           "promptCache": {
             "short": 300,
             "long": 3600
@@ -77,6 +170,16 @@
           }
         },
         "anthropic/claude-fable-5": {
+          "inputLimits": {
+            "images": {
+              "resize": {
+                "maxWidth": 1568,
+                "maxHeight": 1568,
+                "maxBytes": 1048576,
+                "jpegQuality": 75
+              }
+            }
+          },
           "promptCache": {
             "short": 300,
             "long": 3600
@@ -96,6 +199,16 @@
           }
         },
         "anthropic/claude-fable-5.1": {
+          "inputLimits": {
+            "images": {
+              "resize": {
+                "maxWidth": 1568,
+                "maxHeight": 1568,
+                "maxBytes": 1048576,
+                "jpegQuality": 75
+              }
+            }
+          },
           "promptCache": {
             "short": 300,
             "long": 3600
@@ -116,6 +229,16 @@
           }
         },
         "openai/gpt-6-astra": {
+          "inputLimits": {
+            "images": {
+              "resize": {
+                "maxWidth": 1568,
+                "maxHeight": 1568,
+                "maxBytes": 1048576,
+                "jpegQuality": 75
+              }
+            }
+          },
           "thinkingLevelMap": {
             "off": null,
             "minimal": null,
@@ -146,6 +269,16 @@
           }
         },
         "openai/gpt-6-sol": {
+          "inputLimits": {
+            "images": {
+              "resize": {
+                "maxWidth": 1568,
+                "maxHeight": 1568,
+                "maxBytes": 1048576,
+                "jpegQuality": 75
+              }
+            }
+          },
           "cost": {
             "tiers": [
               {
@@ -166,6 +299,16 @@
           }
         },
         "openai/gpt-6-luna": {
+          "inputLimits": {
+            "images": {
+              "resize": {
+                "maxWidth": 1568,
+                "maxHeight": 1568,
+                "maxBytes": 1048576,
+                "jpegQuality": 75
+              }
+            }
+          },
           "cost": {
             "tiers": [
               {
@@ -186,6 +329,16 @@
           }
         },
         "moonshotai/kimi-k3": {
+          "inputLimits": {
+            "images": {
+              "resize": {
+                "maxWidth": 1568,
+                "maxHeight": 1568,
+                "maxBytes": 1048576,
+                "jpegQuality": 75
+              }
+            }
+          },
           "compat": {
             "vercelGatewayRouting": {
               "order": [
@@ -195,6 +348,16 @@
           }
         },
         "spacexai/grok-4.7": {
+          "inputLimits": {
+            "images": {
+              "resize": {
+                "maxWidth": 1568,
+                "maxHeight": 1568,
+                "maxBytes": 1048576,
+                "jpegQuality": 75
+              }
+            }
+          },
           "cost": {
             "tiers": [
               {
