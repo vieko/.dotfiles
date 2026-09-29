@@ -229,8 +229,10 @@ fi
 
 Details live in `docs/os-configs.md` (git GPG setup script, kitty/ghostty
 `os-current`/`config-current` symlink pattern, clipboard rules) and
-`docs/macos.md` (defaults script). Read them when bootstrapping a fresh
-machine, switching OS, or touching the kitty/ghostty/macos packages.
+`docs/macos.md` (defaults script), and `docs/keybindings.md` (which layer
+owns which modifier, plus `scripts/.scripts/keybind-audit.sh`). Read them
+when bootstrapping a fresh machine, switching OS, or touching the
+kitty/ghostty/macos/aerospace/karabiner/tmux packages or any keybinding.
 Inline gotcha: never hardcode clipboard commands in nvim/tmux configs —
 both auto-detect the OS tool.
 

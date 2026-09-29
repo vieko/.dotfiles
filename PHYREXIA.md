@@ -102,6 +102,11 @@ truth.
   2026-09-24: fam-3776 reported the SOQL leg blocked and the summoner
   filed it as a permissions problem when the exit node was simply off.
 
+- **Keyboard chords are layered; check before binding.** Cmd belongs to
+  macOS/Aerospace, Ctrl to the terminal stack, and macOS symbolic hotkeys
+  win over everything. The owner map, the chords deliberately given up, and
+  the audit (`~/.scripts/keybind-audit.sh`) live in `docs/keybindings.md`.
+
 ## Vessels
 
 Which model a construct is bound into. Available vessels are per-host
