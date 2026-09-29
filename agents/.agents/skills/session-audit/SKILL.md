@@ -77,7 +77,17 @@ gateway, pi#9210); "true $" is the number to quote.
 8. **Openers.** Repeated first-4-word patterns are prompt-template candidates
    (`/issue`, `/lede`, `/pr` exist; check `~/.pi/agent/prompts/` before
    proposing).
-9. **Constructs.** `summons.log` gives dispatch counts by kind/vessel;
+9. **Counsel.** pi-counsel (since 2026-09-29) writes a `counsel` custom
+   entry per consult; the section reports consults, $ (outside session
+   true $, since it rides the tool result), transcript size, cache-read
+   share, verdict split, and a with/without-consults comparison on
+   turns-per-user-turn, hard stops and tool-error rate. The comparison is
+   selection-biased (consults happen in hard sessions); read it for
+   direction only. Zero consults with the Summoner on opus means the model
+   is not reaching for the tool: check the tool description before adding
+   steering to AGENTS.md. Avg $/consult above ~$3 or cache-read share
+   under 30% on repeat consults points at the serialiser, not the model.
+10. **Constructs.** `summons.log` gives dispatch counts by kind/vessel;
    `anvil status --all --since` gives verdicts, attempts, and USD. Compute
    first-attempt pass rate and how often escalation rescued a run. Crashes
    with no result JSON (`~/scratch/logs/golem-*.json` empty) are
@@ -93,16 +103,18 @@ gateway, pi#9210); "true $" is the number to quote.
   `-m sol` vs the 11 fable repair runs in weeks 37-38 ($5-15 each). Sol
   wins on pass rate at ~1/25 of fable's token price; loses if the review
   loop goes around again.
-- **opus-5.5 vs fable-5.1 as Summoner**: 40% of fable's price on every
-  axis; quality parity unproven. Compare $/user-turn and abort rate.
+- **opus-5.5 Summoner + fable-5.1 counsel** (started 2026-09-29): opus at
+  40% of fable's price on every axis with fable reachable via pi-counsel.
+  Compare $/user-turn (including counsel $) and abort rate against the
+  fable-Summoner weeks 37-39; report consults per session and whether
+  verdicts were "stop"/"revise" often enough to have earned their cost.
 - **sonnet-5 edit loss**: `-m sonnet` dispatches keep feeding the A/B;
   report the malformed-edit rate if any ran.
 - **1h TTL net**: +$362 (wk 36) then +$120/12d (wks 37-38). If it goes
   negative, `PI_CACHE_RETENTION=long` comes off.
-- **`cacheWarming: "idle"`** (settings.json since 2026-09-21) pings to keep
-  Anthropic caches warm between runs. Success = `idle` misses fall from
-  the 79/12d baseline; cost = the warming reads (check `showCacheMissNotices`
-  warming lines). Net negative means back to `"streaming"`.
+- **`cacheWarming: "idle"`**: closed 2026-09-29. Never fired on a 1h tier
+  (refresh at 54 min vs a fixed 30 min idle cap; pi#10180). Back to the
+  `"streaming"` default; reopen if upstream scales the cap with the TTL.
 
 ## Write-up shape
 

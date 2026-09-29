@@ -76,6 +76,11 @@ const editByModel = {};
 const openers = [];
 const userMsgs = [];
 const gapHist = {};
+// pi-counsel consultations: `custom` entries with customType "counsel"
+// (model, cost, tokens, durationMs, transcriptTokens, verdict). Their spend
+// sits on the counsel tool result, not on an assistant turn, so it is
+// outside totals.tru and reported on its own.
+const counsel = [];
 
 for (const dir of readdirSync(root)) {
 	let files;
@@ -98,12 +103,24 @@ for (const dir of readdirSync(root)) {
 				}
 			})
 			.filter(Boolean);
-		const s = { dir: shortDir(dir), file: f.slice(0, 16), start: null, user: 0, turns: 0, toolCalls: 0, toolErrors: 0, pi: 0, tru: 0, ctxSum: 0, maxCtx: 0, models: new Set(), firstPrompt: "", inWindow: false };
+		const s = { dir: shortDir(dir), file: f.slice(0, 16), start: null, user: 0, turns: 0, toolCalls: 0, toolErrors: 0, pi: 0, tru: 0, ctxSum: 0, maxCtx: 0, models: new Set(), firstPrompt: "", inWindow: false, hardStops: 0, counsel: 0, counselCost: 0 };
 		const calls = new Map();
 		let prev = null;
 		let prevIdx = -1;
 		for (let i = 0; i < L.length; i++) {
 			const e = L[i];
+			if (e.type === "custom" && e.customType === "counsel" && e.data) {
+				const cts = new Date(e.timestamp).getTime();
+				if (cts >= since && cts <= until) {
+					const d = e.data;
+					const tk = d.tokens ?? {};
+					const inTok = (tk.input ?? 0) + (tk.cacheRead ?? 0) + (tk.cacheWrite ?? 0);
+					counsel.push({ ts: cts, when: mt(cts), dir: s.dir, model: (d.model ?? "?").split("/").pop(), effort: d.effort, cost: d.cost ?? 0, durationMs: d.durationMs ?? 0, transcriptTokens: d.transcriptTokens ?? 0, inTok, cacheRead: tk.cacheRead ?? 0, outTok: tk.output ?? 0, elided: d.elidedEntries ?? 0, truncated: !!d.truncated, question: (d.question ?? "").slice(0, 80), verdict: (d.verdict ?? "").slice(0, 100) });
+					s.counsel++;
+					s.counselCost += d.cost ?? 0;
+				}
+				continue;
+			}
 			if (e.type !== "message") continue;
 			const m = e.message;
 			const ts = new Date(e.timestamp).getTime();
@@ -180,6 +197,7 @@ for (const dir of readdirSync(root)) {
 					if (Array.isArray(ed) && ed.some((x) => !x || Object.keys(x).length === 0 || x.newText === undefined)) editByModel[model].malformed++;
 				}
 			}
+			if (m.stopReason === "error" || m.stopReason === "aborted") s.hardStops++;
 			if (m.stopReason === "error" || m.stopReason === "aborted") hardStops.push({ when: mt(ts), dir: s.dir, model, stop: m.stopReason, err: (m.errorMessage ?? "").slice(0, 80) });
 			const ctx = u.input + u.cacheRead + u.cacheWrite;
 			s.ctxSum += ctx;
@@ -296,6 +314,34 @@ topPhrases(openers, `Openers: first prompt of each session (${openers.length})`)
 P();
 topPhrases(userMsgs, `Recurring user messages, all turns (${userMsgs.length})`);
 P();
+P(`## Counsel (pi-counsel consultations: ${counsel.length})`);
+if (counsel.length) {
+	const withC = sessions.filter((x) => x.counsel > 0);
+	const without = sessions.filter((x) => x.counsel === 0 && x.turns >= 20);
+	const sum = (arr, f) => arr.reduce((a, x) => a + f(x), 0);
+	const cSpend = sum(counsel, (c) => c.cost);
+	const cIn = sum(counsel, (c) => c.inTok);
+	const cRead = sum(counsel, (c) => c.cacheRead);
+	P(`Consults: ${counsel.length} in ${withC.length} sessions. Spend $${cSpend.toFixed(2)} (avg $${(cSpend / counsel.length).toFixed(2)}, ${totals.tru ? ((100 * cSpend) / totals.tru).toFixed(1) : "?"}% of session true $). Avg transcript ${Math.round(sum(counsel, (c) => c.transcriptTokens) / counsel.length / 1000)}K tokens, avg ${Math.round(sum(counsel, (c) => c.durationMs) / counsel.length / 1000)}s, cache read share ${cIn ? ((100 * cRead) / cIn).toFixed(0) : 0}%. Elided: ${counsel.filter((c) => c.elided > 0).length}, truncated: ${counsel.filter((c) => c.truncated).length}, with question: ${counsel.filter((c) => c.question).length}.`);
+	const byCM = {};
+	for (const c of counsel) {
+		byCM[`${c.model}:${c.effort ?? "?"}`] ??= { n: 0, cost: 0 };
+		byCM[`${c.model}:${c.effort ?? "?"}`].n++;
+		byCM[`${c.model}:${c.effort ?? "?"}`].cost += c.cost;
+	}
+	P(`By counsel model: ${Object.entries(byCM).map(([k, v]) => `${k}=${v.n} ($${v.cost.toFixed(2)})`).join(", ")}.`);
+	const verdicts = {};
+	for (const c of counsel) {
+		const k = /^\W*(proceed|revise|stop)/i.exec(c.verdict)?.[1]?.toLowerCase() ?? "other";
+		verdicts[k] = (verdicts[k] ?? 0) + 1;
+	}
+	P(`Verdicts: ${JSON.stringify(verdicts)}.`);
+	const avg = (arr, f) => (arr.length ? (sum(arr, f) / arr.length).toFixed(1) : "-");
+	P(`Sessions with consults (n=${withC.length}) vs without, >=20 turns (n=${without.length}): turns/user-turn ${avg(withC, (x) => x.turns / Math.max(1, x.user))} vs ${avg(without, (x) => x.turns / Math.max(1, x.user))}; hard stops/session ${avg(withC, (x) => x.hardStops)} vs ${avg(without, (x) => x.hardStops)}; tool errors/100 calls ${avg(withC, (x) => (100 * x.toolErrors) / Math.max(1, x.toolCalls))} vs ${avg(without, (x) => (100 * x.toolErrors) / Math.max(1, x.toolCalls))}. Correlation, not causation: consults land in the harder sessions.`);
+	P(`Most expensive consults:`);
+	for (const c of [...counsel].sort((a, b) => b.cost - a.cost).slice(0, 6)) P(`- ${c.when} ${c.dir} ${c.model} $${c.cost.toFixed(2)} ${Math.round(c.transcriptTokens / 1000)}K→${c.outTok} ${Math.round(c.durationMs / 1000)}s${c.question ? ` q="${c.question}"` : ""} → ${c.verdict.replace(/\|/g, "/")}`);
+} else P(`None recorded. pi-counsel writes a \`counsel\` custom entry per consult; zero means the tool was not called (or the extension was not loaded).`);
+P();
 P(`## Constructs`);
 const summons = join(homedir(), "scratch/logs/summons.log");
 if (existsSync(summons)) {
@@ -313,6 +359,6 @@ P(`_Generated by session-audit/scripts/audit.mjs. Catalog: ${catalogPath ? "foun
 
 console.log(out.join("\n"));
 if (jsonOut) {
-	writeFileSync(jsonOut, JSON.stringify({ since, until, totals: { ...totals }, byDay: Object.fromEntries(Object.entries(byDay).map(([d, v]) => [d, { ...v, sessions: v.sessions.size }])), byModel: Object.fromEntries(Object.entries(byModel).map(([m, v]) => [m, { ...v, sessions: v.sessions.size }])), ctxBuckets, misses, ttl, tools, toolErrCats, editByModel, hardStops, sessions }, null, 1));
+	writeFileSync(jsonOut, JSON.stringify({ since, until, totals: { ...totals }, byDay: Object.fromEntries(Object.entries(byDay).map(([d, v]) => [d, { ...v, sessions: v.sessions.size }])), byModel: Object.fromEntries(Object.entries(byModel).map(([m, v]) => [m, { ...v, sessions: v.sessions.size }])), ctxBuckets, misses, ttl, tools, toolErrCats, editByModel, hardStops, counsel, sessions }, null, 1));
 	console.error(`json: ${jsonOut}`);
 }
