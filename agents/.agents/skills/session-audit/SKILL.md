@@ -18,8 +18,11 @@ anvil status --all --since 7d        # golem verdicts + USD (anvil >= 0.3.1); go
 
 Dates are local midnight (`AUDIT_TZ`, default America/Edmonton). `--json` keeps
 the raw per-session rows for follow-up questions. The script reprices 1h cache
-writes at 2x input on Anthropic models (pi bills them at the 5m rate through the
-gateway, pi#9210); "true $" is the number to quote.
+writes at 2x input on Anthropic models for turns pi billed at the 5m rate
+(pi#9210, fixed in pi 0.99.0 on 2026-09-29; detected per turn from the billed
+rate, so sessions still running an older pi process are also caught); "true $"
+is the number to quote. Once every turn in the window is post-0.99, true $
+converges on pi-reported $ and the repricing note can be dropped.
 
 ## Read the report in this order
 

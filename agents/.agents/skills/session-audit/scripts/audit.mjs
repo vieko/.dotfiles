@@ -27,9 +27,12 @@ const topN = Number(opt("top", "15"));
 const jsonOut = opt("json");
 const TZ = process.env.AUDIT_TZ ?? "America/Edmonton";
 
-// Pricing: pi bills 1h cache writes at the 5m rate via the gateway (pi#9210).
-// Anthropic charges 2x input for 1h writes; with PI_CACHE_RETENTION=long every
-// write is a 1h write. `trueCost` corrects that using the model catalog.
+// Pricing: before pi 0.99.0, pi billed 1h cache writes at the 5m rate via the
+// gateway (pi#9210, fixed 2026-09-29). Anthropic charges 2x input for 1h
+// writes; with PI_CACHE_RETENTION=long every write is a 1h write. `trueCost`
+// corrects that using the model catalog, but only for turns whose billed
+// cacheWrite rate still matches the 5m rate, so windows spanning the upgrade
+// are not double-counted.
 const catalogPath = (() => {
 	const roots = [
 		process.env.PI_PACKAGE_ROOT,
@@ -43,14 +46,31 @@ const catalogPath = (() => {
 	}
 	return null;
 })();
-const catalog = catalogPath ? Object.assign({}, ...Object.values(JSON.parse(readFileSync(catalogPath, "utf8")))) : {};
+// Catalog file is { [api]: { ["chat:<id>"]: model } } since pi 0.99 (bare <id>
+// before); key by each entry's own id so both shapes resolve.
+const catalog = catalogPath
+	? Object.fromEntries(
+			Object.values(JSON.parse(readFileSync(catalogPath, "utf8")))
+				.flatMap((byKey) => Object.values(byKey))
+				.filter((m) => m && m.id && (m.type ?? "chat") === "chat")
+				.map((m) => [m.id, m]),
+		)
+	: {};
+if (!catalogPath || !Object.keys(catalog).length) console.error("warning: gateway model catalog not found; true $ equals pi-reported $");
 const longRetention = (process.env.PI_CACHE_RETENTION ?? "long") === "long";
 // Anthropic-served models only: the gateway exposes OpenAI models (gpt-6-astra) over
 // anthropic-messages too, but their cache is OpenAI's (no 1h TTL, no write premium).
 const isAnthropicServed = (m) => m.api === "anthropic-messages" && /^anthropic\//.test(m.model ?? "");
+// True when pi billed this turn's cache writes at the 5m rate (pre-0.99): the
+// billed $/Mtok sits closer to catalog cacheWrite than to 2x input.
+const billedAtShortRate = (c, u) => {
+	if (!u.cacheWrite) return false;
+	const rate = (u.cost.cacheWrite / u.cacheWrite) * 1e6;
+	return Math.abs(rate - c.cacheWrite) < Math.abs(rate - c.input * 2);
+};
 const trueCostOf = (m, u) => {
 	const c = catalog[m.model]?.cost;
-	if (!c || !isAnthropicServed(m) || !longRetention) return u.cost.total;
+	if (!c || !isAnthropicServed(m) || !longRetention || !billedAtShortRate(c, u)) return u.cost.total;
 	// replace pi's 5m-rate write charge with the 1h rate (2x input)
 	return u.cost.total - u.cost.cacheWrite + (u.cacheWrite * c.input * 2) / 1e6;
 };
