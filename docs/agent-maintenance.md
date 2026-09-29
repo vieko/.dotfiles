@@ -90,6 +90,60 @@ Release procedure for pi-post itself (bump, tag, npm publish via OIDC) is in
 the repo: `~/dev/pi-post/docs/releasing.md`. Same pin-bump rules apply to the
 bonfire adapter (see `~/.pi/agent/AGENTS.md`).
 
+## Pi MCP servers (`~/.pi/agent/mcp.json`, machine-local)
+
+Pi uses its built-in MCP support (pi >= 0.99). `pi-mcp-adapter` was
+retired 2026-09-29 (dotfiles `26d2d1e`); if a startup warning says an
+extension registers `/mcp` and the built-in was skipped, the adapter is
+still installed: `pi remove npm:pi-mcp-adapter`.
+
+Server config is **not in dotfiles** because the Index entry carries a
+Vercel deployment-protection bypass token. On a new host, create
+`~/.pi/agent/mcp.json` by hand:
+
+```json
+{
+  "mcpServers": {
+    "linear": {
+      "url": "https://mcp.linear.app/mcp",
+      "oauth": { "scope": "read write" }
+    },
+    "index": {
+      "command": "npx",
+      "args": [
+        "--yes", "--registry=https://registry.npmjs.org", "mcp-remote@0.1.38",
+        "https://index-p6x988u8l.vercel.tools/eve/v1/mcp",
+        "--header", "x-vercel-protection-bypass:<token>"
+      ],
+      "timeout": 180,
+      "exposure": "direct"
+    }
+  }
+}
+```
+
+- **Linear**: OAuth via dynamic client registration. `pi mcp login linear`
+  opens the browser; tokens land in `~/.pi/agent/mcp-auth.json`. Default
+  `codemode` exposure is deliberate (76 tools); the model calls
+  `mcp__linear__<tool>` from `codemode` scripts or loads a few with
+  `tool_search`. Add a `toolExposure` block to declare hot tools directly.
+- **Index**: the `<token>` is the Index project's protection-bypass secret
+  (Vercel dashboard, or copy from PHYREXIA's file). Goes through `mcp-remote`
+  over stdio because native HTTP clients cannot carry the bypass header
+  across every OAuth request (Cameron, 2026-08-19). mcp-remote owns the Okta
+  flow and stores tokens in `~/.mcp-auth`; the first Index tool call opens
+  the browser. Never `pi mcp login index`.
+- Verify with `pi mcp list` (exit 0 = every enabled server connected).
+  Running sessions pick up config changes on `/reload`.
+
+**Migrating a host that still runs the adapter** (adapter-schema
+`mcp.json` uses `requestTimeoutMs`, `auth: "oauth"`, `lifecycle`,
+`settings`; the built-in rejects those keys): `pi remove
+npm:pi-mcp-adapter`, rewrite `mcp.json` to the shape above (`requestTimeoutMs`
+ms -> `timeout` s), `pi mcp login linear`, `pi mcp list`, then delete
+`~/.pi/agent/mcp-cache.json` and the adapter's keychain item
+(`security delete-generic-password -s pi-mcp-adapter.oauth`).
+
 ## vercel-plugin skills path (`current` symlink)
 
 `settings.base.json` points the vercel-plugin skills at a stable `current`
