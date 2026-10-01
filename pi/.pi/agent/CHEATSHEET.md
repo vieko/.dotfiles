@@ -52,3 +52,10 @@
 
 - `/model <fuzzy>` or Ctrl+L: pick. Ctrl+.: cycle.
 - Shift+Tab: thinking level (border color). Ctrl+S in a picker: save as default.
+
+## Around pi (macOS)
+
+- tmux prefix C-a: `|` `-` split, `h/j/k/l` pane, `c` window, `n/p` next/prev, `.` swap, `z` zoom.
+- Cmd+H/J/K/L: Aerospace focus. Cmd+1..0: workspace. Cmd+Space: float. Cmd+D: Spotlight.
+- Ctrl+Shift+C/V: copy/paste in the terminal. Cmd+Shift+Enter: new Ghostty window.
+- `keys` in a shell or tmux prefix `?`: the full cross-layer card.

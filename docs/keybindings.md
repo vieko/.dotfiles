@@ -46,6 +46,15 @@ and its integrated terminal need raw Ctrl).
   Print, Save Page dialogs on a stray press).
 - bare `C-l` / `C-k` navigation from shell panes in tmux: use the prefix.
 
+## Quick reference
+
+`docs/keybindings-card.md` is the one-screen version of this file: the
+chords you actually press, grouped by layer. `keys` (in `scripts/`) renders
+it with bat; tmux `prefix + ?` opens it in a popup; `keys <pattern>` greps
+it; `keys -e` edits it. Pi's `/cheat` ends with a short "Around pi" section
+that points here. When a chord changes, update the card and the table above
+together.
+
 ## Auditing
 
 `~/.scripts/keybind-audit.sh` (in `scripts/`) collects chords from the live

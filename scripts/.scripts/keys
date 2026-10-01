@@ -1,0 +1,39 @@
+#!/usr/bin/env bash
+# keys: show the keybinding card (docs/keybindings-card.md in the dotfiles).
+#
+# Bound to tmux `prefix + ?` as a display-popup; also fine from a plain shell.
+# `keys -e` opens the card in $EDITOR. `keys <pattern>` greps the card.
+#
+# Renders with bat when available (markdown highlighting, pager), otherwise
+# falls back to less / cat.
+
+set -euo pipefail
+
+card="${KEYS_CARD:-$HOME/.dotfiles/docs/keybindings-card.md}"
+
+if [[ ! -f "$card" ]]; then
+    echo "keys: no card at $card" >&2
+    exit 1
+fi
+
+case "${1:-}" in
+    -e|--edit)
+        exec "${EDITOR:-nvim}" "$card"
+        ;;
+    -h|--help)
+        sed -n '2,6p' "$0" | sed 's/^# \{0,1\}//'
+        exit 0
+        ;;
+esac
+
+if [[ $# -gt 0 ]]; then
+    exec grep -i -- "$*" "$card"
+fi
+
+if command -v bat >/dev/null 2>&1; then
+    exec bat --language=md --style=plain --paging=always --color=always "$card"
+elif command -v less >/dev/null 2>&1; then
+    exec less -R "$card"
+else
+    exec cat "$card"
+fi
