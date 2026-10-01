@@ -105,10 +105,12 @@ Vercel deployment-protection bypass token. On a new host, create
 {
   "mcpServers": {
     "linear": {
+      "description": "Linear issues, projects, cycles, comments, and documents for the Vercel workspace (OAuth; resolves assignee \"me\").",
       "url": "https://mcp.linear.app/mcp",
       "oauth": { "scope": "read write" }
     },
     "index": {
+      "description": "Index: Vercel internal knowledge graph of people, teams, projects, and docs (via mcp-remote; first call opens Okta login).",
       "command": "npx",
       "args": [
         "--yes", "--registry=https://registry.npmjs.org", "mcp-remote@0.1.38",
@@ -133,6 +135,10 @@ Vercel deployment-protection bypass token. On a new host, create
   across every OAuth request (Cameron, 2026-08-19). mcp-remote owns the Okta
   flow and stores tokens in `~/.mcp-auth`; the first Index tool call opens
   the browser. Never `pi mcp login index`.
+- `description` (pi >= 0.99.2) is the one-liner shown in the `mcp_servers`
+  system prompt section and the text `searchTools()` ranks the server's
+  tools by. Without it pi falls back to the first line of the server's own
+  instructions, which for Linear is a formatting note, not a summary.
 - Verify with `pi mcp list` (exit 0 = every enabled server connected).
   Running sessions pick up config changes on `/reload`.
 
