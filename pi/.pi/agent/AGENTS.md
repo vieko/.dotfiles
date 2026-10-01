@@ -170,9 +170,14 @@ reply is the merge instruction; do not ask again. Sequence:
 
 1. Wait for required checks green and review approval (use the repo's
    PR-wait mechanism if it has one; otherwise poll `gh pr checks`).
-2. `gh pr merge <n> --squash --delete-branch`, then confirm `MERGED`.
+2. `gh pr merge <n> --squash` (no `--delete-branch`), then confirm
+   `MERGED`. gh 2.99+ `--delete-branch` also removes the head branch's
+   worktree, even when a job is running from it.
 3. Close the loop: move the Linear issue if the PR body didn't auto-close
-   it, prune the worktree and any construct window (`fam-*`, `golem-*`)
+   it, then clean up explicitly. Check nothing runs from the worktree
+   (`lsof -d cwd | grep -F <path>` is empty), remove it, delete the local branch, and
+   `git push origin --delete <branch>` (skip for a stacked base until its
+   child is retargeted). Close any construct window (`fam-*`, `golem-*`)
    for that issue, and report the merge SHA in one line.
 
 Blockers (red check, changes requested, merge conflict) get reported once
