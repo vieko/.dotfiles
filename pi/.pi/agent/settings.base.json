@@ -5,7 +5,7 @@
   "tuiMode": "fullscreen",
   "defaultThinkingLevel": "high",
   "enableInstallTelemetry": false,
-  "quietStartup": true,
+  "quietStartup": "header",
   "showCacheMissNotices": true,
   "skills": [
     "~/.claude/plugins/cache/claude-plugins-official/vercel/current/skills"
