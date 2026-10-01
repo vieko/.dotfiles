@@ -175,8 +175,7 @@ claude() {
         local len=${#tok}
         if [[ "$len" -eq 0 ]]; then
             echo "xcc: CLAUDE_GATEWAY_TOKEN is empty -- refusing to run Claude Code off-gateway." >&2
-            echo "     Stale/un-exported 1Password env. Re-hydrate (note set -a), then retry:" >&2
-            echo '       set -a; eval "$(op inject -i ~/.dotfiles/bash/env.op)"; set +a' >&2
+            echo "     Stale/un-exported 1Password env. Run op-hydrate, then retry." >&2
             return 1
         fi
         # Vercel gateway keys are 60 chars; warn (don't block) on drift so a
@@ -189,6 +188,29 @@ claude() {
     else
         command claude "$@"
     fi
+}
+
+# ==> op-hydrate: load env.op secrets into this shell and, inside tmux, the
+# server's global env so new panes inherit them. Repairs a tmux server seeded
+# by a login shell that raced 1Password at boot. Existing panes still need
+# their own op-hydrate (or a new pane).
+op-hydrate() {
+    local out line k v n=0
+    out="$(op inject -i "$HOME/.dotfiles/bash/env.op")" || return 1
+    while IFS= read -r line; do
+        [[ "$line" =~ ^([A-Z_][A-Z0-9_]*)=(.*)$ ]] || continue
+        k="${BASH_REMATCH[1]}" v="${BASH_REMATCH[2]}"
+        if [[ -z "$v" || "$v" == op://* ]]; then
+            echo "op-hydrate: $k unresolved" >&2
+            continue
+        fi
+        export "$k=$v"
+        [[ -n "$TMUX" ]] && tmux set-environment -g "$k" "$v"
+        n=$((n + 1))
+    done <<< "$out"
+    export OP_ENV_HYDRATED=1
+    [[ -n "$TMUX" ]] && tmux set-environment -g OP_ENV_HYDRATED 1
+    echo "op-hydrate: $n keys loaded${TMUX:+ (shell + tmux global env)}"
 }
 
 # ==> dangerous mode (skips ALL permission prompts — use with caution)

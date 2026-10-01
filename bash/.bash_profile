@@ -63,7 +63,15 @@ if [[ -z "$OP_ENV_HYDRATED" ]] \
     set -a
     eval "$(op inject -i "$HOME/.dotfiles/bash/env.op" 2>/dev/null)"
     set +a
-    export OP_ENV_HYDRATED=1
+    # Only mark hydrated on success, so a failed inject retries next login.
+    [[ -n "$AI_GATEWAY_API_KEY" ]] && export OP_ENV_HYDRATED=1
+fi
+
+# A login shell racing 1Password at boot (app not yet unlocked) skips the
+# block above silently, and a tmux server started from it seeds every pane
+# without secrets (2026-10-01). Say so; `op-hydrate` (.bash_ai) repairs it.
+if [[ -z "$AI_GATEWAY_API_KEY" ]] && command -v op &>/dev/null; then
+    echo "[op] 1Password secrets not loaded (app locked or not ready). Run: op-hydrate" >&2
 fi
 
 # op-less hosts (e.g. chaos): hydrate the gateway key from Pi's auth.json,
