@@ -1,5 +1,8 @@
 {
   // Editor appearance
+  "collaboration_panel": {
+    "dock": "left"
+  },
   "context_servers": {
     "playwright": {
       "source": "custom",
@@ -72,6 +75,7 @@
     }
   },
   "outline_panel": {
+    "dock": "left",
     "default_width": 360,
     "file_icons": true,
     "folder_icons": true,
