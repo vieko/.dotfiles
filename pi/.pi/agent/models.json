@@ -46,7 +46,7 @@
           },
           "compat": {
             "supportsMidConvoSystemMessages": true,
-            "supportsMidConvoToolChanges": true,
+            "supportsMidConvoToolChanges": false,
             "supportsStrictTools": true,
             "vercelGatewayRouting": {
               "only": [
@@ -75,7 +75,7 @@
           },
           "compat": {
             "supportsMidConvoSystemMessages": true,
-            "supportsMidConvoToolChanges": true,
+            "supportsMidConvoToolChanges": false,
             "supportsStrictTools": true,
             "supportsMidConvoEffort": true,
             "vercelGatewayRouting": {
@@ -160,7 +160,7 @@
           },
           "compat": {
             "supportsMidConvoSystemMessages": true,
-            "supportsMidConvoToolChanges": true,
+            "supportsMidConvoToolChanges": false,
             "supportsStrictTools": true,
             "vercelGatewayRouting": {
               "only": [
@@ -189,7 +189,7 @@
           },
           "compat": {
             "supportsMidConvoSystemMessages": true,
-            "supportsMidConvoToolChanges": true,
+            "supportsMidConvoToolChanges": false,
             "supportsStrictTools": true,
             "supportsMidConvoEffort": true,
             "vercelGatewayRouting": {
