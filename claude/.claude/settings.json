@@ -116,6 +116,17 @@
           }
         ]
       }
+    ],
+    "UserPromptSubmit": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node $HOME/dev/sigil/integrations/claude/user-prompt-submit.mjs",
+            "timeout": 5
+          }
+        ]
+      }
     ]
   },
   "statusLine": {
