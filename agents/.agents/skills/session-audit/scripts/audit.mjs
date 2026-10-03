@@ -33,9 +33,22 @@ const TZ = process.env.AUDIT_TZ ?? "America/Edmonton";
 // corrects that using the model catalog, but only for turns whose billed
 // cacheWrite rate still matches the 5m rate, so windows spanning the upgrade
 // are not double-counted.
+// Managed install (pi.dev installer, pi 1.0.1+): releases live under
+// ~/.pi/agent/install/releases/<version>/ with pi-ai hoisted to that
+// release's node_modules; current-version names the active one.
+const managedRoot = (() => {
+	const installDir = join(process.env.PI_CODING_AGENT_DIR ?? join(homedir(), ".pi/agent"), "install");
+	try {
+		const version = readFileSync(join(installDir, "current-version"), "utf8").trim();
+		return version ? join(installDir, "releases", version) : null;
+	} catch {
+		return null;
+	}
+})();
 const catalogPath = (() => {
 	const roots = [
 		process.env.PI_PACKAGE_ROOT,
+		managedRoot,
 		join(homedir(), ".npm-global/lib/node_modules/@earendil-works/pi-coding-agent"),
 		"/usr/local/lib/node_modules/@earendil-works/pi-coding-agent",
 		"/opt/homebrew/lib/node_modules/@earendil-works/pi-coding-agent",

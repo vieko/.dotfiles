@@ -3,6 +3,28 @@
 Rarely-needed procedures for the agent tooling on this machine. Referenced
 from `~/.pi/agent/AGENTS.md`.
 
+## Where Pi is installed (managed install)
+
+Since 1.0.1 Pi runs from the pi.dev managed install, not global npm (npm
+dropped its shrinkwrap in 1.0.1, so `npm i -g` no longer pins transitive
+deps). Layout:
+
+- `~/.pi/agent/install/releases/<version>/` holds a release with its own
+  pinned `node_modules`; `~/.pi/agent/install/current-version` names the
+  active one. `pi-ai`, `pi-tui`, etc. are hoisted to that release's
+  `node_modules/@earendil-works/`, not nested under `pi-coding-agent`.
+- `~/.pi/agent/bin/pi` is the launcher; `~/.local/bin/pi` symlinks to it.
+  `type -a pi` should list only those (plus `~/.local/share/../bin/pi`, the
+  same file). A `~/.npm-global/bin/pi` means a stray `npm i -g` -- remove it
+  with `npm rm -g @earendil-works/pi-coding-agent`.
+- `pi update` is the whole upgrade path. The installer
+  (`curl -fsSL https://pi.dev/install.sh | sh`) also offers reinstall /
+  uninstall / migrate-from-npm.
+
+Anything that hardcodes the old `~/.npm-global/lib/node_modules/...` path
+should resolve through `current-version` instead (the session-audit
+`audit.mjs` catalog lookup does).
+
 ## Refreshing Pi's model catalog
 
 Pi (0.80.8+) keeps a dynamic model catalog in `~/.pi/agent/models-store.json`
@@ -30,7 +52,7 @@ flags hold. When a new Claude model lands, copy its native compat onto the
 gateway override in `pi/.pi/agent/models.json`:
 
 ```bash
-cd /Users/vieko/.npm-global/lib/node_modules/@earendil-works/pi-coding-agent/node_modules/@earendil-works/pi-ai/dist
+cd ~/.pi/agent/install/releases/"$(cat ~/.pi/agent/install/current-version)"/node_modules/@earendil-works/pi-ai/dist
 node --input-type=module -e 'import * as m from "./models.generated.js"; console.log(JSON.stringify(m.MODELS.anthropic["claude-<id>"].compat))'
 ```
 
