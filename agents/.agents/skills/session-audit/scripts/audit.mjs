@@ -114,6 +114,10 @@ const gapHist = {};
 // sits on the counsel tool result, not on an assistant turn, so it is
 // outside totals.tru and reported on its own.
 const counsel = [];
+// `/fork` copies the parent's entries (same ids) into the new file. Count each
+// entry once; a duplicate still advances `prev` so gap/miss attribution holds.
+const seenIds = new Set();
+let forkDupes = 0;
 
 for (const dir of readdirSync(root)) {
 	let files;
@@ -142,6 +146,17 @@ for (const dir of readdirSync(root)) {
 		let prevIdx = -1;
 		for (let i = 0; i < L.length; i++) {
 			const e = L[i];
+			if (e.id) {
+				if (seenIds.has(e.id)) {
+					if (e.type === "message" && e.message?.role === "assistant" && e.message.usage?.cost) {
+						forkDupes++;
+						prev = e;
+						prevIdx = i;
+					}
+					continue;
+				}
+				seenIds.add(e.id);
+			}
 			if (e.type === "custom" && e.customType === "counsel" && e.data) {
 				const cts = new Date(e.timestamp).getTime();
 				if (cts >= since && cts <= until) {
@@ -285,6 +300,7 @@ const P = (s = "") => out.push(s);
 P(`# pi session audit: ${mt(since)} to ${mt(until)} (${TZ})`);
 P();
 P(`Sessions with turns in window: ${sessions.length}. Assistant turns: ${totals.turns}. User turns: ${totals.user}. Tool calls: ${totals.toolCalls} (errors ${totals.toolErrors}).`);
+if (forkDupes) P(`Fork duplicates skipped: ${forkDupes} assistant turns appeared in more than one session file (counted once).`);
 P(`Spend: pi-reported ${usd(totals.pi)}, true ≈ ${usd(totals.tru)}${longRetention ? " (1h cache writes repriced at 2x input; pi#9210)" : ""}. By type (pi-reported): input ${usd(totals.byType.input)}, output ${usd(totals.byType.output)}, cacheRead ${usd(totals.byType.cacheRead)}, cacheWrite ${usd(totals.byType.cacheWrite)}.`);
 if (longRetention) P(`1h TTL: premium paid ≈ ${usd(ttl.premium)}, rewrites avoided on 5-60m gaps ≈ ${usd(ttl.saved)}, net ${ttl.saved - ttl.premium >= 0 ? "+" : ""}${usd(ttl.saved - ttl.premium)}.`);
 P();

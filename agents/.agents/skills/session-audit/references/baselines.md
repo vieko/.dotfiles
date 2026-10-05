@@ -82,3 +82,35 @@ old row so drift is visible.
 - Recurring messages: "proceed with (a)" x21 + "proceed with a" x10 +
   "proceed" x8; "posted" x11 + "posted, merge it" x9; "draft a lede for" x14;
   bare pi-clipboard path x17; "anything else for this" x8 (new).
+
+## Week 40 (2026-09-27 to 2026-10-04, 7 working days), PHYREXIA
+
+- 55 sessions with turns, 5,852 assistant turns, 632 user turns, 5,254 tool
+  calls (230 errors). pi-reported $458; true $486 (~$420-490/week, from
+  ~$640). First window with fork dedupe in `audit.mjs`: two `/fork`s had
+  duplicated 443 turns / $36 / $4.44 counsel; earlier baselines are
+  inflated by whatever forking they contained (direction holds).
+- Split (pi-reported): cacheRead $205, cacheWrite $149, output $104.
+- Models: fable-5.1 2,834 turns $318 (312 user turns, $1.02/ut; $1.22
+  excluding the $112 drift session); opus-5.5 2,199 turns $145 (305 user
+  turns, $0.48/ut); sol 810 turns $22 (7 familiars). Aborts: fable 9, opus 8.
+- 1h TTL (anthropic/* only): premium $65 vs $275 avoided; net +$210.
+- Context: 26% of turns >= 200K carried 35% of spend; max ctx 491K. Two
+  drift sessions (09-22 index transcription $112, 4 active days, 5
+  compactions; 09-28 3758 handoff $61, 457K) = 36% of spend.
+- Misses: idle 24 ($45, avg 128K); unexplained 12 ($5): fable 0.07%
+  (2/2,772), opus 0.05%, sol 1.13% (9/798, OpenAI best-effort at 0-1m gaps).
+  Size-tax finding retired.
+- Edit health: fable 1/77, opus 0/52, sol 0/240 malformed.
+- Hard stops: 40. 8 = gateway 400 `messages.N.content: Invalid input` on
+  `tool_addition` blocks (10-03, fixed by `supportsMidConvoToolChanges:
+  false`, dotfiles ede7e5b); 14 Request timed out in two clusters (09-30
+  18:40-21:10, 10-02 14:1x); 17 aborts; 1 503.
+- Counsel: 7 consults (5 fable:high $7.78, 2 haiku probes), avg $1.11,
+  1.6% of session spend, 5 revise / 2 stop, cache-read share 0%.
+- Constructs: 1 golem (luna, passed attempt 1, $0.03), 7 sol familiars
+  (3 of them `*-spec.md` executions, golem-shaped).
+- Recurring messages: "proceed with (a)" x28, "(a)" x27, "a)" x14 (81 of 632
+  user turns are one-token decisions); "draft a lede for" x12 (all `/lede`
+  expansions); "anything else for this session?" x8; "pi was just updated"
+  x3 as an opener.
