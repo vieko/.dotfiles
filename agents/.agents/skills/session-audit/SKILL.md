@@ -16,7 +16,10 @@ node ~/.agents/skills/session-audit/scripts/audit.mjs --since 2026-08-31 --until
 anvil status --all --since 7d        # golem verdicts + USD (anvil >= 0.3.1); golems are NOT in pi sessions
 ```
 
-Dates are local midnight (`AUDIT_TZ`, default America/Edmonton). `--json` keeps
+The script counts each session entry once: `/fork` copies the parent's
+entries (same ids) into the child file, and before 2026-10-05 the audit
+summed both (week 40: +443 turns, +$36, +$4.44 counsel). A `Fork duplicates
+skipped` line prints when it happens. Dates are local midnight (`AUDIT_TZ`, default America/Edmonton). `--json` keeps
 the raw per-session rows for follow-up questions. The script reprices 1h cache
 writes at 2x input on Anthropic models for turns pi billed at the 5m rate
 (pi#9210, fixed in pi 0.99.0 on 2026-09-29; detected per turn from the billed
@@ -90,7 +93,16 @@ converges on pi-reported $ and the repricing note can be dropped.
    is not reaching for the tool: check the tool description before adding
    steering to AGENTS.md. Avg $/consult above ~$3 or cache-read share
    under 30% on repeat consults points at the serialiser, not the model.
-10. **Constructs.** `summons.log` gives dispatch counts by kind/vessel;
+10. **Nudges.** `habit-nudges.ts` appends a `nudge` custom entry per nudge
+   shown (since 2026-10-05; keys `shell`, `abort`, `fork`, `renew`). The
+   section reports counts by key and, for `renew` (40 prompts or day 3),
+   how many were followed by <= 3 prompts (the user left for `/new` or
+   `/fork`) vs kept going. The renew nudge exists because weeks 39 and 40
+   each had two "lookup became a workspace" sessions carrying ~35% of
+   spend; if shown-but-ignored dominates for two windows, the nudge is the
+   wrong lever and the next step is a harder one (auto `/compact` at the
+   line, or a cost banner), not more text.
+11. **Constructs.** `summons.log` gives dispatch counts by kind/vessel;
    `anvil status --all --since` gives verdicts, attempts, and USD. Compute
    first-attempt pass rate and how often escalation rescued a run. Crashes
    with no result JSON (`~/scratch/logs/golem-*.json` empty) are

@@ -14,7 +14,7 @@
 - `/fork` (Ctrl+Shift+F): new session from an earlier prompt; drift stays behind.
 - `/tree` (Ctrl+Shift+T, or Escape twice on an empty editor): same, inside this session. Shift+L labels a node.
 - `/clone`: copy the active branch to a new session.
-- `/new` (Ctrl+Shift+N) + `/recap`: restart after a long break.
+- `/new` (Ctrl+Shift+N) + `/recap`: restart after a long break, or at 40 prompts / day 3 (the renew nudge).
 
 ## Context
 
@@ -34,6 +34,8 @@
 - `/pr <n>`: review a PR.
 - `/review`: review the staged diff.
 - `/recap`: repo state for a fresh start.
+- `/wrap`: close out a session: loose ends, constructs, carry-forward.
+- `/pi-update [prev]`: review a pi release against our setup.
 
 ## Copy, export, view
 

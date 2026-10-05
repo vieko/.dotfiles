@@ -260,6 +260,15 @@ address (deliberate silent constructs need the explicit `-R` opt-out).
 Encode the invariant (know what's summoned; runs must be discoverable), not
 the layout.
 
+- **Specs go to golems, briefs go to familiars.** `~/scratch/<id>-spec.md`
+  (a verifiable end state, a gate) is summon-golem input; `<id>-brief.md`
+  (work that needs steering or judgment mid-run) is summon-familiar input.
+  Week 40: 3 of 7 sol familiars ran `Read <id>-spec.md and execute it
+  exactly`; one took 274 turns, 17 tool errors and $10 for 2 user turns,
+  while the week's one luna golem passed on attempt 1 for $0.03. A spec
+  executed as a familiar pays worker-tier prices for no gate and no
+  steering. If a spec has no gate, write the gate (or `--check <cmd>`)
+  before summoning; if it cannot have one, it is a brief, name it so.
 - **Familiars are summoned, never conscripted.** New task work always gets
   a fresh construct -- never dispatch a brief into an existing session
   found via `list_sessions` / pi-post. A session named for task A silently

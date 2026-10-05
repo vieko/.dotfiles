@@ -15,6 +15,13 @@
  *   abort   Escape while streaming -> Enter steers, Alt+Enter follows up.
  *   fork    Resuming a session with many user turns -> `/fork` restarts from
  *           an earlier prompt and leaves the drift behind.
+ *   renew   40 prompts, or a third active day -> `/new` + `/recap`. Week 39
+ *           and 40 audits each had two "lookup became a workspace" sessions
+ *           carrying ~35% of spend; the fork nudge fires only on resume and
+ *           did not change that.
+ *
+ * Every nudge shown is also appended as a `nudge` custom entry (never in
+ * model context) so session-audit can count shown vs. acted on.
  *
  * `/cheat` renders ~/.pi/agent/CHEATSHEET.md in an overlay (Esc/Enter/q to
  * close). `/cheat off` mutes nudges for this session.
@@ -29,6 +36,8 @@ import { Markdown, matchesKey, truncateToWidth, visibleWidth } from "@earendil-w
 
 const CHEATSHEET = join(homedir(), ".pi/agent/CHEATSHEET.md");
 const FORK_TURNS = 20;
+const RENEW_TURNS = 40;
+const RENEW_DAYS = 3;
 
 // First tokens that mean "this is a shell command, not a prompt".
 const SHELL_HEAD =
@@ -52,30 +61,54 @@ function userTurns(ctx: ExtensionContext): number {
 	return n;
 }
 
+// Distinct local calendar days with at least one user prompt on this branch.
+function activeDays(ctx: ExtensionContext, includeToday = false): number {
+	const days = new Set<string>();
+	if (includeToday) days.add(new Date().toLocaleDateString("en-CA"));
+	for (const e of ctx.sessionManager.getBranch()) {
+		if (e.type !== "message" || e.message.role !== "user") continue;
+		days.add(new Date(e.timestamp).toLocaleDateString("en-CA"));
+	}
+	return days.size;
+}
+
 export default function (pi: ExtensionAPI) {
 	let muted = false;
 	const shown = new Set<string>();
 
-	const nudge = (ctx: ExtensionContext, key: string, text: string) => {
+	const nudge = (ctx: ExtensionContext, key: string, text: string, data: Record<string, unknown> = {}) => {
 		if (muted || !ctx.hasUI || shown.has(key)) return;
 		shown.add(key);
 		ctx.ui.notify(`tip: ${text} (/cheat for the list)`, "info");
+		pi.appendEntry("nudge", { key, ...data });
+	};
+
+	const renew = (ctx: ExtensionContext, turns: number, days: number) => {
+		if (turns < RENEW_TURNS && days < RENEW_DAYS) return;
+		const why = days >= RENEW_DAYS ? `day ${days} of this session, ${turns} prompts` : `${turns} prompts in this session`;
+		nudge(ctx, "renew", `${why}. /new + /recap starts fresh at a fraction of the price; /fork keeps an earlier thread`, { turns, days });
 	};
 
 	pi.on("session_start", (event, ctx) => {
 		shown.clear();
 		if (event.reason !== "resume" && event.reason !== "startup") return;
 		const turns = userTurns(ctx);
+		const days = activeDays(ctx);
+		renew(ctx, turns, days);
 		if (turns < FORK_TURNS) return;
 		nudge(
 			ctx,
 			"fork",
 			`${turns} prompts in this session. /fork picks an earlier prompt and starts a new session from there; the drift after it stays behind`,
+			{ turns },
 		);
 	});
 
 	pi.on("input", (event, ctx) => {
 		if (event.source !== "interactive" || event.streamingBehavior) return;
+		// This prompt is about to become turn N+1; a session that crosses the
+		// renew line within one sitting gets the nudge here, not only on resume.
+		renew(ctx, userTurns(ctx) + 1, activeDays(ctx, true));
 		if (!looksLikeShell(event.text)) return;
 		nudge(ctx, "shell", `!${event.text.trim().split(/\s+/).slice(0, 2).join(" ")} runs in the TUI without a model turn; !!cmd keeps it out of context`);
 	});
