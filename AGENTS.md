@@ -73,6 +73,10 @@ Pi-managed `lastChangelogVersion` key and warns if live package pins drifted
 from the base (base wins; sync base first if live is newer after `pi update`). An
 unknown host falls back to `hosts/enabledModels.default.json` (the restricted
 set). Add a host by dropping in a new `hosts/enabledModels.<host>.json` fragment.
+An optional `hosts/packages.<host>.json` appends per-host package extras to the
+shared pins: local dev checkouts loaded as pi packages (e.g. `"../../dev/sigil"`,
+relative to `~/.pi/agent`, so it only resolves where the clone exists). Without
+it, a dev path added to the live file is dropped on the next `setup-pi.sh` run.
 
 **pi-prose** (`~/dev/pi-prose`, published as `pi-prose` on npm, installed via
 the `packages` array) follows the same dev pattern as the bonfire adapter: the

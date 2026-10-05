@@ -116,12 +116,17 @@ host's work profile (production TS monorepo, gated prod migrations,
 governance-heavy coordination). Defaults, not law -- override per summoning
 when the work demands it.
 
-- **Summoner** -- `claude-fable-5.1:high` (the Pi default; the seat opus held
-  before it). The judgment seat gets the daily-driver frontier vessel.
-  Escalate to `claude-opus-5.5:medium` for the gnarliest architecture or
-  review passes -- that is its defined job. Opus 5.5 is also the standing
-  A/B against fable for Summoner work: 40% of fable's price on every axis
-  (in/out/cacheRead/cacheWrite), quality parity unproven as of 2026-09-22.
+- **Summoner** -- `claude-opus-5.5:high` (the Pi default since 2026-10-05,
+  a declared two-week A/B; `claude-fable-5.1:high` held the seat from
+  2026-09-22 and is one `/model fable` away). Week 40 ran 2,199 opus turns
+  against 2,834 fable turns: $0.48 vs $1.02 per user turn, abort rate 2.6%
+  vs 2.9%, unexplained cache-miss rate 0.05% vs 0.07%, opus carrying the
+  week's largest contexts (491K). Price and cache penalties are ruled out;
+  quality parity is the open question and only a fortnight of real
+  Summoner work answers it. Decision point: the week-42 audit. Revert if
+  review passes start catching what the Summoner should have, or if
+  consults trend toward "stop". Escalate to fable for the gnarliest
+  architecture or review passes while the A/B runs; that is now its job.
 - **Familiar** -- `gpt-6-sol:high` by default (was `claude-sonnet-5:medium`
   until 2026-09-22). Same $2/$10 tier; the switch is because sonnet-5 via
   the gateway drops ~11% of edit tool bodies in transit (`edits: [{}]`) and

@@ -1,6 +1,6 @@
 {
   "defaultProvider": "vercel-ai-gateway",
-  "defaultModel": "anthropic/claude-fable-5.1",
+  "defaultModel": "anthropic/claude-opus-5.5",
   "theme": "one-dark",
   "tuiMode": "fullscreen",
   "defaultThinkingLevel": "high",

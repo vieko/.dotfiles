@@ -49,11 +49,23 @@ out="${HOME}/.pi/agent/settings.json"
 tmp="$(mktemp)"
 jq --slurpfile models "$fragment" '.enabledModels = $models[0]' "$base" >"$tmp"
 
+# Optional per-host package extras (hosts/packages.<host>.json): local dev
+# checkouts loaded as pi packages, e.g. "../../dev/sigil" (relative to
+# ~/.pi/agent, so portable across OSes but only valid where the clone exists).
+# Appended after the shared pins so a Ctrl+S or `pi install` of a dev path is
+# not silently dropped on the next run.
+extras="hosts/packages.${host}.json"
+if [[ -f "$extras" ]]; then
+  tmp2="$(mktemp)"
+  jq --slurpfile extra "$extras" '.packages = ((.packages // []) + $extra[0] | reduce .[] as $p ([]; if index($p) then . else . + [$p] end))' "$tmp" >"$tmp2"
+  mv "$tmp2" "$tmp"
+fi
+
 if [[ -f "$out" ]]; then
   # Warn if `pi update` bumped package pins in the live file but the tracked
   # base is stale -- base wins, so stale base pins would downgrade packages.
   livePkgs="$(jq -c '.packages // []' "$out")"
-  basePkgs="$(jq -c '.packages // []' "$base")"
+  basePkgs="$(jq -c '.packages // []' "$tmp")"
   if [[ "$livePkgs" != "$basePkgs" ]]; then
     echo "warning: live package pins differ from settings.base.json (base wins)." >&2
     echo "  live: ${livePkgs}" >&2
