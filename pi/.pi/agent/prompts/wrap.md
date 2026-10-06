@@ -1,5 +1,5 @@
 ---
-description: Close out this session: loose ends, unreaped constructs, what carries forward
+description: "Close out this session: loose ends, unreaped constructs, what carries forward"
 argument-hint: "[anything you want weighed, e.g. 'we are done with 3910']"
 ---
 Wrap this session. Answer "anything else for this session?" with evidence, not
