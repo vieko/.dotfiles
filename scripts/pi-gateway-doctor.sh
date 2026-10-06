@@ -196,7 +196,7 @@ if [[ $APPLY -eq 1 ]]; then
     else
         echo "[INFO] 5/5 smoke: running a fresh non-interactive session..."
         RESULT=$(env -u ANTHROPIC_AUTH_TOKEN -u ANTHROPIC_API_KEY -u ANTHROPIC_BASE_URL \
-            pi -p --mode json --no-session "Reply with exactly: OK" 2>&1 | python3 -c "
+            pi -p --mode json --no-session --no-mcp "Reply with exactly: OK" 2>&1 | python3 -c "
 import json, sys
 provider = model = None
 for line in sys.stdin:
