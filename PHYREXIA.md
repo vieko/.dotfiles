@@ -202,8 +202,22 @@ when the work demands it.
      base averaged $12). Holds if luna's rung-0 rate on them is above
      ~40%; fails if rung-1 cost on luna's partial worktree exceeds a cold
      fable base.
+  4. *haiku-5.5 golem trial* (from 2026-10-08, anvil#50) -- the next ~10
+     mechanical specs (lint, formatter, small refactors, codemods) go
+     `summon-golem.sh -m haiku`. haiku now means claude-haiku-5.5: luna's
+     list price ($0.10/$0.50; 5x above 100K input, which 1% of golem
+     turns reach), same ladder shape (`haiku:high -> haiku:xhigh ->
+     opus:high`). Repriced on luna's 2,128 observed turns it is $1.73 vs
+     $2.76, so base cost is a wash and the only lever is escalation spend
+     ($75 of $78 in the window). Holds if haiku's rung-0 rate on those
+     specs is at or above luna's 71% and its follow-up rate no worse than
+     luna's ~7%; then haiku becomes the mechanical-spec vessel. It does not
+     become the default either way: it is same-family as the reviewer,
+     which is the blind spot luna's default exists to avoid. Fails below
+     ~60% rung 0, since each extra escalation costs ~$3.70.
 - **Legion** -- `sol` members (`haiku` only for purely mechanical
-  batches -- historically unused). At a 3-member ceiling, member cost is
+  batches -- historically unused at 4.5 prices; 5.5 since 2026-10-08
+  costs a tenth of that, so revisit with the golem trial above). At a 3-member ceiling, member cost is
   noise next to merge-conflict and review cost; the gate + review carry
   the judgment, not the member.
 
