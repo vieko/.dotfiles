@@ -1,0 +1,182 @@
+#!/usr/bin/env bash
+# remind-at.sh -- one-shot macOS reminder: a sticky alert plus a pi-post message
+# at a local date and time, via a launchd agent that removes itself.
+#
+# Usage:
+#   remind-at.sh [--to <pi-post target>] [--title <text>] <slug> "<YYYY-MM-DD HH:MM>" <message|->
+#   remind-at.sh --list
+#   remind-at.sh --cancel <slug>
+#
+#   <slug>     lowercase id, e.g. gtmeng-3924-flip (label dev.vieko.reminder.<slug>)
+#   <message>  body text; "-" reads it from stdin
+#   --to       pi-post target (address, name, or session id). Default: the
+#              calling pi session (pi-post whoami). Prefer an address over a
+#              directory: a directory with several live sessions is ambiguous.
+#
+# Why it looks like this (GTMENG-3924 reminder, 2026-10-08): the first
+# hand-rolled version fired on time and still delivered nothing.
+#   - launchd jobs get PATH=/usr/bin:/bin:/usr/sbin:/sbin, so pi-post's
+#     `#!/usr/bin/env node` failed with exit 127. The job runs pi-post with an
+#     absolute node path resolved here, and the scheduler smoke-tests that
+#     exact command under an empty environment before it installs anything.
+#   - Every channel's exit code goes to ~/scratch/logs/reminders.log; nothing
+#     goes to /dev/null.
+#   - `launchctl bootout` of the job's own label kills the running script, so
+#     self-removal ran before `rm` and the files were left behind. The job
+#     removes its files first and boots itself out as the very last step.
+#   - `display notification` from a launchd job is attributed to Script Editor
+#     and can be dropped silently; the job uses a modal `display alert` and
+#     falls back to a notification only if the alert errors.
+#   - RunAtLoad lets a reminder missed while the Mac was off fire at the next
+#     login instead of never; the job exits quietly when it is not due yet.
+
+set -euo pipefail
+
+[[ "${OSTYPE:-}" == darwin* ]] || { echo "error: remind-at.sh needs macOS launchd" >&2; exit 2; }
+
+STATE_DIR="$HOME/.local/state/reminders"
+AGENTS_DIR="$HOME/Library/LaunchAgents"
+LOG="$HOME/scratch/logs/reminders.log"
+PIPOST="$HOME/.pi/agent/post/bin/pi-post"
+LABEL_PREFIX="dev.vieko.reminder"
+UID_DOMAIN="gui/$(id -u)"
+
+die() { echo "error: $*" >&2; exit 2; }
+
+if [[ "${1:-}" == "--list" ]]; then
+  shopt -s nullglob
+  for plist in "$AGENTS_DIR/$LABEL_PREFIX".*.plist; do
+    label=$(basename "$plist" .plist)
+    slug=${label#"$LABEL_PREFIX."}
+    due=$(cat "$STATE_DIR/$slug.due" 2>/dev/null || echo "?")
+    loaded=no
+    launchctl print "$UID_DOMAIN/$label" >/dev/null 2>&1 && loaded=yes
+    printf '%-40s due %s  loaded=%s\n' "$slug" "$due" "$loaded"
+  done
+  exit 0
+fi
+
+if [[ "${1:-}" == "--cancel" ]]; then
+  slug=${2:?usage: remind-at.sh --cancel <slug>}
+  launchctl bootout "$UID_DOMAIN/$LABEL_PREFIX.$slug" 2>/dev/null || true
+  rm -f "$AGENTS_DIR/$LABEL_PREFIX.$slug.plist" "$STATE_DIR/$slug".{sh,txt,due}
+  echo "[OK] canceled $slug"
+  exit 0
+fi
+
+to="" title=""
+while [[ $# -gt 0 ]]; do
+  case "$1" in
+    --to) to=${2:?--to needs a value}; shift 2 ;;
+    --title) title=${2:?--title needs a value}; shift 2 ;;
+    -h|--help) sed -n '2,12p' "$0"; exit 0 ;;
+    --) shift; break ;;
+    -*) die "unknown flag $1" ;;
+    *) break ;;
+  esac
+done
+[[ $# -eq 3 ]] || die "usage: remind-at.sh [--to target] [--title text] <slug> \"YYYY-MM-DD HH:MM\" <message|->"
+slug=$1 when=$2 body=$3
+[[ "$slug" =~ ^[a-z0-9][a-z0-9-]{0,62}$ ]] || die "slug must be lowercase [a-z0-9-]"
+[[ "$body" == "-" ]] && body=$(cat)
+[[ -n "$body" ]] || die "empty message"
+[[ -n "$title" ]] || title=$slug
+
+due_epoch=$(date -j -f "%Y-%m-%d %H:%M:%S" "$when:00" +%s 2>/dev/null) || die "bad time '$when' (want YYYY-MM-DD HH:MM, local)"
+(( due_epoch > $(date +%s) )) || die "time '$when' is in the past"
+
+# fnm's per-shell multishell path dies with the shell; the default alias does not.
+node_bin="$HOME/.local/share/fnm/aliases/default/bin/node"
+[[ -x "$node_bin" ]] || node_bin=$(command -v node) || die "node not found"
+node_bin=$(cd "$(dirname "$node_bin")" && pwd -P)/$(basename "$node_bin")
+[[ -x "$PIPOST" ]] || die "pi-post CLI missing at $PIPOST"
+
+if [[ -z "$to" ]]; then
+  to=$("$node_bin" "$PIPOST" whoami 2>/dev/null | grep -oE 's-[0-9a-f]{12}' | head -1) \
+    || die "no --to and pi-post whoami found no session; pass --to <address>"
+fi
+resolved=$(env -i HOME="$HOME" PATH=/usr/bin:/bin:/usr/sbin:/sbin "$node_bin" "$PIPOST" resolve "$to" 2>&1) \
+  || die "pi-post cannot resolve '$to' under launchd's environment: $resolved"
+
+label="$LABEL_PREFIX.$slug"
+plist="$AGENTS_DIR/$label.plist"
+job="$STATE_DIR/$slug.sh"
+mkdir -p "$STATE_DIR" "$AGENTS_DIR" "$(dirname "$LOG")"
+launchctl bootout "$UID_DOMAIN/$label" 2>/dev/null || true
+
+printf '%s' "$body" > "$STATE_DIR/$slug.txt"
+date -r "$due_epoch" '+%Y-%m-%d %H:%M %Z' > "$STATE_DIR/$slug.due"
+
+# The job script carries absolute paths only; launchd gives it no useful PATH.
+cat > "$job" <<EOF
+#!/bin/bash
+# Generated by remind-at.sh. Removes itself after it fires.
+SLUG=$(printf '%q' "$slug")
+LABEL=$(printf '%q' "$label")
+DUE=$due_epoch
+NODE=$(printf '%q' "$node_bin")
+PIPOST=$(printf '%q' "$PIPOST")
+TARGET=$(printf '%q' "$to")
+TITLE=$(printf '%q' "$title")
+LOG=$(printf '%q' "$LOG")
+BODY_FILE=$(printf '%q' "$STATE_DIR/$slug.txt")
+PLIST=$(printf '%q' "$plist")
+STATE=$(printf '%q' "$STATE_DIR/$slug")
+EOF
+cat >> "$job" <<'EOF'
+log() { printf '%s [%s] %s\n' "$(date '+%Y-%m-%d %H:%M:%S %Z')" "$SLUG" "$*" >> "$LOG"; }
+now=$(date +%s)
+if (( now < DUE )); then log "loaded, not due until $(date -r "$DUE" '+%Y-%m-%d %H:%M %Z')"; exit 0; fi
+
+body=$(cat "$BODY_FILE" 2>/dev/null)
+late=$(( now - DUE ))
+if (( late > 30 * 86400 )); then
+  log "more than 30 days late; dropping without delivery"
+else
+  (( late > 120 )) && body="[late by $(( late / 60 )) min] $body"
+  out=$(printf '%s' "$body" | "$NODE" "$PIPOST" send --to "$TARGET" --from "reminder:$SLUG" 2>&1); rc=$?
+  log "pi-post send --to $TARGET rc=$rc ${out//$'\n'/ }"
+fi
+
+# Remove files first: once launchctl bootout runs, this process is killed.
+rm -f "$PLIST" "$STATE.txt" "$STATE.due" "$STATE.sh"
+
+if (( late <= 30 * 86400 )); then
+  short=${body:0:900}
+  short=${short//\\/\\\\}; short=${short//\"/\\\"}
+  t=${TITLE//\\/\\\\}; t=${t//\"/\\\"}
+  out=$(/usr/bin/osascript -e "display alert \"$t\" message \"$short\" giving up after 21600" 2>&1); rc=$?
+  log "display alert rc=$rc ${out//$'\n'/ }"
+  if (( rc != 0 )); then
+    out=$(/usr/bin/osascript -e "display notification \"${short:0:200}\" with title \"$t\" sound name \"Glass\"" 2>&1); rc=$?
+    log "display notification rc=$rc ${out//$'\n'/ }"
+  fi
+fi
+log "done; booting out $LABEL"
+/bin/launchctl bootout "gui/$(id -u)/$LABEL" 2>/dev/null
+EOF
+chmod 700 "$job"
+
+cal_month=$(date -r "$due_epoch" +%-m) cal_day=$(date -r "$due_epoch" +%-d)
+cal_hour=$(date -r "$due_epoch" +%-H) cal_min=$(date -r "$due_epoch" +%-M)
+cat > "$plist" <<EOF
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0"><dict>
+  <key>Label</key><string>$label</string>
+  <key>ProgramArguments</key><array><string>/bin/bash</string><string>$job</string></array>
+  <key>StartCalendarInterval</key><dict>
+    <key>Month</key><integer>$cal_month</integer><key>Day</key><integer>$cal_day</integer>
+    <key>Hour</key><integer>$cal_hour</integer><key>Minute</key><integer>$cal_min</integer>
+  </dict>
+  <key>RunAtLoad</key><true/>
+  <key>StandardOutPath</key><string>$LOG</string>
+  <key>StandardErrorPath</key><string>$LOG</string>
+</dict></plist>
+EOF
+plutil -lint "$plist" >/dev/null || die "generated plist is invalid: $plist"
+launchctl bootstrap "$UID_DOMAIN" "$plist" || die "launchctl bootstrap failed for $plist"
+launchctl print "$UID_DOMAIN/$label" >/dev/null 2>&1 || die "$label is not loaded after bootstrap"
+
+echo "[OK] $slug due $(cat "$STATE_DIR/$slug.due") -> $to"
+echo "     job $job; log $LOG"
