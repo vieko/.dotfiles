@@ -17,7 +17,11 @@ deps). Layout:
   `type -a pi` should list only those (plus `~/.local/share/../bin/pi`, the
   same file). A `~/.npm-global/bin/pi` means a stray `npm i -g` -- remove it
   with `npm rm -g @earendil-works/pi-coding-agent`.
-- `pi update` is the whole upgrade path. The installer
+- `pi update` is the whole upgrade path. Since 1.1.0 it prunes
+  `releases/` to the new version and the one it updated from, so the
+  previous release stays on disk for diffing changelogs and catalogs.
+  Older directories left over from pre-1.1.0 updates are safe to `rm -rf`
+  (never the one `current-version` names). The installer
   (`curl -fsSL https://pi.dev/install.sh | sh`) also offers reinstall /
   uninstall / migrate-from-npm.
 

@@ -5,9 +5,9 @@ argument-hint: "[previous version, default: the older release dir still on disk]
 Pi was just updated. Review what changed against our setup and report what to
 adopt, what needs updating, and what is noise. Read-only until I pick an option.
 
-**Window.** Current version: `pi --version`. Previous: `$1` if given, else the
-older directory in `ls -t ~/.pi/agent/install/releases/` (pi keeps the prior
-release on disk). Read `CHANGELOG.md` under
+**Window.** Current version: `pi --version`. Previous: ${1:-the older directory
+in `ls -t ~/.pi/agent/install/releases/` (since 1.1.0 `pi update` keeps
+exactly the new release and the one it updated from)}. Read `CHANGELOG.md` under
 `~/.pi/agent/install/releases/<current>/node_modules/@earendil-works/pi-coding-agent/`
 from the current version down to, not including, the previous one. Follow the
 `docs/*.md` links for anything that looks relevant; read those docs completely.

@@ -143,6 +143,33 @@
             }
           }
         },
+        "anthropic/claude-haiku-5.5": {
+          "inputLimits": {
+            "images": {
+              "resize": {
+                "maxWidth": 1568,
+                "maxHeight": 1568,
+                "maxBytes": 1048576,
+                "jpegQuality": 75
+              }
+            }
+          },
+          "promptCache": {
+            "short": 300,
+            "long": 3600
+          },
+          "compat": {
+            "supportsStrictTools": true,
+            "vercelGatewayRouting": {
+              "only": [
+                "anthropic"
+              ],
+              "order": [
+                "anthropic"
+              ]
+            }
+          }
+        },
         "anthropic/claude-fable-5": {
           "inputLimits": {
             "images": {
@@ -222,17 +249,6 @@
             "xhigh": "xhigh",
             "max": "max"
           },
-          "cost": {
-            "tiers": [
-              {
-                "inputTokensAbove": 272000,
-                "input": 20,
-                "output": 75,
-                "cacheRead": 2,
-                "cacheWrite": 25
-              }
-            ]
-          },
           "compat": {
             "forceAdaptiveThinking": true,
             "vercelGatewayRouting": {
@@ -252,17 +268,6 @@
                 "jpegQuality": 75
               }
             }
-          },
-          "cost": {
-            "tiers": [
-              {
-                "inputTokensAbove": 272000,
-                "input": 4,
-                "output": 15,
-                "cacheRead": 0.4,
-                "cacheWrite": 5
-              }
-            ]
           },
           "compat": {
             "vercelGatewayRouting": {
@@ -286,17 +291,6 @@
                 "jpegQuality": 75
               }
             }
-          },
-          "cost": {
-            "tiers": [
-              {
-                "inputTokensAbove": 272000,
-                "input": 0.2,
-                "output": 0.75,
-                "cacheRead": 0.02,
-                "cacheWrite": 0.25
-              }
-            ]
           },
           "compat": {
             "vercelGatewayRouting": {
@@ -343,17 +337,6 @@
               }
             }
           },
-          "cost": {
-            "tiers": [
-              {
-                "inputTokensAbove": 200000,
-                "input": 4,
-                "output": 12,
-                "cacheRead": 1,
-                "cacheWrite": 0
-              }
-            ]
-          },
           "compat": {
             "vercelGatewayRouting": {
               "order": [
@@ -375,17 +358,6 @@
                 "jpegQuality": 75
               }
             }
-          },
-          "cost": {
-            "tiers": [
-              {
-                "inputTokensAbove": 272000,
-                "input": 4,
-                "output": 15,
-                "cacheRead": 0.2,
-                "cacheWrite": 5
-              }
-            ]
           },
           "compat": {
             "vercelGatewayRouting": {

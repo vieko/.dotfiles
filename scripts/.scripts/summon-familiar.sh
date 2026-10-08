@@ -62,7 +62,7 @@ log_summon() {
 
 alias_to_model() {
     case "$1" in
-        haiku)  echo "anthropic/claude-haiku-4.5:low" ;;
+        haiku)  echo "anthropic/claude-haiku-5.5:low" ;;
         sol)    echo "openai/gpt-6-sol:high" ;;
         sonnet) echo "anthropic/claude-sonnet-5.5:medium" ;;
         opus)   echo "anthropic/claude-opus-5.5:medium" ;;

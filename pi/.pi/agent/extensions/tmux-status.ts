@@ -5,7 +5,9 @@
  * status bar shows what needs attention without a sound or a glance at
  * the pane. Sets the window user option `@pi_status` to `working` on
  * agent_start, `done` or `error` on agent_settled (error when the last
- * run's assistant message stopped with `stopReason: "error"`), `done`
+ * run's assistant message stopped with `stopReason: "error"`), clears it
+ * when the run was aborted (Esc is you, not news; pi 1.1 reports the
+ * same case as `idle` over OSC 7501, which tmux does not forward), `done`
  * while a blocking extension UI prompt waits on input, and clears it on
  * shutdown; the tmux `window-status-format` renders the marker (see
  * tmux.conf).
@@ -49,9 +51,9 @@ export default function (pi: ExtensionAPI) {
 		lastRunErrored = last?.role === "assistant" && last.stopReason === "error";
 	});
 
-	pi.on("agent_settled", () => {
+	pi.on("agent_settled", (event) => {
 		running = false;
-		setStatus(lastRunErrored ? "error" : "done");
+		setStatus(event.aborted ? "" : lastRunErrored ? "error" : "done");
 	});
 
 	// Blocking ctx.ui prompts (confirm/select/input/editor) need you even
