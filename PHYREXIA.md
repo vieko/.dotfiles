@@ -288,6 +288,8 @@ the layout.
   executed as a familiar pays worker-tier prices for no gate and no
   steering. If a spec has no gate, write the gate (or `--check <cmd>`)
   before summoning; if it cannot have one, it is a brief, name it so.
+  Enforced since 2026-10-09: summon-familiar.sh refuses `*-spec.md` and
+  summon-golem.sh refuses a `*-brief.md` file; `-F` forces either.
 - **Familiars are summoned, never conscripted.** New task work always gets
   a fresh construct -- never dispatch a brief into an existing session
   found via `list_sessions` / pi-post. A session named for task A silently
