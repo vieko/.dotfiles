@@ -288,8 +288,13 @@ the layout.
   executed as a familiar pays worker-tier prices for no gate and no
   steering. If a spec has no gate, write the gate (or `--check <cmd>`)
   before summoning; if it cannot have one, it is a brief, name it so.
-  Enforced since 2026-10-09: summon-familiar.sh refuses `*-spec.md` and
-  summon-golem.sh refuses a `*-brief.md` file; `-F` forces either.
+  Caveat (2026-10-09 Luna Decisions audit, 199 ledger files): that week-40
+  count is by filename, and the suffix is unreliable. gtmeng-3910-spec.md
+  opens with "Familiar brief. Steerable"; all three week-40 files scored
+  as briefs (0.01-0.03), and specs sent to familiars scored a median 0.17
+  vs 0.87 for specs sent to golems. Name by content, not by precision: a
+  steerable brief with a gate is still `-brief.md`. The summon scripts warn
+  on a suffix/script mismatch and never refuse.
 - **Familiars are summoned, never conscripted.** New task work always gets
   a fresh construct -- never dispatch a brief into an existing session
   found via `list_sessions` / pi-post. A session named for task A silently

@@ -13,7 +13,7 @@
 #      not silently in a background pane.
 #
 # Usage:
-#   summon-familiar.sh [-m alias] [-P] [-n] [-R] [-C] [-F] [-w name] [-W name] <brief-path> [prompt override]
+#   summon-familiar.sh [-m alias] [-P] [-n] [-R] [-C] [-w name] [-W name] <brief-path> [prompt override]
 #
 #   -m alias   vessel: haiku|sol|sonnet|opus|fable|luna|astra (default: sol),
 #              or a raw gateway id with an explicit effort when the alias's
@@ -33,10 +33,6 @@
 #   -R         no report-back: summon without injecting the report-back
 #              footer. Deliberate opt-out only -- a familiar summoned this
 #              way finishes silently (the fam-2649 failure mode).
-#   -F         force: accept a *-spec.md file. Specs go to golems (PHYREXIA.md
-#              summoning discipline); week 40 sent 3 of 7 sol familiars a
-#              spec, one ran 274 turns for ~$10. Use -F only for a spec that
-#              truly cannot have a gate -- better, rename it to *-brief.md.
 #   -w name    file-touching familiar: create a git worktree at
 #              <repo-parent>/<repo>-worktrees/<name> (new branch <name>) and
 #              summon there. Enforces the PHYREXIA.md isolation invariant
@@ -95,18 +91,16 @@ print_mode=0
 dry_run=0
 no_report=0
 allow_counsel=0
-force_kind=0
 worktree_name=""
 window_name=""
 
-while getopts "m:PnRCFw:W:" opt; do
+while getopts "m:PnRCw:W:" opt; do
     case "$opt" in
         m) vessel="$OPTARG" ;;
         P) print_mode=1 ;;
         n) dry_run=1 ;;
         R) no_report=1 ;;
         C) allow_counsel=1 ;;
-        F) force_kind=1 ;;
         w) worktree_name="$OPTARG" ;;
         W) window_name="$OPTARG" ;;
         *) exit 2 ;;
@@ -116,7 +110,7 @@ shift $((OPTIND - 1))
 
 [[ $print_mode -eq 1 && -n "$window_name" ]] && { echo "error: -P and -W are mutually exclusive" >&2; exit 2; }
 
-[[ $# -ge 1 ]] || { echo "usage: summon-familiar.sh [-m alias] [-P] [-n] [-R] [-C] [-F] [-w name] [-W name] <brief-path> [prompt]" >&2; exit 2; }
+[[ $# -ge 1 ]] || { echo "usage: summon-familiar.sh [-m alias] [-P] [-n] [-R] [-C] [-w name] [-W name] <brief-path> [prompt]" >&2; exit 2; }
 
 # Familiars are workers, not summoners: the counsel tool (pi-counsel) stays
 # off unless -C says this dispatch may consult. Same env var for both modes.
@@ -127,11 +121,12 @@ brief="$1"; shift
 brief_abs="$(cd "$(dirname "$brief")" 2>/dev/null && pwd)/$(basename "$brief")" || true
 [[ -r "$brief_abs" ]] || { echo "error: brief not readable: $brief" >&2; exit 1; }
 
-# Kind guard: specs go to golems, briefs go to familiars (PHYREXIA.md).
-if [[ "$brief_abs" == *-spec.md && $force_kind -eq 0 ]]; then
-    echo "error: $brief is a spec -- specs go to golems: summon-golem.sh <name> $brief" >&2
-    echo "       if it needs steering, not a gate, rename it to *-brief.md; or pass -F to force" >&2
-    exit 2
+# Kind check: warn, never refuse. A 2026-10-09 audit found the suffix
+# unreliable -- most *-spec.md files sent to familiars read as briefs
+# (gtmeng-3910-spec.md opens with "Familiar brief. Steerable").
+if [[ "$brief_abs" == *-spec.md ]]; then
+    echo "warn: $brief is named as a spec -- if it has a gate and needs no steering, use summon-golem.sh" >&2
+    echo "      if it is a brief, rename it to *-brief.md (PHYREXIA.md summoning discipline)" >&2
 fi
 
 model="$(alias_to_model "$vessel")" || { echo "error: unknown vessel alias: $vessel" >&2; exit 2; }

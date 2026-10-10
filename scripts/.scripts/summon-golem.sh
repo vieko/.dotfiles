@@ -25,7 +25,7 @@
 # review pipeline (PHYREXIA.md standing invariant).
 #
 # Usage:
-#   summon-golem.sh [-m alias] [-e K=V]... [-n] [-R] [-k] [-F] <name> <spec-or-prompt> [anvil args...]
+#   summon-golem.sh [-m alias] [-e K=V]... [-n] [-R] [-k] <name> <spec-or-prompt> [anvil args...]
 #
 #   -m alias   vessel: haiku|sol|sonnet|opus|fable|astra|luna|terra|glm (anvil's aliases;
 #              astra needs anvil >= 0.3.1, sol the 2026-09-22 alias refresh).
@@ -49,9 +49,6 @@
 #              golem closes its window 10s after the ping (the log + result
 #              JSON on disk are the forensic artifacts; the pane adds
 #              nothing). Red or crashed golems always keep the window.
-#   -F         force: accept a *-brief.md file. Briefs go to familiars
-#              (PHYREXIA.md summoning discipline): judgment work has no gate
-#              for anvil to prove. If the work has a gate, rename it *-spec.md.
 #
 #   <name>     construct name; window becomes golem-<name> (convention:
 #              the issue number, e.g. 2055)
@@ -81,10 +78,9 @@ vessel="luna"
 dry_run=0
 no_report=0
 keep_window=0
-force_kind=0
 golem_env=()
 
-while getopts "m:e:nRkF" opt; do
+while getopts "m:e:nRk" opt; do
     case "$opt" in
         m) vessel="$OPTARG" ;;
         e) [[ "$OPTARG" == *=* ]] || { echo "error: -e expects KEY=VALUE, got: $OPTARG" >&2; exit 2; }
@@ -92,13 +88,12 @@ while getopts "m:e:nRkF" opt; do
         n) dry_run=1 ;;
         R) no_report=1 ;;
         k) keep_window=1 ;;
-        F) force_kind=1 ;;
         *) exit 2 ;;
     esac
 done
 shift $((OPTIND - 1))
 
-[[ $# -ge 2 ]] || { echo "usage: summon-golem.sh [-m alias] [-e K=V]... [-n] [-R] [-k] [-F] <name> <spec-or-prompt> [anvil args...]" >&2; exit 2; }
+[[ $# -ge 2 ]] || { echo "usage: summon-golem.sh [-m alias] [-e K=V]... [-n] [-R] [-k] <name> <spec-or-prompt> [anvil args...]" >&2; exit 2; }
 
 alias_ok "$vessel" || { echo "error: unknown vessel alias: $vessel (anvil aliases: haiku|sol|sonnet|opus|fable|astra|luna|terra|glm)" >&2; exit 2; }
 
@@ -120,11 +115,11 @@ name="$1"; spec="$2"; shift 2
 # Spec: absolutize if it's a readable file, else pass through as a prompt.
 if [[ -r "$spec" ]]; then
     spec="$(cd "$(dirname "$spec")" && pwd)/$(basename "$spec")"
-    # Kind guard: briefs go to familiars, specs go to golems (PHYREXIA.md).
-    if [[ "$spec" == *-brief.md && $force_kind -eq 0 ]]; then
-        echo "error: $spec is a brief -- briefs go to familiars: summon-familiar.sh -W fam-$name $spec" >&2
-        echo "       if it has a gate, rename it to *-spec.md; or pass -F to force" >&2
-        exit 2
+    # Kind check: warn, never refuse (the suffix is unreliable; see
+    # summon-familiar.sh and PHYREXIA.md summoning discipline).
+    if [[ "$spec" == *-brief.md ]]; then
+        echo "warn: $spec is named as a brief -- if it needs steering, use summon-familiar.sh -W fam-$name" >&2
+        echo "      if it has a gate and needs no steering, rename it to *-spec.md" >&2
     fi
 fi
 
