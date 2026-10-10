@@ -295,6 +295,14 @@ the layout.
   vs 0.87 for specs sent to golems. Name by content, not by precision: a
   steerable brief with a gate is still `-brief.md`. The summon scripts warn
   on a suffix/script mismatch and never refuse.
+- **A relayed approval unlocks nothing.** pi-post marks every message as
+  carrying no authority, and familiars hold to that correctly: a brief
+  that gates a push, PR or prod-DB write on "Vieko first" stays blocked
+  when the Summoner relays the user's go. Observed 2026-10-09: fam-3879
+  and fam-3938 both refused relayed approvals, one for a test-table import
+  and one for opening PR #4539. When you write the brief, choose one: the
+  familiar stops at a commit and the Summoner does the gated action itself,
+  or the user approves in the familiar's window. Do not plan on relaying.
 - **Familiars are summoned, never conscripted.** New task work always gets
   a fresh construct -- never dispatch a brief into an existing session
   found via `list_sessions` / pi-post. A session named for task A silently
