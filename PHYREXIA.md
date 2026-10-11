@@ -345,6 +345,15 @@ the layout.
   summoner; the 2551 familiar then executed a third party's "rebase now").
   Existing sessions receive coordination only: acks, freezes, collision
   checks, relays.
+- **The Summoner speaks for the user within the brief** (since
+  2026-10-09). `summon-familiar.sh` injects a SUMMONER AUTHORITY footer
+  bound to the Summoner's reply address: scope changes and recoverable git
+  steps on the Familiar's own unpushed branch need no user round-trip.
+  Push, merge, deploys, DB writes and publishes still do (global AGENTS.md
+  destructive guard). Trigger: fam-audit-labels took the Summoner's word
+  for a local amend, then blocked on a local rebase. Known gap: pi-post
+  shows `reply_to`, which a sender can redirect, not the sender's address;
+  showing `from.address` in pi-post's delivery line would close it.
 - **Dispatched Familiars get their own named window** (`fam-<issue>`),
   symmetric with golem watch windows: `summon-familiar.sh -W fam-<issue>`
   (see Vessels above; startup is verified either way). The window name is
