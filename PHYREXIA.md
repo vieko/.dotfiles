@@ -67,6 +67,18 @@ truth.
   Golem) trials one impact-tiered exception for low-impact mechanical
   golems; until it holds, there is no exception.
 
+- **Pi Durable is not a construct substrate here** (assessed 2026-10-11,
+  https://earendil.com/posts/pi-durable/). It is an experimental framework
+  for always-on, multi-surface, multi-human agents with checkpointed tasks;
+  it does not replace the Pi coding agent. Summoner and Familiars are
+  one-person terminal sessions, which is Pi 1.0's design center. Golems
+  run anvil on the pi 1.1.0 coding-agent SDK (anvil #52); Durable's
+  crash-resume has no buyer there (anvil #54: 0 non-terminal records in
+  236 runs, and anvil commits only on gate-pass). Reopen on any of: a
+  `running` anvil record lost mid-dispatch; a wish for a Slack-reachable or
+  always-on agent on Scourge; or Pi moving the coding agent itself onto
+  Durable, at which point anvil follows the SDK.
+
 ## Host hazards
 
 - **SentinelOne SIGKILLs code-like argv.** This host runs SentinelOne
