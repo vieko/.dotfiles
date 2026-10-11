@@ -115,6 +115,13 @@ converges on pi-reported $ and the repricing note can be dropped.
 
 ## Optional Luna Decisions labels (after steps 7 and 8)
 
+**Experimental: rubric v1 is not validated.** A manual read of the week-41
+top sessions disagreed with the `shape` labels: v1 has no choice for a
+Summoner that directs several issues by design, its input is mostly
+"proceed with (a)" prompts, and `reports` mixes dispatches with completion
+reports. Do not quote these labels as findings until a later rubric passes
+a manual read.
+
 Use this pass to find session drift and opener intents that differ in wording.
 The script stays deterministic. It never calls a model. Export the sample:
 
