@@ -127,11 +127,13 @@ when the work demands it.
   review passes start catching what the Summoner should have, or if
   consults trend toward "stop". Escalate to fable for the gnarliest
   architecture or review passes while the A/B runs; that is now its job.
-- **Familiar** -- `gpt-6-sol:high` by default (was `claude-sonnet-5:medium`
-  until 2026-09-22). Same $2/$10 tier; the switch is because sonnet-5 via
+- **Familiar** -- `gpt-6.1-sol:high` by default (was `claude-sonnet-5:medium`
+  until 2026-09-22, `gpt-6-sol` until 2026-10-09; golems and the picker
+  moved to 6.1 on 2026-09-29, the familiar alias lagged). Same $2/$10 tier; the switch is because sonnet-5 via
   the gateway drops ~11% of edit tool bodies in transit (`edits: [{}]`) and
   neither strict sampling nor the fine-grained-streaming path moved it,
-  while gpt-6-sol has 0 malformed edits across 600+ GPT-family edit calls.
+  while gpt-6-sol had 0 malformed edits across 600+ GPT-family edit calls
+  (measured on 6.0; the next audit's edit-health line covers 6.1).
   `-m sonnet` still resolves, for the A/B and for a same-family worker when
   one is wanted. Escalate to the Summoner's vessel only when the summoning
   names WHY judgment dominates (governance paths, prod-impact calls,

@@ -108,6 +108,7 @@ converges on pi-reported $ and the repricing note can be dropped.
    with no result JSON (`~/scratch/logs/golem-*.json` empty) are
    infrastructure, not model, failures; read the `.log` next to them.
    Vessel names changed 2026-09-22 (`luna` = gpt-6-luna, `sol` = gpt-6-sol,
+   then gpt-6.1-sol for golems from 2026-09-29 and familiars from 2026-10-09,
    `opus` = claude-opus-5.5, strong rung is opus not fable, `glm`/`terra`
    dropped); older rows in `summons.log` and `anvil status` carry the old
    ids, so group by alias, not by model id, across the boundary.

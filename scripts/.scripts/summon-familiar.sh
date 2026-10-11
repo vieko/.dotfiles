@@ -63,14 +63,14 @@ log_summon() {
 alias_to_model() {
     case "$1" in
         haiku)  echo "anthropic/claude-haiku-5.5:low" ;;
-        sol)    echo "openai/gpt-6-sol:high" ;;
+        sol)    echo "openai/gpt-6.1-sol:high" ;;  # 6.1 since 2026-10-09, matching anvil's alias and the picker
         sonnet) echo "anthropic/claude-sonnet-5.5:medium" ;;
         opus)   echo "anthropic/claude-opus-5.5:medium" ;;
         fable)  echo "anthropic/claude-fable-5.1:high" ;;
         luna)   echo "openai/gpt-6-luna:high" ;;
         astra)  echo "openai/gpt-6-astra:high" ;;
         # Raw gateway id passthrough (provider/model[:effort]). Still goes
-        # through the enabledModels warning below, so a typo surfaces.
+        # through the catalog check below, so a typo surfaces.
         */*)    echo "$1" ;;
         *)      return 1 ;;
     esac
@@ -143,10 +143,13 @@ case "$vessel" in
         ;;
 esac
 
-# Warn if the resolved model is not in this host's enabled set.
-host_frag="$HOME/.pi/agent/hosts/enabledModels.$(hostname | tr '[:upper:]' '[:lower:]').json"
-if [[ -r "$host_frag" ]] && ! grep -q "\"$model\"" "$host_frag"; then
-    echo "warn: $model not in $(basename "$host_frag") -- summoning anyway" >&2
+# Warn if the model id (effort suffix stripped) is not in pi's catalog for
+# this provider. Checks existence, not the picker: enabledModels.<host>.json
+# deliberately omits worker-only vessels (haiku, luna, opus:medium), so the
+# old picker check warned on every such summon and trained people to ignore it.
+model_id="${model%:*}"
+if ! pi --list-models 2>/dev/null | awk -v p="$PROVIDER" -v m="$model_id" '$1 == p && $2 == m { found = 1 } END { exit !found }'; then
+    echo "warn: $model_id not in pi's $PROVIDER catalog (typo, or a model pi does not know yet) -- summoning anyway" >&2
 fi
 
 prompt="${*:-Read $brief_abs and execute it exactly.}"
