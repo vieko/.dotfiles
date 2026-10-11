@@ -79,6 +79,21 @@ truth.
   always-on agent on Scourge; or Pi moving the coding agent itself onto
   Durable, at which point anvil follows the SDK.
 
+  The same verdict covers **harness-on-world** (`~/dev/harness-on-world`,
+  vercel-labs; assessed 2026-10-11): Pi and fx sessions as runs on a
+  Workflow SDK World, the transcript a fold of the event log, crash
+  mid-tool resumed with an interrupted result, steer as a durable inbox.
+  Its bench prices the layer at ~400-500 ms per tool call on `server/on`
+  (bash tool gap 374-505 ms vs 7 ms raw) and 800-1000 ms on the hybrid
+  lane, a tax no construct here has a claim on. It would fix two hazards,
+  not a role: "silence means still running" (backstop + heartbeats) and
+  the window name as the in-flight signal (the dashboard reads every
+  session), but the PoC itself lists liveness as the primitive the World
+  lacks and builds it from side streams and queue delays. One extra reopen
+  trigger on top of Durable's: constructs leaving this host (a Legion on
+  Vercel Sandbox past the 6-golem CPU ceiling). On that day this repo's
+  sandbox lane is the reference, not Pi Durable.
+
 ## Host hazards
 
 - **SentinelOne SIGKILLs code-like argv.** This host runs SentinelOne
