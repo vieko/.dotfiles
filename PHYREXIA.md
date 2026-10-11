@@ -63,7 +63,9 @@ truth.
   session holding the richest context (usually the Summoner). A green gate
   cannot distinguish "make the test pass" from "the test was lying"; the
   review catches what no gate can (planted probe strings, contracts that
-  enshrine the bug, prose that satisfies a grep).
+  enshrine the bug, prose that satisfies a grep). Open proof 5 (Vessels >
+  Golem) trials one impact-tiered exception for low-impact mechanical
+  golems; until it holds, there is no exception.
 
 ## Host hazards
 
@@ -217,6 +219,35 @@ when the work demands it.
      become the default either way: it is same-family as the reviewer,
      which is the blind spot luna's default exists to avoid. Fails below
      ~60% rung 0, since each extra escalation costs ~$3.70.
+  5. *impact-tiered review* (from 2026-10-11) -- can low-impact golem
+     diffs move from Summoner review to cross-family agent review? Source:
+     Calvin Grunewald's attention/impact grid (x.com, 2026-10-07): spend
+     human attention by impact, not uniformly. **Low impact** means all
+     of: a trial-4 mechanical spec, one app or package, no `packages/*`
+     source, no migrations / prod-DB / auth / secrets / CI / governance
+     paths, no new dependencies, under ~200 changed lines. Anything else
+     keeps full review. **Shadow mode** for the next ~10 qualifying green
+     golems: a one-shot review familiar from the other family than the
+     golem (`summon-familiar.sh -P -m astra` for haiku, `-m opus` for
+     luna) gets the spec and the diff and returns SHIP or HOLD with
+     findings. The Summoner still does its full review, before it reads
+     the agent verdict, and logs both in
+     `~/scratch/review-tier-trial-notes.md` (spec, golem vessel, both
+     verdicts, blocking findings on each side, Summoner minutes spent).
+     The standing invariant is unchanged while the trial runs.
+     Criteria, fixed before the data:
+     - Holds if the agent review misses zero blocking findings the
+       Summoner caught, issues at most 2 false HOLDs, and merged diffs
+       need follow-ups (`-repair`/`-fix`) no more often than luna's ~7%.
+       Then low-impact golems ship on agent SHIP plus a Summoner spot
+       check (spec, diffstat, gate output, agent verdict; a full read of
+       every third), and the standing invariant gains that exception.
+     - Fails on one missed blocking finding: full review stays for every
+       construct, and the tiering is dropped, not tuned.
+     - Drop it even if it holds when Summoner reviews of these diffs
+       average under ~3 minutes: there is no attention to save.
+     - Fewer than ~6 qualifying specs by the week-44 audit: extend once,
+       then drop.
 - **Legion** -- `sol` members (`haiku` only for purely mechanical
   batches -- historically unused at 4.5 prices; 5.5 since 2026-10-08
   costs a tenth of that, so revisit with the golem trial above). At a 3-member ceiling, member cost is
