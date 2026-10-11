@@ -1,34 +1,24 @@
 # Repository Guide for Agents
 
-Canonical guidance for any coding agent (Claude Code, Pi, Codex, …) working in
+Canonical guidance for any coding agent (Claude Code, Pi, Codex, ...) working in
 this repository. `CLAUDE.md` is a symlink to this file, so both filenames
-resolve to identical content — edit only `AGENTS.md`.
+resolve to identical content; edit only `AGENTS.md`.
 
 ## Session Context
 
-Read `<project>/.bonfire/index.md` for current state. The file is kept current
-automatically by host-native bonfire adapters — no commands to run.
-
-- **Pi**: extension loaded via symlink at `~/.pi/agent/extensions/bonfire-dev`
-  pointing to `~/dev/bonfire/pi`. Hooks `session_compact` + `session_shutdown`.
-- **Claude Code**: Stop hook in `~/.claude/settings.json` pointing to
-  `~/dev/bonfire/claude/update-bonfire.mjs`.
-- **Other agents (Codex, OpenCode, …)**: fallback skill via
-  `/skill:bonfire end` only, has `disable-model-invocation: true`.
-
-Opt in per repo with `mkdir <repo>/.bonfire`. Without that directory, all
-adapters and the skill no-op silently.
+Read `.bonfire/index.md` for current state. Host-native bonfire adapters keep
+it current; there are no commands to run. Pi loads the adapter from the
+`packages` pin in `pi/.pi/agent/settings.base.json`; Claude Code runs it from
+a `Stop` hook in `claude/.claude/settings.json`; other agents use
+`/skill:bonfire end` explicitly. Install detail: `docs/agent-packages.md`.
 
 ## Dotfiles Management
 
 ### Commands
 
-- `stow <folder>`: Symlink specific configuration folder (preferred method)
-- `stow -t / <folder>`: Symlink system-wide configurations (may need sudo)
-- `git status`: Check status of dotfiles repository
-- `git diff`: View pending changes
-- `git add -u`: Add modified tracked files
-- `git add <file>`: Add specific file
+- `stow <folder>`: symlink one configuration package (preferred method)
+- `stow -t / <folder>`: symlink system-wide configurations (may need sudo)
+- `git add -u` / `git add <file>`: stage changes as usual
 
 **Note:** Stow packages individually based on OS. Do NOT run `stow .` blindly.
 
@@ -36,7 +26,7 @@ adapters and the skill no-op silently.
 
 Primary packages by platform. The repo also holds many smaller single-purpose
 packages not listed here (e.g. `aws`, `gh`, `gnupg`, `cargo`, `zed`, `picom`,
-`tofi`, GTK/Qt theming) — this list is not exhaustive; stow what you need.
+`tofi`, GTK/Qt theming); stow what you need.
 
 **Cross-platform packages:** bash, git, kitty, ghostty, tmux, nvim, starship, bat, btop, lazygit, yazi, assets, claude, pi, opencode, agents, slack
 **macOS-only:** macos, macos-keyboard, aerospace, sketchybar, karabiner
@@ -44,242 +34,55 @@ packages not listed here (e.g. `aws`, `gh`, `gnupg`, `cargo`, `zed`, `picom`,
 
 ### Agent-related Packages
 
-**`pi/`** — Pi coding agent config. `~/.pi/agent/` is a real directory with
-per-file stow symlinks into `pi/.pi/agent/`, so tracked files *are* the repo
-working tree while untracked machine state (`sessions/`, `auth.json`,
-`models-store.json`, …) coexists alongside them. Tracks: `AGENTS.md`, `settings.base.json`, `hosts/*.json`, `setup-pi.sh`,
-`models.json`, `keybindings.json`, `prompts/`, `themes/`. **Does NOT track**
-`auth.json`, `git/`, `sessions/`, `models-store.json`, `skills/`, or the generated
-`settings.json` (auto-generated / machine-local).
+Rules that apply on every edit. Layout, rationale, and bootstrap steps are in
+`docs/agent-packages.md`; read it before changing any of these packages.
 
-`models.json` registers custom models (or models newer than Pi's built-in registry)
-for the configured providers. It merges into the built-in providers — most useful
-for adding bleeding-edge gateway models that Pi's bundled registry doesn't know
-about yet. It is shared across all hosts: `modelOverrides` are inert unless a
-model is actually used, so host-restricted models (e.g. Kimi K3, Grok 4.7) can
-carry routing/cost overrides everywhere without affecting hosts that lack access.
-
-**Per-host `settings.json` (generated, not tracked).** Pi has only two settings
-layers (global + per-project) with no env interpolation or includes, so
-per-machine differences can't live inside the tracked file. `enabledModels` (the
-`/model` picker + Ctrl+P cycle set) must differ per host because each machine's
-Vercel AI Gateway key has different model access — Chaos (unrestricted) enables
-Kimi K3 + Grok 4.7; Phyrexia (Vercel Team key) does not. `setup-pi.sh` switches
-on `hostname` (mirroring `hypr/scripts/host.sh`), merges `settings.base.json`
-with `hosts/enabledModels.<host>.json` via `jq`, and writes
-`~/.pi/agent/settings.json` directly (the live file is a real file, not a
-stow symlink -- Pi's atomic writes replace symlinks). It preserves the
-Pi-managed `lastChangelogVersion` key and warns if live package pins drifted
-from the base (base wins; sync base first if live is newer after `pi update`). An
-unknown host falls back to `hosts/enabledModels.default.json` (the restricted
-set). Add a host by dropping in a new `hosts/enabledModels.<host>.json` fragment.
-An optional `hosts/packages.<host>.json` appends per-host package extras to the
-shared pins: local dev checkouts loaded as pi packages (e.g. `"../../dev/sigil"`,
-relative to `~/.pi/agent`, so it only resolves where the clone exists). Without
-it, a dev path added to the live file is dropped on the next `setup-pi.sh` run.
-
-**pi-prose** (`~/dev/pi-prose`, published as `pi-prose` on npm, installed via
-the `packages` array) follows the same dev pattern as the bonfire adapter: the
-installed package runs the pinned release, not the local working copy. Footgun:
-the package and a local copy cannot load simultaneously -- both register the
-`--style` flag, and flag collisions fail the extension load. To test in-flight
-changes, use `pi -ne -e ~/dev/pi-prose/extensions/pi-prose.ts` (isolated, no
-hot reload), or for longer dev bursts remove the package entry from
-`settings.base.json` + rerun `setup-pi.sh`, then symlink
-`~/.pi/agent/extensions/pi-prose-dev.ts` -> `~/dev/pi-prose/extensions/pi-prose.ts`
-(gitignored) for `/reload` support. Restore the package entry when done.
-
-Run `pi/.pi/agent/setup-pi.sh` once after stowing on a fresh machine, and again
-whenever `settings.base.json` or a host fragment changes. Because the generated
-`settings.json` is gitignored, the old `lastChangelogVersion` churn is gone —
-Pi writes into a file git no longer tracks.
-
-**`agents/`** — cross-agent shared skills. Stows to `~/.agents/`. Single source
-of truth for skills that any agent (Pi, Claude, Codex) should see.
-
-Some skills are symlinks to dev repos:
-- `~/.agents/skills/bonfire` → `~/dev/bonfire/skills/bonfire`
-- `~/.agents/skills/anvil` → `~/dev/anvil/packages/cli/skills/anvil`
-
-These point into machine-local `~/dev` clones, so their absolute target differs
-per OS (`/Users/...` on macOS, `/home/...` on Linux) — a single committed symlink
-can't be right for both. They are **gitignored and regenerated per machine**: on a
-fresh machine, clone the dev repos (`~/dev/bonfire`, `~/dev/anvil`), then run
-`agents/.agents/setup-skill-symlinks.sh` after stowing `agents/`. Other skills are
-self-contained directories.
-
-(Lineage notes for retired names — forge, old bonfire commands — live in
-`docs/agent-maintenance.md`.)
-
-**Bonfire adapter installation:**
-
-The Pi adapter is tracked as a `pi install` package entry in
-`pi/.pi/agent/settings.json` (`packages: ["git:github.com/vieko/bonfire@vX.Y.Z"]`).
-On a fresh machine, run `pi update` after stowing to materialize it. Pi
-clones to `~/.pi/agent/git/github.com/vieko/bonfire/` and the root
-`package.json` manifest points at `./pi/extension.ts`.
-
-The Claude Code adapter is wired via a `Stop` hook entry in
-`claude/.claude/settings.json` pointing to
-`$HOME/dev/bonfire/claude/update-bonfire.mjs`. This requires
-`~/dev/bonfire/` cloned (see the deploy checklist); the `$HOME`-relative path
-is portable across macOS and Linux, so no per-OS editing is needed.
-
-**Skill layout convention:**
-
-- **Tracked skills** live as real directories under `agents/.agents/skills/<name>/`
-  in this repo. They ship via stow with the rest of the dotfiles. Use this for
-  stable, machine-agnostic skills that don't change often.
-- **Symlinked skills** live at `~/dev/<name>/skills/<name>/` and are symlinked
-  in from `agents/.agents/skills/<name>`. Use this for skills under active
-  development that benefit from their own git history, releases, and PRs. These
-  symlinks are gitignored and regenerated per machine via
-  `agents/.agents/setup-skill-symlinks.sh` (absolute `~/dev` targets differ by OS).
-
-Both resolve to the same path at runtime (`~/.agents/skills/<name>`). The
-choice is purely about where the source of truth lives. Migrate a skill
-between modes by replacing the dotfiles entry with the opposite kind
-(symlink → directory or vice versa) and re-stowing `agents/`.
-
-**Spinner verb dictionary (shared across agents):**
-
-The occult/metallurgical agent-spinner verbs are centralized in one
-canonical file: `agents/.agents/verbs.json` (structured by section).
-Two consumers read it:
-
-- **Pi** — `pi/.pi/agent/extensions/spinner-verbs.ts` reads
-  `~/.agents/verbs.json` at runtime. Always current; nothing to regenerate.
-- **Claude Code** — `claude/.claude/settings.json` `spinnerVerbs.verbs`
-  (flat array, lives in dotfiles, synced).
-
-Claude's synced copy is regenerated from the canonical JSON by
-`agents/.agents/scripts/sync-verbs.mjs`. Both the canonical file and the synced
-copy now live in this repo, but there is intentionally **no** commit hook
-enforcing sync — it's a manual discipline:
-
-```bash
-# 1. edit the canonical dictionary
-$EDITOR agents/.agents/verbs.json
-
-# 2. regenerate the synced copy
-node agents/.agents/scripts/sync-verbs.mjs
-
-# 3. (optional) confirm no drift remains
-node agents/.agents/scripts/sync-verbs.mjs --check   # exit 1 on drift
-
-# 4. commit dotfiles: verbs.json + claude/settings.json together
-```
-
-**`claude/`** — Claude Code config. Stows to `~/.claude/`. Tracks `settings.json`,
-`statusline.sh`, and `output-styles/` (matter-of-fact and ste, ported from
-[pi-prose](https://github.com/vieko/pi-prose)) — matches the same "config not
-state" philosophy as `pi/`. Keep the style bodies in sync with pi-prose's
-built-ins by hand when they change; pi-prose is the source of truth.
-
-**`opencode/`** — OpenCode V2 config. Stows to `~/.config/opencode/`. Tracks
-`opencode.jsonc` (server config: model, agents, permissions, policies) and
-`cli.json` (TUI theme/keybinds; V2 collapsed the old layered `tui.json` into
-this one global file). Models route through Vercel AI Gateway via the catalog
-provider `vercel`, which activates from `AI_GATEWAY_API_KEY` in the background
-server's environment -- no key is stored in OpenCode. Because every client
-attaches to one shared server, that server must have been started from a login
-shell where the key is hydrated; if `opencode auth list` does not show
-`Vercel AI Gateway ... environment`, run `opencode service restart` from such a
-shell. An `experimental.policies` block denies every provider except `vercel` so
-stray stored accounts (e.g. the legacy Anthropic key in the SQLite db) stay out
-of `/models`. `AGENTS.md` is a relative symlink to `pi/.pi/agent/AGENTS.md`
-(one global instruction set for both agents; relative, so it is committed and
-works on both OSes). Not tracked: `service.json`, `package.json`/`node_modules`
-(plugin deps), and `skills/` (machine-local; `~/.agents/skills` is
-auto-discovered anyway). Skills, `AGENTS.md`, and `.opencode/` project dirs
-follow the same conventions as Pi; OpenCode reads `~/.agents/skills` and
-`~/.claude/skills` natively.
-
-Status (2026-09-26): OpenCode is a **bounded trial**, not a Summoner runtime.
-Use it for fresh-start, single-sitting work (cross-family second reads,
-one-shot reviews, `opencode run` in scripts, harness A/Bs against Pi); Pi
-remains the Summoner and constructs stay Pi/Anvil. Known gaps, investigated
-and deliberately not built yet: no Bonfire adapter (nothing native writes
-portable project memory; run `/skill:bonfire end` before closing a session in
-an opted-in repo), no pi-post bridge (the server has per-session inboxes with
-steer/queue delivery, but no addresses, registry, offline queue, or path to
-Pi/anvil senders, so `summon-golem.sh` refuses to dispatch from an OpenCode
-pane without `-R`), and no pi-prose (agent `system` replaces the base prompt
-rather than appending, so the native half-measure is not worth configuring).
-All three are buildable on the V2 plugin API (`@opencode/plugin`: `context` /
-`compaction` hooks, `session.prompt` steer, `command.transform`). Build
-trigger: OpenCode earns a standing weekly role. Build order if so: pi-post
-bridge, then Bonfire adapter; skip pi-prose. If the trial shows nothing Pi
-lacks, keep this package as maintained config and stop.
+- **`pi/`** tracks `AGENTS.md`, `settings.base.json`, `hosts/*.json`,
+  `setup-pi.sh`, `models.json`, `keybindings.json`, `prompts/`, `themes/`,
+  `extensions/`, `prose/`. It does not track `auth.json`, `sessions/`,
+  `models-store.json`, or the generated `settings.json`. Never edit
+  `~/.pi/agent/settings.json` by hand: change `settings.base.json` or a
+  `hosts/*.json` fragment, then run `pi/.pi/agent/setup-pi.sh`.
+- **`agents/`** stows to `~/.agents/` and is the single source of truth for
+  cross-agent skills. `bonfire` and `anvil` are gitignored symlinks into
+  `~/dev`; regenerate them with `agents/.agents/setup-skill-symlinks.sh`.
+  After editing `agents/.agents/verbs.json`, run
+  `node agents/.agents/scripts/sync-verbs.mjs` and commit
+  `claude/.claude/settings.json` with it.
+- **`claude/`** tracks Claude Code `settings.json`, `statusline.sh`, and
+  `output-styles/` (kept in sync with pi-prose by hand).
+- **`opencode/`** is a bounded trial, not a Summoner runtime. Keep it as
+  maintained config unless it earns a standing weekly role.
 
 ### OS Detection Pattern
 
-A `USER_OS` environment variable is exported in `bash/.bash_exports`:
-
-- `macos` on macOS
-- `linux` on Linux
-
-Use this in configs that support environment variables, or use conditional logic in bash:
-
-```bash
-if [[ "$OSTYPE" == "linux-gnu"* ]]; then
-    # Linux-specific
-elif [[ "$OSTYPE" == "darwin"* ]]; then
-    # macOS-specific
-fi
-```
+`USER_OS` (`macos` or `linux`) is exported in `bash/.bash_exports`. In bash,
+branch on `$OSTYPE` (`linux-gnu*` / `darwin*`) when a config has no env
+interpolation.
 
 ### OS-Specific Configs & macOS Defaults
 
 Details live in `docs/os-configs.md` (git GPG setup script, kitty/ghostty
-`os-current`/`config-current` symlink pattern, clipboard rules) and
+`os-current`/`config-current` symlink pattern, clipboard rules),
 `docs/macos.md` (defaults script), and `docs/keybindings.md` (which layer
 owns which modifier, plus `scripts/.scripts/keybind-audit.sh`). Read them
 when bootstrapping a fresh machine, switching OS, or touching the
 kitty/ghostty/macos/aerospace/karabiner/tmux packages or any keybinding.
-Inline gotcha: never hardcode clipboard commands in nvim/tmux configs —
-both auto-detect the OS tool.
+Inline gotcha: never hardcode clipboard commands in nvim/tmux configs; both
+auto-detect the OS tool.
 
 ### Style Guidelines
 
-- **Organization**: Each application's configs belong in their own directory
-- **Naming**: Use lowercase for directories and original case for config files
-- **Comments**: Include brief comments for non-obvious configurations
-- **Platform**: Distinguish between Linux-specific and cross-platform configs
-- **Consistency**: Maintain consistent theming across applications
-- **Naming Conventions**: Use camelCase for script variables
-- **Shell Scripts**: Place executable scripts in the `scripts` directory
-- **Environment Variables**: Define context-specific variables in respective config files
+- **Organization**: each application's configs belong in their own directory
+- **Naming**: lowercase directories, original case for config files
+- **Comments**: brief comments for non-obvious configurations
+- **Platform**: distinguish Linux-specific from cross-platform configs
+- **Consistency**: consistent theming across applications
+- **Scripts**: camelCase variables; executables live in `scripts/`
 
 ## Hyprland Configuration
 
-Full guide in `docs/hyprland.md` — installation (hy3 via hyprpm, version must
-match hyprland's), modular config structure, host detection (havoc/chaos via
-`hypr/.config/hypr/scripts/host.sh`), and key scripts. Read it before touching
-`hypr/`. Quick refs: reload with `hyprctl reload`, debug with
-`hyprctl monitors` / `hyprctl clients`.
-
-## Sessions Pattern (Optional)
-
-If you've set up the Sessions Directory Pattern (`npx create-sessions-dir`):
-
-- `/start-session` - Read context, fetch GitHub/Linear issues
-- `/end-session` - Update context, detect merged PRs, auto-archive
-- `/plan` - Create structured implementation plans
-- `/document` - Topic-specific documentation with sub-agents
-- `/change-git-strategy` - Change git strategy for .sessions/
-
-Learn more: https://vieko.dev/sessions
-
-## External Tools (Optional)
-
-**For GitHub integration:**
-```bash
-gh auth login    # Required for PR/issue fetching
-```
-
-**For Linear integration:**
-Configure the Linear MCP server in your Claude settings.
-See: https://github.com/anthropics/claude-code/blob/main/docs/mcp.md
-
-Commands will gracefully handle missing tools and prompt for manual input.
+Full guide in `docs/hyprland.md` (hy3 via hyprpm, modular config, host
+detection via `hypr/.config/hypr/scripts/host.sh`, key scripts). Read it
+before touching `hypr/`. Quick refs: `hyprctl reload`, `hyprctl monitors`,
+`hyprctl clients`.

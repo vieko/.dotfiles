@@ -97,8 +97,9 @@ chmod 600 "$out"
 
 echo "Generated ${out} for host '${host}' from ${fragment}."
 
-# Self-heal the vercel-plugin skills `current` symlink that settings.base.json
-# points at (a plugin update dangles it, silently shrinking the Pi skill set).
+# Self-heal the vercel-plugin skills `current` symlink that per-project
+# .pi/settings.json files point at (a plugin update dangles it, silently
+# shrinking the Pi skill set in those repos).
 # Login shells also repair this (bash/.bash_profile); doing it here too covers
 # fresh-machine bootstrap. See docs/agent-maintenance.md.
 vercelPluginDir="${HOME}/.claude/plugins/cache/claude-plugins-official/vercel"

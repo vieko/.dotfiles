@@ -7,9 +7,6 @@
   "enableInstallTelemetry": false,
   "quietStartup": "header",
   "showCacheMissNotices": true,
-  "skills": [
-    "~/.claude/plugins/cache/claude-plugins-official/vercel/current/skills"
-  ],
   "editorPaddingX": 1,
   "treeFilterMode": "user-only",
   "packages": [

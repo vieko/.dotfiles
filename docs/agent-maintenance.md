@@ -178,8 +178,24 @@ ms -> `timeout` s), `pi mcp login linear`, `pi mcp list`, then delete
 
 ## vercel-plugin skills path (`current` symlink)
 
-`settings.base.json` points the vercel-plugin skills at a stable `current`
-symlink, not a version directory:
+The vercel-plugin skills (35 of them, ~4K tokens of descriptions) load
+per project, not globally. Until 2026-10-11 `settings.base.json` listed
+them for every session; a dotfiles session has no use for `eve`,
+`microfrontends`, or `flags-sdk`. Opt a repo in with a gitignored
+`.pi/settings.json` (Pi combines project and user resource lists):
+
+```
+mkdir -p <repo>/.pi && cat > <repo>/.pi/settings.json <<'EOF'
+{
+  "skills": [
+    "~/.claude/plugins/cache/claude-plugins-official/vercel/current/skills"
+  ]
+}
+EOF
+```
+
+`~/dev/gtm` has one (its `.gitignore` already covers `.pi/`). The path
+ends in a stable `current` symlink, not a version directory:
 
 ```
 ~/.claude/plugins/cache/claude-plugins-official/vercel/current/skills
@@ -190,8 +206,8 @@ NOT loaded globally — their trigger words are too generic, e.g. `release`.
 Re-add that path in a per-project `.pi/settings.json` when actively working
 on vercel-plugin itself.)
 
-`current` -> the installed version dir (e.g. `0.43.0`), so `settings.base.json`
-never changes on a plugin bump. BUT the symlink lives inside the
+`current` -> the installed version dir (e.g. `0.43.0`), so the project
+settings never change on a plugin bump. BUT the symlink lives inside the
 plugin-managed cache: a plugin update creates a new version dir and removes
 the old one, which leaves `current` dangling (or clobbers it). Symptom: the
 skill set shrinks at startup with no error.
