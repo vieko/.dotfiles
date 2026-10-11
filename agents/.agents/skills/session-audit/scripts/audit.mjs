@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 // Weekly pi session audit: deterministic numbers from ~/.pi/agent/sessions/**.
-// Usage: node audit.mjs [--since 7d|2026-08-31] [--until ISO] [--json out.json] [--top 15]
+// Usage: node audit.mjs [--since 7d|2026-08-31] [--until ISO] [--json out.json] [--top 15] [--prompts N]
 // Prints a markdown report to stdout. The interpretation (patterns, footguns,
 // opportunities) is the agent's job; see ../SKILL.md.
 
@@ -25,6 +25,10 @@ const since = parseSince(opt("since", "7d"));
 const until = opt("until") ? parseSince(opt("until")) : Date.now();
 const topN = Number(opt("top", "15"));
 const jsonOut = opt("json");
+const promptsOpt = opt("prompts");
+const promptsN = promptsOpt === undefined ? 0 : Number(promptsOpt);
+if (args.includes("--prompts") && (promptsOpt === undefined || !Number.isSafeInteger(promptsN) || promptsN < 1)) throw new Error("--prompts: expected a positive integer");
+const textOf = (content) => typeof content === "string" ? content : (content ?? []).filter((c) => c.type === "text").map((c) => c.text).join(" ");
 const TZ = process.env.AUDIT_TZ ?? "America/Edmonton";
 
 // Pricing: before pi 0.99.0, pi billed 1h cache writes at the 5m rate via the
@@ -145,6 +149,12 @@ for (const dir of readdirSync(root)) {
 			})
 			.filter(Boolean);
 		const s = { dir: shortDir(dir), file: f.slice(0, 16), start: null, user: 0, turns: 0, toolCalls: 0, toolErrors: 0, pi: 0, tru: 0, ctxSum: 0, maxCtx: 0, models: new Set(), firstPrompt: "", inWindow: false, hardStops: 0, counsel: 0, counselCost: 0 };
+		if (promptsN) {
+			// Sample the full session, including inherited fork context. Reports
+			// are received pi-post custom messages, not user prompts or tool calls.
+			s.prompts = L.filter((e) => e.type === "message" && e.message?.role === "user").slice(0, promptsN).map((e) => textOf(e.message.content).replace(/\s+/g, " ").slice(0, 300));
+			s.reports = L.filter((e) => e.type === "custom_message" && e.customType === "pi-post" && textOf(e.content).startsWith("Message from pi session")).map((e) => textOf(e.content).slice(0, 2000));
+		}
 		const calls = new Map();
 		let prev = null;
 		let prevIdx = -1;
