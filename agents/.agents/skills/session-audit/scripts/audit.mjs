@@ -29,6 +29,21 @@ const promptsOpt = opt("prompts");
 const promptsN = promptsOpt === undefined ? 0 : Number(promptsOpt);
 if (args.includes("--prompts") && (promptsOpt === undefined || !Number.isSafeInteger(promptsN) || promptsN < 1)) throw new Error("--prompts: expected a positive integer");
 const textOf = (content) => typeof content === "string" ? content : (content ?? []).filter((c) => c.type === "text").map((c) => c.text).join(" ");
+const isReportOf = (entry) => {
+	const text = textOf(entry.content);
+	if (entry.type !== "custom_message" || entry.customType !== "pi-post" || !text.startsWith("Message from pi session")) return false;
+	const message = entry.details?.message;
+	const sender = message?.from?.name ?? /^Message from pi session ([^\n(]+?)(?: \(|:)/.exec(text)?.[1]?.trim() ?? "";
+	const body = message?.body ?? text.slice(text.indexOf("\n") + 1).split("\n\nThis came from another pi session")[0];
+	// Exclude dispatches and coordination even when a construct sends them.
+	if (/^\s*(?:summoner review|scope change|ack(?:nowledged)?\b|approved\b|relaying\b|please\b|go\b|proceed\b|can you\b|could you\b|report back when\b)/i.test(body)) return false;
+	if (/(?:^|\n)\s*(?:new task\b|next task\b|report back (?:when|with)\b)/i.test(body)) return false;
+	const opening = body.trim().split("\n")[0];
+	if (/\b(?:in progress|checks in progress|still working|checkpoint|progress update|review,? relayed)\b/i.test(opening)) return false;
+	const status = /\b(?:complete(?:d)?|done|finished|blocked|giving up|final report|hand[- ]back|review fixes (?:pushed|landed)|follow[- ]up committed)\b|^report\s*:|\blane report\b/i.test(opening);
+	const constructResult = /^(?:fam|golem)-/.test(sender) && /\b(?:verification|deviations|committed|pushed)\b/i.test(body) && /\b(?:pass(?:ed)?|fail(?:ed)?|blocked|complete(?:d)?|committed|pushed)\b/i.test(body);
+	return status || constructResult;
+};
 const TZ = process.env.AUDIT_TZ ?? "America/Edmonton";
 
 // Pricing: before pi 0.99.0, pi billed 1h cache writes at the 5m rate via the
@@ -150,10 +165,10 @@ for (const dir of readdirSync(root)) {
 			.filter(Boolean);
 		const s = { dir: shortDir(dir), file: f.slice(0, 16), start: null, user: 0, turns: 0, toolCalls: 0, toolErrors: 0, pi: 0, tru: 0, ctxSum: 0, maxCtx: 0, models: new Set(), firstPrompt: "", inWindow: false, hardStops: 0, counsel: 0, counselCost: 0 };
 		if (promptsN) {
-			// Sample the full session, including inherited fork context. Reports
-			// are received pi-post custom messages, not user prompts or tool calls.
+			// Sample inherited fork context too. Detect reports from the full
+			// body before truncation so dispatch instructions stay excluded.
 			s.prompts = L.filter((e) => e.type === "message" && e.message?.role === "user").slice(0, promptsN).map((e) => textOf(e.message.content).replace(/\s+/g, " ").slice(0, 300));
-			s.reports = L.filter((e) => e.type === "custom_message" && e.customType === "pi-post" && textOf(e.content).startsWith("Message from pi session")).map((e) => textOf(e.content).slice(0, 2000));
+			s.reports = L.filter(isReportOf).map((e) => textOf(e.content).slice(0, 2000));
 		}
 		const calls = new Map();
 		let prev = null;
