@@ -206,7 +206,8 @@ when the work demands it.
      base averaged $12). Holds if luna's rung-0 rate on them is above
      ~40%; fails if rung-1 cost on luna's partial worktree exceeds a cold
      fable base.
-  4. *haiku-5.5 golem trial* (from 2026-10-08, anvil#50) -- the next ~10
+  4. *haiku-5.5 golem trial* (restarted 2026-10-11 on pi 1.1.0, anvil#52;
+     count with `anvil-ledger --since 2026-10-11`) -- the next ~10
      mechanical specs (lint, formatter, small refactors, codemods) go
      `summon-golem.sh -m haiku`. haiku now means claude-haiku-5.5: luna's
      list price ($0.10/$0.50; 5x above 100K input, which 1% of golem
@@ -218,7 +219,10 @@ when the work demands it.
      luna's ~7%; then haiku becomes the mechanical-spec vessel. It does not
      become the default either way: it is same-family as the reviewer,
      which is the blind spot luna's default exists to avoid. Fails below
-     ~60% rung 0, since each extra escalation costs ~$3.70.
+     ~60% rung 0, since each extra escalation costs ~$3.70. The 3 runs
+     from 2026-10-08..10 (pi 0.99.1, derived-model bridge; 3/3 rung 0,
+     $0.17) are a separate cohort: #52 deleted the bridge and changed the
+     prompt prefix, so they do not count toward the ~10.
   5. *impact-tiered review* (from 2026-10-11) -- can low-impact golem
      diffs move from Summoner review to cross-family agent review? Source:
      Calvin Grunewald's attention/impact grid (x.com, 2026-10-07): spend
