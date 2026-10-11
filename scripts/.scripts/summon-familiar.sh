@@ -235,7 +235,11 @@ if [[ $print_mode -eq 1 ]]; then
         exit 1
     fi
     mkdir -p "$LOG_DIR"
-    log="$LOG_DIR/familiar-$(date +%Y%m%d-%H%M%S)-$vessel.log"
+    # Raw ids carry '/' and ':' (anthropic/claude-sonnet-5.5:high); a '/' in
+    # the filename sends the redirect to a missing dir and the familiar never
+    # starts. The brief slug keeps same-second parallel dispatches apart.
+    brief_slug="$(basename "$brief_abs" .md)"
+    log="$LOG_DIR/familiar-$(date +%Y%m%d-%H%M%S)-${brief_slug}-${vessel//[\/:]/-}.log"
     cmd=(env ${counsel_env:+"$counsel_env"} pi -p --provider "$PROVIDER" --model "$model" "$prompt")
     if [[ $dry_run -eq 1 ]]; then
         echo "dry-run (print mode):"
@@ -261,6 +265,9 @@ if [[ $print_mode -eq 1 ]]; then
         exit 1
     fi
     echo "verified: running clean after 15s"
+    # pi -p writes nothing until the run ends; an empty log is not a dead run.
+    # Week 41 relaunched 5 briefs twice on that misread (15 runs, 3x spend).
+    echo "note: the log stays empty until the run ends -- check liveness with: ps -p $pid"
 else
     # Pane/window familiar: default shell first (env hydration), command typed in.
     [[ -n "${TMUX:-}" ]] || { echo "error: pane/window mode requires tmux (use -P for in-band)" >&2; exit 1; }

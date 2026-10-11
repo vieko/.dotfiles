@@ -114,3 +114,31 @@ old row so drift is visible.
   user turns are one-token decisions); "draft a lede for" x12 (all `/lede`
   expansions); "anything else for this session?" x8; "pi was just updated"
   x3 as an opener.
+
+## Week 41 (2026-10-05 to 2026-10-11 10:00, Mon-Sun), PHYREXIA
+
+- 67 sessions with turns, 4,661 assistant turns, 406 user turns, 4,495 tool
+  calls (170 errors). pi-reported $259 = true $259: the pi#9210 repricing
+  has converged. Spend down 47% from week 40 ($486).
+- Split (pi-reported): cacheRead $113, cacheWrite $95, output $51.
+- Models: opus-5.5 is the Summoner (369 user turns, $221, $0.60/ut; $0.64
+  with counsel); fable-5.1 2 sessions $15; sonnet-5.5 17 sessions $24 (all
+  test-audit familiars); sol 8 sessions $12. Aborts: 5 (week 40: 17).
+- 1h TTL: premium $34 vs $87 avoided; net +$52.
+- Context: 18% of turns >= 200K carried 25% of spend (week 40: 26%/35%);
+  max ctx 372K, no turns at 400K+. Top session $25; none above $100.
+- Misses: idle 17 ($17, avg 117K); unexplained 13 ($7, 0% clustered):
+  opus 0.23% (7/3,054), sol 1.04%.
+- Edit health: 0 malformed across 171 edits (opus 0/91, sol 0/75).
+- Hard stops: 5, all aborts; 0 transport errors (week 40: 23).
+- Counsel: 15 consults in 9 sessions, all fable:high, $14.26 (avg $0.95,
+  5.5% of spend), 13 revise / 2 proceed, cache-read share 0%.
+- Nudges (first window): renew 9 shown, 3 followed by /new or /fork, 6
+  kept going (avg 12 more prompts).
+- Constructs: 6 golems (3 luna, 3 haiku), 6/6 passed attempt 1, $0.23.
+  Familiars: sol 8, opus 2, sonnet-5.5 15 full runs for 5 briefs (3x each,
+  ~$16 duplicate) after `summon-familiar.sh -P -m <raw/id>` built a log
+  path with a slash and the hand-rolled relaunches showed empty logs.
+- Recurring messages: "proceed with (a)" x59 + "(a)" x14 + "- proceed with
+  (a)" x7 (80 of 406 user turns); `/wrap` x10, `/pi-update` x2, `/lede` x5
+  in use.
