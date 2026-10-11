@@ -142,3 +142,11 @@ old row so drift is visible.
 - Recurring messages: "proceed with (a)" x59 + "(a)" x14 + "- proceed with
   (a)" x7 (80 of 406 user turns); `/wrap` x10, `/pi-update` x2, `/lede` x5
   in use.
+- Setup assessment (2026-10-11): fixed prompt prefix ~30K tokens at session
+  start (`first` misses avg 33K): ~7.7K two AGENTS.md files, ~6.5K skill
+  descriptions (35 vercel-plugin + 19 agents), rest tools + base prompt.
+  Prefix ≈ 20% of cacheRead spend. Changes landed the same day: vercel
+  skills moved to per-project `.pi/settings.json` (dotfiles sessions now
+  list 15 skills, gtm 57), dotfiles AGENTS.md 14.7K -> 4.2K chars, and an
+  "Ask or proceed" rule in the global AGENTS.md. Next audit: `first`-miss
+  avg ctx (expect ~23-25K) and the "proceed with (a)" share (was 16-20%).

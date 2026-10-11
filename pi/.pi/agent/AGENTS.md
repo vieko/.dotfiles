@@ -270,6 +270,18 @@ is fine — the file is reviewable artifact. Applying it is the line.
 When in doubt, ask. The cost of a confirmation round-trip is much smaller than
 the cost of a clobbered `.env.local` or an unintended prod deploy.
 
+## Ask or proceed
+
+"When in doubt" means the destructive set above, a scope change, or a choice
+you cannot undo. It does not mean every fork in the road. Over the two weeks
+to 2026-10-11, 16% of user turns were "proceed with (a)": the model had
+already named its recommendation and stopped anyway. Rule: if the recommended
+option is inside the brief, reversible, and outside the destructive set, take
+it and report what you did and why in one line. Offer a lettered list only
+when the choice is irreversible, changes scope, or the options are genuinely
+close and the user holds information you lack. The lettered format itself is
+unchanged; it is the trigger that narrows.
+
 ## Timestamps
 
 Report times to the user in Mountain Time (America/Edmonton), not raw UTC ISO
