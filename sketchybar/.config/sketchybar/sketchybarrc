@@ -91,8 +91,9 @@ sketchybar --add item fullscreen left \
            --subscribe fullscreen aerospace_workspace_change
 
 ##### Adding Right Items #####
-# Add keyboard change event and clock update event
-sketchybar --add event keyboard_change
+# keyboard_change is the macOS distributed notification posted on any input
+# source switch (bar click, menu bar, hotkey), so the item needs no polling.
+sketchybar --add event keyboard_change AppleSelectedInputSourcesChangedNotification
 sketchybar --add event clock_update
 
 # Right side items (ordered right to left): Time/Date, Keyboard, Volume, Battery, Camera, Weather
@@ -108,7 +109,6 @@ sketchybar --add item clock right \
            \
            --add item keyboard right \
            --set keyboard \
-           update_freq=3 \
            icon.color="$BASE0B" \
            label.color="$BASE07" \
            script="$PLUGIN_DIR/keyboard.sh" \
