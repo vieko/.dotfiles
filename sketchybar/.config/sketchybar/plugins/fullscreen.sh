@@ -1,7 +1,6 @@
 #!/usr/bin/env bash
 
-# Base16 One Dark colors
-BASE0B=0xff98c379  # Green
+. "$CONFIG_DIR/colors.sh"
 
 # Check if the currently focused window is in fullscreen mode
 # Query aerospace for focused window fullscreen state

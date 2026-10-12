@@ -1,8 +1,6 @@
 #!/bin/sh
 
-# Base16 One Dark colors
-BASE07=0xffc8ccd4  # Foreground
-BASE0D=0xff61afef  # Blue
+. "$CONFIG_DIR/colors.sh"
 
 # Get system location using geolocation API
 # Falls back to IP-based location if geolocation fails
@@ -20,15 +18,17 @@ fi
 # Fetch weather condition and temperature in one request (more efficient)
 # %C = weather condition text, %t = temperature
 # Format: "Condition,Temperature"
-if [ -n "$LOCATION" ]; then
-  # Use specific location coordinates
-  WEATHER=$(curl -s "wttr.in/$LOCATION?format=%C,%t")
-else
-  # Fall back to IP-based location
-  WEATHER=$(curl -s 'wttr.in/?format=%C,%t')
-fi
+# -f: HTTP errors (rate limit, outage) yield no body instead of an HTML page.
+WEATHER=$(curl -sf --max-time 10 "wttr.in/$LOCATION?format=%C,%t")
 
-# If curl fails or returns empty, show fallback
+# Keep the last good reading when wttr is down or answers with an error
+# string ("Unknown location; ...") instead of "Condition,+NN°X".
+case "$WEATHER" in
+  *,[+-][0-9]*°[CF]) ;;
+  *) [ -n "$(sketchybar --query "$NAME" 2>/dev/null | grep -o '"value": "[+-][0-9]')" ] && exit 0
+     WEATHER="" ;;
+esac
+
 if [ -z "$WEATHER" ]; then
   ICON="?"
   LABEL="--"

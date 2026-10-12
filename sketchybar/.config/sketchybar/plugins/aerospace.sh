@@ -1,8 +1,6 @@
 #!/usr/bin/env bash
 
-# Base16 One Dark colors
-BASE00=0xff282c34  # Background (dark text on active workspace)
-BASE07=0xffc8ccd4  # Foreground (light text on inactive workspace)
+. "$CONFIG_DIR/colors.sh"
 
 # Highlight the currently focused AeroSpace workspace
 # Query aerospace directly for reliability instead of relying on env vars

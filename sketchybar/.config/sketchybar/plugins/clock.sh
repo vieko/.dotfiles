@@ -4,9 +4,7 @@
 # the item invoking this script:
 # https://felixkratz.github.io/SketchyBar/config/events#events-and-scripting
 
-# Base16 One Dark colors
-BASE07=0xffc8ccd4  # Foreground
-BASE0A=0xffe5c07b  # Yellow
+. "$CONFIG_DIR/colors.sh"
 
 STATE_FILE="/tmp/sketchybar_clock_state"
 

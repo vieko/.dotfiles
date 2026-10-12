@@ -1,9 +1,6 @@
 #!/bin/bash
 
-# Base16 One Dark colors
-BASE07=0xffc8ccd4  # Foreground
-BASE0B=0xff98c379  # Green
-BASE0E=0xffc678dd  # Purple
+. "$CONFIG_DIR/colors.sh"
 
 # Get current keyboard layout
 LAYOUT=$(defaults read ~/Library/Preferences/com.apple.HIToolbox.plist AppleSelectedInputSources 2>/dev/null | grep "KeyboardLayout Name" | sed -E 's/.*"KeyboardLayout Name" = "?([^";]+)"?;.*/\1/')

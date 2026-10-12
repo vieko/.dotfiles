@@ -1,8 +1,6 @@
 #!/bin/sh
 
-# Base16 One Dark colors
-BASE07=0xffc8ccd4  # Foreground
-BASE0E=0xffc678dd  # Purple
+. "$CONFIG_DIR/colors.sh"
 
 # Get Wi-Fi interface
 WIFI_INTERFACE=$(networksetup -listallhardwareports | awk '/Wi-Fi/{getline; print $2}')

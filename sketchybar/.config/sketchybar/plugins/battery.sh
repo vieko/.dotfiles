@@ -1,10 +1,6 @@
 #!/bin/sh
 
-# Base16 One Dark colors
-BASE07=0xffc8ccd4  # Foreground
-BASE08=0xffe06c75  # Red (critical)
-BASE09=0xffd19a66  # Orange (warning)
-BASE0E=0xffc678dd  # Purple (normal/charging)
+. "$CONFIG_DIR/colors.sh"
 
 PERCENTAGE="$(pmset -g batt | grep -Eo "\d+%" | cut -d% -f1)"
 CHARGING="$(pmset -g batt | grep 'AC Power')"
