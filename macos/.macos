@@ -97,6 +97,8 @@ defaults write com.apple.HIToolbox AppleEnabledInputSources -array \
 #          the Programmers QWERTY number row. Switch layouts from the menu bar.
 #   79-82  move left/right a Space (Ctrl+Left/Right). Aerospace replaced
 #          Spaces; Pi uses ctrl+left/right for word-nav and tree fold.
+#   32-35  Mission Control / Application windows (Ctrl+Up/Down, +Shift).
+#          Same reason: Aerospace replaced Spaces, the chords belong to TUIs.
 #   65     Spotlight Finder window (Opt+Cmd+D). Collided with the Dock toggle.
 #   30/184 screenshot selection to file (Cmd+Shift+4), screenshot options
 #          (Cmd+Shift+5); 29 (Ctrl+Cmd+Shift+3). Aerospace owns cmd-shift-N
@@ -127,6 +129,10 @@ symbolicHotkey 79 false                # move left a Space (Ctrl+Left)
 symbolicHotkey 80 false                # move left a Space + Shift
 symbolicHotkey 81 false                # move right a Space (Ctrl+Right)
 symbolicHotkey 82 false                # move right a Space + Shift
+symbolicHotkey 32 false 65535 126 8650752  # Mission Control (Ctrl+Up)
+symbolicHotkey 33 false 65535 125 8650752  # Application windows (Ctrl+Down)
+symbolicHotkey 34 false 65535 126 8781824  # Mission Control + Shift
+symbolicHotkey 35 false 65535 125 8781824  # Application windows + Shift
 symbolicHotkey 64 true  100 2 1048576  # Spotlight (Cmd+D)
 symbolicHotkey 65 false 100 2 1179648  # Spotlight Finder window (Opt+Cmd+D)
 symbolicHotkey 28 true  65535 105 8519680  # screenshot to file (Shift+F13)
@@ -166,6 +172,6 @@ echo ""
 echo "Note: Dock is permanently hidden (toggle with Option+Command+D)"
 echo "      Menu bar autohides on hover (Ctrl-Fn-F2 to toggle)"
 echo "      Keyboard repeat set to fastest (requires logout to take effect)"
-echo "      Ctrl+Space / Ctrl+Left/Right system hotkeys disabled (Ctrl belongs to the terminal)"
+echo "      Ctrl+Space / Ctrl+Arrow system hotkeys disabled (Ctrl belongs to the terminal)"
 echo "      Wallpaper set to One Dark solid color"
 echo "      All animations set to instant/minimal for maximum responsiveness"

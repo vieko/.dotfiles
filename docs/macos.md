@@ -7,10 +7,10 @@
 4. Enter password when prompted for system-level changes
 
 **What it configures:**
-- Computer name (set to "phyrexia") - commented out, requires sudo
+- Computer, host and NetBIOS name set to `hostname -s` (uses sudo; this is the password prompt)
 - Dock permanently hidden (1000s delay, toggle with Option+Command+D)
 - Menu bar autohides on hover (Ctrl-Fn-F2 to toggle)
-- System hotkeys: Spotlight on Cmd+D, screenshots on Shift+F13 / Ctrl+Shift+F13 (Kinesis PrintScreen), Ctrl+Space layout switch and Ctrl+Left/Right Spaces disabled (Ctrl belongs to the terminal; Cmd to Aerospace)
+- System hotkeys: Spotlight on Cmd+D, screenshots on Shift+F13 / Ctrl+Shift+F13 (Kinesis PrintScreen), Ctrl+Space layout switch Ctrl+Left/Right Spaces and Ctrl+Up/Down Mission Control disabled (Ctrl belongs to the terminal; Cmd to Aerospace)
 - Keyboard repeat rate (fastest: KeyRepeat=1, InitialKeyRepeat=10, requires logout)
 - Wallpaper (One Dark solid color from ~/Pictures/Wallpapers)
 - Instant animations (dock toggle, window minimize/resize, Mission Control)
