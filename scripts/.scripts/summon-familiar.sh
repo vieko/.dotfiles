@@ -9,8 +9,8 @@
 #      send-keys -- a split-window with a direct command skips env hydration.
 #   3. Panes are targeted by immutable pane_id (%N), never by index --
 #      kill-pane reindexes and you end up steering the wrong session.
-#   4. Startup is verified: "No API key found" and friends fail loudly here,
-#      not silently in a background pane.
+#   4. Startup is verified: "No API key found", a killed pi or a pane back
+#      at its shell fail loudly here, not silently in a background pane.
 #
 # Usage:
 #   summon-familiar.sh [-m alias] [-P] [-n] [-R] [-C] [-w name] [-W name] <brief-path> [prompt override]
@@ -187,6 +187,25 @@ else
     exit 1
 fi
 
+# Long-argv kill (2026-10-12, fam-35): PHYREXIA SIGKILLs a process whose
+# argv holds a ~1 KB argument (the linearis limit in AGENTS.md). The footer
+# above makes the prompt ~1.4 KB, so `pi "<prompt>"` died with "Killed: 9"
+# before it started. Past PROMPT_ARGV_MAX, the full prompt goes to a
+# write-once file and pi gets a short instruction to read it. The brief
+# itself is still never mutated.
+PROMPT_ARGV_MAX=600
+prompt_file=""
+if (( ${#prompt} > PROMPT_ARGV_MAX )); then
+    mkdir -p "$LOG_DIR"
+    prompt_file="$LOG_DIR/familiar-prompt-$(date +%Y%m%d-%H%M%S)-$(basename "$brief_abs" .md).md"
+    if [[ $dry_run -eq 1 ]]; then
+        echo "dry-run (prompt file, ${#prompt} bytes): $prompt_file"
+    else
+        printf '%s\n' "$prompt" > "$prompt_file"
+    fi
+    prompt="Read $prompt_file and follow it exactly. It holds your task and the mandatory report-back."
+fi
+
 # Edit-tool shape history (2026-09-05 week-36 audit): sonnet-5 familiars lost
 # 18 of 134 edit calls to schema validation -- arguments arrived as
 # `edits: [{}]` or a trailing edit without newText; fable had 0 of 193.
@@ -296,9 +315,14 @@ else
         echo "summoned: pane $pane_id, vessel $vessel ($model)"
     fi
     sleep 15
-    if tmux capture-pane -t "$pane_id" -p 2>/dev/null | grep -qE "No API key found|Error:"; then
-        echo "error: familiar reported a startup error -- pane $pane_id tail:" >&2
-        tmux capture-pane -t "$pane_id" -p | grep -vE '^\s*$' | tail -5 >&2
+    # A pi killed at exec leaves only "Killed: 9" and a shell prompt, which the
+    # error grep alone reported as clean (fam-35, 2026-10-12). pi runs as node:
+    # a pane back at its shell means pi is not running.
+    pane_cmd="$(tmux display -p -t "$pane_id" '#{pane_current_command}' 2>/dev/null || echo gone)"
+    if [[ "$pane_cmd" =~ ^-?(bash|zsh|sh|fish|gone)$ ]] \
+        || tmux capture-pane -t "$pane_id" -p 2>/dev/null | grep -qE "No API key found|Error:|Killed"; then
+        echo "error: familiar is not running (pane command: $pane_cmd) -- pane $pane_id tail:" >&2
+        tmux capture-pane -t "$pane_id" -p 2>/dev/null | grep -vE '^\s*$' | tail -5 >&2
         exit 1
     fi
     echo "verified: pane $pane_id clean after 15s (steer with: tmux send-keys -t $pane_id, or pi-post once registered)"
