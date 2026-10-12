@@ -13,7 +13,7 @@
 #      at its shell fail loudly here, not silently in a background pane.
 #
 # Usage:
-#   summon-familiar.sh [-m alias] [-P] [-n] [-R] [-C] [-w name] [-W name] <brief-path> [prompt override]
+#   summon-familiar.sh [-m alias] [-P] [-n] [-R] [-C] [-B board] [-w name] [-W name] <brief-path> [prompt override]
 #
 #   -m alias   vessel: haiku|sol|sonnet|opus|fable|luna|astra (default: sol),
 #              or a raw gateway id with an explicit effort when the alias's
@@ -33,6 +33,11 @@
 #   -R         no report-back: summon without injecting the report-back
 #              footer. Deliberate opt-out only -- a familiar summoned this
 #              way finishes silently (the fam-2649 failure mode).
+#   -B board   sigil board: the familiar draws on <board> (SIGIL_ROOM) instead
+#              of its worktree's default <repo>--<branch> board. '@' means the
+#              summoner's board: $SIGIL_ROOM, else the summoner's sigil pin.
+#              A board without '--' also moves the familiar's session map to
+#              map-<board> (sigil#51).
 #   -w name    file-touching familiar: create a git worktree at
 #              <repo-parent>/<repo>-worktrees/<name> (new branch <name>) and
 #              summon there. Enforces the PHYREXIA.md isolation invariant
@@ -93,14 +98,16 @@ no_report=0
 allow_counsel=0
 worktree_name=""
 window_name=""
+board=""
 
-while getopts "m:PnRCw:W:" opt; do
+while getopts "m:PnRCB:w:W:" opt; do
     case "$opt" in
         m) vessel="$OPTARG" ;;
         P) print_mode=1 ;;
         n) dry_run=1 ;;
         R) no_report=1 ;;
         C) allow_counsel=1 ;;
+        B) board="$OPTARG" ;;
         w) worktree_name="$OPTARG" ;;
         W) window_name="$OPTARG" ;;
         *) exit 2 ;;
@@ -110,7 +117,24 @@ shift $((OPTIND - 1))
 
 [[ $print_mode -eq 1 && -n "$window_name" ]] && { echo "error: -P and -W are mutually exclusive" >&2; exit 2; }
 
-[[ $# -ge 1 ]] || { echo "usage: summon-familiar.sh [-m alias] [-P] [-n] [-R] [-C] [-w name] [-W name] <brief-path> [prompt]" >&2; exit 2; }
+[[ $# -ge 1 ]] || { echo "usage: summon-familiar.sh [-m alias] [-P] [-n] [-R] [-C] [-B board] [-w name] [-W name] <brief-path> [prompt]" >&2; exit 2; }
+
+# -B: share a sigil board (sigil#51). Pane familiars start from a fresh login
+# shell, so the summoner's env never reaches them; SIGIL_ROOM goes on the
+# command line in both modes.
+board_env=""
+if [[ -n "$board" ]]; then
+    if [[ "$board" == "@" ]]; then
+        pins_dir="${SIGIL_PINS_DIR:-$HOME/dev/sigil/.rooms/pins}"
+        board="${SIGIL_ROOM:-}"
+        if [[ -z "$board" && -n "${PI_SESSION_ADDRESS:-}" && -r "$pins_dir/$PI_SESSION_ADDRESS" ]]; then
+            board="$(tr -d '[:space:]' < "$pins_dir/$PI_SESSION_ADDRESS")"
+        fi
+        [[ -n "$board" ]] || { echo "error: -B @: the summoner has no SIGIL_ROOM and no sigil pin -- draw on a board first or name it" >&2; exit 2; }
+    fi
+    [[ "$board" =~ ^[A-Za-z0-9_-]{1,64}$ ]] || { echo "error: -B: invalid board id: $board" >&2; exit 2; }
+    board_env="SIGIL_ROOM=$board"
+fi
 
 # Familiars are workers, not summoners: the counsel tool (pi-counsel) stays
 # off unless -C says this dispatch may consult. Same env var for both modes.
@@ -259,7 +283,7 @@ if [[ $print_mode -eq 1 ]]; then
     # starts. The brief slug keeps same-second parallel dispatches apart.
     brief_slug="$(basename "$brief_abs" .md)"
     log="$LOG_DIR/familiar-$(date +%Y%m%d-%H%M%S)-${brief_slug}-${vessel//[\/:]/-}.log"
-    cmd=(env ${counsel_env:+"$counsel_env"} pi -p --provider "$PROVIDER" --model "$model" "$prompt")
+    cmd=(env ${counsel_env:+"$counsel_env"} ${board_env:+"$board_env"} pi -p --provider "$PROVIDER" --model "$model" "$prompt")
     if [[ $dry_run -eq 1 ]]; then
         echo "dry-run (print mode):"
         printf '  '; printf '%q ' "${cmd[@]}"; printf '\n  log: %s\n' "$log"
@@ -268,7 +292,7 @@ if [[ $print_mode -eq 1 ]]; then
     cd "$work_dir"
     nohup "${cmd[@]}" > "$log" 2>&1 &
     pid=$!
-    log_summon "mode=print pid=$pid brief=$brief_abs${worktree_name:+ worktree=$worktree_name}"
+    log_summon "mode=print pid=$pid brief=$brief_abs${worktree_name:+ worktree=$worktree_name}${board:+ board=$board}"
     echo "dispatched: pid $pid, vessel $vessel ($model)"
     echo "log: $log"
     sleep 15
@@ -290,7 +314,7 @@ if [[ $print_mode -eq 1 ]]; then
 else
     # Pane/window familiar: default shell first (env hydration), command typed in.
     [[ -n "${TMUX:-}" ]] || { echo "error: pane/window mode requires tmux (use -P for in-band)" >&2; exit 1; }
-    pi_cmd="${counsel_env:+$counsel_env }pi --provider \"$PROVIDER\" --model \"$model\" \"$prompt\""
+    pi_cmd="${counsel_env:+$counsel_env }${board_env:+$board_env }pi --provider \"$PROVIDER\" --model \"$model\" \"$prompt\""
     if [[ $dry_run -eq 1 ]]; then
         if [[ -n "$window_name" ]]; then
             echo "dry-run (window mode): new-window -n $window_name, then send-keys:"
@@ -308,10 +332,10 @@ else
     sleep 1
     tmux send-keys -t "$pane_id" "$pi_cmd" Enter
     if [[ -n "$window_name" ]]; then
-        log_summon "mode=window window=$window_name pane=$pane_id brief=$brief_abs${worktree_name:+ worktree=$worktree_name}"
+        log_summon "mode=window window=$window_name pane=$pane_id brief=$brief_abs${worktree_name:+ worktree=$worktree_name}${board:+ board=$board}"
         echo "summoned: window $window_name (pane $pane_id), vessel $vessel ($model)"
     else
-        log_summon "mode=pane pane=$pane_id brief=$brief_abs${worktree_name:+ worktree=$worktree_name}"
+        log_summon "mode=pane pane=$pane_id brief=$brief_abs${worktree_name:+ worktree=$worktree_name}${board:+ board=$board}"
         echo "summoned: pane $pane_id, vessel $vessel ($model)"
     fi
     sleep 15
