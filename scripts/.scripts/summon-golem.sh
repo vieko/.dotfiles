@@ -20,12 +20,15 @@
 #      see ping() below. Rule for anything in this script: no code-like
 #      text on a command line.
 #   5. -v --reasoning are on by default (AGENTS.md dispatch rule).
+#   7. With -B, the golem shows on the sigil session map as a task: `doing`
+#      at dispatch, updated from the same EXIT trap as the ping (sigil#51).
+#      The map is a view, never a gate: a down sigil server only warns.
 #
 # The ping is a claim, not a review: every golem diff still passes the one
 # review pipeline (PHYREXIA.md standing invariant).
 #
 # Usage:
-#   summon-golem.sh [-m alias] [-e K=V]... [-n] [-R] [-k] <name> <spec-or-prompt> [anvil args...]
+#   summon-golem.sh [-m alias] [-e K=V]... [-n] [-R] [-k] [-B board] <name> <spec-or-prompt> [anvil args...]
 #
 #   -m alias   vessel: haiku|sol|sonnet|opus|fable|astra|luna|terra|glm (anvil's aliases;
 #              astra needs anvil >= 0.3.1, sol the 2026-09-22 alias refresh).
@@ -45,6 +48,11 @@
 #              .npmrc, so the cooldown stays on for everything else. Review the
 #              lockfile diff of such a run: transitives inside the cooldown
 #              can move too.
+#   -B board   put the golem on the session map that sigil board binds to
+#              (map-<board up to '--'>), as task golem-<name>: `doing` at
+#              dispatch; `done` (detail: review pending) on a green exit,
+#              still `doing` with the exit code otherwise. '@' means the
+#              summoner's board, as in summon-familiar.sh. sigil#51.
 #   -k         keep the window open after a green exit. Default: a green
 #              golem closes its window 10s after the ping (the log + result
 #              JSON on disk are the forensic artifacts; the pane adds
@@ -79,8 +87,9 @@ dry_run=0
 no_report=0
 keep_window=0
 golem_env=()
+board=""
 
-while getopts "m:e:nRk" opt; do
+while getopts "m:e:nRkB:" opt; do
     case "$opt" in
         m) vessel="$OPTARG" ;;
         e) [[ "$OPTARG" == *=* ]] || { echo "error: -e expects KEY=VALUE, got: $OPTARG" >&2; exit 2; }
@@ -88,12 +97,13 @@ while getopts "m:e:nRk" opt; do
         n) dry_run=1 ;;
         R) no_report=1 ;;
         k) keep_window=1 ;;
+        B) board="$OPTARG" ;;
         *) exit 2 ;;
     esac
 done
 shift $((OPTIND - 1))
 
-[[ $# -ge 2 ]] || { echo "usage: summon-golem.sh [-m alias] [-e K=V]... [-n] [-R] [-k] <name> <spec-or-prompt> [anvil args...]" >&2; exit 2; }
+[[ $# -ge 2 ]] || { echo "usage: summon-golem.sh [-m alias] [-e K=V]... [-n] [-R] [-k] [-B board] <name> <spec-or-prompt> [anvil args...]" >&2; exit 2; }
 
 alias_ok "$vessel" || { echo "error: unknown vessel alias: $vessel (anvil aliases: haiku|sol|sonnet|opus|fable|astra|luna|terra|glm)" >&2; exit 2; }
 
@@ -121,6 +131,28 @@ if [[ -r "$spec" ]]; then
         echo "warn: $spec is named as a brief -- if it needs steering, use summon-familiar.sh -W fam-$name" >&2
         echo "      if it has a gate and needs no steering, rename it to *-spec.md" >&2
     fi
+fi
+
+# -B: the session map the golem shows on (sigil#51). Same '@' resolution as
+# summon-familiar.sh; the map id follows sigil's projectMapId rule.
+map_id=""
+map_task=""
+map_title=""
+sigil_server="${SIGIL_SERVER:-http://127.0.0.1:5858}"
+if [[ -n "$board" ]]; then
+    if [[ "$board" == "@" ]]; then
+        pins_dir="${SIGIL_PINS_DIR:-$HOME/dev/sigil/.rooms/pins}"
+        board="${SIGIL_ROOM:-}"
+        if [[ -z "$board" && -n "${PI_SESSION_ADDRESS:-}" && -r "$pins_dir/$PI_SESSION_ADDRESS" ]]; then
+            board="$(tr -d '[:space:]' < "$pins_dir/$PI_SESSION_ADDRESS")"
+        fi
+        [[ -n "$board" ]] || { echo "error: -B @: the summoner has no SIGIL_ROOM and no sigil pin -- draw on a board first or name it" >&2; exit 2; }
+    fi
+    [[ "$board" =~ ^[A-Za-z0-9_-]{1,64}$ ]] || { echo "error: -B: invalid board id: $board" >&2; exit 2; }
+    map_id="$(printf 'map-%s' "${board%%--*}" | tr '[:upper:]' '[:lower:]' | cut -c1-64)"
+    map_task="$(printf 'golem-%s' "$name" | tr '[:upper:]' '[:lower:]' | tr -c 'a-z0-9-' '-' | cut -c1-64)"
+    if [[ -r "$spec" ]]; then map_title="golem $name: $(basename "$spec" .md)"; else map_title="golem $name"; fi
+    map_title="${map_title:0:80}"
 fi
 
 # Report-back address: captured here, where the summoner's env exists.
@@ -177,6 +209,27 @@ EOF
     for kv in "${golem_env[@]+"${golem_env[@]}"}"; do
         printf 'export %s=%q   # -e: scoped to this golem\n' "${kv%%=*}" "${kv#*=}"
     done
+    if [[ -n "$map_id" ]]; then
+        cat <<EOF
+
+# -B: update the golem's map task once, on any exit. A view, never a gate.
+MAPPED=0
+map_close() {
+    [[ \$MAPPED -eq 1 ]] && return 0
+    MAPPED=1
+    local status="\$1" passed=""
+    [[ -s "\$RESULT" ]] && passed="\$(jq -r '.passed // empty' "\$RESULT" 2>/dev/null)"
+    local state=doing detail="gate red or no result (exit \$status); see \$RESULT"
+    if [[ "\$status" == 0 && "\$passed" == true ]]; then state=done; detail="gate green; review pending"; fi
+    jq -n --arg id $(printf '%q' "$map_task") --arg status "\$state" --arg detail "\${detail:0:160}" --arg session $(printf '%q' "golem:$name") \\
+        '{ops: [{op: "upsert", id: \$id, status: \$status, detail: \$detail}], session: \$session, source: ["summon-golem"]}' \\
+        | curl -sf -m 5 -H 'content-type: application/json' --data-binary @- $(printf '%q' "$sigil_server/maps/$map_id/patch") >/dev/null \\
+        || echo "warn: could not update map task $map_task on $map_id" >&2
+}
+EOF
+    else
+        printf '\nmap_close() { :; }\n'
+    fi
     if [[ $no_report -eq 0 ]]; then
         cat <<EOF
 
@@ -211,15 +264,18 @@ Gate green is a claim, not a review -- run the review pass before integrating."
         | $pipost_cmd send --to $(printf '%q' "$report_to") --from $(printf '%q' "golem:$name") \\
         || echo "warn: fallback ping to $report_to also failed -- report manually" >&2
 }
-trap 'ping "\${ANVIL_STATUS:-interrupted}"' EXIT
 EOF
     else
         printf '\nping() { :; }  # -R: report-back deliberately disabled at summon time\n'
     fi
+    cat <<'EOF'
+trap 'map_close "${ANVIL_STATUS:-interrupted}"; ping "${ANVIL_STATUS:-interrupted}"' EXIT
+EOF
     cat <<EOF
 
 $anvil_cmd >"\$RESULT" 2> >(tee "\$LOG" >&2)
 ANVIL_STATUS=\$?
+map_close "\$ANVIL_STATUS"
 ping "\$ANVIL_STATUS"
 echo
 if [[ \$ANVIL_STATUS -eq 0 && $keep_window -eq 0 && -n "\${TMUX_PANE:-}" ]]; then
@@ -233,7 +289,15 @@ EOF
 chmod +x "$runner"
 # -------------------------------------------------------------------------
 
+# -B: open the map task now, from the summoner's side, before the window exists.
+map_open() {
+    jq -n --arg id "$map_task" --arg title "$map_title" --arg session "golem:$name" \
+        '{ops: [{op: "upsert", id: $id, kind: "task", title: $title, status: "doing", detail: "dispatched"}], session: $session, source: ["summon-golem"]}' \
+        | curl -sf -m 5 -H 'content-type: application/json' --data-binary @- "$sigil_server/maps/$map_id/patch" >/dev/null
+}
+
 if [[ $dry_run -eq 1 ]]; then
+    [[ -n "$map_id" ]] && echo "dry-run: would open map task $map_task (\"$map_title\") on $map_id at $sigil_server"
     echo "dry-run: would open window $window (login shell, cwd $PWD), then send-keys:"
     echo "  bash $runner"
     echo "--- runner ---"
@@ -254,6 +318,9 @@ echo "summoned: window $window (pane $pane_id), vessel $vessel"
 echo "log: $log"
 echo "result: $result"
 [[ $no_report -eq 0 ]] && echo "ping: wired to $report_to (fires on every exit path)"
+if [[ -n "$map_id" ]]; then
+    if map_open; then echo "map: task $map_task doing on $map_id"; else echo "warn: could not open map task $map_task on $map_id (sigil server down?)" >&2; fi
+fi
 
 # Startup verification: fail loudly here, not silently in a pane.
 sleep 15
