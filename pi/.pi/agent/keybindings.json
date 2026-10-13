@@ -1,4 +1,5 @@
 {
+  "$schema": "https://pi.dev/schemas/keybindings.schema.json",
   "app.session.new": ["ctrl+shift+n"],
   "app.session.resume": ["ctrl+shift+r"],
   "app.session.tree": ["ctrl+shift+t"],
