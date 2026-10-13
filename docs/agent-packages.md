@@ -53,7 +53,7 @@ hot reload), or for longer dev bursts remove the package entry from
 `~/.pi/agent/extensions/pi-prose-dev.ts` -> `~/dev/pi-prose/extensions/pi-prose.ts`
 (gitignored) for `/reload` support. Restore the package entry when done.
 
-**pi-redact** (`~/dev/pi-redact`, `github.com/vieko/pi-redact`, pinned via
+**pi-redact** (`~/dev/pi-redact`, npm `@vieko/pi-redact`, pinned via
 `packages`) keeps secrets out of session transcripts: placeholders in, real
 values back only for local tools. It logs each first sighting as a
 `pi-redact` custom entry (counts and channel, no value).
