@@ -13,7 +13,8 @@
     "git:github.com/vieko/bonfire@v7.5.0",
     "git:github.com/vieko/pi-prose@v0.3.1",
     "git:github.com/vieko/pi-post@v0.8.1",
-    "npm:pi-counsel@0.1.0"
+    "npm:pi-counsel@0.1.0",
+    "git:github.com/vieko/pi-redact@v0.1.0"
   ],
   "hideThinkingBlock": false,
   "retry": {

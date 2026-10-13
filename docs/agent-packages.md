@@ -53,6 +53,14 @@ hot reload), or for longer dev bursts remove the package entry from
 `~/.pi/agent/extensions/pi-prose-dev.ts` -> `~/dev/pi-prose/extensions/pi-prose.ts`
 (gitignored) for `/reload` support. Restore the package entry when done.
 
+**pi-redact** (`~/dev/pi-redact`, `github.com/vieko/pi-redact`, pinned via
+`packages`) keeps secrets out of session transcripts: placeholders in, real
+values back only for local tools. It logs each first sighting as a
+`pi-redact` custom entry (counts and channel, no value).
+`scripts/scrub-sessions.ts` in that repo rewrites vendor-shaped keys out of
+old sessions. Same dev footgun as pi-prose: the pinned package and a local
+path both register `/redact`, so load only one.
+
 Run `pi/.pi/agent/setup-pi.sh` once after stowing on a fresh machine, and again
 whenever `settings.base.json` or a host fragment changes. Because the generated
 `settings.json` is gitignored, the old `lastChangelogVersion` churn is gone —
