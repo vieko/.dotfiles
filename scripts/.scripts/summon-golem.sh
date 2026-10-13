@@ -134,7 +134,8 @@ if [[ -r "$spec" ]]; then
 fi
 
 # -B: the session map the golem shows on (sigil#51). Same '@' resolution as
-# summon-familiar.sh; the map id follows sigil's projectMapId rule.
+# summon-familiar.sh; the map id follows sigil's mapForRoom rule (a map-*
+# board is its own map, else map-<board before -->).
 map_id=""
 map_task=""
 map_title=""
@@ -149,7 +150,8 @@ if [[ -n "$board" ]]; then
         [[ -n "$board" ]] || { echo "error: -B @: the summoner has no SIGIL_ROOM and no sigil pin -- draw on a board first or name it" >&2; exit 2; }
     fi
     [[ "$board" =~ ^[A-Za-z0-9_-]{1,64}$ ]] || { echo "error: -B: invalid board id: $board" >&2; exit 2; }
-    map_id="$(printf 'map-%s' "${board%%--*}" | tr '[:upper:]' '[:lower:]' | cut -c1-64)"
+    if [[ "$board" == map-* ]]; then map_id="$(printf '%s' "$board" | tr '[:upper:]' '[:lower:]')"
+    else map_id="$(printf 'map-%s' "${board%%--*}" | tr '[:upper:]' '[:lower:]' | cut -c1-64)"; fi
     map_task="$(printf 'golem-%s' "$name" | tr '[:upper:]' '[:lower:]' | tr -c 'a-z0-9-' '-' | cut -c1-64)"
     if [[ -r "$spec" ]]; then map_title="golem $name: $(basename "$spec" .md)"; else map_title="golem $name"; fi
     map_title="${map_title:0:80}"
@@ -222,7 +224,7 @@ map_close() {
     local state=doing detail="gate red or no result (exit \$status); see \$RESULT"
     if [[ "\$status" == 0 && "\$passed" == true ]]; then state=done; detail="gate green; review pending"; fi
     jq -n --arg id $(printf '%q' "$map_task") --arg status "\$state" --arg detail "\${detail:0:160}" --arg session $(printf '%q' "golem:$name") \\
-        '{ops: [{op: "upsert", id: \$id, status: \$status, detail: \$detail}], session: \$session, source: ["summon-golem"]}' \\
+        '{ops: [{op: "upsert", id: \$id, status: \$status, detail: \$detail}], session: \$session, role: "golem", source: ["summon-golem"]}' \\
         | curl -sf -m 5 -H 'content-type: application/json' --data-binary @- $(printf '%q' "$sigil_server/maps/$map_id/patch") >/dev/null \\
         || echo "warn: could not update map task $map_task on $map_id" >&2
 }
@@ -292,7 +294,7 @@ chmod +x "$runner"
 # -B: open the map task now, from the summoner's side, before the window exists.
 map_open() {
     jq -n --arg id "$map_task" --arg title "$map_title" --arg session "golem:$name" \
-        '{ops: [{op: "upsert", id: $id, kind: "task", title: $title, status: "doing", detail: "dispatched"}], session: $session, source: ["summon-golem"]}' \
+        '{ops: [{op: "upsert", id: $id, kind: "task", title: $title, status: "doing", detail: "dispatched"}], session: $session, role: "golem", source: ["summon-golem"]}' \
         | curl -sf -m 5 -H 'content-type: application/json' --data-binary @- "$sigil_server/maps/$map_id/patch" >/dev/null
 }
 
@@ -305,6 +307,16 @@ if [[ $dry_run -eq 1 ]]; then
     rm -f "$runner"
     exit 0
 fi
+
+# sigil#51 roles, set here and never guessed: the construct reads SIGIL_ROLE,
+# and the summoner gets a role file under its pi-post address, which sigil
+# reads on every draw and map patch. A down or missing sigil only skips it.
+mark_summoner() {
+    [[ "${PI_SESSION_ADDRESS:-}" =~ ^[A-Za-z0-9_-]+$ ]] || return 0
+    local roles_dir="${SIGIL_ROLES_DIR:-$HOME/dev/sigil/.rooms/roles}"
+    mkdir -p "$roles_dir" 2>/dev/null && printf 'summoner\n' > "$roles_dir/$PI_SESSION_ADDRESS" 2>/dev/null || true
+}
+mark_summoner
 
 # Login shell first (env hydration), then the runner via send-keys --
 # same discipline as summon-familiar.sh pane mode.

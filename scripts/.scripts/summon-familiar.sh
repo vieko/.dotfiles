@@ -135,6 +135,16 @@ if [[ -n "$board" ]]; then
     [[ "$board" =~ ^[A-Za-z0-9_-]{1,64}$ ]] || { echo "error: -B: invalid board id: $board" >&2; exit 2; }
     board_env="SIGIL_ROOM=$board"
 fi
+role_env="SIGIL_ROLE=familiar"
+
+# sigil#51 roles, set here and never guessed: the construct reads SIGIL_ROLE,
+# and the summoner gets a role file under its pi-post address, which sigil
+# reads on every draw and map patch. A down or missing sigil only skips it.
+mark_summoner() {
+    [[ "${PI_SESSION_ADDRESS:-}" =~ ^[A-Za-z0-9_-]+$ ]] || return 0
+    local roles_dir="${SIGIL_ROLES_DIR:-$HOME/dev/sigil/.rooms/roles}"
+    mkdir -p "$roles_dir" 2>/dev/null && printf 'summoner\n' > "$roles_dir/$PI_SESSION_ADDRESS" 2>/dev/null || true
+}
 
 # Familiars are workers, not summoners: the counsel tool (pi-counsel) stays
 # off unless -C says this dispatch may consult. Same env var for both modes.
@@ -271,6 +281,8 @@ if [[ -n "$worktree_name" ]]; then
     work_dir="$wt_dir"
 fi
 
+[[ $dry_run -eq 1 ]] || mark_summoner
+
 if [[ $print_mode -eq 1 ]]; then
     # In-band dispatch: inherits this shell's env (must be hydrated).
     if [[ -z "${AI_GATEWAY_API_KEY:-}" ]]; then
@@ -283,7 +295,7 @@ if [[ $print_mode -eq 1 ]]; then
     # starts. The brief slug keeps same-second parallel dispatches apart.
     brief_slug="$(basename "$brief_abs" .md)"
     log="$LOG_DIR/familiar-$(date +%Y%m%d-%H%M%S)-${brief_slug}-${vessel//[\/:]/-}.log"
-    cmd=(env ${counsel_env:+"$counsel_env"} ${board_env:+"$board_env"} pi -p --provider "$PROVIDER" --model "$model" "$prompt")
+    cmd=(env ${counsel_env:+"$counsel_env"} ${board_env:+"$board_env"} "$role_env" pi -p --provider "$PROVIDER" --model "$model" "$prompt")
     if [[ $dry_run -eq 1 ]]; then
         echo "dry-run (print mode):"
         printf '  '; printf '%q ' "${cmd[@]}"; printf '\n  log: %s\n' "$log"
@@ -314,7 +326,7 @@ if [[ $print_mode -eq 1 ]]; then
 else
     # Pane/window familiar: default shell first (env hydration), command typed in.
     [[ -n "${TMUX:-}" ]] || { echo "error: pane/window mode requires tmux (use -P for in-band)" >&2; exit 1; }
-    pi_cmd="${counsel_env:+$counsel_env }${board_env:+$board_env }pi --provider \"$PROVIDER\" --model \"$model\" \"$prompt\""
+    pi_cmd="${counsel_env:+$counsel_env }${board_env:+$board_env }$role_env pi --provider \"$PROVIDER\" --model \"$model\" \"$prompt\""
     if [[ $dry_run -eq 1 ]]; then
         if [[ -n "$window_name" ]]; then
             echo "dry-run (window mode): new-window -n $window_name, then send-keys:"
