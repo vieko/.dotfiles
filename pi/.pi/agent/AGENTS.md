@@ -134,39 +134,25 @@ when applicable.
 
 ## PR announcements
 
-When you open a PR, end your reply with three artifacts (this is the
-cross-repo personal default; repo-level `AGENTS.md` may extend or
-override):
+When you open a PR, end your reply with two artifacts (repo-level
+`AGENTS.md` may extend this; `~/dev/gtm` adds a Slack one-liner and a
+daily-thread rule):
 
 1. **PR title + URL** on their own lines, for quick scanning.
 2. **Pitch**: one sentence answering "what does this PR bring to the
    table?" — state the user-visible behavior change or capability
    unlocked, not a file-by-file recap. Call out flag-gated /
    dark-shipped PRs explicitly in the same sentence.
-3. **Slack one-liner** (paste-ready, markdown link form):
 
-   ```
-   :pr: [verb(PROJECT): title (LINEAR-ID)](pr url) `+xxx` `-xxx`
-   ```
+Don't substitute a longer recap for the pitch — the pitch is the
+deliverable; anything else is supplementary.
 
-   - `verb` is the conventional-commits type (`feat`, `fix`, `chore`,
-     `docs`, `refactor`).
-   - `PROJECT` is the Linear project name in ALL CAPS with spaces
-     (e.g. `LEAD AGENT`, `PROMPT BENCH`, `VOLTRON`). For work without
-     a Linear issue, fall back to the conventional-commits scope
-     uppercased with hyphens-to-spaces (e.g. `AGENTS`, `LEAD WEB`).
-   - Drop the `(LINEAR-ID)` chunk entirely when there's no Linear issue.
-   - `+xxx` / `-xxx` are `additions` / `deletions` from
-     `gh pr view <n> --json additions,deletions`.
+### "merge it" closes the loop
 
-Don't substitute a longer recap for the pitch — the pitch + one-liner
-are the deliverables; anything else is supplementary.
-
-### "posted" closes the loop
-
-After the announcement the user pastes the one-liner to Slack and replies
-`posted` (often `posted, merge it` / `posted, merge when green`). That
-reply is the merge instruction; do not ask again. Sequence:
+After the announcement the user replies `merge it` (or `merge when
+green`). That reply is the merge instruction; do not ask again. In a repo
+whose `AGENTS.md` requires a Slack post before merge (`~/dev/gtm`), the
+reply is `posted` (often `posted, merge it`) and means the same. Sequence:
 
 1. Wait for required checks green and review approval (use the repo's
    PR-wait mechanism if it has one; otherwise poll `gh pr checks`).
@@ -181,8 +167,8 @@ reply is the merge instruction; do not ask again. Sequence:
    for that issue, and report the merge SHA in one line.
 
 Blockers (red check, changes requested, merge conflict) get reported once
-with the concrete cause; "posted" does not authorize force-pushes,
-admin-merges, or bypassing required checks.
+with the concrete cause; the merge instruction does not authorize
+force-pushes, admin-merges, or bypassing required checks.
 
 ## Tool & review notes
 
