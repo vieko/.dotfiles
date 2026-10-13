@@ -19,11 +19,13 @@
 #            calling pi session (pi-post whoami). It is pinned to an address
 #            at schedule time.
 #
-# Alert buttons: Resume opens the session and closes the reminder. Snooze 1h
-# shows the alert again in an hour. Later (or no answer for 6h) leaves it open
-# in --list. A live session's tmux pane gets focus; an offline session resumes
-# with `pi --session <id>` in a new tmux window, where the queued brief is the
-# first thing it reads.
+# Alert buttons: Resume opens the session and closes the reminder once pi
+# runs. Snooze 1h shows the alert again in an hour. Later (or no answer for
+# 6h) leaves it open in --list. A live session's tmux pane gets focus; an
+# offline session resumes with `pi --session <id>` in a new tmux window named
+# for the slug, where the queued brief is the first thing it reads. A session
+# with no file to resume gets a new pi session in that window, seeded with the
+# brief. A failed resume leaves the reminder open with its brief.
 #
 # Why it looks like this:
 #   - GTMENG-3924 (2026-10-08): the first hand-rolled version fired on time and
@@ -97,29 +99,72 @@ activate_terminal() {
   done
 }
 
-# Opens the session behind a pi-post address. Exit 0 on success; otherwise
-# prints the reason and a manual command.
+reg_live_pid() {
+  local pid; pid=$(reg_field "$1" pid) || return 1
+  [[ -n "$pid" ]] && kill -0 "$pid" 2>/dev/null && [[ "$(ps -o comm= -p "$pid")" =~ (pi|node)$ ]] && echo "$pid"
+}
+
+# Opens a named tmux window that runs pi, and waits until pi is up. Args:
+# tmux session, cwd, window name, address to wait for (or ""), pi args...
+# Prints the pane id. Exit 1 when pi does not start.
+open_pi_window() {
+  local tsess=$1 cwd=$2 wname=$3 waddr=$4 path cmd pane i
+  shift 4
+  # tmux gives a window the PATH of the client that creates it, even over
+  # new-window -e, and under launchd that PATH has no node: pi exited 127 and
+  # tmux closed the window at once (2026-10-13). Export the tmux server's
+  # PATH in the command, with the node pinned at schedule time first.
+  path=$("$TMUX_BIN" show-environment -g PATH 2>/dev/null) && path=${path#PATH=} || path=""
+  path="$(dirname "${NODE:-/usr/bin/node}"):${path:-/opt/homebrew/bin:/usr/bin:/bin:/usr/sbin:/sbin}"
+  # When pi exits, the window keeps a shell, so an error stays on screen.
+  cmd="export PATH=$(printf '%q' "$path"); $(printf '%q ' "$PI_BIN" "$@"); rc=\$?; echo; echo \"[INFO] pi exited (rc=\$rc)\"; exec $(printf '%q' "${SHELL:-/bin/bash}") -l"
+  pane=$("$TMUX_BIN" new-window -P -F '#{pane_id}' -t "$tsess:" -c "$cwd" -n "${wname:0:32}" "$cmd") || return 1
+  "$TMUX_BIN" set-option -w -t "$pane" automatic-rename off 2>/dev/null || true
+  echo "$pane"
+  for (( i = 0; i < 40; i++ )); do
+    sleep 0.5
+    if [[ -n "$waddr" ]]; then reg_live_pid "$waddr" >/dev/null && return 0
+    # No address to watch for a new session: pi is up while the pane's
+    # shell still has a child; after pi exits the shell has none.
+    elif (( i >= 8 )) && /usr/bin/pgrep -P "$("$TMUX_BIN" display -p -t "$pane" '#{pane_pid}')" >/dev/null 2>&1; then return 0; fi
+  done
+  return 1
+}
+
+# Opens the session behind a pi-post address: focuses its pane when it is
+# live, resumes it in a new named window when it is offline, and starts a new
+# session with the brief when there is nothing to resume. Exit 0 only when
+# pi is running; otherwise prints the reason and a manual command.
 resume_session() {
-  local addr=$1 sid cwd name pid client cpid tsess pane file
+  local addr=$1 slug=${2:-} sid cwd name pid client cpid tsess pane file wname brief
   [[ -f "$REGISTRY/$addr.json" ]] || { echo "$addr is not in the pi-post registry"; return 1; }
   sid=$(reg_field "$addr" sessionId) cwd=$(reg_field "$addr" cwd)
-  name=$(reg_field "$addr" name || echo "$addr") pid=$(reg_field "$addr" pid || true)
+  name=$(reg_field "$addr" name || echo "$addr") pid=$(reg_live_pid "$addr" || true)
+  wname=${slug:-$name}
   read -r _ client cpid tsess < <("$TMUX_BIN" list-clients -F '#{client_activity} #{client_name} #{client_pid} #{session_name}' 2>/dev/null | sort -rn | head -1) || true
-  if [[ -n "$pid" ]] && kill -0 "$pid" 2>/dev/null && [[ "$(ps -o comm= -p "$pid")" =~ (pi|node)$ ]]; then
+  if [[ -n "$pid" ]]; then
     pane=$(pane_for_pid "$pid")
     [[ -n "$pane" && -n "$client" ]] || { echo "$name is live but not in an attached tmux pane; switch to it by hand"; return 1; }
     "$TMUX_BIN" select-window -t "$pane" && "$TMUX_BIN" select-pane -t "$pane" &&
       "$TMUX_BIN" switch-client -c "$client" -t "$pane" || { echo "tmux could not focus $pane"; return 1; }
     echo "focused live session $name in pane $pane"
   else
-    [[ -n "$sid" && -d "$cwd" ]] || { echo "$addr has no session id or cwd"; return 1; }
-    # Ephemeral sessions register with pi-post but never write a file.
-    file=$(find "$HOME/.pi/agent/sessions" -name "*_$sid.jsonl" -print -quit 2>/dev/null)
-    [[ -n "$file" ]] || { echo "$name has no session file to resume (ephemeral session?)"; return 1; }
+    [[ -d "$cwd" ]] || { echo "$addr has no cwd"; return 1; }
     [[ -n "$client" ]] || { echo "no attached tmux client; run: cd $cwd && pi --session $sid"; return 1; }
-    "$TMUX_BIN" new-window -t "$tsess:" -c "$cwd" -n "${name:0:24}" "$(printf '%q --session %q' "$PI_BIN" "$file")" &&
-      "$TMUX_BIN" switch-client -c "$client" -t "$tsess" || { echo "tmux new-window failed; run: cd $cwd && pi --session $sid"; return 1; }
-    echo "resumed offline session $name in a new tmux window"
+    # Ephemeral sessions register with pi-post but never write a file.
+    [[ -n "$sid" ]] && file=$(find "$HOME/.pi/agent/sessions" -name "*_$sid.jsonl" -print -quit 2>/dev/null)
+    if [[ -n "${file:-}" ]]; then
+      pane=$(open_pi_window "$tsess" "$cwd" "$wname" "$addr" --session "$file") ||
+        { echo "pi did not start in window $wname${pane:+ ($pane)}; run: cd $cwd && pi --session $sid"; return 1; }
+      echo "resumed offline session $name in window $wname ($pane)"
+    else
+      [[ -n "$slug" && -s "$STATE_DIR/$slug.txt" ]] || { echo "$name has no session file and no brief to start from"; return 1; }
+      brief="Reminder $slug was for session $name ($addr), which cannot be resumed. Its brief follows."$'\n\n'"$(cat "$STATE_DIR/$slug.txt")"
+      pane=$(open_pi_window "$tsess" "$cwd" "$wname" "" "$brief") ||
+        { echo "pi did not start in window $wname${pane:+ ($pane)}; brief: $STATE_DIR/$slug.txt"; return 1; }
+      echo "$name had no session file; started a new session with the brief in window $wname ($pane)"
+    fi
+    "$TMUX_BIN" switch-client -c "$client" -t "$pane" || true
   fi
   activate_terminal "$cpid"
 }
@@ -157,7 +202,7 @@ cmd_resume() {
   [[ -f "$STATE_DIR/$slug.meta" ]] || die "no reminder named $slug"
   # shellcheck disable=SC1090 # reason: written by this script with printf %q
   source "$STATE_DIR/$slug.meta"
-  if out=$(resume_session "$TARGET"); then
+  if out=$(resume_session "$TARGET" "$slug"); then
     log "$slug" "resume: $out"; echo "[OK] $out"
     cmd_cancel "$slug"
   else
@@ -209,8 +254,11 @@ cmd_fire() {
         while (( $(date +%s) < snooze_until )) && [[ -f "$meta" ]]; do sleep 30; done
         rm -f "$STATE_DIR/$slug.snooze" ;;
       Resume)
-        if out=$(resume_session "$TARGET"); then log "$slug" "resume: $out"; close_state "$slug"
-        else log "$slug" "resume failed: $out"; alert "Resume failed: $TITLE" "$out" >/dev/null 2>&1; fi
+        # The reminder closes only once pi runs; a failed resume leaves it
+        # open in --list with its brief, for remind-at.sh --resume <slug>.
+        if out=$(resume_session "$TARGET" "$slug"); then log "$slug" "resume: $out"; close_state "$slug"
+        else log "$slug" "resume failed: $out"
+          alert "Resume failed: $TITLE" "$out"$'\n\n'"The reminder stays open. Retry: remind-at.sh --resume $slug" >/dev/null 2>&1; fi
         break ;;
       *) break ;;
     esac
@@ -235,7 +283,7 @@ while [[ $# -gt 0 ]]; do
     --to) to=${2:?--to needs a value}; shift 2 ;;
     --title) title=${2:?--title needs a value}; shift 2 ;;
     --ask) ask=${2:?--ask needs a value}; shift 2 ;;
-    -h|--help) sed -n '2,26p' "$0"; exit 0 ;;
+    -h|--help) sed -n '2,28p' "$0"; exit 0 ;;
     --) shift; break ;;
     -*) die "unknown flag $1" ;;
     *) break ;;
