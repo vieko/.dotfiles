@@ -5,7 +5,7 @@
 #
 # Usage:
 #   remind-at.sh [--to <target>] --title <text> --ask <text> <slug> "<YYYY-MM-DD HH:MM>" <brief|->
-#   remind-at.sh --list              pending and open reminders
+#   remind-at.sh --list [--tsv]      pending and open reminders (--tsv: for scripts)
 #   remind-at.sh --resume <slug>     open the reminder's session, then close it
 #   remind-at.sh --done <slug>       close an open reminder
 #   remind-at.sh --cancel <slug>     remove a pending or open reminder
@@ -169,24 +169,36 @@ resume_session() {
   activate_terminal "$cpid"
 }
 
+# Prints pending, "snoozed to HH:MM", or open.
+status_of() {
+  local slug=$1
+  if [[ -f "$(plist_of "$slug")" ]]; then echo pending
+  elif [[ -f "$STATE_DIR/$slug.snooze" ]] && launchctl print "$UID_DOMAIN/$LABEL_PREFIX.$slug" >/dev/null 2>&1; then
+    echo "snoozed to $(date -r "$(cat "$STATE_DIR/$slug.snooze")" '+%H:%M')"
+  else echo open; fi
+}
+
+# --tsv: one line per reminder, for the pi /reminders extension:
+# slug, status, due epoch, target, title, ask (tabs in text become spaces).
 cmd_list() {
+  local tsv=${1:-} meta slug found=0
   shopt -s nullglob
-  local meta slug status found=0
   for meta in "$STATE_DIR"/*.meta; do
     found=1
     slug=$(basename "$meta" .meta)
     (
       # shellcheck disable=SC1090 # reason: written by this script with printf %q
       source "$meta"
-      if [[ -f "$(plist_of "$slug")" ]]; then status=pending
-      elif [[ -f "$STATE_DIR/$slug.snooze" ]] && launchctl print "$UID_DOMAIN/$LABEL_PREFIX.$slug" >/dev/null 2>&1; then
-        status="snoozed to $(date -r "$(cat "$STATE_DIR/$slug.snooze")" '+%H:%M')"
-      else status=open; fi
-      printf '%-36s %-18s due %s  -> %s\n    %s: %s\n' "$slug" "$status" \
-        "$(date -r "$DUE" '+%Y-%m-%d %H:%M %Z')" "$TARGET" "$TITLE" "$ASK"
+      status=$(status_of "$slug")
+      if [[ -n "$tsv" ]]; then
+        printf '%s\t%s\t%s\t%s\t%s\t%s\n' "$slug" "$status" "$DUE" "$TARGET" "${TITLE//$'\t'/ }" "${ASK//$'\t'/ }"
+      else
+        printf '%-36s %-18s due %s  -> %s\n    %s: %s\n' "$slug" "$status" \
+          "$(date -r "$DUE" '+%Y-%m-%d %H:%M %Z')" "$TARGET" "$TITLE" "$ASK"
+      fi
     )
   done
-  (( found )) || echo "no pending or open reminders"
+  (( found )) || [[ -n "$tsv" ]] || echo "no pending or open reminders"
 }
 
 cmd_cancel() {
@@ -268,7 +280,7 @@ cmd_fire() {
 }
 
 case "${1:-}" in
-  --list) cmd_list; exit 0 ;;
+  --list) [[ -z "${2:-}" || "$2" == --tsv ]] || die "usage: remind-at.sh --list [--tsv]"; cmd_list "${2:-}"; exit 0 ;;
   --cancel) valid_slug "${2:?usage: remind-at.sh --cancel <slug>}"; cmd_cancel "$2"; echo "[OK] canceled $2"; exit 0 ;;
   --done) valid_slug "${2:?usage: remind-at.sh --done <slug>}"
     [[ -f "$STATE_DIR/$2.meta" ]] || die "no reminder named $2"
