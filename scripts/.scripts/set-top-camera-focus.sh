@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
 # Script to configure top camera (Logitech StreamCam) for close-up card viewing
-# Auto-detects camera by USB port to handle device number changes
+# Auto-detects camera by USB serial to handle device number and port changes
 
 # Parse command-line arguments
 enableZoom=true
@@ -28,14 +28,21 @@ while [[ $# -gt 0 ]]; do
     esac
 done
 
-# Auto-detect top camera by USB port (6.3)
-topCameraDevice=$(v4l2-ctl --list-devices 2>/dev/null | \
-    grep -A 3 "Logitech StreamCam.*6\.3" | \
-    grep -m 1 "/dev/video" | \
-    awk '{print $1}')
+# Auto-detect top camera by USB serial (port paths change when re-cabled)
+topCameraSerial="4A3AEB25"
+topCameraDevice=""
+for node in /sys/class/video4linux/video*; do
+    # index 0 is the capture node; the USB device (with serial) is the interface's parent
+    [[ "$(cat "$node/index" 2>/dev/null)" == "0" ]] || continue
+    usbDevice=$(readlink -f "$node/device/..")
+    if [[ "$(cat "$usbDevice/serial" 2>/dev/null)" == "$topCameraSerial" ]]; then
+        topCameraDevice="/dev/$(basename "$node")"
+        break
+    fi
+done
 
 if [[ -z "$topCameraDevice" ]]; then
-    echo "Error: Could not detect top camera (USB port 6.3)"
+    echo "Error: Could not detect top camera (serial $topCameraSerial)"
     echo "Available devices:"
     v4l2-ctl --list-devices
     exit 1
