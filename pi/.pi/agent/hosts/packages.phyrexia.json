@@ -1,1 +1,8 @@
-["../../dev/sigil"]
+[
+  "../../dev/bonfire",
+  "../../dev/pi-prose",
+  "../../dev/pi-post",
+  "../../dev/pi-counsel",
+  "../../dev/pi-redact",
+  "../../dev/sigil"
+]

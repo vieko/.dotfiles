@@ -49,15 +49,29 @@ out="${HOME}/.pi/agent/settings.json"
 tmp="$(mktemp)"
 jq --slurpfile models "$fragment" '.enabledModels = $models[0]' "$base" >"$tmp"
 
-# Optional per-host package extras (hosts/packages.<host>.json): local dev
+# Optional per-host package overrides (hosts/packages.<host>.json): local dev
 # checkouts loaded as pi packages, e.g. "../../dev/sigil" (relative to
 # ~/.pi/agent, so portable across OSes but only valid where the clone exists).
-# Appended after the shared pins so a Ctrl+S or `pi install` of a dev path is
-# not silently dropped on the next run.
+# A local path replaces the shared pin with the same package name in place
+# (git:github.com/vieko/bonfire@v7.5.1, npm:@vieko/pi-redact@0.1.2 and
+# ../../dev/bonfire all name "bonfire" / "pi-redact"), so the working copy runs
+# on that host and the pin still holds everywhere else. Loading both would
+# fail: pi-prose and pi-redact register the same flags and commands twice.
+# Paths without a matching pin are appended.
 extras="hosts/packages.${host}.json"
 if [[ -f "$extras" ]]; then
   tmp2="$(mktemp)"
-  jq --slurpfile extra "$extras" '.packages = ((.packages // []) + $extra[0] | reduce .[] as $p ([]; if index($p) then . else . + [$p] end))' "$tmp" >"$tmp2"
+  jq --slurpfile extra "$extras" '
+    def pkgname:
+      if startswith("git:") then ltrimstr("git:") | split("@")[0] | split("/") | last
+      elif startswith("npm:") then ltrimstr("npm:") | capture("^(@[^/]+/)?(?<n>[^@]+)").n
+      else rtrimstr("/") | split("/") | last end;
+    ($extra[0]) as $x
+    | (.packages // []) as $b
+    | .packages = (
+        ($b | map(. as $p | (($x | map(select(pkgname == ($p | pkgname))) | first) // $p)))
+        + ($x | map(select(. as $e | ($b | map(pkgname) | index($e | pkgname)) | not)))
+        | reduce .[] as $p ([]; if index($p) then . else . + [$p] end))' "$tmp" >"$tmp2"
   mv "$tmp2" "$tmp"
 fi
 

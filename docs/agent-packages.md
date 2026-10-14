@@ -37,21 +37,24 @@ Pi-managed `lastChangelogVersion` key and warns if live package pins drifted
 from the base (base wins; sync base first if live is newer after `pi update`). An
 unknown host falls back to `hosts/enabledModels.default.json` (the restricted
 set). Add a host by dropping in a new `hosts/enabledModels.<host>.json` fragment.
-An optional `hosts/packages.<host>.json` appends per-host package extras to the
-shared pins: local dev checkouts loaded as pi packages (e.g. `"../../dev/sigil"`,
-relative to `~/.pi/agent`, so it only resolves where the clone exists). Without
-it, a dev path added to the live file is dropped on the next `setup-pi.sh` run.
+An optional `hosts/packages.<host>.json` lists local dev checkouts loaded as pi
+packages (e.g. `"../../dev/sigil"`, relative to `~/.pi/agent`, so it only
+resolves where the clone exists). A path replaces the shared pin with the same
+package name in place (`../../dev/pi-redact` replaces `npm:@vieko/pi-redact@…`);
+paths without a pin are appended. PHYREXIA lists all six packages (bonfire,
+pi-prose, pi-post, pi-counsel, pi-redact, sigil), so it runs the `~/dev`
+working copies and needs no install after a release; other hosts keep the
+pins. Without the file, a dev path added to the live file is dropped on the
+next `setup-pi.sh` run.
 
-**pi-prose** (`~/dev/pi-prose`, published as `pi-prose` on npm, installed via
-the `packages` array) follows the same dev pattern as the bonfire adapter: the
-installed package runs the pinned release, not the local working copy. Footgun:
-the package and a local copy cannot load simultaneously -- both register the
-`--style` flag, and flag collisions fail the extension load. To test in-flight
-changes, use `pi -ne -e ~/dev/pi-prose/extensions/pi-prose.ts` (isolated, no
-hot reload), or for longer dev bursts remove the package entry from
-`settings.base.json` + rerun `setup-pi.sh`, then symlink
-`~/.pi/agent/extensions/pi-prose-dev.ts` -> `~/dev/pi-prose/extensions/pi-prose.ts`
-(gitignored) for `/reload` support. Restore the package entry when done.
+**pi-prose** (`~/dev/pi-prose`, published as `pi-prose` on npm, pinned via
+the `packages` array) follows the same pattern as the bonfire adapter: pinned
+hosts run the release, PHYREXIA runs the checkout. Footgun: the package and a
+local copy cannot load simultaneously -- both register the `--style` flag, and
+flag collisions fail the extension load. The in-place replacement above keeps
+them apart; never add a second entry for the same package. On a pinned host,
+test in-flight changes with `pi -ne -e ~/dev/pi-prose/extensions/pi-prose.ts`
+(isolated, no hot reload).
 
 **pi-redact** (`~/dev/pi-redact`, npm `@vieko/pi-redact`, pinned via
 `packages`) keeps secrets out of session transcripts: placeholders in, real
@@ -59,7 +62,11 @@ values back only for local tools. It logs each first sighting as a
 `pi-redact` custom entry (counts and channel, no value).
 `scripts/scrub-sessions.ts` in that repo rewrites vendor-shaped keys out of
 old sessions. Same dev footgun as pi-prose: the pinned package and a local
-path both register `/redact`, so load only one.
+path both register `/redact`, so load only one. Pinned hosts keep
+`min-release-age=2` in `~/.npmrc`, so a fresh npm pin does not install for
+two days; run `npm_config_min_release_age=0 npm install
+@vieko/pi-redact@<version>` in `~/.pi/agent/npm` for your own release. `pi
+update` does not move an npm package that already satisfies the caret range.
 
 **Footer status convention.** Every extension that calls
 `ctx.ui.setStatus` uses one shape so the footer line reads as one list.

@@ -19,8 +19,9 @@ file is kept current automatically by:
   holds the current pin). Hooks
   `session_compact` for rich Goal/Progress/Next/Blocked summaries and
   `session_shutdown` for a first-user-prompt fallback when compaction is
-  broken or doesn't fire. This runs the tagged release, not the local
-  working copy; testing in-flight changes is covered in
+  broken or doesn't fire. Hosts with a `hosts/packages.<host>.json`
+  (PHYREXIA) load the `~/dev/bonfire` checkout instead of the tag, so
+  whatever is checked out there is live; other hosts run the tag. See
   `~/.dotfiles/docs/agent-maintenance.md`.
 - **Claude Code adapter** (`~/dev/bonfire/claude/`, wired via a `Stop` hook in
   `~/.claude/settings.json`). Reads `ai-title` entries from the session JSONL.

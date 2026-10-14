@@ -229,13 +229,24 @@ Caveat: `current` is NOT tracked in dotfiles (it lives in the runtime cache);
 on a fresh machine it appears after the plugin installs + the next login
 shell or `setup-pi.sh` run.
 
-## Testing in-flight bonfire adapter changes
+## Pi packages run from `~/dev` on PHYREXIA
 
-The Pi adapter runs the tagged release from GitHub (the `packages` pin in
-settings), not your local `~/dev/bonfire` working copy. To test in-flight
-changes, either bump and retag, or temporarily swap the entry for a local
-path / restore a dev symlink under `~/.pi/agent/extensions/`. Same pin-bump
-rules as pi-post (see above).
+`pi/.pi/agent/hosts/packages.phyrexia.json` replaces every shared pin
+(bonfire, pi-prose, pi-post, pi-counsel, pi-redact) with its `~/dev`
+checkout, plus sigil, so this machine runs the working copies. Consequences,
+the same as for anvil below:
+
+- **Keep each `~/dev/<package>` on `main`.** A branch checked out there is
+  what every new pi session (and `/reload`) on the machine loads, half-done
+  work included. Do feature work in a worktree, as for any repo.
+- **A release does not touch this machine.** After merging, the update here
+  is `git -C ~/dev/<package> pull` and `/reload`; the tag and pin bump are
+  for the other hosts.
+- **pi-post's CLI follows the loaded copy.** The extension re-points
+  `~/.pi/agent/post/bin/pi-post` at `~/dev/pi-post/bin/pi-post.mjs` on load.
+
+Hosts without the fragment still run the pinned releases; test in-flight
+changes there with `pi -ne -e <path to extension>`, or add the fragment.
 
 ## Anvil runs from the working tree, not a global install
 
@@ -256,9 +267,10 @@ No build, no reinstall, no version skew. Consequences:
 - **Keep `~/dev/anvil` on `main`.** File-touching anvil work goes in
   `~/dev/anvil-worktrees/<branch>` like any other repo; a WIP branch checked
   out in `~/dev/anvil` is what every golem on the machine runs.
-- pi-prose, pi-post, and bonfire are different: those load through pi's
-  `packages` array as pinned release tags (`~/.dotfiles/AGENTS.md`, pi-prose
-  section), so for them a release plus pin bump is the update path.
+- The pi packages (bonfire, pi-prose, pi-post, pi-counsel, pi-redact) load
+  through pi's `packages` array: from `~/dev` on PHYREXIA (see "Pi packages
+  run from `~/dev` on PHYREXIA" above), as pinned releases elsewhere, where a
+  release plus pin bump is the update path.
 
 ## Anvil worktree footguns (gtm)
 
