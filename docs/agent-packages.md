@@ -77,8 +77,10 @@ path both register `/redact`, so load only one.
   `sigil-map-run`).
 
 Current sources: bonfire, pi-prose, pi-redact, the sigil map observer,
-and `extensions/reminders.ts`. `tmux-status.ts` writes tmux, not the
-footer.
+`extensions/reminders.ts`, and `extensions/waits.ts` (detached gtm
+`pr-wait`/`deploy-wait --notify` runs; `wait !#N` means one exited without
+a delivered message, `/waits` shows its log). `tmux-status.ts` writes
+tmux, not the footer.
 
 Run `pi/.pi/agent/setup-pi.sh` once after stowing on a fresh machine, and again
 whenever `settings.base.json` or a host fragment changes. Because the generated

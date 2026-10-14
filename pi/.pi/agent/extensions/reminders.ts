@@ -6,9 +6,9 @@
  * calls it. Bare `/reminders` picks a reminder, then an action;
  * `/reminders list|show|resume|done|cancel [slug]` runs one directly.
  *
- * The footer shows `N open reminders` when an alert was answered Later or
- * timed out, because an open reminder is easy to forget once its alert is
- * gone; otherwise `N reminders` while some are pending. It refreshes on
+ * The footer shows `reminders !N` (warning) when an alert was answered
+ * Later or timed out, because an open reminder is easy to forget once its
+ * alert is gone; otherwise `reminders N` while some are pending. It refreshes on
  * session start, after each run (the agent schedules reminders through
  * bash), after each command, and every minute (a pending reminder turns
  * open when it fires). macOS only, like the script.
