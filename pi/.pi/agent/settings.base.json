@@ -15,7 +15,7 @@
     "git:github.com/vieko/pi-prose@v0.3.2",
     "git:github.com/vieko/pi-post@v0.8.1",
     "npm:pi-counsel@0.1.0",
-    "npm:@vieko/pi-redact@0.1.1"
+    "npm:@vieko/pi-redact@0.1.2"
   ],
   "hideThinkingBlock": false,
   "retry": {
