@@ -66,11 +66,12 @@ path both register `/redact`, so load only one.
 Pi sorts items by status key and joins them with one space, so each item
 is one token with no spaces inside:
 
-- `name:value`, with a five-letter lowercase name (`prose`, `vault`,
-  `alarm`, `board`, `watch`) so the line reads evenly. Bonfire keeps its
-  `△ <value>` identity.
+- `name:value`, with a six-letter lowercase name (`styles`, `redact`,
+  `remind`, `canvas`, `follow`) so the line reads evenly; pick words that
+  read without knowing the extension. Bonfire keeps its `△ <value>`
+  identity.
 - `dim` at rest. `warning` only when the user must act, with `!` after the
-  value (`alarm:1!`, `board:gtm!`, `watch:#3146!`, bonfire `△ init!`);
+  value (`remind:1!`, `canvas:gtm!`, `follow:#3146!`, bonfire `△ init!`);
   put the detail in a one-time notify, not the footer. Use semantic theme
   colors only; literal names throw on themes that lack them.
 - Clear the status (`undefined`) when there is nothing to say.
@@ -81,13 +82,13 @@ is one token with no spaces inside:
 | Item | Source | Value |
 |---|---|---|
 | `△` | bonfire | breadcrumb age; `init!`, `fences!`, `7d!` stale in-flight, `compact?` nudge |
-| `prose:` | pi-prose | active output style |
-| `vault:` | pi-redact | distinct values kept out of the transcript |
-| `alarm:` | `extensions/reminders.ts` | pending reminders; `N!` when one fired and is open |
-| `board:` | sigil map observer | map name; `!` when a run failed |
-| `watch:` | `extensions/waits.ts` | detached gtm `pr-wait`/`deploy-wait --notify` runs (`#N`, `deploy#N`, `deploy@main`, or a count); `!` when one exited without a delivered message (`/waits` shows its log) |
+| `styles:` | pi-prose | active output style |
+| `redact:` | pi-redact | distinct values kept out of the transcript |
+| `remind:` | `extensions/reminders.ts` | pending reminders; `N!` when one fired and is open |
+| `canvas:` | sigil map observer | map name; `!` when a run failed |
+| `follow:` | `extensions/waits.ts` | detached gtm `pr-wait`/`deploy-wait --notify` runs (`#N`, `deploy#N`, `deploy@main`, or a count); `!` when one exited without a delivered message (`/waits` shows its log) |
 
-Example: `△ today prose:ste vault:1 alarm:2 board:gtm watch:#3146`.
+Example: `△ today styles:ste redact:1 remind:2 canvas:gtm waiter:#3146`.
 `tmux-status.ts` writes tmux, not the footer.
 
 Run `pi/.pi/agent/setup-pi.sh` once after stowing on a fresh machine, and again

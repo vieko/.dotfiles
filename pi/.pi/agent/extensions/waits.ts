@@ -9,8 +9,8 @@
  * is gone means the waiter died or failed to report, and the session would
  * otherwise wait for a message that never comes.
  *
- * Footer, in the shared format (docs/agent-packages.md): `watch:#3146` or
- * `watch:2` in dim while waiters run; `watch:#3146!` in warning when one died
+ * Footer, in the shared format (docs/agent-packages.md): `follow:#3146` or
+ * `follow:2` in dim while waiters run; `follow:#3146!` in warning when one died
  * without reporting. `/waits` lists records with their logs; `/waits clear`
  * deletes dead ones. Refreshes on session start, after each tool call, and
  * every 15s.
@@ -107,9 +107,9 @@ export default function (pi: ExtensionAPI) {
 		const live = records.filter((r) => r.alive);
 		const theme = ctx.ui.theme;
 		const text = dead.length
-			? theme.fg("warning", `watch:${dead.length === 1 ? label(dead[0]) : dead.length}!`)
+			? theme.fg("warning", `follow:${dead.length === 1 ? label(dead[0]) : dead.length}!`)
 			: live.length
-				? theme.fg("dim", `watch:${live.length === 1 ? label(live[0]) : live.length}`)
+				? theme.fg("dim", `follow:${live.length === 1 ? label(live[0]) : live.length}`)
 				: undefined;
 		try {
 			ctx.ui.setStatus(STATUS_KEY, text);
