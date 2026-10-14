@@ -88,7 +88,7 @@ is one token with no spaces inside:
 | `canvas:` | sigil map observer | map name; `!` when a run failed |
 | `follow:` | `extensions/waits.ts` | detached gtm `pr-wait`/`deploy-wait --notify` runs (`#N`, `deploy#N`, `deploy@main`, or a count); `!` when one exited without a delivered message (`/waits` shows its log) |
 
-Example: `△ today styles:ste redact:1 remind:2 canvas:gtm waiter:#3146`.
+Example: `△ today styles:ste redact:1 remind:2 canvas:gtm follow:#3146`.
 `tmux-status.ts` writes tmux, not the footer.
 
 Run `pi/.pi/agent/setup-pi.sh` once after stowing on a fresh machine, and again
