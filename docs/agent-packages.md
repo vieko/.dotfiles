@@ -71,7 +71,7 @@ leads with a glyph that marks where it starts:
   to another font and renders at a different height. Check with fontTools
   before adding one.
 - `dim` at rest. `warning` only when the user must act, with the marker
-  after the value (`△ init!`, `» 1!`, `≡ gtm 13!`, `« #3146!`); put the
+  after the value (`△ init!`, `» 1!`, `≡ gtm 13!`, `◊ #3146!`); put the
   detail in a one-time notify, not the footer. Use semantic theme colors
   only; literal names throw on themes that lack them.
 - Clear the status (`undefined`) when there is nothing to say.
@@ -86,9 +86,9 @@ leads with a glyph that marks where it starts:
 | `ø` | pi-redact | distinct values kept out of the transcript |
 | `»` | `extensions/reminders.ts` | pending reminders; `N!` when one fired and is open |
 | `≡` | sigil map observer | map name and live item count; `!` when a run failed |
-| `«` | `extensions/waits.ts` | detached gtm `pr-wait`/`deploy-wait --notify` runs; `!` when one exited without a delivered message (`/waits` shows its log) |
+| `◊` | `extensions/waits.ts` | detached gtm `pr-wait`/`deploy-wait --notify` runs; `!` when one exited without a delivered message (`/waits` shows its log) |
 
-Example: `△ today ≈ ste ø 1 » 2 ≡ gtm 13 « #3146`. `tmux-status.ts`
+Example: `△ today ≈ ste ø 1 » 2 ≡ gtm 13 ◊ #3146`. `tmux-status.ts`
 writes tmux, not the footer.
 
 Run `pi/.pi/agent/setup-pi.sh` once after stowing on a fresh machine, and again
