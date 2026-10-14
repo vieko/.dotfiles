@@ -299,5 +299,5 @@ Rarely-needed procedures live in `~/.dotfiles/docs/agent-maintenance.md` —
 read it when: a gateway model isn't showing up in `/model` (catalog refresh),
 Pi MCP servers need setting up on a new host or migrating off pi-mcp-adapter,
 vercel-plugin skills seem missing (`current` symlink; now self-healing via
-login shells and `setup-pi.sh`), you need to test in-flight bonfire adapter
-changes, or an old name (forge, bonfire start/handoff) needs context.
+login shells and `setup-pi.sh`), a pi package change is not showing up
+(PHYREXIA loads the `~/dev` checkouts, other hosts the pinned tags), or an old name (forge, bonfire start/handoff) needs context.

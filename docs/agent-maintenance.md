@@ -91,6 +91,9 @@ update both. Verify with a `-ne` probe that logs `ctx.model` on
 
 ## Updating pinned git packages in Pi (pi-post, bonfire)
 
+Applies to hosts that run the pins. PHYREXIA loads the `~/dev` checkouts
+instead (see "Pi packages run from `~/dev` on PHYREXIA" below) and skips this.
+
 Pi packages pinned via the `packages` array in `~/.pi/agent/settings.json`
 (e.g. `git:github.com/vieko/pi-post@vX.Y.Z`) are cloned to
 `~/.pi/agent/git/<host>/<path>`. Two gotchas when bumping the pin:

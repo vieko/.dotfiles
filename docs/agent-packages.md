@@ -124,11 +124,13 @@ self-contained directories.
 
 ## Bonfire adapter installation
 
-The Pi adapter is tracked as a `pi install` package entry in
-`pi/.pi/agent/settings.json` (`packages: ["git:github.com/vieko/bonfire@vX.Y.Z"]`).
-On a fresh machine, run `pi update` after stowing to materialize it. Pi
-clones to `~/.pi/agent/git/github.com/vieko/bonfire/` and the root
-`package.json` manifest points at `./pi/extension.ts`.
+The Pi adapter is a package entry in `pi/.pi/agent/settings.base.json`
+(`packages: ["git:github.com/vieko/bonfire@vX.Y.Z"]`). On a fresh pinned
+machine, run `setup-pi.sh`, then `pi update --extensions` to materialize it.
+Pi clones to `~/.pi/agent/git/github.com/vieko/bonfire/`, and the root
+`package.json` manifest points at `./pi/extension.ts`. PHYREXIA loads
+`~/dev/bonfire` instead (`hosts/packages.phyrexia.json`), so it needs only the
+clone.
 
 The Claude Code adapter is wired via a `Stop` hook entry in
 `claude/.claude/settings.json` pointing to

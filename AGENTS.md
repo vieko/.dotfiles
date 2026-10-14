@@ -8,7 +8,8 @@ resolve to identical content; edit only `AGENTS.md`.
 
 Read `.bonfire/index.md` for current state. Host-native bonfire adapters keep
 it current; there are no commands to run. Pi loads the adapter from the
-`packages` pin in `pi/.pi/agent/settings.base.json`; Claude Code runs it from
+`packages` pin in `pi/.pi/agent/settings.base.json` (PHYREXIA swaps the pin for
+`~/dev/bonfire` via `hosts/packages.phyrexia.json`); Claude Code runs it from
 a `Stop` hook in `claude/.claude/settings.json`; other agents use
 `/skill:bonfire end` explicitly. Install detail: `docs/agent-packages.md`.
 
