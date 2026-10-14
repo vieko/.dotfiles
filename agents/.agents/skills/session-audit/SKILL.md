@@ -102,7 +102,13 @@ converges on pi-reported $ and the repricing note can be dropped.
    spend; if shown-but-ignored dominates for two windows, the nudge is the
    wrong lever and the next step is a harder one (auto `/compact` at the
    line, or a cost banner), not more text.
-11. **Constructs.** `summons.log` gives dispatch counts by kind/vessel;
+11. **Sigil observer.** sigil's map observer writes a `sigil-map-run`
+   custom entry per run (cost, tokens, ms, ops applied/rejected, error).
+   The section sums spend by map and model, outside session true $. This
+   is the only place observer cost shows; the footer no longer carries
+   it. Week 41 baseline: ~$0.005/run, 0.16% of spend. Act on errors or
+   rejected ops before cost.
+12. **Constructs.** `summons.log` gives dispatch counts by kind/vessel;
    `anvil status --all --since` gives verdicts, attempts, and USD. Compute
    first-attempt pass rate and how often escalation rescued a run. Crashes
    with no result JSON (`~/scratch/logs/golem-*.json` empty) are

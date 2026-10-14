@@ -61,6 +61,25 @@ values back only for local tools. It logs each first sighting as a
 old sessions. Same dev footgun as pi-prose: the pinned package and a local
 path both register `/redact`, so load only one.
 
+**Footer status convention.** Every extension that calls
+`ctx.ui.setStatus` uses one shape so the footer line reads as one list:
+
+- `<name> <value>`, lowercase, one space, no colons or separators
+  (`△ today`, `style ste`, `redact 1`, `reminders 2`, `map 13`). The name
+  is a short word, or a glyph when the glyph is the identity (bonfire's
+  `△`).
+- `dim` at rest. `warning` only when the user must act, with a `!` on the
+  value (`△ !init`, `reminders !1`, `map !patch 500`). Use semantic
+  theme colors only; literal names throw on themes that lack them.
+- Clear the status (`undefined`) when there is nothing to say.
+- Keep cost and other telemetry out of the footer. Record it in a custom
+  entry (`pi.appendEntry`) and report it in `session-audit` (counsel,
+  `sigil-map-run`).
+
+Current sources: bonfire, pi-prose, pi-redact, the sigil map observer,
+and `extensions/reminders.ts`. `tmux-status.ts` writes tmux, not the
+footer.
+
 Run `pi/.pi/agent/setup-pi.sh` once after stowing on a fresh machine, and again
 whenever `settings.base.json` or a host fragment changes. Because the generated
 `settings.json` is gitignored, the old `lastChangelogVersion` churn is gone —

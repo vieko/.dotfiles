@@ -104,12 +104,12 @@ export default function (pi: ExtensionAPI) {
 		if (list) cached = list;
 		const open = cached.filter((r) => r.status === "open").length;
 		const pending = cached.length - open;
-		const plural = (n: number) => (n === 1 ? "" : "s");
 		const theme = ctx.ui.theme;
+		// Shared footer format (docs/agent-packages.md): fired reminders need action.
 		const text = open
-			? theme.fg("warning", `${open} open reminder${plural(open)}`)
+			? theme.fg("warning", `reminders !${open}`)
 			: pending
-				? theme.fg("dim", `${pending} reminder${plural(pending)}`)
+				? theme.fg("dim", `reminders ${pending}`)
 				: undefined;
 		try {
 			ctx.ui.setStatus(STATUS_KEY, text);

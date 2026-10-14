@@ -42,6 +42,8 @@ const rows = [first, user("u2", "second prompt"), user("u3", "third prompt"), re
 	entry("r11", "custom_message", { customType: "pi-post", content: "Message from pi session worker:\nThe previous task is complete.\nNext task: implement a change." }),
 	entry("r12", "custom_message", { customType: "pi-post", content: "Message from pi session worker:\nGTMENG-12 follow-up complete; committed locally." }),
 	entry("r13", "custom_message", { customType: "pi-post", content: "Message from pi session worker:\nREPORT: test audit lane -- DONE.\nVerification: ledger parsed." }),
+	entry("s1", "custom", { customType: "sigil-map-run", data: { at: Date.parse("2026-10-10T16:00:00Z"), map: "fixture", model: "gateway/google/flash", cost: 0.004, input: 12000, output: 300, ms: 2000, ops: 3, applied: 2, rejected: ["bad id"] } }),
+	entry("s2", "custom", { customType: "sigil-map-run", data: { at: Date.parse("2026-10-10T16:05:00Z"), map: "fixture", error: "server unreachable" } }),
 	assistant("a1")];
 writeFileSync(join(sessionsDir, "2026-10-10T16-00-parent.jsonl"), rows.map(x => JSON.stringify(x)).join("\n"));
 // A fork inherits entries, but its sample must retain the original opener.
@@ -86,4 +88,16 @@ test("invalid prompt counts fail before auditing", () => {
 		assert.match(result.stderr, /expected a positive integer/);
 	}
 	assert.notEqual(run(["--prompts"]).status, 0);
+});
+
+test("sigil observer runs are summed outside session spend", () => {
+	const r = run();
+	assert.equal(r.status, 0, r.stderr);
+	const json = JSON.parse(r.jsonText);
+	assert.equal(json.sigilRuns.length, 2);
+	assert.equal(json.sigilRuns[0].cost, 0.004);
+	assert.equal(json.sigilRuns[1].error, "server unreachable");
+	assert.match(r.stdout, /## Sigil observer \(`sigil-map-run` entries: 2\)/);
+	assert.match(r.stdout, /Spend \$0\.004 .*applied 2, rejected 1, unparsed replies 0, errors 1\./);
+	assert.match(r.stdout, /By map: fixture \(flash\)=1 \(\$0\.004\), fixture \(\?\)=1 \(\$0\.000\)\./);
 });
