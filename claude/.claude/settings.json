@@ -93,7 +93,7 @@
       "Skill(linear-cli)"
     ],
     "ask": [
-      "Bash(.claude/scripts/*:*)"
+      "Bash(.claude/scripts/*)"
     ],
     "defaultMode": "auto"
   },
