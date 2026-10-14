@@ -75,10 +75,10 @@ is one token with no spaces inside:
 
 - `name:value`, with a six-letter lowercase name (`styles`, `redact`,
   `remind`, `canvas`, `follow`) so the line reads evenly; pick words that
-  read without knowing the extension. Bonfire keeps its `△ <value>`
-  identity.
+  read without knowing the extension. Bonfire is the one seven-letter
+  name (`bonfire:today`).
 - `dim` at rest. `warning` only when the user must act, with `!` after the
-  value (`remind:1!`, `canvas:gtm!`, `follow:#3146!`, bonfire `△ init!`);
+  value (`remind:1!`, `canvas:gtm!`, `follow:#3146!`, `bonfire:init!`);
   put the detail in a one-time notify, not the footer. Use semantic theme
   colors only; literal names throw on themes that lack them.
 - Clear the status (`undefined`) when there is nothing to say.
@@ -88,14 +88,14 @@ is one token with no spaces inside:
 
 | Item | Source | Value |
 |---|---|---|
-| `△` | bonfire | breadcrumb age; `init!`, `fences!`, `7d!` stale in-flight, `compact?` nudge |
+| `bonfire:` | bonfire | breadcrumb age; `init!`, `fences!`, `7d!` stale in-flight, `compact?` nudge, `+IS`/`+F` writes |
 | `styles:` | pi-prose | active output style |
 | `redact:` | pi-redact | distinct values kept out of the transcript |
 | `remind:` | `extensions/reminders.ts` | pending reminders; `N!` when one fired and is open |
 | `canvas:` | sigil map observer | map name; `!` when a run failed |
 | `follow:` | `extensions/waits.ts` | detached gtm `pr-wait`/`deploy-wait --notify` runs (`#N`, `deploy#N`, `deploy@main`, or a count); `!` when one exited without a delivered message (`/waits` shows its log) |
 
-Example: `△ today styles:ste redact:1 remind:2 canvas:gtm follow:#3146`.
+Example: `bonfire:today styles:ste redact:1 remind:2 canvas:gtm follow:#3146`.
 `tmux-status.ts` writes tmux, not the footer.
 
 Run `pi/.pi/agent/setup-pi.sh` once after stowing on a fresh machine, and again
