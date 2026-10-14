@@ -9,8 +9,8 @@
  * is gone means the waiter died or failed to report, and the session would
  * otherwise wait for a message that never comes.
  *
- * Footer, in the shared format (docs/agent-packages.md): `• #3146` or
- * `• 2` in dim while waiters run; `• #3146!` in warning when one died
+ * Footer, in the shared format (docs/agent-packages.md): `wait:#3146` or
+ * `wait:2` in dim while waiters run; `wait:#3146!` in warning when one died
  * without reporting. `/waits` lists records with their logs; `/waits clear`
  * deletes dead ones. Refreshes on session start, after each tool call, and
  * every 15s.
@@ -83,11 +83,12 @@ function readRecords(): WaitRecord[] {
 	return out.sort((a, b) => a.started - b.started);
 }
 
-/** `#3146` for a PR number or URL, `deploy main` / `deploy 1a2b3c4d5` for deploy-wait. */
+/** `#3146` for a PR number or URL; `deploy#3146` / `deploy@main` / `deploy@1a2b3c4d5` for deploy-wait. One token, no spaces. */
 function label(r: WaitRecord): string {
 	const pr = /^\d+$/.test(r.target) ? r.target : /\/pull\/(\d+)/.exec(r.target)?.[1];
-	const what = pr ? `#${pr}` : /^[0-9a-f]{10,}$/.test(r.target) ? r.target.slice(0, 9) : r.target;
-	return r.kind === "pr-wait" ? what : `${r.kind.replace(/-wait$/, "")} ${what}`;
+	const what = pr ? `#${pr}` : /^[0-9a-f]{10,}$/.test(r.target) ? r.target.slice(0, 9) : r.target.replace(/\s+/g, "-");
+	const kind = r.kind.replace(/-wait$/, "");
+	return r.kind === "pr-wait" ? what : `${kind}${pr ? "" : "@"}${what}`;
 }
 
 function age(started: number): string {
@@ -106,9 +107,9 @@ export default function (pi: ExtensionAPI) {
 		const live = records.filter((r) => r.alive);
 		const theme = ctx.ui.theme;
 		const text = dead.length
-			? theme.fg("warning", `• ${dead.length === 1 ? label(dead[0]) : dead.length}!`)
+			? theme.fg("warning", `wait:${dead.length === 1 ? label(dead[0]) : dead.length}!`)
 			: live.length
-				? theme.fg("dim", `• ${live.length === 1 ? label(live[0]) : live.length}`)
+				? theme.fg("dim", `wait:${live.length === 1 ? label(live[0]) : live.length}`)
 				: undefined;
 		try {
 			ctx.ui.setStatus(STATUS_KEY, text);

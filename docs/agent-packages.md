@@ -64,32 +64,30 @@ path both register `/redact`, so load only one.
 **Footer status convention.** Every extension that calls
 `ctx.ui.setStatus` uses one shape so the footer line reads as one list.
 Pi sorts items by status key and joins them with one space, so each item
-leads with a glyph that marks where it starts:
+is one token with no spaces inside:
 
-- `<glyph> <value>`, one space, no colons or separators. Glyphs must exist
-  in Berkeley Mono (the ghostty and kitty font); a missing glyph falls back
-  to another font and renders at a different height. Check with fontTools
-  before adding one.
-- `dim` at rest. `warning` only when the user must act, with the marker
-  after the value (`△ init!`, `» 1!`, `≡ gtm 13!`, `• #3146!`); put the
-  detail in a one-time notify, not the footer. Use semantic theme colors
-  only; literal names throw on themes that lack them.
+- `name:value`, lowercase name (`style:ste`, `redacted:1`). Bonfire keeps
+  its `△ <value>` identity.
+- `dim` at rest. `warning` only when the user must act, with `!` after the
+  value (`reminders:1!`, `map:gtm!`, `wait:#3146!`, bonfire `△ init!`);
+  put the detail in a one-time notify, not the footer. Use semantic theme
+  colors only; literal names throw on themes that lack them.
 - Clear the status (`undefined`) when there is nothing to say.
 - Keep cost and other telemetry out of the footer. Record it in a custom
   entry (`pi.appendEntry`) and report it in `session-audit` (counsel,
   `sigil-map-run`).
 
-| Glyph | Source | Value |
+| Item | Source | Value |
 |---|---|---|
 | `△` | bonfire | breadcrumb age; `init!`, `fences!`, `7d!` stale in-flight, `compact?` nudge |
-| `≈` | pi-prose | active output style |
-| `ø` | pi-redact | distinct values kept out of the transcript |
-| `»` | `extensions/reminders.ts` | pending reminders; `N!` when one fired and is open |
-| `≡` | sigil map observer | map name and live item count; `!` when a run failed |
-| `•` | `extensions/waits.ts` | detached gtm `pr-wait`/`deploy-wait --notify` runs; `!` when one exited without a delivered message (`/waits` shows its log) |
+| `style:` | pi-prose | active output style |
+| `redacted:` | pi-redact | distinct values kept out of the transcript |
+| `reminders:` | `extensions/reminders.ts` | pending reminders; `N!` when one fired and is open |
+| `map:` | sigil map observer | map name; `!` when a run failed |
+| `wait:` | `extensions/waits.ts` | detached gtm `pr-wait`/`deploy-wait --notify` runs (`#N`, `deploy#N`, `deploy@main`, or a count); `!` when one exited without a delivered message (`/waits` shows its log) |
 
-Example: `△ today ≈ ste ø 1 » 2 ≡ gtm 13 • #3146`. `tmux-status.ts`
-writes tmux, not the footer.
+Example: `△ today style:ste redacted:1 reminders:2 map:gtm wait:#3146`.
+`tmux-status.ts` writes tmux, not the footer.
 
 Run `pi/.pi/agent/setup-pi.sh` once after stowing on a fresh machine, and again
 whenever `settings.base.json` or a host fragment changes. Because the generated
