@@ -1,0 +1,5 @@
+[StreamInputs]
+inputDevice=alsa_input.usb-046d_Logitech_StreamCam_16A01565-02.analog-stereo
+
+[StreamOutputs]
+outputDevice=raop_sink.Sonos-7828CAD00A7C.local.192.168.50.221.7000
