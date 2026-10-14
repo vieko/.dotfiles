@@ -95,7 +95,7 @@
     "ask": [
       "Bash(.claude/scripts/*:*)"
     ],
-    "defaultMode": "default"
+    "defaultMode": "auto"
   },
   "model": "fable",
   "hooks": {
@@ -122,7 +122,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "node $HOME/dev/sigil/integrations/claude/user-prompt-submit.mjs",
+            "command": "f=$HOME/dev/sigil/integrations/claude/user-prompt-submit.mjs; [ -f \"$f\" ] && node \"$f\" || true",
             "timeout": 5
           }
         ]
