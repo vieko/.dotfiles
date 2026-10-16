@@ -10,6 +10,7 @@
   "showCacheMissNotices": true,
   "editorPaddingX": 1,
   "treeFilterMode": "user-only",
+  "sessionShareDestination": "gist",
   "packages": [
     "git:github.com/vieko/bonfire@v7.6.0",
     "git:github.com/vieko/pi-prose@v0.3.2",

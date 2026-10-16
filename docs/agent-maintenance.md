@@ -83,6 +83,14 @@ The override needs, as of pi 0.87:
 - `compat.vercelGatewayRouting: { only: ["anthropic"], order: ["anthropic"] }`
   -- enforced by `extensions/gateway-routing.ts` until pi#9211 lands.
 
+Do not copy `supportsMidConvoEffort` onto gateway `openai/*` overrides, even
+though pi 1.3.0's native OpenAI entries carry it. The gateway serves GPT-6
+over `anthropic-messages`; with the flag, pi pins the request effort to
+`high` and sends the level only as an in-conversation `output_config`
+marker, which the gateway ignores for OpenAI upstreams (probe 2026-10-16:
+marker-low out-thought request-low). The cache then "holds" across a
+Shift+Tab change only because effort never changes.
+
 Anvil keeps its own copy of this overlay in
 `~/dev/anvil/packages/core/src/node/model-resolver.ts` (`withGatewayCompat`);
 update both. Verify with a `-ne` probe that logs `ctx.model` on
