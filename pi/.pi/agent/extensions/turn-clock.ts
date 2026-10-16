@@ -1,7 +1,7 @@
 /**
  * turn-clock
  *
- * Prints a dim "done 3:30 p.m. · 13s" line in the chat when a run ends,
+ * Prints a dim "done 15:30 · 13s" line in the chat when a run ends,
  * like Claude Code's "Baked for 13s · done 3:30 p.m.". A pane you come
  * back to shows when it finished and if the prompt cache is likely cold.
  *
@@ -9,7 +9,7 @@
  * retries and queued messages count toward one run. It stops on
  * agent_settled, which fires once per run. Aborted runs print nothing
  * (Esc is you, not news); a run that ended on a model error prints
- * "error" instead of "done". Times are Mountain Time.
+ * "error" instead of "done". Times are Mountain Time, 24-hour.
  *
  * Interactive mode only. Uses ctx.ui.notify, so the line is not saved to
  * the session; the session JSONL already timestamps every entry.
@@ -17,11 +17,11 @@
 
 import type { ExtensionAPI } from "@earendil-works/pi-coding-agent";
 
-const clock = new Intl.DateTimeFormat("en-CA", {
+const clock = new Intl.DateTimeFormat("en-GB", {
 	timeZone: "America/Edmonton",
-	hour: "numeric",
+	hour: "2-digit",
 	minute: "2-digit",
-	hour12: true,
+	hourCycle: "h23",
 });
 
 function formatDuration(ms: number): string {

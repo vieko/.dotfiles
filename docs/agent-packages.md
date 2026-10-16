@@ -97,7 +97,7 @@ is one token with no spaces inside:
 
 Example: `bonfire:today styles:ste redact:1 remind:2 canvas:gtm follow:#3146`.
 `tmux-status.ts` writes tmux, not the footer. `turn-clock.ts` prints its
-"done 3:30 p.m. · 13s" line in the chat, not the footer.
+"done 15:30 · 13s" line in the chat, not the footer.
 
 Run `pi/.pi/agent/setup-pi.sh` once after stowing on a fresh machine, and again
 whenever `settings.base.json` or a host fragment changes. Because the generated
