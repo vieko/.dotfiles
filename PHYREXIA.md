@@ -171,7 +171,9 @@ when the work demands it.
   with a verify gate is worker-tier work by definition. Observed 2026-08-30
   audit: ~11 of 14 script-summoned familiars over three weeks ran
   `-m fable` -- the escalation clause had inverted the default in practice;
-  that is the drift this wording exists to stop.
+  that is the drift this wording exists to stop. Familiars run with
+  `PI_COUNSEL=off`; summon with `-C` when the brief asks for a counsel
+  read.
 - **Golem** -- anvil `--model luna` (gpt-6-luna) by default: a
   cross-family golem under an Anthropic reviewer diversifies failure modes
   -- same-family worker+reviewer share blind spots, and the review gate
@@ -299,7 +301,13 @@ when the work demands it.
   break, and compact at 150K, not 300K.
 
 Cross-family consults (`gpt-6-astra`, `gpt-6-sol`) are conversations, not
-constructs -- a second read needs no binding.
+constructs -- a second read needs no binding. In a session, ask for one
+through counsel ("have counsel review with an OpenAI model"): the tool's
+`model` argument (pi-counsel#1) sends one consult to that model with the
+full transcript and the session budget, without changing `counsel.json`.
+The default counsel stays fable, same family as an opus Summoner;
+`/counsel status` says so. Do not hand-roll `pi -p` for it (observed
+2026-10-16, sigil: an anchoring brief, a shell, no budget).
 
 **CLI binding gotcha:** gateway model IDs contain a slash
 (`anthropic/claude-sonnet-5`), so `pi --model "anthropic/claude-sonnet-5"`
