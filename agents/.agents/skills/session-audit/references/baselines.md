@@ -150,3 +150,33 @@ old row so drift is visible.
   list 15 skills, gtm 57), dotfiles AGENTS.md 14.7K -> 4.2K chars, and an
   "Ask or proceed" rule in the global AGENTS.md. Next audit: `first`-miss
   avg ctx (expect ~23-25K) and the "proceed with (a)" share (was 16-20%).
+
+## Week 42 (2026-10-12 to 2026-10-16 10:00, Mon-Fri, partial), PHYREXIA
+
+- 46 sessions with turns, 3,598 assistant turns, 320 user turns, 3,318 tool
+  calls (142 errors). True $250 in 4.4 days ($57/day; week 41 $40/day),
+  $0.78/user turn (week 41 $0.64). 10-14 alone $115.
+- Split: cacheRead $91, cacheWrite $116, output $42 (cacheWrite > cacheRead:
+  misses are the story).
+- Models: opus-5.5 $180 (27 sessions), gpt-6.1-sol $36 (15), fable-5.1 $27
+  (1 session).
+- 1h TTL: premium $39 vs $78 avoided; net +$39.
+- Context: 21% of turns >= 200K carried 38% of spend; max ctx 438K (a sol
+  familiar). Top session $76 (GTMENG-3938 Summoner, 3 days, 69 user turns).
+- Misses: first 18 (dev-gtm 41-42K, dotfiles/worktrees 21K); idle 23 ($27,
+  avg 151K); unexplained 24 ($39, 17% clustered). 12 ($28) in the 3938
+  Summoner on 10-14 evening; opus outside it 4/~1,700 (~0.23%, baseline).
+  Causes: pi-redact re-minting random tags after `/reload` of the ~/dev
+  checkout (4 events, two full rewrites each, ~$19); AGENTS.md edits
+  mid-session (3, $6.50). 4 of 7 sol misses are 30-34 min OpenAI expiry.
+- Custom-triggered (pi-post) runs drop prose_contract/output_style/
+  mcp_servers sections; they return on the next user prompt (since
+  10-08/09). Mostly cache-neutral (2 breaks, ~$5.4); behaviour gap.
+- Edit health: 0/189 malformed. Hard stops: 4 (1 x 503, 3 aborts).
+- Counsel: 15 consults, $15.72 (6.3%), 8 revise / 1 stop / 5 proceed.
+- Nudges: renew 9 shown, 4 left, 5 kept going (avg 23 more prompts).
+  Second window where ignored dominates.
+- Constructs: 16 golem runs, 14 passed attempt 1, 2 void (gate inconclusive;
+  scope), 1 stale; $45.87, fable 3 runs = $44.84 (two of them repair specs,
+  the sol pilot still has no data). 14 sol familiars.
+- Recurring messages: ~60 of 320 user turns are one-token decisions (19%).
