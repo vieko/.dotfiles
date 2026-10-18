@@ -1,0 +1,6 @@
+[Unit]
+Description=Telegram alert when chaos-backup.service fails
+
+[Service]
+Type=oneshot
+ExecStart=/usr/local/bin/chaos-backup-failed

@@ -1,0 +1,12 @@
+#!/bin/bash
+# OnFailure= hook for chaos-backup.service: Telegram the last log lines.
+# Uses the same bot/chat as the app-cacahuate guards (from vieko's ~/.secrets).
+set -uo pipefail
+eval "$(grep -E '^export TELEGRAM_(BOT_TOKEN|CHAT_ID)=' /home/vieko/.secrets)"  # not source: with set -u the file aborts under systemd (no $HOME in the unit env)
+: "${TELEGRAM_BOT_TOKEN:?}" "${TELEGRAM_CHAT_ID:?}"
+TAIL=$(journalctl -u chaos-backup.service -n 40 --no-pager -o cat 2>/dev/null \
+       | grep -iE "fatal|error|rc=|abort" | tail -4)
+curl -s --max-time 20 "https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage" \
+  -d "chat_id=${TELEGRAM_CHAT_ID}" \
+  --data-urlencode "text=🔴 chaos-backup FAILED on $(hostname) ($(date '+%F %H:%M')). restic nightly did not complete.
+${TAIL}" >/dev/null

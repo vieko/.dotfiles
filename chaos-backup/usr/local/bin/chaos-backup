@@ -1,0 +1,51 @@
+#!/bin/bash
+# chaos-backup — nightly restic backup of the irreplaceable set on chaos.
+# Run as root via chaos-backup.service/.timer. Repo is local on /mnt/backup.
+# Passphrase: /root/.restic-pass (chmod 600, you supply it).
+set -uo pipefail
+
+export RESTIC_REPOSITORY="/mnt/backup/restic"
+export RESTIC_PASSWORD_FILE="/root/.restic-pass"
+export RESTIC_CACHE_DIR="/var/cache/restic"   # unit runs without $HOME; restic aborts if it cannot find a cache dir
+EXCLUDE="/etc/restic/excludes.txt"
+LOG="/var/log/chaos-backup.log"
+
+log() { echo "[$(date '+%F %T')] $*" | tee -a "$LOG"; }
+
+# Backup disk must be mounted (nofail means it might not be after a boot).
+if ! mountpoint -q /mnt/backup; then
+  log "ABORT: /mnt/backup not mounted"; exit 1
+fi
+
+# Always-available core set.
+# NOTE: ~/.ssh, ~/.gnupg, ~/.aws are intentionally NOT here — secrets stay out of this
+# single-passphrase repo. Regenerate keys/creds if the drive dies, or stash in charon.
+SRC=( /home/vieko/dev /home/vieko/.dotfiles /home/vieko/Documents /home/vieko/backups
+      /home/vieko/Pictures )
+
+# NOTE: ~/Downloads is intentionally NOT backed up — it's a transient drawer; the
+# irreplaceable assets that lived there were moved into ~/Documents and ~/Pictures.
+
+# NOTE: charon (the KeePass vault) is deliberately NOT backed up here — neither decrypted
+# nor encrypted. Decrypted would expose all passwords if the restic passphrase ever leaked.
+# The vault is protected instead by: Syncthing replicas (phyrexia/havoc/scourge) for
+# device-loss, and a separate restic of the ENCRYPTED ~/charon container to the offsite USB
+# (and later cloud), where the VeraCrypt password stays a second wall.
+
+log "backup START — sources: ${SRC[*]}"
+restic backup --verbose --exclude-file="$EXCLUDE" --exclude-caches \
+  --tag nightly "${SRC[@]}" 2>&1 | tee -a "$LOG"
+RC=${PIPESTATUS[0]}
+log "backup finished rc=$RC"
+
+if [ "$RC" -eq 0 ]; then
+  log "forget/prune"
+  restic forget --prune \
+    --keep-daily 7 --keep-weekly 4 --keep-monthly 6 \
+    --tag nightly 2>&1 | tee -a "$LOG"
+fi
+
+# Light integrity check (subset) — full check is heavy; do a quick metadata check.
+restic check --read-data-subset=2% 2>&1 | tee -a "$LOG" || log "WARN: restic check reported issues"
+log "DONE rc=$RC"
+exit "$RC"

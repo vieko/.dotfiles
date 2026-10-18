@@ -35,3 +35,10 @@ Repos + packages: `sudo bash scripts/.scripts/fedora-fresh-install.sh`.**
   Take a named baseline after install: `sudo snapper -c root create -d "clean baseline"`.
 - Hyprland: COPR `lionheartp/Hyprland`. ghostty: COPR `scottames/ghostty`. Node: `n`, not nvm.
 - Long dnf commands: run from a script file — terminal paste-wrap splits them into garbage.
+
+## Backups
+- Nightly restic of the irreplaceable set to `/mnt/backup`: `sudo chaos-backup/install.sh`,
+  then write `/root/.restic-pass` from the vault. The installer refuses to look healthy if the
+  file is missing or still the `PASSPHRASE` placeholder (that exact gap cost 104 silent nights,
+  2026-07 → 2026-10). Failures Telegram via `chaos-backup-failed.service`. Details: `chaos-backup/README.md`.
+- Root from an agent session: `SUDO_ASKPASS=~/.scripts/zenity-askpass sudo -A <cmd>`.

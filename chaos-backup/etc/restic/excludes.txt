@@ -1,0 +1,21 @@
+# restic excludes — caches & reproducible artifacts (keep source + .git history).
+node_modules
+.next
+.nuxt
+.turbo
+dist
+build
+target
+.venv
+venv
+__pycache__
+*.pyc
+.cache
+.pytest_cache
+.gradle
+.mypy_cache
+.parcel-cache
+.DS_Store
+Thumbs.db
+# incomplete downloads (not part of the irreplaceable set)
+/home/vieko/Downloads/incomplete

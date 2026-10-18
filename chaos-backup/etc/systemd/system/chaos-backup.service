@@ -1,0 +1,11 @@
+[Unit]
+Description=Nightly restic backup of the irreplaceable set to /mnt/backup
+Requires=mnt-backup.mount
+After=mnt-backup.mount network-online.target
+ConditionPathIsMountPoint=/mnt/backup
+
+[Service]
+Type=oneshot
+Nice=10
+IOSchedulingClass=idle
+ExecStart=/usr/local/bin/chaos-backup
