@@ -120,6 +120,15 @@ real artifact (a script in dotfiles, a skill, a Bonfire entry, a repo doc, a
 Linear comment). If it's not worth promoting, it's not worth keeping. Agents
 may write freely here but must never treat stale scratch as authoritative.
 
+## Reminders
+
+When a check must happen later, schedule it; do not ask the user to come
+back and tell you. In Pi, use the `remind` tool. Elsewhere, run
+`~/.scripts/remind-at.sh --to <pi session> --title ... --ask ... <slug>
+"YYYY-MM-DD HH:MM" -` (macOS, targets pi sessions only). It survives
+reboots and resumes the session. To wait for a condition (PR checks, a
+deploy), use the repo's `*-wait.sh --detach --notify` instead.
+
 ## Commit message style
 
 Lowercase imperative with conventional-commits scope:

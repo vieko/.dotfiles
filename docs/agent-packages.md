@@ -91,7 +91,7 @@ is one token with no spaces inside:
 | `bonfire:` | bonfire | breadcrumb age; `init!`, `fences!`, `7d!` stale in-flight, `compact?` nudge, `+IS`/`+F` writes |
 | `styles:` | pi-prose | active output style |
 | `redact:` | pi-redact | distinct values kept out of the transcript |
-| `remind:` | `extensions/reminders.ts` | pending reminders; `N!` when one fired and is open |
+| `remind:` | `extensions/reminders.ts` (also the agent's `remind` tool) | pending reminders; `N!` when one fired and is open |
 | `canvas:` | sigil map observer | map name; `!` when a run failed |
 | `follow:` | `extensions/waits.ts` | detached gtm `pr-wait`/`deploy-wait --notify` runs (`#N`, `deploy#N`, `deploy@main`, or a count); `!` when one exited without a delivered message (`/waits` shows its log) |
 

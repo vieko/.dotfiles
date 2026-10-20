@@ -12,13 +12,19 @@
  * session start, after each run (the agent schedules reminders through
  * bash), after each command, and every minute (a pending reminder turns
  * open when it fires). macOS only, like the script.
+ *
+ * The `remind` tool lets the agent schedule one. Without it, sessions did
+ * not know the script existed: in the 72h to 2026-10-20 agents told the
+ * user to "tell me check in an hour", hand-rolled a nohup loop, or proposed
+ * a Linear issue, and used the script only once the user named it.
  */
 
-import { execFile } from "node:child_process";
+import { execFile, spawn } from "node:child_process";
 import { readFileSync } from "node:fs";
 import { homedir } from "node:os";
 import { join } from "node:path";
 import type { ExtensionAPI, ExtensionContext } from "@earendil-works/pi-coding-agent";
+import { Type } from "typebox";
 
 const SCRIPT = join(homedir(), ".scripts", "remind-at.sh");
 const STATE_DIR = join(homedir(), ".local", "state", "reminders");
@@ -42,6 +48,34 @@ function run(args: string[]): Promise<{ ok: boolean; out: string }> {
 			resolve({ ok: !err, out: `${stdout}${stderr}`.trim() });
 		});
 	});
+}
+
+// Schedules through the script with the brief on stdin. PI_SESSION_ID lets
+// the script's `pi-post whoami` default target this session.
+function schedule(args: string[], brief: string, sessionId: string): Promise<{ ok: boolean; out: string }> {
+	return new Promise((resolve) => {
+		const child = spawn(SCRIPT, args, { env: { ...process.env, PI_SESSION_ID: sessionId } });
+		let out = "";
+		child.stdout.on("data", (d) => (out += d));
+		child.stderr.on("data", (d) => (out += d));
+		const timer = setTimeout(() => child.kill(), 30_000);
+		child.on("error", (err) => resolve({ ok: false, out: String(err) }));
+		child.on("close", (code) => {
+			clearTimeout(timer);
+			resolve({ ok: code === 0, out: out.trim() });
+		});
+		child.stdin.end(brief);
+	});
+}
+
+// "+90m", "+2h", "+3d" become a local "YYYY-MM-DD HH:MM"; anything else passes through.
+function resolveAt(at: string): string {
+	const m = /^\+(\d+)\s*([mhd])$/.exec(at.trim());
+	if (!m) return at.trim();
+	const unit = { m: 60_000, h: 3_600_000, d: 86_400_000 }[m[2] as "m" | "h" | "d"];
+	const d = new Date(Date.now() + Number(m[1]) * unit);
+	const p = (n: number) => String(n).padStart(2, "0");
+	return `${d.getFullYear()}-${p(d.getMonth() + 1)}-${p(d.getDate())} ${p(d.getHours())}:${p(d.getMinutes())}`;
 }
 
 async function listReminders(): Promise<Reminder[] | undefined> {
@@ -162,6 +196,53 @@ export default function (pi: ExtensionAPI) {
 		};
 		if (action) await act(map[action], r.slug, ctx);
 	}
+
+	pi.registerTool({
+		name: "remind",
+		label: "Remind",
+		description:
+			"Schedule a one-shot reminder (macOS launchd via ~/.scripts/remind-at.sh). At the given local time it " +
+			"sends the brief to this pi session over pi-post and shows the user an alert whose Resume button " +
+			"focuses this session, or resumes it in a new tmux window when it is offline. It survives reboots: " +
+			"a reminder missed while the Mac was off fires at next login. Reusing a slug reschedules it. " +
+			"List or cancel with `remind-at.sh --list` / `--cancel <slug>` (the user has /reminders).",
+		promptSnippet: "Schedule a reminder that messages this session at a local time and lets the user resume it",
+		promptGuidelines: [
+			"When a check or follow-up must happen later (a deploy to land, a crawl to run, a review in a week), schedule it with remind instead of asking the user to come back and tell you, and instead of a hand-rolled sleep loop or a Linear issue used as a timer.",
+			"remind fires at a clock time. To wait for a condition (PR checks, a deploy), prefer the repo's *-wait.sh --detach --notify scripts; use remind when no waiter covers the condition or the wait spans days.",
+		],
+		parameters: Type.Object({
+			slug: Type.String({
+				description: "Lowercase id [a-z0-9-], issue first, e.g. gtmeng-3924-flip or inc-8334-noindex-check",
+			}),
+			at: Type.String({
+				description: 'Local time "YYYY-MM-DD HH:MM" (America/Edmonton), or relative "+90m", "+2h", "+3d"',
+			}),
+			title: Type.String({ description: "Alert title, max 60 chars, one line: what this is about" }),
+			ask: Type.String({ description: "Alert text, max 140 chars, one line: the one thing to do now" }),
+			brief: Type.String({
+				description:
+					"Full context for the session that receives it: what to check, exact commands, what a good and a bad " +
+					"result look like, what to do next. Sent over pi-post only, never shown in the alert.",
+			}),
+			to: Type.Optional(
+				Type.String({ description: "pi-post target (name, s-address, session id). Default: this session" }),
+			),
+		}),
+		async execute(_toolCallId, params, _signal, _onUpdate, ctx) {
+			const when = resolveAt(params.at);
+			const args = ["--title", params.title, "--ask", params.ask];
+			if (params.to) args.unshift("--to", params.to);
+			args.push(params.slug, when, "-");
+			const { ok, out } = await schedule(args, params.brief, ctx.sessionManager.getSessionId());
+			if (!ok) throw new Error(out || `remind-at.sh failed for ${params.slug}`);
+			void refresh(ctx);
+			return {
+				content: [{ type: "text", text: out }],
+				details: { slug: params.slug, at: when },
+			};
+		},
+	});
 
 	pi.registerCommand("reminders", {
 		description: "List remind-at.sh reminders; show, resume, close, or cancel one",
