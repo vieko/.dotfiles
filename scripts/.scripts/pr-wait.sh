@@ -20,6 +20,9 @@
 # --notify chooses CLAUDE_CODE_MESSAGING_SOCKET, then PI_SESSION_ADDRESS or
 # PI_POST_REPLY_TO. Explicit targets accept pi-post addresses/names/paths or
 # uds:/socket. A failed delivery leaves the wait record for /waits to show.
+# New base commits that touch PR files produce a log event and appear in the
+# final status, notification, and PR_JSON.baseOverlapEvents. No extra messages
+# are sent. API errors retry on later polls; no state persists across restarts.
 # --then receives PR, PR_URL, PR_TITLE, PR_STATE, PR_MERGE_STATE, PR_CHECKS,
 # PR_REVIEW_DECISION, PR_THREADS, PR_WAIT_RESULT, PR_STATUS, and PR_JSON.
 # Exit: 0 ok; 1 failed; 2 timeout; 3 usage/dependency; 4 duplicate waiter.
@@ -37,6 +40,8 @@ here="$(cd "$(dirname "$scriptPath")" && pwd)"
 statusSh="$here/lib/pr-wait/pr-status.sh"
 # shellcheck source=scripts/.scripts/lib/pr-wait/agent-notify.sh
 . "$here/lib/pr-wait/agent-notify.sh"
+# shellcheck source=scripts/.scripts/lib/pr-wait/base-overlap.sh
+. "$here/lib/pr-wait/base-overlap.sh"
 usage() {
   awk 'NR > 1 && !/^#/ { exit } NR > 1 { sub(/^# ?/, ""); print }' "$scriptPath" >&2
   exit "${1:-3}"
@@ -88,6 +93,7 @@ if (( detach )); then
 fi
 repoFlag=(); [[ -z "$repo" ]] || repoFlag=(--repo "$repo")
 start=$(date +%s); headAt=$start; headSeen=""; lastSignature=""; result=""; json=""; optionalFail=0
+baseSeen=""; baseRefSeen=""; overlapEvents='[]'
 errFile=$(mktemp "${TMPDIR:-/tmp}/pr-wait-err.XXXXXX")
 trap 'rm -f "$errFile"' EXIT
 while :; do
@@ -113,6 +119,26 @@ while :; do
     headSeen="$head"; headAt=$now
   fi
   sinceHead=$(( now - headAt ))
+  base=$(jq -r '.base // empty' <<<"$json")
+  baseRef=$(jq -r '.baseRef // empty' <<<"$json")
+  if [[ "$baseRef" != "$baseRefSeen" ]]; then
+    baseSeen="$base"; baseRefSeen="$baseRef"
+  elif [[ -n "$base" && -n "$baseSeen" && "$base" != "$baseSeen" ]]; then
+    host=$(jq -r .host <<<"$json"); fullRepo=$(jq -r .repo <<<"$json"); prNumber=$(jq -r .number <<<"$json")
+    if touched=$(base_overlap "$host" "$fullRepo" "$prNumber" "$baseSeen" "$base"); then
+      if [[ "$touched" != '[]' ]]; then
+        event=$(jq -cn --arg ref "$baseRef" --arg old "$baseSeen" --arg new "$base" --argjson paths "$touched" \
+          '{baseRef:$ref, oldBase:$old, newBase:$new, paths:$paths}')
+        overlapEvents=$(jq -cn --argjson events "$overlapEvents" --argjson event "$event" '$events + [$event]')
+        echo "[pr-wait] $(jq -r '"\(.baseRef) moved to \(.newBase[0:9]) and touches files in this PR: \(.paths | join(", "))"' <<<"$event")" >&2
+      fi
+      baseSeen="$base"
+    else
+      echo '[pr-wait] base comparison failed; will retry without advancing the baseline' >&2
+    fi
+  elif [[ -n "$base" && -z "$baseSeen" ]]; then
+    baseSeen="$base"
+  fi
   if (( checksRequired == 0 )); then hardFail=$(( requiredFail + optionalFail )); optionalFail=0
   else hardFail=$requiredFail; fi
   if [[ "$state" == MERGED || "$state" == CLOSED ]]; then
@@ -148,6 +174,7 @@ while :; do
   sleep "$interval"
 done
 if [[ -n "$json" ]]; then
+  json=$(jq --argjson events "$overlapEvents" '. + {baseOverlapEvents:$events}' <<<"$json")
   statusText=$(printf '%s' "$json" | "$statusSh" --from-json)
 else
   json='{}'; statusText='No PR snapshot available; see status-fetch errors in the log.'

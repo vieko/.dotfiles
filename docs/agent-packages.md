@@ -116,6 +116,9 @@ GitHub checkout, or with a PR URL or `--repo owner/name` from another directory:
 
 The default waits for checks only. `review` uses GitHub's review decision,
 not gtm's review-bot pool. Without required checks, every failing check gates.
+Base changes that touch PR files appear in the log and final notification.
+The waiter compares both names of renamed files and retries failed base reads.
+It sends no extra notification for an overlap event and saves no restart state.
 The copied library keeps the existing wait-record contract, so `follow:` and
 `/waits` show detached notifications without an extension change. Gtm keeps
 its own scripts and policy; neither checkout depends on the other.

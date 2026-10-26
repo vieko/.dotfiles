@@ -34,6 +34,7 @@ query($owner:String!,$name:String!,$number:Int!){
   repository(owner:$owner,name:$name){ pullRequest(number:$number){
     number title url state isDraft mergedAt additions deletions
     mergeStateStatus reviewDecision headRefOid headRefName baseRefName
+    baseRef { target { oid } }
     mergeCommit { oid }
     autoMergeRequest { enabledAt }
     commits(last:1){ nodes { commit { statusCheckRollup { contexts(first:100){ nodes {
@@ -76,6 +77,7 @@ query($owner:String!,$name:String!,$number:Int!){
        mergeCommit: $pr.mergeCommit.oid, autoMerge: ($pr.autoMergeRequest != null),
        additions: $pr.additions, deletions: $pr.deletions,
        head: $pr.headRefOid, headRef: $pr.headRefName, baseRef: $pr.baseRefName,
+       base: $pr.baseRef.target.oid,
        mergeStateStatus: $pr.mergeStateStatus, reviewDecision: $pr.reviewDecision,
        checks: {
          total: ($checks | length),
@@ -100,6 +102,7 @@ jq -r --argjson threads "$showThreads" '
   "checks: \(.checks.summary) (\(.checks.pass) pass, \(.checks.fail) fail, \(.checks.pending) pending, \(.checks.skip) skip)",
   (.checks.failing[] | "  fail: \(.name)\(if .required then " [required]" else "" end)  \(.url // "")"),
   (if (.checks.pendingNames | length) > 0 then "  pending: \(.checks.pendingNames | join(", "))" else empty end),
+  (.baseOverlapEvents[]? | "base overlap: \(.baseRef) moved to \(.newBase[0:9]) and touches files in this PR: \(.paths | join(", "))"),
   "threads: \(.threads.unresolved) unresolved",
   (if $threads == 1 or .threads.unresolved <= 5 then
     (.threads.items[] | "  \(.path):\(.line // "?") [\(.author)] comment-id \(.id)\n    \(.body)")

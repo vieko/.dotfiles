@@ -35,6 +35,17 @@ elif args[:2] == ['api', 'graphql']:
         commits={'nodes':[{'commit':{'statusCheckRollup':{'contexts':{'nodes':checks}}}}]},
         reviews={'nodes':[]},reviewThreads={'nodes':[]})
     print(json.dumps({'data':{'repository':{'pullRequest':pr}}}))
+elif args[0] == 'api' and any('/pulls/42/files' in a for a in args):
+    print(json.dumps(scenario.get('prPages', [[{'filename':'shared.py'}]])))
+elif args[0] == 'api' and any('/compare/' in a for a in args):
+    failures = root / 'compare_failures'
+    n = int(failures.read_text()) if failures.exists() else 0
+    if n < scenario.get('compareErrors', 0):
+        failures.write_text(str(n + 1))
+        print('compare API unavailable', file=sys.stderr); sys.exit(1)
+    print(json.dumps(scenario.get('comparePages', [{'files':[{'filename':'shared.py'}]}])))
+elif args[0] == 'api' and any('/commits/' in a for a in args):
+    print(json.dumps(scenario.get('commitPages', [{'files':[{'filename':'shared.py'}]}])))
 else:
     print('unexpected gh invocation: ' + repr(args), file=sys.stderr); sys.exit(9)
 '''
@@ -130,6 +141,66 @@ class WaiterTests(unittest.TestCase):
         data = json.loads((self.root / "export.json").read_text())
         self.assertEqual(data["number"], 42)
         self.assertEqual(data["host"], "github.com")
+
+    def overlap_run(self, **extra):
+        self.scenario([{'base':'old'}, {'base':'new','state':'MERGED'}], **extra)
+        return self.run_wait('--for', 'merged', '--timeout', '10', '--notify', '--then',
+                             'printf "%s" "$PR_JSON" > "$FAKE_ROOT/export.json"')
+
+    def overlap_events(self):
+        return json.loads((self.root / 'export.json').read_text())['baseOverlapEvents']
+
+    def test_base_overlap_in_final_message(self):
+        proc = self.overlap_run()
+        self.assertEqual(self.overlap_events()[0]['paths'], ['shared.py'])
+        message = (self.root / 'messages').read_text()
+        self.assertIn('base overlap: main moved to new', message)
+        self.assertEqual(message.count('pr-wait #42:'), 1)
+        self.assertIn('[pr-wait] main moved to new', proc.stderr)
+
+    def test_non_overlap_sends_no_event(self):
+        self.overlap_run(comparePages=[{'files':[{'filename':'unrelated.py'}]}])
+        self.assertEqual(self.overlap_events(), [])
+
+    def test_renames_match_both_names(self):
+        self.overlap_run(prPages=[[{'filename':'new.py','previous_filename':'old.py'}]],
+                         comparePages=[{'files':[{'filename':'renamed.py','previous_filename':'old.py'}]}])
+        self.assertEqual(self.overlap_events()[0]['paths'], ['old.py'])
+
+    def test_paginated_files(self):
+        self.overlap_run(prPages=[[{'filename':'unrelated.py'}], [{'filename':'last.py'}]],
+                         comparePages=[{'files':[{'filename':'last.py'}]}, {'files':[]}])
+        self.assertEqual(self.overlap_events()[0]['paths'], ['last.py'])
+        calls = [json.loads(line) for line in (self.root / 'calls').read_text().splitlines()]
+        self.assertTrue(all('--paginate' in call and '--slurp' in call
+                            for call in calls if any('/files?' in arg or '/compare/' in arg for arg in call)))
+
+    def test_large_base_compare_reads_commit_files(self):
+        self.overlap_run(comparePages=[{'files':[{'filename':f'other-{n}'} for n in range(300)],
+                                       'commits':[{'sha':'commit1'}]}])
+        self.assertEqual(self.overlap_events()[0]['paths'], ['shared.py'])
+
+    def test_base_api_error_retries_old_baseline(self):
+        self.scenario([{'base':'old'}, {'base':'new'}, {'base':'new','state':'MERGED'}], compareErrors=1)
+        proc = self.run_wait('--for', 'merged', '--timeout', '10', '--then',
+                             'printf "%s" "$PR_JSON" > "$FAKE_ROOT/export.json"')
+        self.assertIn('will retry without advancing', proc.stderr)
+        self.assertEqual(self.overlap_events()[0]['oldBase'], 'old')
+        calls = [json.loads(line) for line in (self.root / 'calls').read_text().splitlines()]
+        compares = [call for call in calls if any('/compare/old...new' in arg for arg in call)]
+        self.assertEqual(len(compares), 2)
+
+    def test_base_ref_change_resets_baseline(self):
+        self.scenario([{'base':'old'}, {'base':'new','baseRef':'release','state':'MERGED'}])
+        self.run_wait('--for', 'merged', '--timeout', '10', '--then',
+                      'printf "%s" "$PR_JSON" > "$FAKE_ROOT/export.json"')
+        self.assertEqual(self.overlap_events(), [])
+
+    def test_same_base_is_compared_once(self):
+        self.scenario([{'base':'old'}, {'base':'new'}, {'base':'new','state':'MERGED'}])
+        self.run_wait('--for', 'merged', '--timeout', '10', '--then',
+                      'printf "%s" "$PR_JSON" > "$FAKE_ROOT/export.json"')
+        self.assertEqual(len(self.overlap_events()), 1)
 
     def test_notify_delivers_final_status(self):
         self.scenario([{}])
