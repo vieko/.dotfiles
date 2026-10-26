@@ -115,7 +115,8 @@ GitHub checkout, or with a PR URL or `--repo owner/name` from another directory:
 ```
 
 The default waits for checks only. `review` uses GitHub's review decision,
-not gtm's review-bot pool. Without required checks, every failing check gates.
+not gtm's review-bot pool. In a repo with no required reviews the decision
+stays empty, so `--for review` times out there; use the default `checks`. Without required checks, every failing check gates.
 Base changes that touch PR files appear in the log and final notification.
 The waiter compares both names of renamed files and retries failed base reads.
 It sends no extra notification for an overlap event and saves no restart state.
@@ -124,7 +125,10 @@ The second command exits 4 and prints the existing waiter's PID. Different
 targets wait independently. Conditions do not change the lock key. Pi target
 names resolve to addresses before locking. Without notifications, duplicate
 commands share one target. A Python supervisor holds the lock while the shell
-waiter runs; hooks do not inherit its lock descriptor.
+waiter runs; hooks do not inherit its lock descriptor. Lock files stay in
+`~/.local/state/pr-wait/locks/` (one empty file per PR and target, never
+unlinked while a waiter may hold it); deleting the directory when no waiter
+runs is safe.
 The copied library keeps the existing wait-record contract, so `follow:` and
 `/waits` show detached notifications without an extension change. Gtm keeps
 its own scripts and policy; neither checkout depends on the other.
