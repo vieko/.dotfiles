@@ -1,11 +1,11 @@
 ---
-name: modernize
-description: Bring an old or stale pull request up to date and decide whether it should still exist. Use when the user asks to rebase, refresh, revive, or "modernize" a PR or branch that has fallen behind its base.
+name: revisit-pr
+description: Bring a stale pull request up to date and decide whether it should still exist. Use when the user asks to freshen up, bring up to speed, catch up, or rebase a PR or branch that has fallen behind its base.
 ---
 
-# Modernize
+# Revisit PR
 
-Modernize the idea, not only the branch. A clean rebase does not prove the PR
+Revisit the idea, not only the branch. A clean rebase does not prove the PR
 still belongs in the product.
 
 Adapted from [t3dotgg/tstack](https://github.com/t3dotgg/tstack) (MIT), with
@@ -16,7 +16,7 @@ this machine's push and merge rules.
 - Fetch first: the PR head, its base, and any related branch.
 - Treat uncommitted work in the current worktree as the user's. If the
   worktree is dirty or busy, work in a disposable worktree.
-- Modernizing authorizes a local rebase. It does not authorize merging,
+- A revisit authorizes a local rebase. It does not authorize merging,
   closing the PR, changing its base, or growing its scope.
 - A rebased branch needs a force push, and the destructive command guard
   applies: ask before pushing unless the user asked to push in this turn.
@@ -48,7 +48,7 @@ No Git conflicts does not mean the PR is current.
 
 ## 3. Choose a disposition before touching the branch
 
-- **MODERNIZE** — the goal is still useful and the shape is still right.
+- **REFRESH** — the goal is still useful and the shape is still right.
   Rebase, resolve, check, and (with permission) push.
 - **REWORK** — the goal is still useful, but a mechanical rebase keeps the
   wrong implementation. Describe the smallest credible rewrite and stop,
@@ -58,7 +58,7 @@ No Git conflicts does not mean the PR is current.
 
 Age alone is not evidence. Sunk effort is not a reason to keep a PR alive.
 
-## 4. Rebase without losing intent (MODERNIZE only)
+## 4. Rebase without losing intent (REFRESH only)
 
 1. Create a local branch or disposable worktree at the recorded head SHA.
 2. Rebase onto the freshly fetched base.
@@ -75,7 +75,7 @@ Age alone is not evidence. Sunk effort is not a reason to keep a PR alive.
 
 ## Report
 
-Lead with `MODERNIZE`, `REWORK`, or `CLOSE` and the reason. Then give the
+Lead with `REFRESH`, `REWORK`, or `CLOSE` and the reason. Then give the
 meaningful base changes, conceptual conflicts (or "none found"), the rebase
 and push result, checks run with results, and the remaining decision with the
 PR link. Separate observed facts from judgment, and say what you could not
