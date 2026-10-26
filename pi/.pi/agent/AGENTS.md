@@ -127,7 +127,8 @@ back and tell you. In Pi, use the `remind` tool. Elsewhere, run
 `~/.scripts/remind-at.sh --to <pi session> --title ... --ask ... <slug>
 "YYYY-MM-DD HH:MM" -` (macOS, targets pi sessions only). It survives
 reboots and resumes the session. To wait for a condition (PR checks, a
-deploy), use the repo's `*-wait.sh --detach --notify` instead.
+deploy), use the repo's `*-wait.sh --detach --notify` instead; for a PR in
+a repo without one, use `~/.scripts/pr-wait.sh <pr> --detach --notify`.
 
 ## Commit message style
 
@@ -165,7 +166,9 @@ whose `AGENTS.md` requires a Slack post before merge (`~/dev/gtm`), the
 reply is `posted` (often `posted, merge it`) and means the same. Sequence:
 
 1. Wait for required checks green and review approval (use the repo's
-   PR-wait mechanism if it has one; otherwise poll `gh pr checks`).
+   PR-wait mechanism if it has one; otherwise
+   `~/.scripts/pr-wait.sh <n> --detach --notify`, which waits for checks.
+   Add `--for checks,review` only where a review is required).
 2. `gh pr merge <n> --squash` (no `--delete-branch`), then confirm
    `MERGED`. gh 2.99+ `--delete-branch` also removes the head branch's
    worktree, even when a job is running from it.
