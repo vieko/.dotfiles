@@ -2,6 +2,8 @@
 """Hermetic host-waiter contracts. Run: python3 scripts/.scripts/lib/pr-wait/pr-wait.test.py"""
 import json
 import os
+import signal
+import time
 from pathlib import Path
 import subprocess
 import tempfile
@@ -53,6 +55,9 @@ FAKE_POST = '''#!/usr/bin/env python3
 import os, sys
 from pathlib import Path
 root = Path(os.environ['FAKE_ROOT'])
+if sys.argv[1:2] == ['resolve']:
+    print('address:  s-test')
+    sys.exit(0)
 with (root / 'messages').open('a') as f: f.write(sys.stdin.read())
 sys.exit(int(os.environ.get('FAKE_POST_RC', '0')))
 '''
@@ -76,6 +81,7 @@ class WaiterTests(unittest.TestCase):
         self.env.pop("AGENT_WAIT_KIND", None)
         self.env.pop("AGENT_WAIT_TARGET", None)
         self.env.pop("AGENT_WAIT_LOG", None)
+        self.env.pop("PR_WAIT_LOCKED", None)
 
     def scenario(self, polls, **extra):
         (self.root / "scenario.json").write_text(json.dumps(dict(polls=polls, **extra)))
@@ -91,6 +97,13 @@ class WaiterTests(unittest.TestCase):
         proc = self.run_wait()
         self.assertIn("#42: ok", proc.stdout)
         self.assertNotIn("bot", proc.stdout)
+
+    def test_relative_entrypoint_ignores_cdpath(self):
+        self.scenario([{}])
+        env = dict(self.env, CDPATH='/tmp:.')
+        proc = subprocess.run(['scripts/.scripts/pr-wait.sh', '42', '--timeout', '0'],
+                              cwd=SCRIPT.parents[2], env=env, text=True, capture_output=True, timeout=15)
+        self.assertEqual(proc.returncode, 0, proc.stdout + proc.stderr)
 
     def test_all_failures_gate_without_required_checks(self):
         self.scenario([{"checks":[dict(name="test", status="COMPLETED", conclusion="FAILURE", isRequired=False)]}])
@@ -201,6 +214,85 @@ class WaiterTests(unittest.TestCase):
         self.run_wait('--for', 'merged', '--timeout', '10', '--then',
                       'printf "%s" "$PR_JSON" > "$FAKE_ROOT/export.json"')
         self.assertEqual(len(self.overlap_events()), 1)
+
+    def until(self, check, message):
+        deadline = time.monotonic() + 8
+        while time.monotonic() < deadline:
+            if check():
+                return
+            time.sleep(0.05)
+        self.fail(message)
+
+    def start_wait(self, *args):
+        process = subprocess.Popen([str(SCRIPT), '42', '--interval', '1', '--timeout', '30',
+                                    '--for', 'merged', *args], env=self.env, cwd=self.root,
+                                   text=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+        def stop():
+            if process.poll() is None:
+                process.terminate()
+            process.communicate(timeout=8)
+        self.addCleanup(stop)
+        return process
+
+    def active_lock_files(self):
+        return list((self.root / 'state/pr-wait/locks').glob('*.lock'))
+
+    def test_same_target_duplicate_exits_four_before_detach(self):
+        self.scenario([{}])
+        first = self.start_wait('--notify')
+        self.until(lambda: (self.root / 'count').exists(), 'first waiter did not poll')
+        duplicate = self.run_wait('--detach', '--notify-to', 's-test', expected=4)
+        self.assertIn('already has waiter pid ', duplicate.stderr)
+        self.assertNotIn('detached:', duplicate.stdout)
+        self.assertIsNone(first.poll())
+        self.assertEqual(list((self.root / 'tmp').rglob('*.json')), [])
+        self.assertFalse((self.root / 'messages').exists())
+
+    def test_alias_and_address_share_lock(self):
+        self.scenario([{}])
+        self.start_wait('--notify-to', 'friendly-name')
+        self.until(lambda: (self.root / 'count').exists(), 'aliased waiter did not poll')
+        self.run_wait('--notify-to', 's-test', expected=4)
+        self.assertEqual(len(self.active_lock_files()), 1)
+
+    def test_different_target_runs_independently(self):
+        self.scenario([{}])
+        first = self.start_wait('--notify-to', 's-one')
+        self.until(lambda: len(self.active_lock_files()) == 1, 'first lock missing')
+        second = self.start_wait('--notify-to', 's-two')
+        self.until(lambda: len(self.active_lock_files()) == 2, 'second target did not get a separate lock')
+        self.assertIsNone(first.poll())
+        self.assertIsNone(second.poll())
+
+    def test_abnormal_shell_exit_releases_lock(self):
+        self.scenario([{}])
+        first = self.start_wait('--notify')
+        self.until(lambda: (self.root / 'count').exists(), 'first waiter did not poll')
+        pid = int(self.active_lock_files()[0].read_text().split()[1])
+        os.kill(pid, signal.SIGKILL)
+        self.assertEqual(first.wait(timeout=8), 137)
+        self.run_wait('--notify')
+
+    def test_background_hook_does_not_keep_lock(self):
+        self.scenario([{}])
+        self.run_wait('--then', 'sleep 2 >/dev/null 2>&1 &')
+        self.run_wait()
+
+    def test_detached_record_and_delivery(self):
+        self.scenario([{}])
+        proc = self.run_wait('--for', 'merged', '--timeout', '10', '--detach', '--notify')
+        self.assertIn('pr-wait detached: pid ', proc.stdout)
+        records = lambda: list((self.root / 'tmp/agent-waits/s-test').glob('*.json'))
+        self.until(lambda: len(records()) == 1, 'detached waiter did not write its record')
+        data = json.loads(records()[0].read_text())
+        self.assertEqual(set(data), {'kind','target','pid','log','started'})
+        self.assertEqual(data['kind'], 'pr-wait')
+        self.assertEqual(data['target'], '42')
+        self.assertEqual(data['pid'], int(proc.stdout.split('pid ')[1].split(',')[0]))
+        os.kill(data['pid'], 0)
+        self.scenario([{'state':'MERGED'}])
+        self.until(lambda: (self.root / 'messages').exists(), 'detached waiter did not notify')
+        self.until(lambda: not records(), 'delivered notification did not remove its record')
 
     def test_notify_delivers_final_status(self):
         self.scenario([{}])

@@ -25,9 +25,14 @@
 # are sent. API errors retry on later polls; no state persists across restarts.
 # --then receives PR, PR_URL, PR_TITLE, PR_STATE, PR_MERGE_STATE, PR_CHECKS,
 # PR_REVIEW_DECISION, PR_THREADS, PR_WAIT_RESULT, PR_STATUS, and PR_JSON.
+# One waiter per GitHub host/repo/PR and resolved notification transport/target.
+# A different target waits independently. A duplicate exits 4 before detach.
+# No notification uses one shared target. Locks do not save polling state.
+# A Python supervisor holds the lock; the shell PID owns the /waits record.
 # Exit: 0 ok; 1 failed; 2 timeout; 3 usage/dependency; 4 duplicate waiter.
-# Requires: gh (authenticated), jq, Bash. Notification dependencies are optional.
+# Requires: gh (authenticated), jq, python3, Bash. Other notify tools are optional.
 set -euo pipefail
+unset CDPATH
 
 # Resolve the entrypoint symlink so stow and direct checkout execution agree.
 scriptPath="${BASH_SOURCE[0]}"
@@ -83,14 +88,16 @@ for condition in "${conditions[@]}"; do
     *) echo "error: unknown condition '$condition'" >&2; usage ;;
   esac
 done
-for dependency in gh jq; do
+for dependency in gh jq python3; do
   command -v "$dependency" >/dev/null || { echo "error: $dependency not found" >&2; exit 3; }
 done
 notify_resolve "$notify" "$notifyTo"
-if (( detach )); then
-  detach_reexec pr-wait "$prArg" --detach "${origArgs[@]}"
-  exit 0
+if [[ "${PR_WAIT_LOCKED:-}" != 1 ]]; then
+  exec python3 "$here/lib/pr-wait/lock.py" --script "$here/pr-wait.sh" --pr "$prArg" \
+    --repo "$repo" --target "$NOTIFY_TRANSPORT:$NOTIFY_TO" --detach "$detach" -- "${origArgs[@]}"
 fi
+# Hooks and nested waiters must acquire their own lock.
+unset PR_WAIT_LOCKED
 repoFlag=(); [[ -z "$repo" ]] || repoFlag=(--repo "$repo")
 start=$(date +%s); headAt=$start; headSeen=""; lastSignature=""; result=""; json=""; optionalFail=0
 baseSeen=""; baseRefSeen=""; overlapEvents='[]'

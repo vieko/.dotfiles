@@ -83,6 +83,15 @@ notify_resolve() {
       if command -v pi-post >/dev/null 2>&1; then _notify_pipost="pi-post"
       elif [[ -x "$HOME/.pi/agent/post/bin/pi-post" ]]; then _notify_pipost="$HOME/.pi/agent/post/bin/pi-post"
       else echo "error: pi-post target but no pi-post CLI (PATH or ~/.pi/agent/post/bin/pi-post)" >&2; exit 3
+      fi
+      # Names, session IDs, and paths must use the same lock and record directory
+      # as an explicit address. Resolve aliases before either is created.
+      if [[ "$NOTIFY_TO" != s-* ]]; then
+        local resolved address
+        resolved=$("$_notify_pipost" resolve "$NOTIFY_TO") || exit 3
+        address=$(awk '$1 == "address:" { print $2; exit }' <<<"$resolved")
+        [[ "$address" == s-* ]] || { echo 'error: pi-post did not resolve a session address' >&2; exit 3; }
+        NOTIFY_TO="$address"
       fi ;;
     claude)
       if command -v python3 >/dev/null 2>&1; then _notify_sock_tool="python3"

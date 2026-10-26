@@ -119,6 +119,12 @@ not gtm's review-bot pool. Without required checks, every failing check gates.
 Base changes that touch PR files appear in the log and final notification.
 The waiter compares both names of renamed files and retries failed base reads.
 It sends no extra notification for an overlap event and saves no restart state.
+An OS lock prevents duplicate waits for the same PR and notification target.
+The second command exits 4 and prints the existing waiter's PID. Different
+targets wait independently. Conditions do not change the lock key. Pi target
+names resolve to addresses before locking. Without notifications, duplicate
+commands share one target. A Python supervisor holds the lock while the shell
+waiter runs; hooks do not inherit its lock descriptor.
 The copied library keeps the existing wait-record contract, so `follow:` and
 `/waits` show detached notifications without an extension change. Gtm keeps
 its own scripts and policy; neither checkout depends on the other.

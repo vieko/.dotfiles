@@ -78,7 +78,8 @@ query($owner:String!,$name:String!,$number:Int!){
        additions: $pr.additions, deletions: $pr.deletions,
        head: $pr.headRefOid, headRef: $pr.headRefName, baseRef: $pr.baseRefName,
        base: $pr.baseRef.target.oid,
-       mergeStateStatus: $pr.mergeStateStatus, reviewDecision: $pr.reviewDecision,
+       mergeStateStatus: $pr.mergeStateStatus,
+       reviewDecision: (if $pr.reviewDecision == "" then null else $pr.reviewDecision end),
        checks: {
          total: ($checks | length),
          pass: ($checks | map(select(.result == "pass")) | length),
