@@ -58,7 +58,12 @@ converges on pi-reported $ and the repricing note can be dropped.
      fable, 20% clustered), so backend switching is ruled out as the main
      cause; the rate scales with context size (1.3% under 100K, 4.6% at
      400K+). Report it as a size tax unless clustering jumps back above
-     ~35%.
+     ~35%. Since week 42 most "unexplained" misses are prompt
+     changes: look for a `system` message entry before the turn with
+     `toolsAdded`/`toolsRemoved` (tool description changed: live
+     `~/dev` package edits, sigil board name in its descriptions) or a
+     `project_context` section (AGENTS.md edited). With
+     `supportsMidConvoToolChanges: false` each one is a full rewrite.
    - `modelswitch` / `compaction`: expected, small.
 4. **Models.** Per-model unexplained-miss rate should be roughly equal; an
    outlier model points at its provider path.
@@ -149,15 +154,16 @@ proposing templates or interpreting a false report label as an omission.
 
 ## Open experiments (settle before proposing new ones)
 
-- **Sol repair-spec pilot**: the next ~10 `*-repair-spec` golems bound
-  `-m sol` vs the 11 fable repair runs in weeks 37-38 ($5-15 each). Sol
-  wins on pass rate at ~1/25 of fable's token price; loses if the review
-  loop goes around again.
+- **Sol repair-spec pilot**: closed 2026-10-26 with no data. Repair specs
+  stopped appearing (2 in weeks 39-43, both fable); golems run luna and
+  pass attempt 1.
 - **opus-5.5 Summoner + fable-5.1 counsel** (started 2026-09-29): opus at
   40% of fable's price on every axis with fable reachable via pi-counsel.
   Compare $/user-turn (including counsel $) and abort rate against the
   fable-Summoner weeks 37-39; report consults per session and whether
   verdicts were "stop"/"revise" often enough to have earned their cost.
+  Week 43: $0.98/ut including counsel vs $1.02-1.22 in fable weeks;
+  counsel 14% of session spend with 0% cache read (pi-counsel fix open).
 - **sonnet-5 edit loss**: `-m sonnet` dispatches keep feeding the A/B;
   report the malformed-edit rate if any ran.
 - **1h TTL net**: +$362 (wk 36) then +$120/12d (wks 37-38). If it goes

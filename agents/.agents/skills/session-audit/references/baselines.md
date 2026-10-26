@@ -180,3 +180,32 @@ old row so drift is visible.
   scope), 1 stale; $45.87, fable 3 runs = $44.84 (two of them repair specs,
   the sol pilot still has no data). 14 sol familiars.
 - Recurring messages: ~60 of 320 user turns are one-token decisions (19%).
+
+## Week 43 (2026-10-16 10:00 to 2026-10-26 08:50, 5.5 working days), PHYREXIA
+
+- 43 sessions with turns, 3,743 assistant turns, 323 user turns, 3,484 tool
+  calls (116 errors). True $276 (= pi-reported), $0.85/ut ($0.98 with
+  counsel). Normal week 10-19..23: $195 + $28 counsel = $45/day. 10-16
+  afternoon $80 (sigil + pi-counsel dogfooding).
+- Split: cacheRead $101, cacheWrite $128, output $47.
+- Models: opus-5.5 $235 (32 sessions), fable-5.1 $22 (3), gpt-6.1-sol $18 (8).
+- 1h TTL: premium $45 vs $83 avoided; net +$37.
+- Context: 19% of turns >= 200K carried 26% of spend; max 412K. Top session
+  $50; none above $100.
+- Misses: first 20 (dev-gtm 42-44K, dotfiles/worktrees 22-23K); idle 39
+  ($43, avg 149K); compaction 20 ($14, all on resume after 1-95h idle,
+  post-compaction ctx 77-96K); unexplained 12 ($14), 10 of them tool-
+  description changes (13 events in all, ~$16.60): live
+  `~/dev` package edits (counsel `model` param, sigil_flag x3), sigil
+  descriptions embedding the current board, codemode's release path.
+- Edit health: 0/150 malformed. Hard stops: 4, all aborts.
+- Counsel: 30 consults in 18 sessions, $39.44 (14.3% of session spend; week
+  42 6.3%), 27 revise / 3 proceed, cache-read share 0%. After pi-counsel
+  0.2.0 (10-16 16:47): avg input 36K -> 121K, avg $0.60 -> $1.79. 9
+  consults within 60 min of a prior one in the same session ($10.28).
+- Nudges: renew 15 shown, 3 left, 12 kept going (avg 15). 14 of 15 fired in
+  already-compacted sessions. Third window ignored dominates.
+- Constructs: 5 golem runs (4 luna + 1 haiku smoke), 5/5 first attempt,
+  $1.14; fable $0. 7 sol + 3 opus familiars. No repair specs.
+- Recurring messages: 71 of 323 user turns are one-token decisions (22%);
+  sampled, mostly merges/pushes and wording/scope forks.
