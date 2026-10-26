@@ -1,7 +1,7 @@
 ---
 name: braintrust
 version: 1.1.0
-description: Use the Braintrust `bt` CLI for projects, traces, prompts, evals, and SQL queries against logs.
+description: Use when the user asks about Braintrust or its data, such as which apps use Braintrust, running or checking an eval, looking up a trace or span, querying project logs with SQL, or managing prompts and projects. Covers `bt` CLI auth and non-obvious behavior. Not for Datadog traces or log drains.
 ---
 
 # Braintrust CLI (`bt`)

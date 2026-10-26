@@ -1,6 +1,6 @@
 ---
 name: session-audit
-description: Audit recent pi sessions for cost, prompt-cache behavior, context size, tool failures, constructs (golems/familiars), and recurring prompt patterns, then turn the numbers into footguns, opportunities, and gaps. Use whenever the user asks to assess, audit, or review the week's (or any window's) sessions, "what did we spend", "anything we should look into", "new patterns", or wants a recurring session health check. Runs a deterministic script over ~/.pi/agent/sessions and interprets the report.
+description: Use for the weekly session and workflow review, when the user asks to assess, audit, or review the week's (or any window's) sessions, or says "another week", "emerging patterns and practices", "workflow review", "what did we spend", "anything we should look into", or "it's friday, let's run it". Runs a deterministic script over ~/.pi/agent/sessions (cost, cache, context, tool failures, constructs, prompt patterns) and reports footguns, opportunities, and gaps.
 ---
 
 # session-audit

@@ -1,6 +1,6 @@
 ---
 name: monthly-checkin
-description: Draft a personal monthly performance check-in from git history, authored PRs, issue-tracker work, project memory, and collaboration evidence. Use whenever the user asks to draft, prepare, update, review, or submit a monthly check-in, performance check-in, "what did you ship," or "where do you want to grow" response, even if they only name a month. Loads a private local profile for cadence, company context, voice, and examples; gathers evidence; and pauses before finalizing inferred collaboration or growth claims.
+description: Use when the user asks to draft, prepare, update, review, or submit a monthly check-in, Perfbot check-in, or performance check-in, or a "what did you ship" or "where do you want to grow" answer, even if they only name a month. Drafts from git history, authored PRs, issue-tracker work, project memory, and collaboration evidence, using a private local profile for voice and context. Not for Culture Amp self, peer, or upward reviews.
 ---
 
 # Monthly check-in
