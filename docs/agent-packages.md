@@ -93,7 +93,7 @@ is one token with no spaces inside:
 | `redact:` | pi-redact | distinct values kept out of the transcript |
 | `remind:` | `extensions/reminders.ts` (also the agent's `remind` tool) | pending reminders; `N!` when one fired and is open |
 | `canvas:` | sigil map observer | map name; `!` when a run failed |
-| `follow:` | `extensions/waits.ts` | detached gtm `pr-wait`/`deploy-wait --notify` runs (`#N`, `deploy#N`, `deploy@main`, or a count); `!` when one exited without a delivered message (`/waits` shows its log) |
+| `follow:` | `extensions/waits.ts` | detached host `pr-wait.sh` or gtm `pr-wait`/`deploy-wait --notify` runs (`#N`, `deploy#N`, `deploy@main`, or a count); `!` when one exited without a delivered message (`/waits` shows its log) |
 
 Example: `bonfire:today styles:ste redact:1 remind:2 canvas:gtm follow:#3146`.
 `tmux-status.ts` writes tmux, not the footer. `turn-clock.ts` prints its
@@ -103,6 +103,39 @@ Run `pi/.pi/agent/setup-pi.sh` once after stowing on a fresh machine, and again
 whenever `settings.base.json` or a host fragment changes. Because the generated
 `settings.json` is gitignored, the old `lastChangelogVersion` churn is gone —
 Pi writes into a file git no longer tracks.
+
+## Host PR waiter
+
+`scripts/.scripts/pr-wait.sh` stows to `~/.scripts/pr-wait.sh`. It works in any
+GitHub checkout, or with a PR URL or `--repo owner/name` from another directory:
+
+```bash
+~/.scripts/pr-wait.sh 42 --detach --notify
+~/.scripts/pr-wait.sh https://github.com/owner/repo/pull/42 --for checks,review
+```
+
+The default waits for checks only. `review` uses GitHub's review decision,
+not gtm's review-bot pool. In a repo with no required reviews the decision
+stays empty, so `--for review` times out there; use the default `checks`. Without required checks, every failing check gates.
+Base changes that touch PR files appear in the log and final notification.
+The waiter compares both names of renamed files and retries failed base reads.
+It sends no extra notification for an overlap event and saves no restart state.
+An OS lock prevents duplicate waits for the same PR and notification target.
+The second command exits 4 and prints the existing waiter's PID. Different
+targets wait independently. Conditions do not change the lock key. Pi target
+names resolve to addresses before locking. Without notifications, duplicate
+commands share one target. A Python supervisor holds the lock while the shell
+waiter runs; hooks do not inherit its lock descriptor. Lock files stay in
+`~/.local/state/pr-wait/locks/` (one empty file per PR and target, never
+unlinked while a waiter may hold it); deleting the directory when no waiter
+runs is safe.
+The copied library keeps the existing wait-record contract, so `follow:` and
+`/waits` show detached notifications without an extension change. Gtm keeps
+its own scripts and policy; neither checkout depends on the other.
+
+Run the hermetic contracts with
+`python3 scripts/.scripts/lib/pr-wait/pr-wait.test.py`. Use `--help` for the
+conditions, timeouts, notification transports, hooks, and exit codes.
 
 ## `agents/`
 
