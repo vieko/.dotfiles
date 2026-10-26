@@ -14,7 +14,11 @@ Report:
 4. **Code review** — apply the criteria from `/review`:
    - correctness, type safety, side effects, security, API design
    - missing tests
-5. **Approval recommendation** — `Approve`, `Request changes`, or `Needs discussion`
+   - scope: code, tests, or guards the stated intent does not need
+   - give each finding a severity (`blocker` / `should` / `nit`, as defined in
+     `/review`) and the format `<severity> <file>:<line> <claim>. Fix: <suggestion>`
+5. **Approval recommendation** — `Approve` (nits at most), `Request changes`
+   (any blocker or should), or `Needs discussion`
 
 If the PR touches infra/auth/billing/migrations, flag that prominently as a separate
 "High-risk surface" callout regardless of code quality.

@@ -15,4 +15,18 @@ Focus on:
 
 Don't comment on style/formatting if a linter would catch it.
 
-End with one of: `LGTM`, `Minor nits — fixable in-line`, or `Needs revision — see above`.
+Hold the change to the smallest diff that meets its intent. Flag code, tests, or
+guards the intent does not need. When you suggest a fix, prefer one that deletes
+or narrows code over a new helper, option, cache, or lock.
+
+Give every finding a severity, judged by impact, not by how it is phrased:
+
+- **blocker** — the intended case is wrong.
+- **should** — a real bug that callers will hit, within the change's intent.
+- **nit** — everything else: other paths, rare cases, small perf costs, extra
+  compatibility, style.
+
+Format each finding as `<severity> <file>:<line> <claim>. Fix: <suggestion>`.
+
+End with one of: `LGTM` (nits at most), `Minor nits — fixable in-line`, or
+`Needs revision — see above` (any blocker or should).
