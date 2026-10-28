@@ -99,6 +99,32 @@ activate_terminal() {
   done
 }
 
+# pi-post sweeps a registry record once its session is offline for 7 days
+# with an empty inbox, so a reminder set further out finds no record
+# (GTMENG-4181, 2026-10-28). The address is sha256("session\0" + session id),
+# so the session file is still findable. Prints "sid<TAB>cwd".
+session_by_address() {
+  "${NODE:-node}" - "$1" "$HOME/.pi/agent/sessions" <<'JS'
+const { createHash } = require("node:crypto");
+const { readdirSync, openSync, readSync, closeSync } = require("node:fs");
+const { join } = require("node:path");
+const [addr, root] = process.argv.slice(2);
+for (const dir of readdirSync(root)) {
+  let files;
+  try { files = readdirSync(join(root, dir)); } catch { continue; }
+  for (const f of files) {
+    const id = f.match(/_([0-9a-f-]+)\.jsonl$/)?.[1];
+    if (!id || `s-${createHash("sha256").update(`session\0${id}`).digest("hex").slice(0, 12)}` !== addr) continue;
+    const buf = Buffer.alloc(4096), fd = openSync(join(root, dir, f), "r");
+    const n = readSync(fd, buf, 0, buf.length, 0); closeSync(fd);
+    const cwd = JSON.parse(buf.subarray(0, n).toString().split("\n")[0]).cwd;
+    if (cwd) { console.log(`${id}\t${cwd}`); process.exit(0); }
+  }
+}
+process.exit(1);
+JS
+}
+
 reg_live_pid() {
   local pid; pid=$(reg_field "$1" pid) || return 1
   [[ -n "$pid" ]] && kill -0 "$pid" 2>/dev/null && [[ "$(ps -o comm= -p "$pid")" =~ (pi|node)$ ]] && echo "$pid"
@@ -137,9 +163,14 @@ open_pi_window() {
 # pi is running; otherwise prints the reason and a manual command.
 resume_session() {
   local addr=$1 slug=${2:-} sid cwd name pid client cpid tsess pane file wname brief
-  [[ -f "$REGISTRY/$addr.json" ]] || { echo "$addr is not in the pi-post registry"; return 1; }
-  sid=$(reg_field "$addr" sessionId) cwd=$(reg_field "$addr" cwd)
-  name=$(reg_field "$addr" name || echo "$addr") pid=$(reg_live_pid "$addr" || true)
+  if [[ -f "$REGISTRY/$addr.json" ]]; then
+    sid=$(reg_field "$addr" sessionId) cwd=$(reg_field "$addr" cwd)
+    name=$(reg_field "$addr" name || echo "$addr") pid=$(reg_live_pid "$addr" || true)
+  else
+    IFS=$'\t' read -r sid cwd < <(session_by_address "$addr") ||
+      { echo "$addr is not in the pi-post registry and no session file matches it"; return 1; }
+    name=$addr pid=""
+  fi
   wname=${slug:-$name}
   read -r _ client cpid tsess < <("$TMUX_BIN" list-clients -F '#{client_activity} #{client_name} #{client_pid} #{session_name}' 2>/dev/null | sort -rn | head -1) || true
   if [[ -n "$pid" ]]; then
