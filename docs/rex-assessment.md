@@ -139,7 +139,12 @@ Linux-only packages are out of scope (no Rex Linux client).
 - `rex terminfo setup`: xterm-rex in ~/.terminfo, guard in
   ~/.config/rex/ssh_config, Include in ~/.ssh/config (new file).
 - 1Password: four new panes each ran `op inject` and got the key; the
-  user saw at least 3 prompts. Blocker 1 stands.
+  user saw at least 3 prompts. Fixed the same day in .bash_profile: the
+  first Rex shell per server injects once into a 0600 file in the per-user
+  temp dir, keyed by the server socket's inode and birth time; later Rex
+  shells source it, and any login shell deletes files for a gone or
+  restarted server. Outside Rex nothing changes. Verified: three panes
+  opened at once all got the key from one inject.
 - Karabiner reload and Ctrl+C / Ctrl+Shift+V in Rex confirmed by the user.
 - FORGE_STATE_ROOT: not moved. Nothing reads it (forge is anvil's old
   name); the tmux.conf line is dead.

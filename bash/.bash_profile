@@ -55,17 +55,61 @@ fi
 # Guarding on the actual inherited secret is robust to that: any child that
 # already has the key skips `op inject` regardless of the sentinel. A truly
 # fresh login (no key in env) still injects.
+#
+# Rex (macOS): every Rex pane and `rex run` command is a login shell started
+# by a server that holds no secrets, so the inject below would prompt once
+# per pane (3+ prompts seen 2026-10-31). The first Rex shell after a server
+# start injects and leaves the result in a 0600 file named after the server
+# socket's inode and birth time; later Rex shells source it. Any login shell
+# deletes files whose server is gone or restarted, so the secrets live about
+# as long as that server, like a tmux server's env. Shells outside Rex never
+# read the file. A lock makes the panes that layout restore opens at once
+# wait for the first inject instead of prompting each.
+_opRexCache=""
+if [[ "$OSTYPE" == darwin* ]]; then
+    _opRexDir="$(getconf DARWIN_USER_TEMP_DIR 2>/dev/null)op-env-rex"
+    _opRexId=$(stat -f '%i-%B' "$HOME/Library/Application Support/rex/server.sock" 2>/dev/null)
+    for _opRexFile in "$_opRexDir"/*.env; do
+        [[ -e "$_opRexFile" && "${_opRexFile##*/}" != "$_opRexId.env" ]] && rm -f "$_opRexFile"
+    done
+    if [[ -n "$REX_SESSION" && "$REX_SERVER" == *"/rex/server.sock" && -n "$_opRexId" ]]; then
+        _opRexCache="$_opRexDir/$_opRexId.env"
+    fi
+fi
+if [[ -n "$_opRexCache" && -z "$AI_GATEWAY_API_KEY" ]]; then
+    mkdir -p -m 700 "$_opRexDir"
+    # A lock older than a minute belongs to a shell that died mid-inject.
+    find "$_opRexDir/lock" -maxdepth 0 -mmin +1 -exec rmdir {} \; 2>/dev/null
+    if [[ ! -s "$_opRexCache" ]] && ! mkdir "$_opRexDir/lock" 2>/dev/null; then
+        for _ in {1..100}; do [[ -s "$_opRexCache" ]] && break; sleep 0.2; done
+    fi
+    if [[ -s "$_opRexCache" ]]; then
+        set -a
+        . "$_opRexCache"
+        set +a
+        [[ -n "$AI_GATEWAY_API_KEY" ]] && export OP_ENV_HYDRATED=1
+    fi
+fi
+
 if [[ -z "$OP_ENV_HYDRATED" ]] \
         && [[ -z "$AI_GATEWAY_API_KEY" ]] \
         && command -v op &>/dev/null \
         && [[ -r "$HOME/.dotfiles/bash/env.op" ]] \
         && op account list &>/dev/null 2>&1; then
+    _opEnv="$(op inject -i "$HOME/.dotfiles/bash/env.op" 2>/dev/null)"
     set -a
-    eval "$(op inject -i "$HOME/.dotfiles/bash/env.op" 2>/dev/null)"
+    eval "$_opEnv"
     set +a
     # Only mark hydrated on success, so a failed inject retries next login.
     [[ -n "$AI_GATEWAY_API_KEY" ]] && export OP_ENV_HYDRATED=1
+    if [[ -n "$_opRexCache" && -n "$AI_GATEWAY_API_KEY" ]]; then
+        (umask 077 && printf '%s\n' "$_opEnv" > "$_opRexCache.$$") \
+            && mv -f "$_opRexCache.$$" "$_opRexCache"
+    fi
+    unset _opEnv
 fi
+[[ -n "$_opRexCache" ]] && rmdir "$_opRexDir/lock" 2>/dev/null
+unset _opRexCache _opRexDir _opRexId _opRexFile
 
 # A login shell racing 1Password at boot (app not yet unlocked) skips the
 # block above silently, and a tmux server started from it seeds every pane
