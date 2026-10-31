@@ -144,7 +144,8 @@ Linux-only packages are out of scope (no Rex Linux client).
   temp dir, keyed by the server socket's inode and birth time; later Rex
   shells source it, and any login shell deletes files for a gone or
   restarted server. Outside Rex nothing changes. Verified: three panes
-  opened at once all got the key from one inject.
+  opened at once all got the key from one inject, and the user saw one
+  1Password prompt per server start (retested 2026-10-31 13:31).
 - Karabiner reload and Ctrl+C / Ctrl+Shift+V in Rex confirmed by the user.
 - FORGE_STATE_ROOT: not moved. Nothing reads it (forge is anvil's old
   name); the tmux.conf line is dead.
