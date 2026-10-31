@@ -13,6 +13,7 @@
                                             "^com\\.apple\\.Terminal$",
                                             "^net\\.kovidgoyal\\.kitty$",
                                             "^com\\.mitchellh\\.ghostty$",
+                                            "^com\\.superlogical\\.rex$",
                                             "^dev\\.zed\\.Zed$"
                                         ],
                                         "type": "frontmost_application_unless"
@@ -43,6 +44,7 @@
                                             "^com\\.apple\\.Terminal$",
                                             "^net\\.kovidgoyal\\.kitty$",
                                             "^com\\.mitchellh\\.ghostty$",
+                                            "^com\\.superlogical\\.rex$",
                                             "^dev\\.zed\\.Zed$"
                                         ],
                                         "type": "frontmost_application_unless"
@@ -73,6 +75,7 @@
                                             "^com\\.apple\\.Terminal$",
                                             "^net\\.kovidgoyal\\.kitty$",
                                             "^com\\.mitchellh\\.ghostty$",
+                                            "^com\\.superlogical\\.rex$",
                                             "^dev\\.zed\\.Zed$"
                                         ],
                                         "type": "frontmost_application_unless"
@@ -103,6 +106,7 @@
                                             "^com\\.apple\\.Terminal$",
                                             "^net\\.kovidgoyal\\.kitty$",
                                             "^com\\.mitchellh\\.ghostty$",
+                                            "^com\\.superlogical\\.rex$",
                                             "^dev\\.zed\\.Zed$"
                                         ],
                                         "type": "frontmost_application_unless"
@@ -133,6 +137,7 @@
                                             "^com\\.apple\\.Terminal$",
                                             "^net\\.kovidgoyal\\.kitty$",
                                             "^com\\.mitchellh\\.ghostty$",
+                                            "^com\\.superlogical\\.rex$",
                                             "^dev\\.zed\\.Zed$"
                                         ],
                                         "type": "frontmost_application_unless"
@@ -163,6 +168,7 @@
                                             "^com\\.apple\\.Terminal$",
                                             "^net\\.kovidgoyal\\.kitty$",
                                             "^com\\.mitchellh\\.ghostty$",
+                                            "^com\\.superlogical\\.rex$",
                                             "^dev\\.zed\\.Zed$"
                                         ],
                                         "type": "frontmost_application_unless"
@@ -193,6 +199,7 @@
                                             "^com\\.apple\\.Terminal$",
                                             "^net\\.kovidgoyal\\.kitty$",
                                             "^com\\.mitchellh\\.ghostty$",
+                                            "^com\\.superlogical\\.rex$",
                                             "^dev\\.zed\\.Zed$"
                                         ],
                                         "type": "frontmost_application_unless"
@@ -224,6 +231,7 @@
                                             "^com\\.apple\\.Terminal$",
                                             "^net\\.kovidgoyal\\.kitty$",
                                             "^com\\.mitchellh\\.ghostty$",
+                                            "^com\\.superlogical\\.rex$",
                                             "^dev\\.zed\\.Zed$"
                                         ],
                                         "type": "frontmost_application_unless"
@@ -254,6 +262,7 @@
                                             "^com\\.apple\\.Terminal$",
                                             "^net\\.kovidgoyal\\.kitty$",
                                             "^com\\.mitchellh\\.ghostty$",
+                                            "^com\\.superlogical\\.rex$",
                                             "^dev\\.zed\\.Zed$"
                                         ],
                                         "type": "frontmost_application_unless"
@@ -284,6 +293,7 @@
                                             "^com\\.apple\\.Terminal$",
                                             "^net\\.kovidgoyal\\.kitty$",
                                             "^com\\.mitchellh\\.ghostty$",
+                                            "^com\\.superlogical\\.rex$",
                                             "^dev\\.zed\\.Zed$"
                                         ],
                                         "type": "frontmost_application_unless"
@@ -314,6 +324,7 @@
                                             "^com\\.apple\\.Terminal$",
                                             "^net\\.kovidgoyal\\.kitty$",
                                             "^com\\.mitchellh\\.ghostty$",
+                                            "^com\\.superlogical\\.rex$",
                                             "^dev\\.zed\\.Zed$"
                                         ],
                                         "type": "frontmost_application_unless"
@@ -349,6 +360,7 @@
                                             "^com\\.apple\\.Terminal$",
                                             "^net\\.kovidgoyal\\.kitty$",
                                             "^com\\.mitchellh\\.ghostty$",
+                                            "^com\\.superlogical\\.rex$",
                                             "^dev\\.zed\\.Zed$"
                                         ],
                                         "type": "frontmost_application_if"
@@ -380,6 +392,7 @@
                                             "^com\\.apple\\.Terminal$",
                                             "^net\\.kovidgoyal\\.kitty$",
                                             "^com\\.mitchellh\\.ghostty$",
+                                            "^com\\.superlogical\\.rex$",
                                             "^dev\\.zed\\.Zed$"
                                         ],
                                         "type": "frontmost_application_if"

@@ -30,6 +30,7 @@
                 "^com\\.apple\\.Terminal$",
                 "^net\\.kovidgoyal\\.kitty$",
                 "^com\\.mitchellh\\.ghostty$",
+                "^com\\.superlogical\\.rex$",
                 "^dev\\.zed\\.Zed$"
               ]
             }
@@ -61,6 +62,7 @@
                 "^com\\.apple\\.Terminal$",
                 "^net\\.kovidgoyal\\.kitty$",
                 "^com\\.mitchellh\\.ghostty$",
+                "^com\\.superlogical\\.rex$",
                 "^dev\\.zed\\.Zed$"
               ]
             }

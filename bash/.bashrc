@@ -93,6 +93,32 @@ eval "$(zoxide init bash)"
 # Idempotent plain-file source: no 1Password prompt involved.
 [ -f "$HOME/.config/socket-firewall/env.sh" ] && source "$HOME/.config/socket-firewall/env.sh"
 
+# Rex shell integration. Ghostty and kitty inject their own for bash; Rex
+# does not, so without this Rex never learns a pane's directory (layout
+# restore, new-pane cwd, Go to Directory) or where prompts are (prompt
+# jumps, OSC 7501 lifetime). OSC 7 reports the cwd; OSC 133 marks prompt
+# start (A), input start (B), command start (C) and end (D). It runs last in
+# PROMPT_COMMAND so starship and zoxide keep their own order; the exit code
+# comes from starship's capture because $? is gone by then.
+if [[ $- == *i* && "$TERM_PROGRAM" == rex ]]; then
+    __rex_precmd() {
+        local LC_ALL=C path=$PWD enc='' c i
+        for ((i = 0; i < ${#path}; i++)); do
+            c=${path:i:1}
+            case $c in
+                [a-zA-Z0-9/._~-]) enc+=$c ;;
+                *) printf -v c '%%%02X' "'$c"; enc+=$c ;;
+            esac
+        done
+        printf '\e]133;D%s\a' "${STARSHIP_CMD_STATUS:+;$STARSHIP_CMD_STATUS}"
+        printf '\e]7;file://%s%s\e\\' "$HOSTNAME" "$enc"
+        printf '\e]133;A\a'
+        [[ $PS1 == *'133;B'* ]] || PS1+='\[\e]133;B\a\]'
+    }
+    PROMPT_COMMAND="${PROMPT_COMMAND:+$PROMPT_COMMAND;}__rex_precmd"
+    PS0+=$'\e]133;C\a'
+fi
+
 # BEGIN: socket firewall aliases (managed by Iru)
 #alias npm="sfw npm"
 #alias pnpm="sfw pnpm"
