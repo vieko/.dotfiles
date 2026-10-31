@@ -62,6 +62,12 @@ together.
 symbolic hotkeys, Karabiner, Aerospace, Ghostty, live tmux root table and Pi
 (defaults + overrides), normalizes them, and prints chords shared between
 layers. Exit 1 on a collision with a global layer. `--all` dumps the table.
+Rex counts as a terminal layer: `rex keymap` (our `init.lua`, a sequence
+counted as its first key) and any overrides saved in the app's
+`Shortcuts/shortcuts.json`. Rex's built-in defaults are not readable from
+the CLI yet, so its Cmd chords go unchecked; Aerospace claims the ones that
+matter first. The expected note is `ctrl+a`: the Rex prefix over Pi's line
+start, which `C-a C-a` still sends.
 It compares our own layers only; it cannot know what a web app binds, so
 new `global:` or Aerospace chords still need a moment's thought.
 

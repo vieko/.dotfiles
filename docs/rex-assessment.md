@@ -177,6 +177,9 @@ by installers) moved into .bash_exports; .local/bin was already there.
   `scripts/.scripts/rex-new-window.sh`; Ghostty's global binding is
   commented out for the trial.
 
+- Key audit: `keybind-audit.sh` reads Rex's `init.lua` bindings and app
+  overrides. Built-in Rex defaults wait for a CLI that lists them.
+
 ## Rex app settings (not in a config file yet)
 
 Rex keeps appearance in the app (`defaults read com.superlogical.rex`,

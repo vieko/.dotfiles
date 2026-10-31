@@ -11,10 +11,14 @@ than one layer. Layers, outermost first:
   aerospace  [mode.main.binding] in aerospace.toml
   ghostty    keybinds in the ghostty config (global: ones are system-wide)
   tmux       live `tmux list-keys -T root` (no prefix)
+  rex        live `rex keymap` (init.lua) plus app overrides in Rex's
+             Shortcuts/shortcuts.json; a sequence counts as its first key.
+             Rex's built-in defaults are not readable yet (no CLI lists
+             them), so its Cmd chords are not checked
   pi         ~/.pi/agent/keybindings.json overrides
 
 Scope is "global" (fires in every app), "not-terminal" (karabiner unless
-terminals), or "terminal" (tmux/pi/ghostty-local). A chord shared between
+terminals), or "terminal" (tmux/rex/pi/ghostty-local). A chord shared between
 a global layer and anything else is a COLLISION; two terminal-scope layers
 sharing a chord is a NOTE (the innermost app wins, which may be intended).
 
@@ -242,6 +246,71 @@ def collect_tmux():
     return out
 
 
+# --- rex ----------------------------------------------------------------------
+
+REX_BIN = os.path.join(HOME, "Library/Application Support/com.superlogical.rex/RexServer/"
+                       "Versions/Current/Rex Server.app/Contents/MacOS/rex")
+REX_APP_SHORTCUTS = os.path.join(HOME, "Library/Application Support/com.superlogical.rex/"
+                                 "Shortcuts/shortcuts.json")
+
+
+def rex_chord(key):
+    parts = key.split("+")
+    return chord(parts[:-1], parts[-1])
+
+
+def collect_rex():
+    out = []
+    rex = os.path.join(os.environ.get("REX_BIN_DIR", ""), "rex")
+    if not os.access(rex, os.X_OK):
+        rex = REX_BIN
+    try:
+        res = subprocess.run([rex, "--autostart=false", "keymap", "--json"],
+                             capture_output=True, text=True, timeout=10)
+        bindings = json.loads(res.stdout).get("bindings", []) if res.returncode == 0 else []
+    except Exception:
+        bindings = []
+    prefixes = {}
+    for b in bindings:
+        keys = b.get("keys") or []
+        if not keys or b.get("mode"):
+            continue  # mode keys only act inside that mode
+        if len(keys) == 1:
+            out.append((rex_chord(keys[0]), "rex", f"{b.get('action')} ({b.get('source')})", "terminal"))
+        else:
+            prefixes.setdefault(keys[0], []).append(b)
+    for key, seqs in prefixes.items():
+        out.append((rex_chord(key), "rex", f"prefix: {len(seqs)} sequences (init.lua)", "terminal"))
+    # App overrides (Settings, Shortcuts) win over init.lua. The file exists
+    # only after a shortcut is changed in the app; its shape is not
+    # documented, so read any {"key"/"keys": ...} entries and flag the rest.
+    if os.path.exists(REX_APP_SHORTCUTS):
+        found = []
+
+        def walk(node):
+            if isinstance(node, dict):
+                k = node.get("keys") or node.get("key")
+                if isinstance(k, str):
+                    k = [k]
+                if isinstance(k, list) and k and all(isinstance(x, str) for x in k):
+                    found.append((k[0], node.get("action", "?")))
+                for v in node.values():
+                    walk(v)
+            elif isinstance(node, list):
+                for v in node:
+                    walk(v)
+        try:
+            walk(json.load(open(REX_APP_SHORTCUTS)))
+        except Exception:
+            pass
+        for key, action in found:
+            out.append((rex_chord(key), "rex", f"{action} (app override)", "terminal"))
+        if not found:
+            print(f"warn: {REX_APP_SHORTCUTS} exists but no shortcuts were read from it;"
+                  " check it by hand (Settings, Shortcuts)", file=sys.stderr)
+    return out
+
+
 # --- pi -----------------------------------------------------------------------
 
 # Pi editor defaults that matter for tmux/karabiner overlap (pi docs/keybindings.md).
@@ -286,7 +355,7 @@ def main():
     show_all = "--all" in sys.argv
     rows = []
     for fn in (collect_macos, collect_karabiner, collect_aerospace,
-               collect_ghostty, collect_tmux, collect_pi):
+               collect_ghostty, collect_tmux, collect_rex, collect_pi):
         rows.extend(fn())
 
     by_chord = {}
@@ -313,7 +382,7 @@ def main():
     ctrl_at_os = [(c, e) for c, es in by_chord.items() for e in es
                   if e[2] == "global" and e[0] in ("macos",) and c.startswith("ctrl+")]
     cmd_in_term = [(c, e) for c, es in by_chord.items() for e in es
-                   if e[0] in ("tmux", "pi") and "cmd+" in c]
+                   if e[0] in ("tmux", "rex", "pi") and "cmd+" in c]
 
     def dump(title, items):
         print(f"\n== {title} ({len(items)})")
