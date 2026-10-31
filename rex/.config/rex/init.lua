@@ -10,75 +10,73 @@
 -- `a` last window (Rex tracks no window history), `.` swap with index,
 -- `d` detach, resurrect `C-s` / `C-r` (Rex restores layouts itself).
 
-local P = "ctrl+a>"
 local TERMINAL = "com.superlogical.terminal"
 local SHELL = "com.superlogical.terminal.shell"
 
 -- Bindings ------------------------------------------------------------------
 
-local function bind(keys, action, args)
-  rex.bind(P .. keys, action, args)
-end
+-- Each binding spells out its full key, so `rex keymap` names the line that
+-- made it and a grep for "ctrl+a>x" finds it. Loops cover key families.
 
 -- Prefix twice sends a literal Ctrl+A (readline line start, nested tmux).
-bind("ctrl+a", "pane.send_key", { key = "ctrl+a" })
+rex.bind("ctrl+a>ctrl+a", "pane.send_key", { key = "ctrl+a" })
 
 -- Tabs (tmux windows)
-bind("c", "client.tab.new")
-bind("n", "client.tab.next")
-bind("p", "client.tab.previous")
-bind("ctrl+n", "client.tab.next")
-bind("ctrl+p", "client.tab.previous")
-bind("shift+,", "client.tab.move", { direction = "backward" }) -- <
-bind("shift+.", "client.tab.move", { direction = "forward" }) -- >
-bind(",", "client.tab.rename")
-bind("shift+7", "client.tab.close") -- &
+rex.bind("ctrl+a>c", "client.tab.new")
+rex.bind("ctrl+a>n", "client.tab.next")
+rex.bind("ctrl+a>p", "client.tab.previous")
+rex.bind("ctrl+a>ctrl+n", "client.tab.next")
+rex.bind("ctrl+a>ctrl+p", "client.tab.previous")
+rex.bind("ctrl+a>shift+,", "client.tab.move", { direction = "backward" }) -- <
+rex.bind("ctrl+a>shift+.", "client.tab.move", { direction = "forward" }) -- >
+rex.bind("ctrl+a>,", "client.tab.rename")
+rex.bind("ctrl+a>shift+7", "client.tab.close") -- &
 for i = 1, 9 do
-  bind(tostring(i), "client.tab.goto", { index = i })
+  rex.bind("ctrl+a>" .. i, "client.tab.goto", { index = i })
 end
-bind("0", "client.tab.goto", { index = -1 })
+rex.bind("ctrl+a>0", "client.tab.goto", { index = -1 })
 
 -- Sessions
-bind("s", "session.switch")
-bind("w", "session.switch")
-bind("shift+4", "session.rename") -- $
-bind("shift+9", "session.previous") -- (
-bind("shift+0", "session.next") -- )
+rex.bind("ctrl+a>s", "session.switch")
+rex.bind("ctrl+a>w", "session.switch")
+rex.bind("ctrl+a>shift+4", "session.rename") -- $
+rex.bind("ctrl+a>shift+9", "session.previous") -- (
+rex.bind("ctrl+a>shift+0", "session.next") -- )
 
 -- Panes: focus (pain-control binds both h and C-h)
 for key, dir in pairs({ h = "left", j = "down", k = "up", l = "right" }) do
-  bind(key, "pane.focus", { direction = dir, wrap = false })
-  bind("ctrl+" .. key, "pane.focus", { direction = dir, wrap = false })
+  rex.bind("ctrl+a>" .. key, "pane.focus", { direction = dir, wrap = false })
+  rex.bind("ctrl+a>ctrl+" .. key, "pane.focus", { direction = dir, wrap = false })
 end
-bind("o", "pane.focus_next")
-bind(";", "pane.focus_previous")
+rex.bind("ctrl+a>o", "pane.focus_next")
+rex.bind("ctrl+a>;", "pane.focus_previous")
 
 -- Panes: split. Rex's split has no "full width"; split_full below does it.
-bind("shift+\\", "pane.split", { direction = "right" }) -- |
-bind("-", "pane.split", { direction = "down" })
-bind("shift+5", "pane.split", { direction = "right" }) -- %
-bind("shift+'", "pane.split", { direction = "down" }) -- "
-bind("\\", "split_full", { direction = "right" })
-bind("shift+-", "split_full", { direction = "down" }) -- _
+rex.bind("ctrl+a>shift+\\", "pane.split", { direction = "right" }) -- |
+rex.bind("ctrl+a>-", "pane.split", { direction = "down" })
+rex.bind("ctrl+a>shift+5", "pane.split", { direction = "right" }) -- %
+rex.bind("ctrl+a>shift+'", "pane.split", { direction = "down" }) -- "
+rex.bind("ctrl+a>\\", "split_full", { direction = "right" })
+rex.bind("ctrl+a>shift+-", "split_full", { direction = "down" }) -- _
 
 -- Panes: resize one step, or enter resize mode for repeats (tmux -r).
 for key, dir in pairs({ h = "left", j = "down", k = "up", l = "right" }) do
-  bind("shift+" .. key, "pane.resize", { direction = dir })
+  rex.bind("ctrl+a>shift+" .. key, "pane.resize", { direction = dir })
 end
-bind("r", "client.mode.enter", { name = "resize" })
-bind("=", "pane.balance")
+rex.bind("ctrl+a>r", "client.mode.enter", { name = "resize" })
+rex.bind("ctrl+a>=", "pane.balance")
 
 -- Panes: other
-bind("z", "pane.zoom")
-bind("x", "pane.close")
-bind("shift+1", "pane.move_to_new_tab") -- !
-bind("f", "pane.float")
-bind("shift+y", "copy_cwd") -- Y (tmux-yank)
+rex.bind("ctrl+a>z", "pane.zoom")
+rex.bind("ctrl+a>x", "pane.close")
+rex.bind("ctrl+a>shift+1", "pane.move_to_new_tab") -- !
+rex.bind("ctrl+a>f", "pane.float")
+rex.bind("ctrl+a>shift+y", "copy_cwd") -- Y (tmux-yank)
 
 -- Find, palette, help
-bind("[", "client.find.open")
-bind("shift+;", "client.palette.toggle") -- :
-bind("shift+/", "keys_card") -- ?
+rex.bind("ctrl+a>[", "client.find.open")
+rex.bind("ctrl+a>shift+;", "client.palette.toggle") -- :
+rex.bind("ctrl+a>shift+/", "keys_card") -- ?
 
 -- Resize mode: hjkl in 5% steps, HJKL in 15%, Escape or Enter leaves.
 rex.mode("resize", { exclusive = true })
