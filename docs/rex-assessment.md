@@ -191,6 +191,10 @@ by installers) moved into .bash_exports; .local/bin was already there.
   fires for the tab's shell, not typed commands; it dies on restarts),
   and the Rex agent skill (read `rex skill show` first, then use
   `rex skill setup`). Keep tmux-status.ts while tmux stays the fallback.
+- remind-at alert: keep launchd for timing (Rex timers die with the
+  server). Once Rex pushes program status to the phone, consider a small
+  Rex tab reporting `blocked`/`kind=question` in place of the modal alert;
+  it would lose the Snooze and Later buttons and need Rex running.
 
 ## Rex app settings (not in a config file yet)
 
