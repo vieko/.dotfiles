@@ -21,9 +21,10 @@
 #
 # Alert buttons: Resume opens the session and closes the reminder once pi
 # runs. Snooze 1h shows the alert again in an hour. Later (or no answer for
-# 6h) leaves it open in --list. A live session's tmux pane gets focus; an
-# offline session resumes with `pi --session <id>` in a new tmux window named
-# for the slug, where the queued brief is the first thing it reads. A session
+# 6h) leaves it open in --list. A live session's tmux pane or Rex tab gets
+# focus; an offline session resumes with `pi --session <id>` in a new tmux
+# window (when a tmux client is attached) or a new Rex session, named for the
+# slug, where the queued brief is the first thing it reads. A session
 # with no file to resume gets a new pi session in that window, seeded with the
 # brief. A failed resume leaves the reminder open with its brief.
 #
@@ -55,6 +56,8 @@ PIPOST="$HOME/.pi/agent/post/bin/pi-post"
 REGISTRY="$HOME/.pi/agent/post/registry"
 PI_BIN="$HOME/.pi/agent/bin/pi"
 TMUX_BIN=$(command -v tmux 2>/dev/null || echo /opt/homebrew/bin/tmux)
+REX_BIN="$HOME/Library/Application Support/com.superlogical.rex/RexServer/Versions/Current/Rex Server.app/Contents/MacOS/rex"
+REX_APP_ID=com.superlogical.rex
 LABEL_PREFIX="dev.vieko.reminder"
 UID_DOMAIN="gui/$(id -u)"
 TITLE_MAX=60 ASK_MAX=140
@@ -125,6 +128,66 @@ process.exit(1);
 JS
 }
 
+# Rex: never --autostart from here, a probe must not start a server.
+rex() { "$REX_BIN" --autostart=false "$@"; }
+rex_up() { [[ -x "$REX_BIN" ]] && rex server status >/dev/null 2>&1; }
+
+# Prints "<session id> <block id>" of the Rex terminal that runs the given
+# pid: the block whose login process is an ancestor of it. (A pi's own env
+# would say, but node rewrites its argv area, so ps cannot show it.)
+rex_place_of_pid() {
+  local p=$1 chain="" sess out
+  while [[ -n "$p" && "$p" -gt 1 ]]; do chain+="$p "; p=$(ps -o ppid= -p "$p" | tr -d ' '); done
+  # A script reaches a session's blocks only when attached to it (-s).
+  for sess in $(rex ls --json 2>/dev/null | grep -o '"session:[^"]*"' | tr -d '"'); do
+    out=$(rex "do" -s "$sess" --args "{\"chain\": \"$chain\"}" -e '
+      local chain = {}
+      for p in rex.args.chain:gmatch("%d+") do chain[tonumber(p)] = true end
+      for _, w in ipairs((rex.session.view{} or {}).windows or {}) do
+        for _, l in ipairs(w.layers or {}) do
+          for _, b in ipairs(l.blocks or {}) do
+            local pr = rex.block.call("com.superlogical.terminal", "process", { block_id = b.block_id })
+            if pr and pr.child and chain[pr.child.pid] then return b.block_id end
+          end
+        end
+      end' 2>/dev/null) || continue
+    out=${out//\"/}
+    [[ "$out" == block:* ]] && { echo "$sess $out"; return 0; }
+  done
+  return 1
+}
+
+# Shows a Rex session in the app. The app takes this only with Remote
+# Control on (Settings, Rex Server); without it the app still comes to the
+# front and the caller says where to look.
+rex_show() {
+  local sess=$1 client
+  client=$(rex client ls --json 2>/dev/null \
+    | "${NODE:-node}" -e 'let d="";process.stdin.on("data",c=>d+=c).on("end",()=>{const c=JSON.parse(d).clients.find(c=>c.info?.kind==="app");if(c)console.log(c.client_id)})' 2>/dev/null) || true
+  /usr/bin/open -b "$REX_APP_ID" || true
+  [[ -n "$client" ]] && rex -C "$client" "do" session.select session_id="$sess" >/dev/null 2>&1
+}
+
+# Opens pi in a new Rex session labelled for the reminder, and waits until pi
+# is up. Rex runs the command through the login shell's environment, so PATH
+# and secrets are right even from launchd. Args: cwd, label, address to wait
+# for (or ""), pi args... Prints the session id. Exit 1 when pi does not start.
+open_pi_rex() {
+  local cwd=$1 label=$2 waddr=$3 cmd sess i
+  shift 3
+  cmd="$(printf '%q ' "$PI_BIN" "$@"); rc=\$?; echo; echo \"[INFO] pi exited (rc=\$rc)\"; exec $(printf '%q' "${SHELL:-/bin/bash}") -l"
+  sess=$(rex new "${label:0:32}" --cwd "$cwd" --json -- /bin/bash -c "$cmd" 2>/dev/null \
+    | "${NODE:-node}" -e 'let d="";process.stdin.on("data",c=>d+=c).on("end",()=>console.log(JSON.parse(d).session_id))') || return 1
+  [[ "$sess" == session:* ]] || return 1
+  echo "$sess"
+  for (( i = 0; i < 40; i++ )); do
+    sleep 0.5
+    if [[ -n "$waddr" ]]; then reg_live_pid "$waddr" >/dev/null && return 0
+    elif (( i >= 8 )); then return 0; fi
+  done
+  return 1
+}
+
 reg_live_pid() {
   local pid; pid=$(reg_field "$1" pid) || return 1
   [[ -n "$pid" ]] && kill -0 "$pid" 2>/dev/null && [[ "$(ps -o comm= -p "$pid")" =~ (pi|node)$ ]] && echo "$pid"
@@ -162,7 +225,7 @@ open_pi_window() {
 # session with the brief when there is nothing to resume. Exit 0 only when
 # pi is running; otherwise prints the reason and a manual command.
 resume_session() {
-  local addr=$1 slug=${2:-} sid cwd name pid client cpid tsess pane file wname brief
+  local addr=$1 slug=${2:-} sid cwd name pid client cpid tsess pane file wname brief rsess rblock
   if [[ -f "$REGISTRY/$addr.json" ]]; then
     sid=$(reg_field "$addr" sessionId) cwd=$(reg_field "$addr" cwd)
     name=$(reg_field "$addr" name || echo "$addr") pid=$(reg_live_pid "$addr" || true)
@@ -173,17 +236,38 @@ resume_session() {
   fi
   wname=${slug:-$name}
   read -r _ client cpid tsess < <("$TMUX_BIN" list-clients -F '#{client_activity} #{client_name} #{client_pid} #{session_name}' 2>/dev/null | sort -rn | head -1) || true
-  if [[ -n "$pid" ]]; then
+  if [[ -n "$pid" ]] && [[ -z "$(pane_for_pid "$pid")" ]] && read -r rsess rblock < <(rex_place_of_pid "$pid") && rex_up; then
+    rex focus -s "$rsess" "$rblock" >/dev/null 2>&1 || true
+    if rex_show "$rsess"; then echo "focused live session $name in Rex"
+    else echo "Rex is in front; live session $name is in Rex session $(rex ls 2>/dev/null | awk -v id="${rsess: -6}" '$NF==id {print $1}') (turn on Remote Control to have it shown)"; fi
+    return 0
+  elif [[ -n "$pid" ]]; then
     pane=$(pane_for_pid "$pid")
-    [[ -n "$pane" && -n "$client" ]] || { echo "$name is live but not in an attached tmux pane; switch to it by hand"; return 1; }
+    [[ -n "$pane" && -n "$client" ]] || { echo "$name is live but not in an attached tmux pane or a Rex terminal; switch to it by hand"; return 1; }
     "$TMUX_BIN" select-window -t "$pane" && "$TMUX_BIN" select-pane -t "$pane" &&
       "$TMUX_BIN" switch-client -c "$client" -t "$pane" || { echo "tmux could not focus $pane"; return 1; }
     echo "focused live session $name in pane $pane"
   else
     [[ -d "$cwd" ]] || { echo "$addr has no cwd"; return 1; }
-    [[ -n "$client" ]] || { echo "no attached tmux client; run: cd $cwd && pi --session $sid"; return 1; }
     # Ephemeral sessions register with pi-post but never write a file.
     [[ -n "$sid" ]] && file=$(find "$HOME/.pi/agent/sessions" -name "*_$sid.jsonl" -print -quit 2>/dev/null)
+    # No attached tmux client: open it in Rex when its server runs.
+    if [[ -z "$client" ]] && rex_up; then
+      if [[ -n "${file:-}" ]]; then
+        rsess=$(open_pi_rex "$cwd" "$wname" "$addr" --session "$file") ||
+          { echo "pi did not start in Rex session $wname; run: cd $cwd && pi --session $sid"; return 1; }
+        echo "resumed offline session $name in Rex session $wname"
+      else
+        [[ -n "$slug" && -s "$STATE_DIR/$slug.txt" ]] || { echo "$name has no session file and no brief to start from"; return 1; }
+        brief="Reminder $slug was for session $name ($addr), which cannot be resumed. Its brief follows."$'\n\n'"$(cat "$STATE_DIR/$slug.txt")"
+        rsess=$(open_pi_rex "$cwd" "$wname" "" "$brief") ||
+          { echo "pi did not start in Rex session $wname; brief: $STATE_DIR/$slug.txt"; return 1; }
+        echo "$name had no session file; started a new session with the brief in Rex session $wname"
+      fi
+      rex_show "$rsess" || true
+      return 0
+    fi
+    [[ -n "$client" ]] || { echo "no attached tmux client and no Rex server; run: cd $cwd && pi --session $sid"; return 1; }
     if [[ -n "${file:-}" ]]; then
       pane=$(open_pi_window "$tsess" "$cwd" "$wname" "$addr" --session "$file") ||
         { echo "pi did not start in window $wname${pane:+ ($pane)}; run: cd $cwd && pi --session $sid"; return 1; }

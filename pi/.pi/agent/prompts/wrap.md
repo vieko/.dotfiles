@@ -17,7 +17,7 @@ until I pick an option. Extra context from me: `$@`.
 3. **Working tree.** `git status --short` in the cwd and in any worktree this
    session created or touched (`git worktree list`). Uncommitted or unpushed
    work, branches ahead of origin.
-4. **Constructs.** `tmux list-windows -a -F '#W' | grep -E '^(fam|golem)-'`,
+4. **Constructs.** `~/.scripts/construct-term.sh list` (tmux and Rex),
    `anvil status --since 1d` (skip if absent), familiars this session
    dispatched (`list_sessions` for ones still live). For each: done and
    reapable, still running, or stalled.

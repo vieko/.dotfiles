@@ -160,3 +160,19 @@ by installers) moved into .bash_exports; .local/bin was already there.
   tmux keys we use, a resize mode, and three actions (`split_full`,
   `copy_cwd`, `keys_card`). Checked with `rex config check`, `rex keymap`,
   and by running each action in a throwaway session.
+- Construct dispatch: `scripts/.scripts/construct-term.sh` holds the tmux
+  and Rex terminal operations; `summon-familiar.sh`, `summon-golem.sh`
+  and `/wrap`, `/recap` use it, and `remind-at.sh` focuses a live session's
+  Rex tab or resumes an offline one in a new Rex session. Verified end to
+  end in Rex: a haiku familiar window reported back, a haiku golem passed
+  its gate, pinged, and closed its window; reminder resume worked live and
+  offline. Focusing a tab from the CLI needs Remote Control on in the app.
+
+## Trial rules (2026-10-31 to 2026-11-14)
+
+- Do not restart or update the Rex server while a golem or familiar runs:
+  a restart kills every process. Check `construct-term.sh list` and
+  `anvil status` first.
+- Long unattended runs stay in tmux until Rex can upgrade without killing
+  agents.
+- Reassess on 2026-11-14: keep, extend, or roll back.

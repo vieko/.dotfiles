@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# summon-golem.sh -- dispatch an Anvil golem in a named tmux window with a
+# summon-golem.sh -- dispatch an Anvil golem in a named tmux or Rex window with a
 # guaranteed completion ping back to the summoner via pi-post.
 #
 # Encodes the invariants from the 2026-08-21 golem-2055 dispatch review:
@@ -8,8 +8,9 @@
 #      wrapper owns logistics. The agent inside an anvil run is gate-bound
 #      and never does messaging.
 #   2. The summoner's address is captured from this shell's env and baked
-#      into the runner as a literal. tmux windows get the server's env, not
-#      the dispatching pane's -- interpolation-by-luck is not a mechanism.
+#      into the runner as a literal. tmux windows get the server's env and
+#      Rex windows a fresh login env, never the dispatching pane's --
+#      interpolation-by-luck is not a mechanism.
 #   3. `anvil run --json` writes the result to a file; the ping reports the
 #      parsed verdict. No `$?`-through-tee: with --json the stream goes to
 #      stderr and stdout is the result, so anvil's exit status is direct.
@@ -34,7 +35,7 @@
 #              astra needs anvil >= 0.3.1, sol the 2026-09-22 alias refresh).
 #              Default: luna (PHYREXIA golem binding -- cross-family worker
 #              under an Anthropic reviewer diversifies failure modes)
-#   -n         dry run: print the runner script and tmux command, run nothing
+#   -n         dry run: print the runner script and window command, run nothing
 #   -R         no report-back: skip the completion ping. Deliberate opt-out
 #              only -- the golem then finishes silently (golem-2055 mode:
 #              poll the pane or anvil status)
@@ -64,7 +65,8 @@
 #   [args...]  passed to `anvil run` verbatim (--from, --verify, --scope,
 #              --contract, --effort, -C, ...)
 #
-# Requires an active tmux session. The window opens with a login shell
+# Requires tmux or Rex (construct-term.sh picks the one this shell runs in;
+# tmux wins inside both). The window opens with a login shell
 # (env hydration), then runs a generated runner script; the pane stays open
 # after a red exit for inspection and closes itself after a green one (-k
 # to keep it).
@@ -182,7 +184,9 @@ if [[ $no_report -eq 0 ]]; then
     fi
 fi
 
-[[ $dry_run -eq 1 || -n "${TMUX:-}" ]] || { echo "error: summon-golem.sh requires an active tmux session" >&2; exit 1; }
+term="$HOME/.scripts/construct-term.sh"
+backend="$("$term" backend 2>/dev/null)" || backend=""
+[[ $dry_run -eq 1 || -n "$backend" ]] || { echo "error: summon-golem.sh requires tmux or Rex" >&2; exit 1; }
 
 mkdir -p "$LOG_DIR"
 ts="$(date +%Y%m%d-%H%M%S)"
@@ -280,9 +284,9 @@ ANVIL_STATUS=\$?
 map_close "\$ANVIL_STATUS"
 ping "\$ANVIL_STATUS"
 echo
-if [[ \$ANVIL_STATUS -eq 0 && $keep_window -eq 0 && -n "\${TMUX_PANE:-}" ]]; then
+if [[ \$ANVIL_STATUS -eq 0 && $keep_window -eq 0 && -n "\${TMUX_PANE:-}\${REX_BLOCK:-}" ]]; then
     echo "[DONE] $window green. Closing this window in 10s (Ctrl-C to keep). result: \$RESULT"
-    sleep 10 && tmux kill-window -t "\$TMUX_PANE"
+    sleep 10 && $(printf '%q' "$term") close-self
 else
     echo "[DONE] $window finished (exit \$ANVIL_STATUS). Pane stays open; result: \$RESULT"
 fi
@@ -300,7 +304,7 @@ map_open() {
 
 if [[ $dry_run -eq 1 ]]; then
     [[ -n "$map_id" ]] && echo "dry-run: would open map task $map_task (\"$map_title\") on $map_id at $sigil_server"
-    echo "dry-run: would open window $window (login shell, cwd $PWD), then send-keys:"
+    echo "dry-run: would open ${backend:-tmux or Rex} window $window (login shell, cwd $PWD), then type:"
     echo "  bash $runner"
     echo "--- runner ---"
     cat "$runner"
@@ -318,11 +322,11 @@ mark_summoner() {
 }
 mark_summoner
 
-# Login shell first (env hydration), then the runner via send-keys --
-# same discipline as summon-familiar.sh pane mode.
-pane_id="$(tmux new-window -d -P -F '#{pane_id}' -n "$window" -c "$PWD")"
+# Login shell first (env hydration), then the runner typed in -- same
+# discipline as summon-familiar.sh pane mode.
+pane_id="$("$term" open-window "$window" "$PWD")"
 sleep 1
-tmux send-keys -t "$pane_id" "bash $(printf '%q' "$runner")" Enter
+printf 'bash %q' "$runner" | "$term" send "$pane_id"
 # Summon ledger: shared with summon-familiar.sh (one grep audits all
 # constructs' vessel bindings -- see the 2026-08-30 fable-drift audit).
 echo "$(date +%Y-%m-%dT%H:%M:%S%z) kind=golem vessel=$vessel window=$window pane=$pane_id spec=$spec${golem_env[*]+ env=${golem_env[*]}}" >> "$LOG_DIR/summons.log"
@@ -336,9 +340,9 @@ fi
 
 # Startup verification: fail loudly here, not silently in a pane.
 sleep 15
-if tmux capture-pane -t "$pane_id" -p 2>/dev/null | grep -qE "No API key found|error:|Error:|command not found"; then
+if "$term" capture "$pane_id" 2>/dev/null | grep -qE "No API key found|error:|Error:|command not found"; then
     echo "error: golem reported a startup error -- pane $pane_id tail:" >&2
-    tmux capture-pane -t "$pane_id" -p | grep -vE '^\s*$' | tail -6 >&2
+    "$term" capture "$pane_id" | grep -vE '^\s*$' | tail -6 >&2
     exit 1
 fi
-echo "verified: pane $pane_id clean after 15s (watch: tmux capture-pane -t $pane_id -p; presence: anvil status)"
+echo "verified: pane $pane_id clean after 15s (watch: construct-term.sh capture $pane_id; presence: anvil status)"

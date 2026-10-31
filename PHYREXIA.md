@@ -19,6 +19,11 @@ truth.
       |
       +- panes        agents     each pane runs an agent session
 
+Rex trial (2026-10-31, `docs/rex-assessment.md`): the same topology maps to
+a Rex session (plane), tabs (project and construct windows, same names) and
+panes. `summon-*.sh` and `remind-at.sh` pick tmux or Rex through
+`scripts/.scripts/construct-term.sh`; tmux wins when both are present.
+
 ## Roles
 
 - **Summoner** -- the directing session. Runtime-agnostic: a Pi *or* Claude
@@ -502,7 +507,7 @@ the layout.
   `git worktree list` (sibling checkouts, incl. stale anvil dirs), and
   `tmux list-panes -s -F '#{window_name}: #{pane_current_command}'`
   (familiars + dev servers -- construct windows announce themselves by
-  name). The collisions that matter are semantic --
+  name; `construct-term.sh list` covers tmux and Rex). The collisions that matter are semantic --
   two agents on one issue, or two open DB migrations -- not visual.
 
 - **Hand-rolled golem gates on TS work include `tsc --noEmit`.** Explicit
@@ -520,7 +525,7 @@ the layout.
   diagnosed it and refused to touch the gate. Never `cd` inside a captured
   substitution in a gate; pass paths to the tool (`tsc -p "$d/tsconfig.json"`)
   or `unset CDPATH` first, as `scripts/verify-athena.sh` does. Validate
-  gates in a login shell (`tmux new-window`), not only in the bash tool.
+  gates in a login shell (a new tmux or Rex window), not only in the bash tool.
   Corollary: a gate the golem cannot satisfy is a summoner bug; read the
   golem's diagnosis before re-dispatching.
 

@@ -5,8 +5,8 @@
 #   1. Gateway model IDs contain a slash (anthropic/claude-sonnet-5), so pi
 #      --model alone parses the prefix as a direct provider with no key on
 #      this host. Always pass --provider vercel-ai-gateway explicitly.
-#   2. Pane familiars get a default login shell first, then the command via
-#      send-keys -- a split-window with a direct command skips env hydration.
+#   2. Pane familiars get a default login shell first, then the command typed
+#      in -- a split with a direct command skips env hydration.
 #   3. Panes are targeted by immutable pane_id (%N), never by index --
 #      kill-pane reindexes and you end up steering the wrong session.
 #   4. Startup is verified: "No API key found", a killed pi or a pane back
@@ -20,8 +20,8 @@
 #              default level is not what the summoning wants, e.g.
 #              openai/gpt-6-astra:xhigh (astra's ceiling; the alias binds :high)
 #   -P         print mode: in-band `pi -p` dispatch (nohup + log) instead of
-#              an interactive tmux pane
-#   -W name    construct window: open a new tmux window named <name>
+#              an interactive tmux or Rex pane
+#   -W name    construct window: open a new tmux or Rex window named <name>
 #              (convention: fam-<issue>, e.g. fam-2551) instead of a pane in
 #              the current window. The window name is the in-flight signal
 #              (PHYREXIA.md topology) -- kill it on merge with the worktree.
@@ -45,7 +45,8 @@
 #              another session's uncommitted work). Requires running inside
 #              the target repo. Fails loudly on a stale worktree or branch.
 #
-# Pane and window modes require an active tmux session. Default pane mode
+# Pane and window modes require tmux or Rex (construct-term.sh picks the
+# one this shell runs in; tmux wins inside both). Default pane mode
 # opens in the current window (quick same-project helpers); -W opens a named
 # construct window (dispatched task work -- familiars are summoned, never
 # conscripted; see PHYREXIA.md summoning discipline).
@@ -325,24 +326,27 @@ if [[ $print_mode -eq 1 ]]; then
     echo "note: the log stays empty until the run ends -- check liveness with: ps -p $pid"
 else
     # Pane/window familiar: default shell first (env hydration), command typed in.
-    [[ -n "${TMUX:-}" ]] || { echo "error: pane/window mode requires tmux (use -P for in-band)" >&2; exit 1; }
+    # construct-term.sh does the terminal work for tmux and Rex alike.
+    term="$HOME/.scripts/construct-term.sh"
+    backend="$("$term" backend 2>/dev/null)" \
+        || { echo "error: pane/window mode requires tmux or Rex (use -P for in-band)" >&2; exit 1; }
     pi_cmd="${counsel_env:+$counsel_env }${board_env:+$board_env }$role_env pi --provider \"$PROVIDER\" --model \"$model\" \"$prompt\""
     if [[ $dry_run -eq 1 ]]; then
         if [[ -n "$window_name" ]]; then
-            echo "dry-run (window mode): new-window -n $window_name, then send-keys:"
+            echo "dry-run (window mode, $backend): new window $window_name, then type:"
         else
-            echo "dry-run (pane mode): split-window in current window, then send-keys:"
+            echo "dry-run (pane mode, $backend): split beside this pane, then type:"
         fi
         echo "  $pi_cmd"
         exit 0
     fi
     if [[ -n "$window_name" ]]; then
-        pane_id="$(tmux new-window -d -P -F '#{pane_id}' -n "$window_name" -c "$work_dir")"
+        pane_id="$("$term" open-window "$window_name" "$work_dir")"
     else
-        pane_id="$(tmux split-window -d -P -F '#{pane_id}' -c "$work_dir")"
+        pane_id="$("$term" open-split "$work_dir")"
     fi
     sleep 1
-    tmux send-keys -t "$pane_id" "$pi_cmd" Enter
+    printf '%s' "$pi_cmd" | "$term" send "$pane_id"
     if [[ -n "$window_name" ]]; then
         log_summon "mode=window window=$window_name pane=$pane_id brief=$brief_abs${worktree_name:+ worktree=$worktree_name}${board:+ board=$board}"
         echo "summoned: window $window_name (pane $pane_id), vessel $vessel ($model)"
@@ -354,12 +358,12 @@ else
     # A pi killed at exec leaves only "Killed: 9" and a shell prompt, which the
     # error grep alone reported as clean (fam-35, 2026-10-12). pi runs as node:
     # a pane back at its shell means pi is not running.
-    pane_cmd="$(tmux display -p -t "$pane_id" '#{pane_current_command}' 2>/dev/null || echo gone)"
+    pane_cmd="$("$term" command "$pane_id")"
     if [[ "$pane_cmd" =~ ^-?(bash|zsh|sh|fish|gone)$ ]] \
-        || tmux capture-pane -t "$pane_id" -p 2>/dev/null | grep -qE "No API key found|Error:|Killed"; then
+        || "$term" capture "$pane_id" 2>/dev/null | grep -qE "No API key found|Error:|Killed"; then
         echo "error: familiar is not running (pane command: $pane_cmd) -- pane $pane_id tail:" >&2
-        tmux capture-pane -t "$pane_id" -p 2>/dev/null | grep -vE '^\s*$' | tail -5 >&2
+        "$term" capture "$pane_id" 2>/dev/null | grep -vE '^\s*$' | tail -5 >&2
         exit 1
     fi
-    echo "verified: pane $pane_id clean after 15s (steer with: tmux send-keys -t $pane_id, or pi-post once registered)"
+    echo "verified: pane $pane_id clean after 15s (steer with pi-post once registered, or: echo text | construct-term.sh send $pane_id)"
 fi

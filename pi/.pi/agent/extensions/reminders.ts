@@ -203,7 +203,7 @@ export default function (pi: ExtensionAPI) {
 		description:
 			"Schedule a one-shot reminder (macOS launchd via ~/.scripts/remind-at.sh). At the given local time it " +
 			"sends the brief to this pi session over pi-post and shows the user an alert whose Resume button " +
-			"focuses this session, or resumes it in a new tmux window when it is offline. It survives reboots: " +
+			"focuses this session, or resumes it in a new tmux window or Rex session when it is offline. It survives reboots: " +
 			"a reminder missed while the Mac was off fires at next login. Reusing a slug reschedules it. " +
 			"List or cancel with `remind-at.sh --list` / `--cancel <slug>` (the user has /reminders).",
 		promptSnippet: "Schedule a reminder that messages this session at a local time and lets the user resume it",
