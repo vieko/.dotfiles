@@ -210,6 +210,7 @@ set -uo pipefail
 
 RESULT=$(printf '%q' "$result")
 LOG=$(printf '%q' "$log")
+NAME=$(printf '%q' "$name")
 PINGED=0
 EOF
     for kv in "${golem_env[@]+"${golem_env[@]}"}"; do
@@ -275,12 +276,43 @@ EOF
         printf '\nping() { :; }  # -R: report-back deliberately disabled at summon time\n'
     fi
     cat <<'EOF'
-trap 'map_close "${ANVIL_STATUS:-interrupted}"; ping "${ANVIL_STATUS:-interrupted}"' EXIT
+
+# Program status (OSC 7501): a spinner in Rex while anvil runs, then done
+# or error. Its own record id, so it never replaces another program's root
+# record. Written only to a terminal, so a redirected run stays clean.
+# Messages are short and built in-process: no gate commands, and nothing
+# code-like on an argv (the SentinelOne rule above). The pi-post ping stays
+# the delivery; a green window closes after 10s and takes its record along.
+status() {
+    [[ -t 1 ]] || return 0
+    local msg title
+    msg="$(printf '%s' "$2" | base64 | tr -d '\n')"
+    title="$(printf 'golem %s' "$NAME" | base64 | tr -d '\n')"
+    printf '\033]7501;state=%s:id=golem:app=golem:title=%s:msg=%s\033\\' "$1" "$title" "$msg"
+}
+STATUSED=0
+status_close() {
+    [[ $STATUSED -eq 1 ]] && return 0
+    STATUSED=1
+    local code="$1" passed="" attempts=""
+    if [[ -s "$RESULT" ]]; then
+        passed="$(jq -r '.passed // empty' "$RESULT" 2>/dev/null)"
+        attempts="$(jq -r '.attempts // empty' "$RESULT" 2>/dev/null)"
+    fi
+    if [[ "$code" == 0 && "$passed" == true ]]; then
+        status done "golem $NAME passed (attempts: ${attempts:-?})"
+    else
+        status error "golem $NAME failed (exit $code); see the result JSON"
+    fi
+}
+trap 'status_close "${ANVIL_STATUS:-interrupted}"; map_close "${ANVIL_STATUS:-interrupted}"; ping "${ANVIL_STATUS:-interrupted}"' EXIT
+status working "golem $NAME: anvil running"
 EOF
     cat <<EOF
 
 $anvil_cmd >"\$RESULT" 2> >(tee "\$LOG" >&2)
 ANVIL_STATUS=\$?
+status_close "\$ANVIL_STATUS"
 map_close "\$ANVIL_STATUS"
 ping "\$ANVIL_STATUS"
 echo

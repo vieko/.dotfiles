@@ -180,6 +180,18 @@ by installers) moved into .bash_exports; .local/bin was already there.
 - Key audit: `keybind-audit.sh` reads Rex's `init.lua` bindings and app
   overrides. Built-in Rex defaults wait for a CLI that lists them.
 
+- Golem status: the summon-golem runner reports OSC 7501 under its own
+  record id `golem` (working while anvil runs, then done or error), only
+  to a terminal, with short messages. Tested in Rex: working mid-run;
+  error after a red gate, window kept; done after a green gate (`-k`);
+  the pi-post ping still arrives; nothing written when not on a terminal.
+  A green window closes after 10s, so `done` is brief; `error` stays.
+- Deferred after two counsel reviews: OSC 7501 in pr-wait.sh (it runs
+  detached, with no terminal), a Lua events watchdog (Rex's exit event
+  fires for the tab's shell, not typed commands; it dies on restarts),
+  and the Rex agent skill (read `rex skill show` first, then use
+  `rex skill setup`). Keep tmux-status.ts while tmux stays the fallback.
+
 ## Rex app settings (not in a config file yet)
 
 Rex keeps appearance in the app (`defaults read com.superlogical.rex`,
