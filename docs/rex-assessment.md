@@ -196,6 +196,12 @@ by installers) moved into .bash_exports; .local/bin was already there.
   Rex tab reporting `blocked`/`kind=question` in place of the modal alert;
   it would lose the Snooze and Later buttons and need Rex running.
 
+- Rex agent skill installed 2026-10-31 (`rex skill setup`): stub skill in
+  `~/.agents/skills/rex` (gitignored) and `~/.claude/skills/rex`, Claude Code
+  and Codex SessionStart hooks; session naming off. Pi has no hook and needs
+  none (REX_SESSION/REX_BLOCK are in its env). It covers non-Pi terminals;
+  pi-post stays the agent-to-agent channel.
+
 ## Rex app settings (not in a config file yet)
 
 Rex keeps appearance in the app (`defaults read com.superlogical.rex`,

@@ -153,6 +153,14 @@ fresh machine, clone the dev repos (`~/dev/bonfire`, `~/dev/anvil`), then run
 `agents/.agents/setup-skill-symlinks.sh` after stowing `agents/`. Other skills are
 self-contained directories.
 
+`~/.agents/skills/rex` is a third kind: a 13-line stub that `rex skill setup`
+writes on a Mac with Rex (it runs `rex __internal skill`, so the guide follows
+the installed Rex). It is gitignored too; run `rex skill setup` once per
+machine. The same command adds a `SessionStart` hook to
+`claude/.claude/settings.json`, which is tracked; the hook ends in `|| true`,
+so it does nothing where `rex` is missing. `rex skill status` shows what is
+installed, `rex skill remove` undoes it.
+
 (Lineage notes for retired names — forge, old bonfire commands — live in
 `docs/agent-maintenance.md`.)
 

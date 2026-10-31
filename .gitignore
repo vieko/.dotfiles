@@ -7,6 +7,8 @@ credentials
 # ~/.agents/skills and would silently skip the ignored skills.
 agents/.agents/skills/bonfire
 agents/.agents/skills/anvil
+# Written by `rex skill setup` (macOS with Rex); regenerate per machine.
+agents/.agents/skills/rex
 .config/tmux/plugins/*
 tmux/.config/tmux/plugins/*
 cargo/.cargo/*
