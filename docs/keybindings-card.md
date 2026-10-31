@@ -15,7 +15,7 @@ Full layer map and collision audit: `docs/keybindings.md`, `keybind-audit.sh`.
 - `Cmd+D`: Spotlight. `Alt+Cmd+D`: Dock toggle.
 - `Shift+F13`: screenshot to file. `Ctrl+Shift+F13`: selection to clipboard.
   (Kinesis `hk3` sends F13.)
-- `Cmd+Shift+Enter`: new Ghostty window, from anywhere.
+- `Cmd+Shift+Enter`: new Rex window, from anywhere (Aerospace; Ghostty's during the Rex trial is off).
 - Outside terminals and Zed: `Ctrl+{C,V,X,A,F,Z,Y,T,W,N,R}` act as Cmd.
 - Inside terminals: `Ctrl+Shift+C/V` copy / paste.
 

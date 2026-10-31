@@ -168,6 +168,28 @@ by installers) moved into .bash_exports; .local/bin was already there.
   its gate, pinged, and closed its window; reminder resume worked live and
   offline. Focusing a tab from the CLI needs Remote Control on in the app.
 
+- Alerts: `play-random.sh` stays silent when TERM_PROGRAM=rex, so Pi's
+  sound-on-end and the Claude Code Stop hook leave turn alerts to Rex's
+  program notifications (Settings, Notifications: sound, banner, badge).
+- Remote Control on (Settings, Rex Server): reminders switch the app to
+  the session's tab; `rex-new-window.sh` opens windows.
+- New-window hotkey: Aerospace `cmd-shift-enter` runs
+  `scripts/.scripts/rex-new-window.sh`; Ghostty's global binding is
+  commented out for the trial.
+
+## Rex app settings (not in a config file yet)
+
+Rex keeps appearance in the app (`defaults read com.superlogical.rex`,
+keys `Workspace.*`). To match Ghostty on a new machine:
+
+- Theme: `rex -C <host> do client.theme.import path=$HOME/.config/rex/themes/one-half-dark`
+  (Ghostty's One Half Dark with our cursor colors; tracked in `rex/`).
+  Import makes it the dark theme. Appearance: dark.
+- Font: Settings, Terminal, Typography: Berkeley Mono, style Retina
+  (`Workspace.terminalFontName`, `Workspace.terminalFontStyle`).
+- Cursor: block, no blink.
+- Remote Control: on (Settings, Rex Server).
+
 ## Trial rules (2026-10-31 to 2026-11-14)
 
 - Do not restart or update the Rex server while a golem or familiar runs:

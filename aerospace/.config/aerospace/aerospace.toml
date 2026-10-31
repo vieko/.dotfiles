@@ -118,3 +118,8 @@ cmd-space = 'layout floating tiling'
 # Fullscreen toggle (Cmd+F conflicts with find, use Cmd+Shift+F)
 # Also trigger sketchybar to update fullscreen indicator
 cmd-shift-f  = ['fullscreen', 'exec-and-forget sketchybar --trigger aerospace_workspace_change']
+
+# New Rex window from anywhere (Rex trial, docs/rex-assessment.md). Took
+# this chord over from Ghostty's `global:super+shift+enter`; to go back,
+# delete this line and uncomment that one in ghostty/.config/ghostty/config.
+cmd-shift-enter = 'exec-and-forget /bin/bash -c "$HOME/.scripts/rex-new-window.sh"'

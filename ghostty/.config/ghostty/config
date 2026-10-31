@@ -52,7 +52,9 @@ keybind = alt+backspace=text:\x1b\x7f
 # every launch (denied by our Kandji MDM PPPC profile), which is what caused
 # the constant Ghostty + 1Password popups. See also: dropped the old
 # `open -n` Karabiner script (new-ghostty-window.sh) that spawned processes.
-keybind = global:super+shift+enter=new_window
+# Rex trial (2026-10-31): Aerospace binds cmd-shift-enter to a new Rex
+# window instead (scripts/.scripts/rex-new-window.sh). Uncomment to go back.
+# keybind = global:super+shift+enter=new_window
 
 # MOUSE
 mouse-hide-while-typing = true
