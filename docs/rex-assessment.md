@@ -156,3 +156,7 @@ self-heal, socket-firewall source). Relinked with `stow bash` the same day.
 The only live-only lines (opencode and ~/.local/bin PATH entries, appended
 by installers) moved into .bash_exports; .local/bin was already there.
 .bash_exports also puts REX_BIN_DIR back at the front of PATH.
+- `rex/` stow package with `init.lua`: prefix Ctrl+A sequences for the
+  tmux keys we use, a resize mode, and three actions (`split_full`,
+  `copy_cwd`, `keys_card`). Checked with `rex config check`, `rex keymap`,
+  and by running each action in a throwaway session.

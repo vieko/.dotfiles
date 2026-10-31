@@ -30,7 +30,7 @@ packages not listed here (e.g. `aws`, `gh`, `gnupg`, `cargo`, `zed`, `picom`,
 `tofi`, GTK/Qt theming); stow what you need.
 
 **Cross-platform packages:** bash, git, kitty, ghostty, tmux, nvim, starship, bat, btop, lazygit, yazi, assets, claude, pi, opencode, agents, slack
-**macOS-only:** macos, macos-keyboard, aerospace, sketchybar, karabiner
+**macOS-only:** macos, macos-keyboard, aerospace, sketchybar, karabiner, rex (trial; see `docs/rex-assessment.md`)
 **Linux-only:** hypr, waybar, dunst, fuzzel, mako, rofi, sway, i3, polybar, ptyxis (run `ptyxis/setup-ptyxis.sh` once after stowing)
 
 ### Agent-related Packages

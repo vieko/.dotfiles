@@ -28,6 +28,7 @@ A keypress is claimed by the first layer that binds it.
 | Ghostty global | `ghostty/.config/ghostty/config` | global | `cmd+shift+enter` new window (single instance) |
 | Ghostty local | same | terminal | Ghostty defaults minus what Aerospace claims (`cmd+1..9` tabs are dead by design) |
 | tmux | `tmux/.config/tmux/tmux.conf` + tmux-pain-control | terminal | prefix `C-a`; `prefix + h/j/k/l` panes, `prefix + \| -` splits, `prefix + .` swap window. **No root-table Ctrl bindings** (vim-tmux-navigator's tmux half was removed on purpose) |
+| Rex | `rex/.config/rex/init.lua` | terminal (trial) | prefix `C-a` sequences mirroring tmux; Rex app defaults are Cmd chords, so Aerospace keeps `cmd+h/j/k/l` and `cmd+1..0`. `rex keymap` lists our bindings, not the app defaults |
 | Pi | `pi/.pi/agent/keybindings.json` + defaults | terminal | `ctrl+shift+n/r/t/f/s` sessions, `ctrl+p/n` history, `ctrl+.` model cycle, plus the readline-style editor defaults |
 | nvim | `nvim/.config/nvim/lua/core/editor.lua` | terminal | `C-h/j/k/l` cross pane edges into tmux (nvim side of vim-tmux-navigator calls `tmux select-pane`) |
 

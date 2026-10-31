@@ -29,6 +29,14 @@ Full layer map and collision audit: `docs/keybindings.md`, `keybind-audit.sh`.
 - `?` this card. `:list-keys` the raw table.
 - No bare Ctrl chords at the root: they belong to the app in the pane.
 
+## Rex (prefix `C-a`, rex/.config/rex/init.lua)
+
+- Same keys as tmux for tabs, panes, splits, zoom, kill, `?` card.
+- `r` resize mode (`hjkl` 5%, `HJKL` 15%, `=` balance, Esc leaves). `=` balance outside the mode too.
+- `f` float pane. `!` pane to new tab. `0` last tab. `s` / `w` session picker.
+- `[` Find (no copy mode yet). `:` command palette. `Y` copy pane directory.
+- Not ported: `a` last window, `.` swap with index, `d` detach, `C-s` / `C-r`.
+
 ## Pi (Ctrl)
 
 - `Ctrl+Shift+N/R/T/F`: new / resume / tree / fork. `Ctrl+Shift+S`: search.
