@@ -138,12 +138,15 @@ Linux-only packages are out of scope (no Rex Linux client).
   TERM_PROGRAM=rex. Verified: `rex block call pwd` returns the cwd.
 - `rex terminfo setup`: xterm-rex in ~/.terminfo, guard in
   ~/.config/rex/ssh_config, Include in ~/.ssh/config (new file).
-- 1Password: four new panes each ran `op inject` and got the key; prompt
-  count to be reported by the user.
+- 1Password: four new panes each ran `op inject` and got the key; the
+  user saw at least 3 prompts. Blocker 1 stands.
+- Karabiner reload and Ctrl+C / Ctrl+Shift+V in Rex confirmed by the user.
 - FORGE_STATE_ROOT: not moved. Nothing reads it (forge is anvil's old
   name); the tmux.conf line is dead.
 
-Found on the way: ~/.bashrc and ~/.bash_profile on phyrexia are plain
-files, not stow links, and lag the repo (op guard message, vercel skill
-self-heal, socket-firewall source). The Rex block was appended to the live
-~/.bashrc too; backup in ~/scratch/data/bashrc-live-backup-2026-10-31.
+Found on the way: ~/.bashrc and ~/.bash_profile on phyrexia were plain
+files, not stow links, and lagged the repo (op guard message, vercel skill
+self-heal, socket-firewall source). Relinked with `stow bash` the same day.
+The only live-only lines (opencode and ~/.local/bin PATH entries, appended
+by installers) moved into .bash_exports; .local/bin was already there.
+.bash_exports also puts REX_BIN_DIR back at the front of PATH.

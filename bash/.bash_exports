@@ -177,6 +177,14 @@ export PI_CACHE_RETENTION=long
 # it survives Pi rewriting the file on version updates.
 export PI_TELEMETRY=0
 
+# OpenCode's installer puts its binary here and ranks it above the npm-global
+# copy. Its installer appended this to ~/.bashrc once; it lives here now so
+# ~/.bashrc can stay a stow link.
+case ":$PATH:" in
+  *":$HOME/.opencode/bin:"*) ;;
+  *) [[ -d "$HOME/.opencode/bin" ]] && export PATH="$HOME/.opencode/bin:$PATH" ;;
+esac
+
 # User-local bin (last to ensure highest priority)
 case ":$PATH:" in
   *":$HOME/.local/bin:"*) ;;
@@ -191,4 +199,15 @@ esac
 # re-sourcing this file keeps ~/.scripts in front.
 PATH=$(printf '%s' ":$PATH:" | sed "s#:$HOME/.scripts:#:#g; s#^:##; s#:\$##")
 export PATH="$HOME/.scripts:$PATH"
+
+# Rex puts the rex binary that matches its server first in PATH and sets
+# REX_BIN_DIR; the lines above reorder PATH, so put it back in front. The
+# directory holds only `rex`, so it shadows nothing else.
+if [[ -n "${REX_BIN_DIR:-}" ]]; then
+    _rexPath=":$PATH:"
+    _rexPath=${_rexPath//":$REX_BIN_DIR:"/:}
+    _rexPath=${_rexPath#:}
+    export PATH="$REX_BIN_DIR:${_rexPath%:}"
+    unset _rexPath
+fi
 
