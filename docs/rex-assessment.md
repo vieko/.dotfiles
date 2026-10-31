@@ -193,6 +193,10 @@ keys `Workspace.*`). To match Ghostty on a new machine:
 - Cursor: block, no blink.
 - Remote Control: on (Settings, Rex Server).
 
+User check 2026-10-31: Ghostty reloaded without its global chord,
+Cmd+Shift+Enter opens one Rex window, the One Half Dark theme looks right,
+and Alt+Backspace deletes a word in Pi under Rex with no extra binding.
+
 ## Trial rules (2026-10-31 to 2026-11-14)
 
 - Do not restart or update the Rex server while a golem or familiar runs:
