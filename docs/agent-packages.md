@@ -196,6 +196,26 @@ choice is purely about where the source of truth lives. Migrate a skill
 between modes by replacing the dotfiles entry with the opposite kind
 (symlink → directory or vice versa) and re-stowing `agents/`.
 
+## Writing skill descriptions
+
+The model reads only the `description` when it picks a skill, so the
+description decides whether the skill loads. A 90-day pass over pi sessions
+(2026-10) found skills that missed the phrases actually used, and one that
+loaded for the wrong request. Rules:
+
+- Lead with when, in the user's own words ("use sigil", "freshen up",
+  "it's friday, let's run it"), not with what the skill is.
+- Add one clause on what it produces.
+- Add a "Not for" line when a neighbouring skill or a known misfire exists
+  (`web-design-guidelines`: not for HTML artifacts or diagrams).
+- Stay under about 500 characters.
+- Name skills with an active verb where one fits (`revisit-pr`, not
+  `modernize`, which also matches code upgrades).
+
+Skills installed from upstream (`web-design-guidelines`) lose local
+description edits on reinstall; reapply them. Skills in their own repos
+(`sigil`, `anvil`) take description changes through a PR there.
+
 ## Spinner verb dictionary (shared across agents)
 
 The occult/metallurgical agent-spinner verbs are centralized in one
