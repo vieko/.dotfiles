@@ -279,7 +279,10 @@ option is inside the brief, reversible, and outside the destructive set, take
 it and report what you did and why in one line. Offer a lettered list only
 when the choice is irreversible, changes scope, or the options are genuinely
 close and the user holds information you lack. The lettered format itself is
-unchanged; it is the trigger that narrows.
+unchanged; it is the trigger that narrows. This includes the end of a step:
+do not close on a menu of next steps when the recommended one is inside the
+brief and reversible; start it. Week 44 still had 20% one-token replies, and
+a third of the sampled ones answered such a menu.
 
 ## Timestamps
 

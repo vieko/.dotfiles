@@ -19,6 +19,9 @@
  *           and 40 audits each had two "lookup became a workspace" sessions
  *           carrying ~35% of spend; the fork nudge fires only on resume and
  *           did not change that.
+ *   stale   The installed pi is newer than this process. Week 44: one
+ *           Summoner ran 19 days on a pi older than the 1.2.0 fix for
+ *           pi-post wakes dropping prompt sections (~$12 of rewrites).
  *
  * Every nudge shown is also appended as a `nudge` custom entry (never in
  * model context) so session-audit can count shown vs. acted on.
@@ -31,13 +34,24 @@ import { existsSync, readFileSync } from "node:fs";
 import { homedir } from "node:os";
 import { join } from "node:path";
 import type { ExtensionAPI, ExtensionCommandContext, ExtensionContext } from "@earendil-works/pi-coding-agent";
-import { getMarkdownTheme } from "@earendil-works/pi-coding-agent";
+import { getMarkdownTheme, VERSION } from "@earendil-works/pi-coding-agent";
 import { Markdown, matchesKey, truncateToWidth, visibleWidth } from "@earendil-works/pi-tui";
 
 const CHEATSHEET = join(homedir(), ".pi/agent/CHEATSHEET.md");
 const FORK_TURNS = 20;
 const RENEW_TURNS = 40;
 const RENEW_DAYS = 3;
+// Written by pi's managed installer on update; absent on other installs.
+const INSTALLED_VERSION = join(homedir(), ".pi/agent/install/current-version");
+const STALE_CHECK_MS = 10 * 60_000;
+
+function installedVersion(): string | undefined {
+	try {
+		return readFileSync(INSTALLED_VERSION, "utf8").trim() || undefined;
+	} catch {
+		return undefined;
+	}
+}
 
 // First tokens that mean "this is a shell command, not a prompt".
 const SHELL_HEAD =
@@ -89,8 +103,23 @@ export default function (pi: ExtensionAPI) {
 		nudge(ctx, "renew", `${why}. /new + /recap starts fresh at a fraction of the price; /fork keeps an earlier thread`, { turns, days });
 	};
 
+	let staleCheckedAt = 0;
+	const stale = (ctx: ExtensionContext) => {
+		const now = Date.now();
+		if (now - staleCheckedAt < STALE_CHECK_MS) return;
+		staleCheckedAt = now;
+		const installed = installedVersion();
+		if (!installed || installed === VERSION) return;
+		nudge(ctx, "stale", `pi ${installed} is installed but this process runs ${VERSION}. /exit and resume this session to pick up its fixes`, {
+			running: VERSION,
+			installed,
+		});
+	};
+
 	pi.on("session_start", (event, ctx) => {
 		shown.clear();
+		staleCheckedAt = 0;
+		stale(ctx);
 		if (event.reason !== "resume" && event.reason !== "startup") return;
 		const turns = userTurns(ctx);
 		const days = activeDays(ctx);
@@ -106,6 +135,7 @@ export default function (pi: ExtensionAPI) {
 
 	pi.on("input", (event, ctx) => {
 		if (event.source !== "interactive" || event.streamingBehavior) return;
+		stale(ctx);
 		// This prompt is about to become turn N+1; a session that crosses the
 		// renew line within one sitting gets the nudge here, not only on resume.
 		renew(ctx, userTurns(ctx) + 1, activeDays(ctx, true));

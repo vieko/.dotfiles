@@ -99,7 +99,8 @@ converges on pi-reported $ and the repricing note can be dropped.
    steering to AGENTS.md. Avg $/consult above ~$3 or cache-read share
    under 30% on repeat consults points at the serialiser, not the model.
 10. **Nudges.** `habit-nudges.ts` appends a `nudge` custom entry per nudge
-   shown (since 2026-10-05; keys `shell`, `abort`, `fork`, `renew`). The
+   shown (since 2026-10-05; keys `shell`, `abort`, `fork`, `renew`, and
+   `stale` since 2026-11-01: the process runs an older pi than installed). The
    section reports counts by key and, for `renew` (40 prompts or day 3),
    how many were followed by <= 3 prompts (the user left for `/new` or
    `/fork`) vs kept going. The renew nudge exists because weeks 39 and 40
