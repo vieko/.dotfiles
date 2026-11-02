@@ -235,3 +235,6 @@ old row so drift is visible.
   (Rex), no production golems.
 - One-token decisions: 75 of 372 user turns (20%), flat since the 10-11
   rule.
+- Open trial: terra familiars (`-m terra`, gpt-6.1-terra) from 11-02.
+  Week-46 audit: compare terra vs sol on edit health, $/turn, and review
+  rounds per familiar task (PHYREXIA.md Vessels has the decision rule).

@@ -15,7 +15,7 @@
 # Usage:
 #   summon-familiar.sh [-m alias] [-P] [-n] [-R] [-C] [-B board] [-w name] [-W name] <brief-path> [prompt override]
 #
-#   -m alias   vessel: haiku|sol|sonnet|opus|fable|luna|astra (default: sol),
+#   -m alias   vessel: haiku|sol|terra|sonnet|opus|fable|luna|astra (default: sol),
 #              or a raw gateway id with an explicit effort when the alias's
 #              default level is not what the summoning wants, e.g.
 #              openai/gpt-6-astra:xhigh (astra's ceiling; the alias binds :high)
@@ -70,6 +70,7 @@ alias_to_model() {
     case "$1" in
         haiku)  echo "anthropic/claude-haiku-5.5:low" ;;
         sol)    echo "openai/gpt-6.1-sol:high" ;;  # 6.1 since 2026-10-09, matching anvil's alias and the picker
+        terra)  echo "openai/gpt-6.1-terra:high" ;;  # trial since 2026-11-02: half sol's price; PHYREXIA.md Vessels
         sonnet) echo "anthropic/claude-sonnet-5.5:medium" ;;
         opus)   echo "anthropic/claude-opus-5.5:medium" ;;
         fable)  echo "anthropic/claude-fable-5.1:high" ;;
