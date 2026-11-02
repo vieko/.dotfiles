@@ -33,7 +33,8 @@ on `hostname` (mirroring `hypr/scripts/host.sh`), merges `settings.base.json`
 with `hosts/enabledModels.<host>.json` via `jq`, and writes
 `~/.pi/agent/settings.json` directly (the live file is a real file, not a
 stow symlink -- Pi's atomic writes replace symlinks). It preserves the
-Pi-managed `lastChangelogVersion` key and warns if live package pins drifted
+Pi-managed `lastChangelogVersion` and `extensionChangelogVersions` keys
+(the latter, pi 1.5.0+, gates package changelogs after an update) and warns if live package pins drifted
 from the base (base wins; sync base first if live is newer after `pi update`). An
 unknown host falls back to `hosts/enabledModels.default.json` (the restricted
 set). Add a host by dropping in a new `hosts/enabledModels.<host>.json` fragment.

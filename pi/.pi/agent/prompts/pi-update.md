@@ -33,7 +33,7 @@ stops or tool errors in the latest `~/scratch/sessions-*-assessment-notes.md`),
 **Drift check**, since an update often lands with a Ctrl+S or a dev package:
 
 ```bash
-diff <(jq -S 'del(.lastChangelogVersion,.enabledModels)' ~/.pi/agent/settings.json) \
+diff <(jq -S 'del(.lastChangelogVersion,.extensionChangelogVersions,.enabledModels)' ~/.pi/agent/settings.json) \
      <(jq -S 'del(.enabledModels)' ~/.dotfiles/pi/.pi/agent/settings.base.json)
 ```
 

@@ -44,7 +44,10 @@ fi
 # Write directly to the live file. ~/.pi/agent/settings.json is a real file
 # (not a stow symlink): Pi's atomic writes replace symlinks, so a repo-dir
 # copy silently stops propagating. Machine-local keys Pi manages
-# (lastChangelogVersion) are preserved from the existing live file.
+# (lastChangelogVersion, extensionChangelogVersions) are preserved from the
+# existing live file. Dropping extensionChangelogVersions makes Pi treat every
+# package as new and record its version silently, so a package changelog would
+# never show after a pin bump.
 out="${HOME}/.pi/agent/settings.json"
 tmp="$(mktemp)"
 jq --slurpfile models "$fragment" '.enabledModels = $models[0]' "$base" >"$tmp"
@@ -101,7 +104,8 @@ if [[ -f "$out" ]]; then
   done
   tmp2="$(mktemp)"
   jq --slurpfile live "$out" \
-    'if $live[0].lastChangelogVersion then .lastChangelogVersion = $live[0].lastChangelogVersion else . end' \
+    'reduce ("lastChangelogVersion", "extensionChangelogVersions") as $k (.;
+       if $live[0][$k] != null then .[$k] = $live[0][$k] else . end)' \
     "$tmp" >"$tmp2"
   mv "$tmp2" "$tmp"
 fi

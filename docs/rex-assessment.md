@@ -124,8 +124,8 @@ Linux-only packages are out of scope (no Rex Linux client).
 ## Watch items
 
 - Pi OSC 133 A clears OSC 7501 `working` (feedback 1565813108620927117),
-  reported with `--tui-mode regular`; we run fullscreen. Fix in pi#11519,
-  unreleased.
+  reported with `--tui-mode regular`; we run fullscreen. Fixed in pi#11519,
+  shipped in pi 1.5.0 (regular mode no longer writes OSC 133).
 - Agents started through wrappers lose the agent icon (process-group leader).
 - Running tmux inside Rex hides OSC 7501 from Rex; not a useful hybrid.
 
