@@ -20,8 +20,12 @@ from the current version down to, not including, the previous one. Follow the
 - `keybindings.json`, `CHEATSHEET.md`, `~/.dotfiles/docs/keybindings-card.md`
 - `extensions/*.ts` (extension API changes; check the types they import)
 - `prompts/*.md`
-- packages in `settings.base.json`: bonfire, pi-prose, pi-post, pi-counsel
-  (API breaks there need an upstream bump, not a dotfiles edit)
+- our pi packages (bonfire, pi-prose, pi-post, pi-counsel, pi-redact,
+  sigil) and anvil, which pins its own pi SDK (see **Packages** below;
+  fixes there go upstream, not into dotfiles)
+- model names outside `models.json`: the aliases in
+  `~/.dotfiles/scripts/.scripts/summon-familiar.sh` and anvil's
+  `packages/core/src/node/model-resolver.ts`
 - `~/.dotfiles/docs/agent-maintenance.md` and `AGENTS.md` where they describe
   pi behaviour that changed
 
@@ -29,6 +33,18 @@ Buckets: **adopt** (new capability worth wiring in), **update** (something we
 have now contradicts pi), **fixes we hit** (match Fixed items against hard
 stops or tool errors in the latest `~/scratch/sessions-*-assessment-notes.md`),
 **n/a** (one line total, do not enumerate).
+
+**Packages.** Run `~/.scripts/pi-typecheck.sh` (read-only). It typechecks
+the extensions, each package (including its `pi.extensions` entries) and
+anvil against the new release's types, lists the pi SDK each repo has
+installed, diffs the gateway catalog against the previous release, and
+flags any model id we name that the new catalog lacks. A type pass is not
+the whole check: for every Changed, Breaking or Added item, search the
+`~/dev` checkouts for the API it touches (`rg` over their `extensions/`,
+`src/` and `integrations/pi/`) and say whether the behaviour change
+reaches them. For each new catalog model, say whether it is a cheaper or
+newer member of a family we already use (it may replace an alias), and
+whether anvil's pinned SDK can resolve it yet.
 
 **Drift check**, since an update often lands with a Ctrl+S or a dev package:
 
