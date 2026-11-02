@@ -336,31 +336,45 @@ argument is a module path on Node 24, not a glob.
 
 ### Required configuration and request
 
-The dispatching shell must provide `VERCEL_TOKEN`,
-`ANVIL_SANDBOX_GITHUB_TOKEN` (repository-scoped, read-only, preferably
-short-lived), and `AI_GATEWAY_API_KEY`, plus `VERCEL_TEAM_ID`,
-`VERCEL_PROJECT_ID`, and `ANVIL_SANDBOX_SNAPSHOT_ID` for the approved existing
-resources; their values must match `teamId`, `projectId`, and `snapshotId` in
-the request. Make these settings and credentials available in the login
-shell that executes the generated runner (the wrapper intentionally does not
-write them into the runner). Credentials are only used by the controller SDK auth or firewall
-header-transform rules; do not put them in a request, `-e`, a snapshot, or a
-remote environment. Never reuse a personal `gho_` credential or mint a token
-as part of dispatch. `PI_SESSION_ADDRESS` is captured by the wrapper locally
-for the completion ping and is not copied to the sandbox.
+The dispatching shell must provide `VERCEL_TOKEN` and `AI_GATEWAY_API_KEY`,
+plus `VERCEL_TEAM_ID`, `VERCEL_PROJECT_ID`, and
+`ANVIL_SANDBOX_SNAPSHOT_ID` for the approved existing resources; their values
+must match `teamId`, `projectId`, and `snapshotId` in the request. Make these
+settings and credentials available in the login shell that executes the
+generated runner (the wrapper intentionally does not write them into the
+runner). The GitHub clone credential is minted at dispatch from the linked
+Vercel development project's OIDC identity via gh-sts, scoped to the requested
+repository with `contents: read` only. The minted credential is short-lived
+(one-hour lifetime) and the controller rejects it unless at least ten minutes
+remain for setup. No GitHub token is configured in the environment, request,
+`-e`, snapshot, or remote environment. The controller mints exactly once per
+dispatch and never retries a denial: gh-sts bans a
+source IP after repeated policy denials with no decay. `PI_SESSION_ADDRESS`
+is captured by the wrapper locally for the completion ping and is not copied
+to the sandbox.
+
+One-time local setup: run `vercel login`, then run
+`cd ~/.dotfiles/scripts/sandbox && vercel link` and link this directory to the
+`vieko-golem-sandbox` project in the `vercel-internal-playground` team. The
+controller runs OIDC lookup from `scripts/sandbox`, so linking only the repo
+root or a caller's unrelated project is not sufficient. The required gh-sts
+policy id is `vieko-golem-sandbox-development`; it is tracked in
+vercel/infra #38908. Do not retry a 403 or otherwise repeat a policy denial:
+repeated denials have no decay and can ban the source IP.
 
 Prepare a request JSON file and point `ANVIL_SANDBOX_REQUEST` at it before
 running `summon-golem.sh --sandbox`. It contains only the controller's
 allowlisted inputs: `repoUrl`, `forkSha` (40-hex commit), `specPath` (relative
 to the request file), `gate` (non-empty commands), `scopes`, `contracts`
-(relative request-local files), `model`, optional `gateTimeout` (default
-`600s`), `snapshotId`, `teamId`, `projectId`, `vcpus`, `timeoutMs`,
-`localRepo`, `dispatchId`, and `summonerAddress`. The timeout must leave at
-least five minutes for collection. Use a unique dispatch ID and a clean local
-repository; the controller refuses branch/worktree collisions. `--link`,
-symlinked inputs, traversal, unknown keys, and host paths in gate commands are
-rejected. The wrapper still uses the completion ping over stdin (required by
-the SentinelOne rule).
+(relative request-local files), `model`, `ghStsPolicy` (required safe policy
+identifier), optional `gateTimeout` (default `600s`), `snapshotId`, `teamId`,
+`projectId`, `vcpus`, `timeoutMs`, `localRepo`, `dispatchId`, and
+`summonerAddress`. The timeout must leave at least five minutes for
+collection. Use a unique dispatch ID and a clean local repository; the
+controller refuses branch/worktree collisions. `--link`, symlinked inputs,
+traversal, unknown keys, and host paths in gate commands are rejected. The
+wrapper still uses the completion ping over stdin (required by the SentinelOne
+rule).
 
 ### Snapshot build and approval
 

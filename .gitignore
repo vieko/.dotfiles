@@ -1,4 +1,5 @@
 credentials
+scripts/sandbox/.vercel/
 *.log
 # Dev-repo skill symlinks are machine-local (absolute ~/dev paths differ per OS).
 # Regenerate with agents/.agents/setup-skill-symlinks.sh after cloning the dev repos.

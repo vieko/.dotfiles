@@ -5,10 +5,13 @@ import os from 'node:os';
 import fsNative from 'node:fs/promises';
 import { execFile } from 'node:child_process';
 import { promisify } from 'node:util';
+import { getVercelOidcToken } from '@vercel/oidc';
 
 const execFileAsync = promisify(execFile);
-const KEYS = ['repoUrl','forkSha','specPath','gate','scopes','contracts','model','gateTimeout','snapshotId','teamId','projectId','vcpus','timeoutMs','localRepo','dispatchId','summonerAddress'];
-const SECRET_ENV = ['VERCEL_TOKEN','ANVIL_SANDBOX_GITHUB_TOKEN','AI_GATEWAY_API_KEY'];
+const KEYS = ['repoUrl','forkSha','specPath','gate','scopes','contracts','model','gateTimeout','snapshotId','teamId','projectId','ghStsPolicy','vcpus','timeoutMs','localRepo','dispatchId','summonerAddress'];
+const SECRET_ENV = ['VERCEL_TOKEN','AI_GATEWAY_API_KEY'];
+const GH_STS_URL = 'https://gh-sts.vercel-infra.com/token';
+const GH_STS_SETUP_BUDGET_MS = 10 * 60_000;
 const SHA_RE = /^[0-9a-f]{40}$/i;
 const COLLECTION_RESERVE_MS = 5 * 60_000;
 const q = (s) => `'${String(s).replaceAll("'", "'\\''")}'`;
@@ -28,8 +31,8 @@ export function validateRequest(r, requestPath) {
   if ([...r.gate,...r.scopes,...r.contracts,r.model].some(x => /(^|[\s=])--link(?:[\s]|$)/.test(x) || /(?:~\/|\/(?:Users|home|tmp|var|private|workspace|mnt|root|opt)\/)/.test(x))) throw new Error('inputs may not use --link or host paths');
   if (r.model.startsWith('-') || r.scopes.some(x => x.startsWith('-'))) throw new Error('model and scope values may not be option-like');
   if (typeof r.localRepo !== 'string' || !path.isAbsolute(r.localRepo)) throw new Error('localRepo must be an absolute host path');
-  for (const k of ['model','snapshotId','teamId','projectId','dispatchId','summonerAddress']) if (typeof r[k] !== 'string' || !r[k].trim()) throw new Error(`${k} must be a non-empty string`);
-  if (!safeName(r.dispatchId) || !safeName(r.snapshotId)) throw new Error('snapshotId and dispatchId must be safe identifiers');
+  for (const k of ['model','snapshotId','teamId','projectId','ghStsPolicy','dispatchId','summonerAddress']) if (typeof r[k] !== 'string' || !r[k].trim()) throw new Error(`${k} must be a non-empty string`);
+  if (!safeName(r.dispatchId) || !safeName(r.snapshotId) || !safeName(r.ghStsPolicy)) throw new Error('snapshotId, dispatchId, and ghStsPolicy must be safe identifiers');
   if (!Number.isInteger(r.vcpus) || r.vcpus < 1 || r.vcpus > 32 || !Number.isInteger(r.timeoutMs) || r.timeoutMs <= COLLECTION_RESERVE_MS + 30_000) throw new Error('vcpus and timeoutMs must leave a five-minute collection window');
   if (r.gateTimeout !== undefined && (typeof r.gateTimeout !== 'string' || !/^\d+[smh]$/.test(r.gateTimeout))) throw new Error('gateTimeout must be a duration');
   const reqDir = path.resolve(path.dirname(requestPath));
@@ -51,7 +54,7 @@ const sanitize = (x, secrets) => {
 
 /** All orchestration is injectable; only main() binds host and SDK effects. */
 export async function runController(requestPath, effects) {
-  const { sdk, fs, git, exec, clock, log } = effects;
+  const { sdk, fs, git, exec, clock, log, credentials } = effects;
   let req, secrets = [], sandbox, exitCode = 4, dispatched = false, collected = false, worktreesBefore = [];
   const state = { sandboxId: null, stopStatus: 'not-started', retrievalStatus: 'not-started', importStatus: 'not-started', branch: null, worktree: null, remoteWorktree: null, artifactDir: null, verdict: 'inconclusive', stopError: null };
   const pendingLogs = [];
@@ -69,8 +72,8 @@ export async function runController(requestPath, effects) {
     const env = clock.env ?? {};
     for(const [field,key] of [['teamId','VERCEL_TEAM_ID'],['projectId','VERCEL_PROJECT_ID'],['snapshotId','ANVIL_SANDBOX_SNAPSHOT_ID']]) if(!env[key]||req[field]!==env[key]) throw new Error(`${field} must match ${key}`);
     secrets = SECRET_ENV.map(k => env[k]).filter(Boolean);
-    if (secrets.length !== 3) throw new Error('VERCEL_TOKEN, ANVIL_SANDBOX_GITHUB_TOKEN, and AI_GATEWAY_API_KEY are required');
-    secrets.push(`Basic ${Buffer.from(`x-access-token:${env.ANVIL_SANDBOX_GITHUB_TOKEN}`).toString('base64')}`, `Bearer ${env.AI_GATEWAY_API_KEY}`);
+    if (secrets.length !== 2) throw new Error('VERCEL_TOKEN and AI_GATEWAY_API_KEY are required');
+    secrets.push(`Bearer ${env.AI_GATEWAY_API_KEY}`);
     if(containsSecret(raw,secrets)) throw new Error('request JSON must not contain credential values');
     await assertRegularContained(fs, req.requestDir, req.absoluteSpecPath, 'spec');
     const specContent=await fs.readFile(req.absoluteSpecPath,'utf8');
@@ -98,8 +101,28 @@ export async function runController(requestPath, effects) {
     await fs.writeFile(path.join(state.artifactDir, 'request.json'), JSON.stringify({ ...req, absoluteSpecPath: undefined, requestDir: undefined }, null, 2));
     const manifest = { dispatchId: req.dispatchId, snapshotId: req.snapshotId, forkSha: req.forkSha, repoUrl: req.repoUrl, branch: state.branch, worktree: state.worktree, remoteWorktree: null, createdAt: clock.now().toISOString(), sandboxId: null, lockfileHash: await git.lockfileHash(state.worktree), status: 'allocated' };
     await fs.writeFile(path.join(state.artifactDir, 'manifest.json'), JSON.stringify(manifest, null, 2));
-    const gh = env.ANVIL_SANDBOX_GITHUB_TOKEN, gateway = env.AI_GATEWAY_API_KEY;
+    const oidc = await credentials.getOidcToken();
+    if (typeof oidc !== 'string' || !oidc) throw new Error('Vercel OIDC did not return a token');
+    secrets.push(oidc, `Bearer ${oidc}`);
+    const stsResponse = await credentials.fetch(GH_STS_URL, {
+      method: 'POST',
+      headers: { Authorization: `Bearer ${oidc}`, 'Content-Type': 'application/json' },
+      body: JSON.stringify({ owner: new URL(req.repoUrl).pathname.split('/')[1], repo: new URL(req.repoUrl).pathname.split('/')[2].replace(/\.git$/, ''), permissions: { contents: 'read' }, policy: req.ghStsPolicy }),
+    });
+    if (!stsResponse.ok) {
+      const responseBody = await stsResponse.text();
+      const denial = responseBody.includes('POLICY_DENIED') ? `; POLICY_DENIED: ${responseBody}` : '';
+      // gh-sts bans a source IP after repeated policy denials with no decay; never retry this request.
+      throw new Error(`gh-sts policy ${req.ghStsPolicy} failed (${stsResponse.status})${denial}`);
+    }
+    const stsBody = await stsResponse.json();
+    if (typeof stsBody?.token !== 'string' || !stsBody.token) throw new Error(`gh-sts policy ${req.ghStsPolicy} response did not include a token`);
+    const expiresAt = Date.parse(stsBody.expires_at);
+    if (!Number.isFinite(expiresAt)) throw new Error(`gh-sts policy ${req.ghStsPolicy} response had invalid expires_at`);
+    if (expiresAt - clock.now().getTime() < GH_STS_SETUP_BUDGET_MS) throw new Error(`gh-sts policy ${req.ghStsPolicy} token expires before the 10-minute setup budget`);
+    const gh = stsBody.token, gateway = env.AI_GATEWAY_API_KEY;
     const ghBasic = Buffer.from(`x-access-token:${gh}`).toString('base64');
+    secrets.push(gh, ghBasic, `Basic ${ghBasic}`);
     const gatewayRule = { transform: [{ headers: { Authorization: `Bearer ${gateway}` } }] };
     const githubRules = [
       { match: { path: { exact: repoPath(req.repoUrl) + '/info/refs' }, method: ['GET'], queryString: [{ key: { exact: 'service' }, value: { exact: 'git-upload-pack' } }] }, transform: [{ headers: { Authorization: `Basic ${ghBasic}` } }] },
@@ -309,9 +332,12 @@ function checkPatchPath(name) {
 }
 
 async function main() {
-  const { Sandbox } = await import('@vercel/sandbox');
-  const requestPath = process.argv[2];
+  const requestPath = process.argv[2] ? path.resolve(process.argv[2]) : undefined;
   if (!requestPath) { console.error('usage: anvil-sandbox.mjs request.json'); process.exitCode = 4; return; }
+  // OIDC must resolve the lane's linked Vercel project, not the caller's cwd.
+  // Resolve the request path first so a relative argument still means the caller's cwd.
+  process.chdir(path.dirname(fileURLToPath(import.meta.url)));
+  const { Sandbox } = await import('@vercel/sandbox');
   const env = process.env;
   const sdk = {
     create: opts => Sandbox.create(opts),
@@ -337,7 +363,7 @@ async function main() {
   const abortController = new AbortController();
   const onSignal = () => { interrupted = true; abortController.abort(); };
   process.on('SIGINT', onSignal); process.on('SIGTERM', onSignal);
-  const result = await runController(requestPath, { sdk, fs, git, exec, clock: { now: () => new Date(), isInterrupted: () => interrupted, homeDir: os.homedir(), env, signal: abortController.signal }, log: m => console.error(m) });
+  const result = await runController(requestPath, { sdk, fs, git, exec, credentials: { getOidcToken: () => getVercelOidcToken(), fetch: (...args) => globalThis.fetch(...args) }, clock: { now: () => new Date(), isInterrupted: () => interrupted, homeDir: os.homedir(), env, signal: abortController.signal }, log: m => console.error(m) });
   process.off('SIGINT', onSignal); process.off('SIGTERM', onSignal); process.exitCode = result.exitCode;
 }
 
