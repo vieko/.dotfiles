@@ -233,11 +233,15 @@ for (const dir of readdirSync(root)) {
 					s.toolErrors++;
 					totals.toolErrors++;
 					const call = calls.get(m.toolCallId) ?? {};
-					const txt = (m.content ?? []).map((c) => c.text ?? "").join(" ").slice(0, 300);
+					const full = (m.content ?? []).map((c) => c.text ?? "").join(" ");
+					const txt = full.slice(0, 300);
+					// bash appends its exit/timeout status after the output, so test the tail too.
+					const tail = full.slice(-200);
 					let cat = "other";
 					if (/Validation failed/i.test(txt)) cat = "schema validation";
 					else if (/oldText|No match|did not match|not found in/i.test(txt)) cat = "edit: oldText mismatch";
-					else if (/exit code|exited with|Command exited/i.test(txt)) cat = "bash: nonzero exit";
+					else if (/timed out after/i.test(tail)) cat = "timeout";
+					else if (/exit code|exited with|Command exited/i.test(txt + tail)) cat = "bash: nonzero exit";
 					else if (/timed? ?out/i.test(txt)) cat = "timeout";
 					else if (/ENOENT|No such file/i.test(txt)) cat = "missing file";
 					const k = `${call.name ?? "?"} / ${cat}`;

@@ -209,3 +209,29 @@ old row so drift is visible.
   $1.14; fable $0. 7 sol + 3 opus familiars. No repair specs.
 - Recurring messages: 71 of 323 user turns are one-token decisions (22%);
   sampled, mostly merges/pushes and wording/scope forks.
+
+## Week 44 (2026-10-26 08:50 to 2026-11-01 18:00), PHYREXIA
+
+- 56 sessions with turns, 3,892 assistant turns, 373 user turns, 3,547
+  tool calls (156 errors; 112 bash nonzero exit, 20 timeout after the
+  classifier fix). True $267 (= pi-reported), $0.72/ut ($0.77 with
+  counsel). Weekdays $229 = $46/day; 10-31 $31 (Rex trial).
+- Split: cacheRead $97, cacheWrite $132, output $38.
+- Models: opus-5.5 $244 (38 sessions), gpt-6.1-sol $13 (15), fable $5 (1).
+- 1h TTL: premium $47 vs $99 avoided; net +$52.
+- Context: 15% of turns >= 200K carried 26% of spend; max 396K. Top
+  session $61 (GTMENG-3938 Summoner, $182 lifetime over 19 days).
+- Misses: first 28; idle 50 ($55, avg 142K; 24 at 1-3h); compaction 23
+  ($15, avg 82K); unexplained 16 ($19), opus 0.48%, sol 0.27%, 0
+  clustered. 4 were the pi-post section flip in one pre-1.2.0 process
+  (fixed upstream #10267), 3 sigil description changes (sigil#77).
+- Edit health: 0/172 malformed. Hard stops: 6 (3 aborts, 3 transport).
+- Counsel: 15 consults in 6 sessions, $20.92 (7.9%), 10 revise / 5
+  proceed, cache read 0% with no eligible repeat (5m TTL; one pair 8 min
+  apart). Budget cap refused 2.
+- Nudges: renew 17 shown, 8 left, 9 kept going (avg 8). First window
+  without ignored dominating.
+- Constructs: 18 dispatches, 13 sol familiars; 4 haiku golem smoke tests
+  (Rex), no production golems.
+- One-token decisions: 75 of 372 user turns (20%), flat since the 10-11
+  rule.

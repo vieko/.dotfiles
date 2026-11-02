@@ -164,6 +164,9 @@ proposing templates or interpreting a false report label as an omission.
   verdicts were "stop"/"revise" often enough to have earned their cost.
   Week 43: $0.98/ut including counsel vs $1.02-1.22 in fable weeks;
   counsel 14% of session spend with 0% cache read (pi-counsel fix open).
+  Week 44: $0.77/ut, counsel 7.9%. The cache fix (0.2.1) is live but
+  untested in production: counsel uses a 5m TTL and no two consults in
+  one session landed within 5 min.
 - **sonnet-5 edit loss**: `-m sonnet` dispatches keep feeding the A/B;
   report the malformed-edit rate if any ran.
 - **1h TTL net**: +$362 (wk 36) then +$120/12d (wks 37-38). If it goes
