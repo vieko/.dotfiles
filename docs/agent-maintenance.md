@@ -322,6 +322,99 @@ Learned on GTMENG-3352 (2026-09-17). Both cost a wasted dispatch.
   needs `check-types` (or `test`) for that package, not just `lint`
   (#3776: `agents/revoa` shipped to CI missing the dep).
 
+## Sandbox golem lane
+
+The sandbox lane is an opt-in handoff from `summon-golem.sh --sandbox`; the
+ordinary local golem path remains the default. It runs the controller in
+`scripts/sandbox/anvil-sandbox.mjs`, not anvil-side orchestration. This lane is
+currently a controller seam: **do not dispatch until a snapshot has been
+built, reviewed, approved, and the live broker probes have been proven.** It
+never creates a snapshot or Vercel project. Tests run with `npm test` in
+`scripts/sandbox` (after `npm install` there) or
+`node --test scripts/sandbox/anvil-sandbox.test.mjs`; a bare directory
+argument is a module path on Node 24, not a glob.
+
+### Required configuration and request
+
+The dispatching shell must provide `VERCEL_TOKEN`,
+`ANVIL_SANDBOX_GITHUB_TOKEN` (repository-scoped, read-only, preferably
+short-lived), and `AI_GATEWAY_API_KEY`, plus `VERCEL_TEAM_ID`,
+`VERCEL_PROJECT_ID`, and `ANVIL_SANDBOX_SNAPSHOT_ID` for the approved existing
+resources; their values must match `teamId`, `projectId`, and `snapshotId` in
+the request. Make these settings and credentials available in the login
+shell that executes the generated runner (the wrapper intentionally does not
+write them into the runner). Credentials are only used by the controller SDK auth or firewall
+header-transform rules; do not put them in a request, `-e`, a snapshot, or a
+remote environment. Never reuse a personal `gho_` credential or mint a token
+as part of dispatch. `PI_SESSION_ADDRESS` is captured by the wrapper locally
+for the completion ping and is not copied to the sandbox.
+
+Prepare a request JSON file and point `ANVIL_SANDBOX_REQUEST` at it before
+running `summon-golem.sh --sandbox`. It contains only the controller's
+allowlisted inputs: `repoUrl`, `forkSha` (40-hex commit), `specPath` (relative
+to the request file), `gate` (non-empty commands), `scopes`, `contracts`
+(relative request-local files), `model`, optional `gateTimeout` (default
+`600s`), `snapshotId`, `teamId`, `projectId`, `vcpus`, `timeoutMs`,
+`localRepo`, `dispatchId`, and `summonerAddress`. The timeout must leave at
+least five minutes for collection. Use a unique dispatch ID and a clean local
+repository; the controller refuses branch/worktree collisions. `--link`,
+symlinked inputs, traversal, unknown keys, and host paths in gate commands are
+rejected. The wrapper still uses the completion ping over stdin (required by
+the SentinelOne rule).
+
+### Snapshot build and approval
+
+There is deliberately no snapshot builder in this repository. Build a snapshot
+outside dispatch with trusted build tooling, a pinned anvil revision, warmed
+lockfile-keyed dependencies, no credentials, no prior transcripts or run
+records, and no fallback registry access. Record the lockfile SHA-256 in the
+snapshot at `/opt/anvil-snapshot/lockfile.sha256`; the controller compares it
+with the fork checkout before changing from setup egress to gateway-only
+egress. **The first dispatch using each new snapshot requires explicit spend
+approval**, even if it is a dry-looking validation run. IDs must refer to an
+already-existing approved snapshot, team, and project. Do not use this lane to
+probe Vercel or create resources without that approval.
+
+The setup firewall is deny-by-default except for gateway access and the two
+fetch-only GitHub upload-pack matchers for the one requested repository. After
+clone and lockfile verification, egress is reduced to the AI gateway only.
+Both policies are probed before anvil starts. A contradictory probe aborts;
+never work around it by widening policy. The host requests a finite sandbox
+lifetime and reserves the final five minutes for retrieval and stop.
+
+### Artifacts and recovery
+
+Artifacts are written under
+`~/scratch/logs/golem-<local-repo-name>-<dispatchId>/`: `request.json`,
+`manifest.json`, `controller.log`, `anvil.log`, `anvil-result.json`,
+`golem.patch`, `anvil-state.tgz`, `timings.json`, and
+`handoff-result.json`. The patch is collected from the sandbox worktree using
+a temporary Git index and imported only into the dedicated local worktree;
+records are staged and imported to `$XDG_STATE_HOME/anvil/<repo-bucket>/` (or
+`~/.anvil/<repo-bucket>/`) under `runs/` and `sessions/`. Patch conflicts,
+unsafe paths, archive links, and record collisions retain the downloaded
+artifacts but block successful handoff. A green remote gate remains a review
+claim, not approval to integrate.
+
+If the controller dies, do not redispatch automatically. Read
+`manifest.json` for the dispatch ID, sandbox ID (when recorded), fork SHA,
+local branch/worktree, and artifact directory. If the sandbox is still live,
+retrieve the patch, `~/.anvil` archive, result, log, and timings before stopping
+it; check paths and collisions, run `git apply --check` in the named dedicated
+worktree, then import records with the branch rewritten and remote PID removed.
+If the sandbox has expired, mark retrieval as lost and recover only the local
+artifacts already present. SIGKILL cannot guarantee collection or a ping; the
+saved manifest is the recovery point. A stop failure may leave continuing
+spend: use the sandbox ID and recorded expiry for manual cleanup.
+
+Controller exit status: `0` green and imported; `1` gate red; `2` void or
+inconclusive; `3` green but retrieval/import failed; `4` controller error
+before dispatch. Stop failure is recorded but does not change that status.
+
+`TODO(#59): live approval must prove the snapshot's recorded lockfile hash
+path, SDK policy replacement confirmation, denial probes, and record import
+are valid for the chosen Vercel project before the first paid dispatch.`
+
 ## History & lineage
 
 Context for names that appear in old sessions, bonfire entries, or scratch

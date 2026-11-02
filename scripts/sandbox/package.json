@@ -1,0 +1,12 @@
+{
+  "name": "anvil-sandbox-controller",
+  "private": true,
+  "type": "module",
+  "main": "./index.js",
+  "scripts": {
+    "test": "node --test"
+  },
+  "dependencies": {
+    "@vercel/sandbox": "3.8.0"
+  }
+}

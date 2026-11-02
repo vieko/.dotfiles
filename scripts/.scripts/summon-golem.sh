@@ -29,7 +29,7 @@
 # review pipeline (PHYREXIA.md standing invariant).
 #
 # Usage:
-#   summon-golem.sh [-m alias] [-e K=V]... [-n] [-R] [-k] [-B board] <name> <spec-or-prompt> [anvil args...]
+#   summon-golem.sh [-m alias] [-e K=V]... [-n] [--sandbox] [-R] [-k] [-B board] <name> <spec-or-prompt> [anvil args...]
 #
 #   -m alias   vessel: haiku|sol|sonnet|opus|fable|astra|luna|terra|glm (anvil's aliases;
 #              astra needs anvil >= 0.3.1, sol the 2026-09-22 alias refresh).
@@ -72,6 +72,15 @@
 # to keep it).
 
 set -euo pipefail
+
+# Long-form sandbox switch is removed before getopts so the default lane's
+# parsing and generated runner remain byte-for-byte unchanged.
+sandbox_enabled=0
+filtered_args=()
+for arg in "$@"; do
+    if [[ "$arg" == "--sandbox" ]]; then sandbox_enabled=1; else filtered_args+=("$arg"); fi
+done
+set -- "${filtered_args[@]}"
 
 LOG_DIR="$HOME/scratch/logs"
 PIPOST_SHIM="$HOME/.pi/agent/post/bin/pi-post"   # stable, extension-owned (pi-post v0.7.0+, issue #6)
@@ -184,6 +193,13 @@ if [[ $no_report -eq 0 ]]; then
     fi
 fi
 
+sandbox_request="${ANVIL_SANDBOX_REQUEST:-}"
+sandbox_controller="${ANVIL_SANDBOX_CONTROLLER:-$HOME/.dotfiles/scripts/sandbox/anvil-sandbox.mjs}"
+if [[ $sandbox_enabled -eq 1 && $dry_run -eq 0 ]]; then
+    [[ -n "$sandbox_request" && -r "$sandbox_request" ]] || { echo "error: --sandbox requires ANVIL_SANDBOX_REQUEST to name a readable request JSON" >&2; exit 2; }
+    [[ -r "$sandbox_controller" ]] || { echo "error: sandbox controller not found: $sandbox_controller" >&2; exit 2; }
+fi
+
 term="$HOME/.scripts/construct-term.sh"
 backend="$("$term" backend 2>/dev/null)" || backend=""
 [[ $dry_run -eq 1 || -n "$backend" ]] || { echo "error: summon-golem.sh requires tmux or Rex" >&2; exit 1; }
@@ -212,6 +228,15 @@ RESULT=$(printf '%q' "$result")
 LOG=$(printf '%q' "$log")
 NAME=$(printf '%q' "$name")
 PINGED=0
+EOF
+    if [[ $sandbox_enabled -eq 1 ]]; then
+        cat <<EOF
+SANDBOX=1
+REQUEST=$(printf '%q' "${sandbox_request:-${ANVIL_SANDBOX_REQUEST:-$HOME/scratch/logs/golem-$name-$ts.request.json}}")
+CONTROLLER=$(printf '%q' "$sandbox_controller")
+EOF
+    fi
+    cat <<'EOF'
 EOF
     for kv in "${golem_env[@]+"${golem_env[@]}"}"; do
         printf 'export %s=%q   # -e: scoped to this golem\n' "${kv%%=*}" "${kv#*=}"
@@ -254,6 +279,22 @@ result: \$RESULT
 log: \$LOG
 worktree: see anvil status (prune after merge)
 Gate green is a claim, not a review -- run the review pass before integrating."
+EOF
+        if [[ $sandbox_enabled -eq 1 ]]; then
+            cat <<'EOF'
+    local handoff="${SANDBOX_HANDOFF:-}"
+    local details=""
+    if [[ -s "$handoff" ]]; then
+        details="sandbox=$(jq -r '.sandboxId // "?"' "$handoff" 2>/dev/null) stop=$(jq -r '.stopStatus // "?"' "$handoff" 2>/dev/null) retrieval=$(jq -r '.retrievalStatus // "?"' "$handoff" 2>/dev/null) import=$(jq -r '.importStatus // "?"' "$handoff" 2>/dev/null) branch=$(jq -r '.branch // "?"' "$handoff" 2>/dev/null) worktree=$(jq -r '.worktree // "?"' "$handoff" 2>/dev/null) artifacts=$(dirname "$handoff") verdict=$(jq -r '.verdict // "?"' "$handoff" 2>/dev/null) voidReason=$(jq -r '.voidReason // "?"' "$handoff" 2>/dev/null) attempts=$(jq -r '.attempts // "?"' "$handoff" 2>/dev/null) cost=$(jq -r '.cost // "?"' "$handoff" 2>/dev/null) timeoutMs=$(jq -r '.timeoutMs // "?"' "$handoff" 2>/dev/null) provenance=$(jq -c '.provenance // {}' "$handoff" 2>/dev/null)"
+    else
+        details="sandbox=?, stop=?, retrieval=unknown, import=unknown, artifacts=see controller log"
+    fi
+    body="$body
+$details"
+EOF
+        fi
+        cat <<EOF
+
     # Body goes over stdin, never argv. SentinelOne (this host's EDR) SIGKILLs
     # processes whose command line looks like obfuscated shell; the verdict
     # carries the gate commands (grep -E, sed, xargs, \$(...)) and tripped it
@@ -307,11 +348,24 @@ status_close() {
 }
 trap 'status_close "${ANVIL_STATUS:-interrupted}"; map_close "${ANVIL_STATUS:-interrupted}"; ping "${ANVIL_STATUS:-interrupted}"' EXIT
 status working "golem $NAME: anvil running"
-EOF
-    cat <<EOF
 
+EOF
+    if [[ $sandbox_enabled -eq 1 ]]; then
+        cat <<'EOF'
+REQ_REPO="$(jq -r '.localRepo' "$REQUEST")"
+REQ_DISPATCH="$(jq -r '.dispatchId' "$REQUEST")"
+SANDBOX_HANDOFF="$HOME/scratch/logs/golem-$(basename "$REQ_REPO")-$REQ_DISPATCH/handoff-result.json"
+node "$CONTROLLER" "$REQUEST" >"$RESULT" 2> >(tee "$LOG" >&2)
+ANVIL_STATUS=$?
+[[ -s "$SANDBOX_HANDOFF" ]] && cp "$SANDBOX_HANDOFF" "$RESULT"
+EOF
+    else
+        cat <<EOF
 $anvil_cmd >"\$RESULT" 2> >(tee "\$LOG" >&2)
 ANVIL_STATUS=\$?
+EOF
+    fi
+    cat <<EOF
 status_close "\$ANVIL_STATUS"
 map_close "\$ANVIL_STATUS"
 ping "\$ANVIL_STATUS"
