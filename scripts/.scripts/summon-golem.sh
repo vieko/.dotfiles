@@ -236,8 +236,6 @@ REQUEST=$(printf '%q' "${sandbox_request:-${ANVIL_SANDBOX_REQUEST:-$HOME/scratch
 CONTROLLER=$(printf '%q' "$sandbox_controller")
 EOF
     fi
-    cat <<'EOF'
-EOF
     for kv in "${golem_env[@]+"${golem_env[@]}"}"; do
         printf 'export %s=%q   # -e: scoped to this golem\n' "${kv%%=*}" "${kv#*=}"
     done

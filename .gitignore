@@ -28,3 +28,6 @@ pi/.pi/agent/git/
 pi/.pi/agent/settings.json
 pi/.pi/agent/sessions/
 pi/.pi/agent/models-store.json
+
+# Controller deps for the sandbox golem lane (scripts/sandbox/package.json); npm install locally.
+scripts/sandbox/node_modules/
