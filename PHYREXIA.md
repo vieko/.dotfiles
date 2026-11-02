@@ -61,6 +61,17 @@ panes. `summon-*.sh` and `remind-at.sh` pick tmux or Rex through
   ship -- a Legion multiplies the mechanics, never the judgment; a green gate
   cannot distinguish "make the test pass" from "the test was lying").
 
+  **Sandbox lane (spiked 2026-10-20, not built).** A golem ran the
+  GTMENG-4177 replay on a 4 vCPU Vercel Sandbox: passed first try, wall
+  time on par with local, about $0.15 of sandbox per golem, no secret in
+  the VM (firewall-brokered gateway key, fetch-only clone matcher). It is
+  the way past the 6-golem ceiling, but `summon-golem.sh` has no sandbox
+  mode yet. Results and the build list live in anvil #59; the CLI gate
+  timeout (120 s, too short at 4 vCPU) is anvil #58 and blocks it. The
+  spike's Vercel project `vieko-golem-sandbox` (team
+  `vercel-internal-playground`) is kept for the lane; delete it if the
+  lane is dropped.
+
 ## Standing invariants
 
 - **The review gate applies to EVERY construct, not just Legions.** Each
