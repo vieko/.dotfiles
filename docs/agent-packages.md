@@ -55,7 +55,10 @@ local copy cannot load simultaneously -- both register the `--style` flag, and
 flag collisions fail the extension load. The in-place replacement above keeps
 them apart; never add a second entry for the same package. On a pinned host,
 test in-flight changes with `pi -ne -e ~/dev/pi-prose/extensions/pi-prose.ts`
-(isolated, no hot reload).
+(isolated, no hot reload). The always-on contract has no copy here:
+`pi/.pi/agent/prose/config.json` sets `"contract": "matter-of-fact"`, so it
+is the built-in style's text. Edit the rules in pi-prose. This key needs
+pi-prose after v0.3.2; older releases ignore it and run with no contract.
 
 **pi-redact** (`~/dev/pi-redact`, npm `@vieko/pi-redact`, pinned via
 `packages`) keeps secrets out of session transcripts: placeholders in, real
@@ -248,11 +251,10 @@ node agents/.agents/scripts/sync-verbs.mjs --check   # exit 1 on drift
 
 ## `claude/`
 
-Claude Code config. Stows to `~/.claude/`. Tracks `settings.json`,
-`statusline.sh`, and `output-styles/` (matter-of-fact and ste, ported from
-[pi-prose](https://github.com/vieko/pi-prose)) — matches the same "config not
-state" philosophy as `pi/`. Keep the style bodies in sync with pi-prose's
-built-ins by hand when they change; pi-prose is the source of truth.
+Claude Code config. Stows to `~/.claude/`. Tracks `settings.json` and
+`statusline.sh` — matches the same "config not state" philosophy as `pi/`.
+It has no output styles: the copies of pi-prose's styles were never stowed
+or selected, so they were removed rather than kept in sync.
 
 ## `opencode/`
 

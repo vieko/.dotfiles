@@ -50,8 +50,7 @@ Rules that apply on every edit. Layout, rationale, and bootstrap steps are in
   After editing `agents/.agents/verbs.json`, run
   `node agents/.agents/scripts/sync-verbs.mjs` and commit
   `claude/.claude/settings.json` with it.
-- **`claude/`** tracks Claude Code `settings.json`, `statusline.sh`, and
-  `output-styles/` (kept in sync with pi-prose by hand).
+- **`claude/`** tracks Claude Code `settings.json` and `statusline.sh`.
 - **`opencode/`** is a bounded trial, not a Summoner runtime. Keep it as
   maintained config unless it earns a standing weekly role.
 
