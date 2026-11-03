@@ -215,6 +215,43 @@ jq -n --arg term "onboarding" '{query: "query($term: String!) { searchIssues(ter
   mutation matters — cheap insurance, and read-replica lag of a few seconds has
   been observed on the API.
 
+## Vieko's views and cycles (local additions)
+
+The workflow is seven personal views in Linear (not in any repo) plus
+GTMENG's two-week cycles. The view descriptions in Linear are the spec;
+keep them in sync with this table when a filter changes.
+
+| View | Shows | Target |
+|---|---|---|
+| Inbox `f7de0253-e0a4-4ff3-9bda-26fb85d90280` | Triage issues created by or assigned to me | 0 |
+| Unsorted `e0fd5f4a-80ca-45bf-b025-f4eb7c303559` | Open leaves (Todo, Backlog, started; not VULN) with no priority or no project | 0 |
+| Next `8d9dcb66-1901-4595-9738-a06563d1b79a` | Prioritized Todo leaves in the current or next cycle | ~10 |
+| Active `23606cc0-ebd9-48cc-b671-839c7e4ad6db` | Started leaves, not VULN | - |
+| Sagas `4f99528b-1ca9-4b19-89e5-0dc877aea93f` | My parents with open sub-issues | - |
+| Backlog `8fe866ae-0b0f-467c-9f80-7e2f98e2ea76` | Planning pool: Backlog state, plus Todo with no cycle | - |
+| Vulns `d0bf8691-c0cb-4491-8088-dc88c7fc1994` | Open VULN findings (Verify Fix waits on security) | - |
+
+- **Cycles are planned by hand.** GTMENG has auto-add for started and
+  completed issues off, so nothing moves into or out of a cycle by
+  itself. At cycle end, move each unfinished issue to the next cycle or
+  back to Backlog. Cycle membership shows on the team's charts: propose
+  additions, do not add without Vieko.
+- **Views are writable only through GraphQL.** Linear MCP lists views
+  (`list_custom_views`) but cannot edit them, and it returns metadata, not
+  filters. Read `customView(id) { filterData issues { nodes { ... } } }`;
+  write `customViewUpdate(id, input: { filterData, description })`. Cycle
+  filters use `cycle: { or: [{ isActive: { eq: true } }, { isNext: { eq: true } }] }`
+  and `cycle: { null: true }`.
+- **Priority numbers**: 0 none, 1 urgent, 2 high, 3 medium, 4 low. A "P0"
+  in raw API output means no priority, not urgent.
+- **Replying to an Ask reaches Slack only inside the synced thread.** The
+  root comment "This comment thread is synced to ... Slack" has
+  `syncedWith { service }` set. Post the reply with `commentCreate(input:
+  { issueId, parentId: <that root id>, body })`. A top-level comment
+  (MCP `save_comment` without a parent) stays in Linear only. Replies post
+  as Vieko, so draft them and get approval first; `@displayName` in the
+  body resolves to a mention.
+
 ## Writing Style: Comments vs Descriptions (local additions)
 
 The *description* is the canonical spec — put durable scope/design there.
