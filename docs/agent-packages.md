@@ -58,7 +58,7 @@ test in-flight changes with `pi -ne -e ~/dev/pi-prose/extensions/pi-prose.ts`
 (isolated, no hot reload). The always-on contract has no copy here:
 `pi/.pi/agent/prose/config.json` sets `"contract": "matter-of-fact"`, so it
 is the built-in style's text. Edit the rules in pi-prose. This key needs
-pi-prose after v0.3.2; older releases ignore it and run with no contract.
+pi-prose v0.4.0 or later; older releases ignore it and run with no contract.
 
 **pi-redact** (`~/dev/pi-redact`, npm `@vieko/pi-redact`, pinned via
 `packages`) keeps secrets out of session transcripts: placeholders in, real
