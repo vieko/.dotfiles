@@ -185,8 +185,9 @@ when the work demands it.
   the default if its edit health is 0 malformed and its tasks land without
   more review rounds than sol's; otherwise drop the alias. Gateway probe
   2026-11-02: thinking off and high both answer, read + edit round-trip
-  clean. Anvil's `terra` alias still means gpt-5.6-terra until anvil
-  moves to the pi 1.5.0 SDK, so do not use `summon-golem.sh -m terra`.
+  clean. Anvil's `terra` alias means gpt-6.1-terra since anvil#61
+  (pi 1.5.0 SDK); the first terra familiar landed that PR with one
+  comment-typo fix in review.
   `-m sonnet` still resolves, for the A/B and for a same-family worker when
   one is wanted. Escalate to the Summoner's vessel only when the summoning
   names WHY judgment dominates (governance paths, prod-impact calls,
