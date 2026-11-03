@@ -378,13 +378,15 @@ rule).
 
 ### Snapshot build and approval
 
-There is deliberately no snapshot builder in this repository. Build a snapshot
-outside dispatch with trusted build tooling, a pinned anvil revision, warmed
-lockfile-keyed dependencies, no credentials, no prior transcripts or run
-records, and no fallback registry access. Record the lockfile SHA-256 in the
-snapshot at `/opt/anvil-snapshot/lockfile.sha256`; the controller compares it
-with the fork checkout before changing from setup egress to gateway-only
-egress. **The first dispatch using each new snapshot requires explicit spend
+`scripts/sandbox/build-snapshot.mjs` builds the snapshot outside dispatch:
+build-essential, pnpm, a pnpm store warmed from a local `git archive` of one
+gtm commit (no GitHub credential), and anvil at a pinned revision on PATH as
+`anvil`. It keeps no checkout, credential, or run record, and writes the
+lockfile SHA-256 to `/opt/anvil-snapshot/lockfile.sha256` and the pins to
+`/opt/anvil-snapshot/build.json`; the controller compares the hash with the
+fork checkout before changing from setup egress to gateway-only egress, so a
+gtm lockfile change means a rebuild. It prints the snapshot id as JSON;
+export it as `ANVIL_SANDBOX_SNAPSHOT_ID`. **The first dispatch using each new snapshot requires explicit spend
 approval**, even if it is a dry-looking validation run. IDs must refer to an
 already-existing approved snapshot, team, and project. Do not use this lane to
 probe Vercel or create resources without that approval.

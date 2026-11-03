@@ -135,7 +135,8 @@ export async function runController(requestPath, effects) {
     const sandboxDeadline = clock.now().getTime() + req.timeoutMs;
     manifest.sandboxId = state.sandboxId;
     await fs.writeFile(path.join(state.artifactDir, 'manifest.json'), JSON.stringify(manifest, null, 2));
-    const home = '/home/vercel', remoteRepo = `${home}/repo`, remoteSpec = `${home}/input/${req.dispatchId}-spec.md`;
+    // The universal image's user is `vercel` with HOME=/vercel (spike log, anvil#59), not /home/vercel.
+    const home = '/vercel', remoteRepo = `${home}/repo`, remoteSpec = `${home}/input/${req.dispatchId}-spec.md`;
     const runRemote = (cmd, args = [], options = {}) => sdk.runCommand(sandbox, { cmd, args, ...options });
     const output = async (cmd, args = [], allowFail = false) => {
       const r = await runRemote(cmd, args);
