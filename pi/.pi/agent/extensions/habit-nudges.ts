@@ -110,7 +110,7 @@ export default function (pi: ExtensionAPI) {
 		staleCheckedAt = now;
 		const installed = installedVersion();
 		if (!installed || installed === VERSION) return;
-		nudge(ctx, "stale", `pi ${installed} is installed but this process runs ${VERSION}. /exit and resume this session to pick up its fixes`, {
+		nudge(ctx, "stale", `pi ${installed} is installed but this process runs ${VERSION}. /restart resumes this session on it (/compact first is cheaper)`, {
 			running: VERSION,
 			installed,
 		});

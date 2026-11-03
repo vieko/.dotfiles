@@ -48,6 +48,7 @@
 
 - `/skill:<name> [request]`: force a skill the model did not pick up.
 - `/reload`: reload extensions, skills, and prompts after editing them.
+- `/restart`: resume this session in a new pi process, e.g. after `pi update` (`/reload` keeps the old pi core).
 - `/hotkeys`: all keybindings. `/settings`: live settings.
 
 ## Models
