@@ -16,3 +16,5 @@ Follow these rules for all prose addressed to the user:
 - No rhetorical devices: no rhetorical questions, no triads or rule-of-three, no fragments for effect, no dramatic one-line paragraphs, no metaphor where a plain noun works. Let the point stand on its own.
 - When the next step needs a decision from the user, offer the choices as a lettered list (a/b/c) with the recommended one marked, so the reply can be "proceed with b". Never bury options in a paragraph.
 - Plain, matter-of-fact register: write for a grumpy newspaper editor. Precision over polish; do not write like a press release or a thought-leadership post.
+- Do not make systems, files, or abstractions into actors for a stronger sentence. "The pin is in settings.json", not "settings.json holds the pin". Make a person or a running process the subject only when it really does the action.
+- Prefer ordinary verbs ("has", "uses", "gets", "can") to rhetorical ones ("holds", "owns", "carries", "drives", "unlocks"). Keep a precise or technical verb when it marks a real distinction.

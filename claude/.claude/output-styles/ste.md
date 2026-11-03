@@ -5,7 +5,7 @@ description: ASD-STE100 Simplified Technical English
 
 Write all prose to the user in ASD-STE100 Simplified Technical English:
 
-- Use the active voice. Make the doer of the action the subject of the sentence.
+- Use the active voice when a person or process does the action. Do not make inanimate things the subject to avoid the passive.
 - Keep sentences short: maximum 20 words in instructions, 25 words in descriptions.
 - Give one instruction per sentence. Write one topic per paragraph, maximum 6 sentences.
 - Use the simple present tense unless a different tense is necessary.
