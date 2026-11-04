@@ -20,6 +20,31 @@ needs no shell key, resolves `assignee: "me"`, and its default payloads are
 ask the user to run `/mcp login linear` (or `pi mcp login linear` in a
 shell); don't try to authenticate for them.
 
+### Linear MCP from codemode (local additions -- keep when regenerating)
+
+The server's own instructions cover save_* create-or-update, `"me"`,
+pagination, and per-team labels. These are the mistakes sessions keep
+making that the server does not warn about:
+
+- Tool names: `list_issues`, `get_issue`, `save_issue` (create and
+  update; there is no `create_issue`), `list_comments` (`get_issue` has
+  no comments), `save_comment`, `list_projects`, `list_custom_views`,
+  `list_issue_labels`, `list_issue_statuses`, `whoami`. Unsure of a
+  signature: run `text(await describeTool('mcp__linear__<name>'))`; it
+  returns a string. `ALL_TOOLS` is an array of `{name, description}`
+  objects, not strings: `ALL_TOOLS.map(t => t.name)`.
+- Never declare a variable named `tools` in the script. It shadows the
+  codemode global and fails with `SyntaxError: invalid redefinition of
+  parameter name`.
+- `list_issues` `fields` is a fixed enum: `id` is the identifier
+  (`GTMENG-123`, there is no `identifier`), and the state is `status`,
+  not `state`. The `state` filter argument is separate and fine.
+- Results come back as `r.content[0].text`, a JSON string: `JSON.parse` it.
+- `labels` on `save_issue` must already exist on the team and replaces
+  the full set; use `addLabels`. Check names with `list_issue_labels`.
+- `prepare_attachment_upload` needs the target `issue` (it adds to the
+  issue's Resources); `prepare_file_upload` returns markdown to embed.
+
 **Use linearis (the rest of this file) for shell scripts, cron, one-liners in
 `bash`, agents without MCP, or when MCP isn't authenticated.** It runs on the
 personal key described under auth. The gtm repo's `scripts/linear/*.sh` are

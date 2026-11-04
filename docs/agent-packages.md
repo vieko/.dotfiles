@@ -216,8 +216,10 @@ loaded for the wrong request. Rules:
 - Name skills with an active verb where one fits (`revisit-pr`, not
   `modernize`, which also matches code upgrades).
 
-Skills installed from upstream (`web-design-guidelines`) lose local
-description edits on reinstall; reapply them. Skills in their own repos
+Skills installed from upstream (`web-design-guidelines`, `agent-browser`)
+lose local description edits on reinstall; reapply them. `agent-browser`
+also has a "Local additions" section and no upstream `hidden: true` (pi
+ignores the key); keep both when syncing. Skills in their own repos
 (`sigil`, `anvil`) take description changes through a PR there.
 
 ## Spinner verb dictionary (shared across agents)

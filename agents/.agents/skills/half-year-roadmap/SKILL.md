@@ -1,6 +1,7 @@
 ---
 name: half-year-roadmap
 description: Draft half-year (H1/H2) goals or a roadmap for leadership from monthly check-ins, issue-tracker boards, project memory, and the codebase. Use whenever the user asks to draft, plan, or report H1/H2 goals, a half-year or quarterly roadmap, "what do I want to accomplish next half," or a goals summary for a manager to preview to leadership. Produces a BLUF Slack/Notion-ready document of 3-5 goals, each with a done-when, in the user's check-in voice.
+disable-model-invocation: true
 ---
 
 # Half-year roadmap / goals
