@@ -4,7 +4,7 @@ argument-hint: "<PR-URL or #N>"
 ---
 Review GitHub PR $1.
 
-Use `gh pr view $1 --json title,body,author,state,mergedAt,reviewDecision,baseRefName,headRefName,additions,deletions,changedFiles,files,reviews,statusCheckRollup` and `gh pr diff $1` to gather context. If the PR is already merged or closed, say so in the first line and stop unless I asked for a post-merge review.
+Use `gh pr view $1 --json title,body,author,state,mergedAt,reviewDecision,baseRefName,headRefName,additions,deletions,changedFiles,files,reviews,statusCheckRollup` and `gh pr diff $1` to gather context. Lead the report with the PR state; if it is already merged or closed, say so in the first line, then continue the review.
 
 Report:
 
