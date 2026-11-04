@@ -43,13 +43,18 @@ Pull the merged work across the Index surface area:
 
 ```bash
 git log origin/main --format="%h|%an|%ad|%s" --date=short --since="<cutoff>" -- \
-  apps/index agents/index packages/index packages/listeners
+  apps/index packages/index packages/index-salesforce packages/listeners
+git log origin/main --format="%h|%an|%ad|%s" --date=short --since="<cutoff>" -- \
+  apps/gtm-workflows | grep -i -E 'index|zoom|rtms'
 ```
 
-`apps/index` (the app + Zoom client), `agents/index` (the Eve chat agent), and
-`packages/listeners` are the core. Also check for Index-adjacent work that lives
-elsewhere: Eve embeds in `apps/athena`, listener wiring in `apps/gtm-workflows`
-(e.g. Zoom-ingest hooks). Include those when they change what Index delivers.
+`apps/index` (the app, Zoom client, and the Eve chat agent under
+`apps/index/agent`; the old `agents/index` tree was deleted 2026-09-22),
+`packages/index*`, and `packages/listeners` are the core. The second log
+catches Index work in `apps/gtm-workflows` (Zoom capture and RTMS recovery
+workflows, endpoints Index calls); read each hit, the grep is a filter, not
+a verdict. Eve embeds in `apps/athena` count when they change what Index
+delivers.
 
 **Scope guard:** the events-registry plumbing (`packages/events` catalogs,
 subscriber-as-code, freeze periods, cron producers) is its own project (VOLTRON /

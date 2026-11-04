@@ -121,9 +121,9 @@ converges on pi-reported $ and the repricing note can be dropped.
    infrastructure, not model, failures; read the `.log` next to them.
    Vessel names changed 2026-09-22 (`luna` = gpt-6-luna, `sol` = gpt-6-sol,
    then gpt-6.1-sol for golems from 2026-09-29 and familiars from 2026-10-09,
-   `opus` = claude-opus-5.5, strong rung is opus not fable, `glm`/`terra`
-   dropped); older rows in `summons.log` and `anvil status` carry the old
-   ids, so group by alias, not by model id, across the boundary.
+   `opus` = claude-opus-5.5, strong rung is opus not fable, `glm` dropped;
+   `terra` = gpt-6.1-terra since 2026-11-02, a trial vessel); older rows
+   in `summons.log` and `anvil status` carry the old ids, so group by alias, not by model id, across the boundary.
 
 ## Optional Luna Decisions labels (after step 8)
 
@@ -154,6 +154,13 @@ Cutoffs can hide evidence. Read representative openers and reports before
 proposing templates or interpreting a false report label as an omission.
 
 ## Open experiments (settle before proposing new ones)
+
+- **Terra familiars** (started 2026-11-02, decide at the week-46 audit):
+  `-m terra` (gpt-6.1-terra, half sol's price) on ~10 familiar tasks.
+  Compare terra vs sol on malformed edits, $/turn, and review rounds per
+  task. Terra becomes the familiar default only with 0 malformed edits and
+  no more review rounds than sol; otherwise the alias comes off. The rule
+  is in PHYREXIA.md Vessels.
 
 - **Sol repair-spec pilot**: closed 2026-10-26 with no data. Repair specs
   stopped appearing (2 in weeks 39-43, both fable); golems run luna and
