@@ -6,44 +6,82 @@ Draft a lede for us to review: the opening line of the PR description, in my
 voice. Target: `$@` (if empty, the current branch's changes; if a PR number or
 URL, read it with `gh pr view` and `gh pr diff --stat`).
 
-**What a lede is.** One sentence, occasionally two, that answers "what does this
-PR bring to the table?" for a non-technical reader. It states the user-visible
-behavior change or capability unlocked, not what files changed. BLUF: the first
-clause is the takeaway. If the PR is flag-gated, dark-shipped, or a
-foundation for a next PR, say so in the same sentence. It sits above the
-AI-written body; it is the human "why."
+**What a lede is.** One sentence that says what changes for the people who use
+or run this, for a reader who has not seen the diff. Not what files changed,
+not how we found the problem. It sits above the AI-written body, which already
+has the mechanism, the history, and the numbers. If the PR is flag-gated,
+dark-shipped, or a foundation for the next PR, add a short second sentence:
+"Nothing visible yet, the UI comes next."
 
-**Voice rules** (from `~/private/profile/voice.md`; read it if you have not
-this session):
+**Rules** (from my edits on ~90 past ledes; they override the signature moves
+in `~/private/profile/voice.md`, which are for long-form):
 
-- Lead with a claim, not a setup. Concrete consequence over abstraction.
-- Plain register, short sentences. No em dashes; colons and periods land.
-- No hedging, no marketing adjectives, no "this PR introduces". "This" or a
-  bare verb is fine ("Restores...", "Stops...", "Brings...").
-- Numbers when they exist (calls recovered, minutes saved, x-times faster).
-- A light touch of personality is allowed when the change earns it, never
-  forced.
+- **Short.** Aim for 12-20 words; 25 is the hard limit. My own rewrites run
+  ~21 words, your rejected drafts ~30. When in doubt, cut the clause after
+  the colon or semicolon.
+- **One fact.** The single most important change. Drop the backstory (dates,
+  "since #4237", "on in production since September 4"), the second and third
+  effects, and the reassurance clauses unless they are the point.
+- **Verb first, plain verb.** Start with what the PR does: Adds, Fixes,
+  Stops, Removes, Moves, Prevents, Ensures, Brings back, Drops. Or start with
+  the user-visible subject and "now": "Deleting a call now redacts
+  transcripts." Do not front-load a long "When X fails in Y," clause.
+- **Facts, not story.** No metaphor ("a real front door", "new home"), no
+  aphorism or contrast device ("used to be a hope; now it is a test"), no
+  rhetorical verbs (unlocks, drives, owns, carries). Do not make a system the
+  hero of the sentence when a plain statement works.
+- **Plain words.** Name the product or feature a reader knows (Index, Lead,
+  Quality, the review bot), not internal module names, unless the reader is
+  engineering and the name is the point (`pr-wait`, `app-data-report`).
+- **Numbers only when they are the value** ("all 259 lint warnings",
+  "370 customer calls"). Not as decoration.
+- No em dashes. No "This PR introduces".
 
-**Ledes I have written** (match this register, not the topics):
+**Your drafts vs. what I shipped** (learn the edit, not the topic):
 
-- Restores 370 customer calls missed during migration including their account
-  links, notes, and Salesforce records.
-- Stops a single oversized Salesforce lookup from permanently killing an Index
-  chat.
-- This prevents double-posting to account channels during call ingestion: each
-  Slack post is claimed once per event.
-- Index chats with screenshots or files now work across follow-up messages,
-  even when users leave and resume the session.
-- Adds rules for call comments: who may write one, who may see them, and who may
-  change or remove them. Nothing visible yet, that comes next.
-- You can't cut what you can't measure: this puts attendee research on the
-  telemetry so the next PR has a baseline.
-- GTM Monorepo now typechecks on the TS7 compiler, 3.5x faster cold typechecks.
-- When a Zoom recording ingest fails, the system now alerts engineering with the
-  actual error.
+- Draft: "Lead Agent gets a real front door: a route reference that fails the
+  build if it drifts from the code, plus a working `/api/health` for the
+  first time since #1030."
+  Mine: "Adds a landing page for Lead Agent with a route reference and a
+  working `/api/health` route."
+- Draft: "Leads worked in Salesforce fall off the VDR queue for good, with
+  the rollout flag that gated it since September 5 removed."
+  Mine: "Leads worked in Salesforce fall off the VDR queue for good."
+- Draft: "When a repo guard fails in Quality, typecheck, lint, and tests now
+  still run. In #4237, one missing doc row skipped all of them."
+  Mine: "Ensures typecheck, lint, and tests always run, even when a repo
+  guard fails the Quality pass."
+- Draft: "The model registry now refuses to pair a zero-data-retention
+  request with a model that can't serve it: a construction-time throw
+  instead of a 400 in production."
+  Mine: "Requesting ZDR on a model that can't serve it now fails in a unit
+  test."
 
-**Output.** Give me two candidates, each one sentence, labeled A and B (B may
-take a different angle: outcome vs. mechanism, or user vs. team). No preamble,
-no explanation unless a fact in the diff is uncertain, in which case ask one
-question. I will pick, edit, or say "doesn't sound like me", and then you
-revise.
+**Ledes I wrote or shipped** (match this register):
+
+- Restores 370 customer calls missed during migration, including their
+  account links, notes, and Salesforce records.
+- Stops a single oversized Salesforce lookup from permanently killing an
+  Index chat.
+- Deleting a call now redacts transcripts.
+- Prevents every Vercel project in our monorepo from building on docs-only
+  PRs.
+- Brings back report titles, route suggestions, request rewrites, and
+  launch-calendar matching to Feedback.
+- Fixes a stale call-prep test that fails Unit tests on any PR touching a
+  package `gtm-workflows` depends on.
+- `pr-wait` no longer mistakes a fresh push for "no checks, all clear":
+  every new head restarts the cycle.
+- Moves the delete-a-call logic out of the operator script into a shared
+  module Index can call. Nothing visible yet, the UI comes next.
+
+**Output.** Two candidates, labeled A and B, each within the rules above. B
+states the same fact from the other side (user vs. team, or outcome vs. the
+change itself), at the same length and plainness; B is not the longer or
+more colorful version. Before you send them, check each one silently (word count,
+first word, no backstory, no metaphor); print only the two labeled
+sentences. No preamble and no explanation,
+unless a fact in the diff is uncertain; then ask one question. I will pick,
+edit, or say what reads wrong. When I say "shorter", "hard to read", or
+"less story", cut to the one fact and the plainest verb; do not rephrase the
+same length.

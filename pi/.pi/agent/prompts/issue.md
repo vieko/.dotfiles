@@ -11,11 +11,17 @@ a bare number (`1234`, assume team `GTMENG`), or a Linear URL
 segment). Use the normalized `TEAM-N` everywhere below. Anything after `$1` in
 `$@` is extra context from me (a spec path, a constraint); read it too.
 
-**Gather** (the `linear-cli` skill documents the CLI; it is `linearis`):
+**Gather** (the `linear-cli` skill has the Linear MCP gotchas and the
+`linearis` fallback):
 
-1. `linear issues read TEAM-N` (fall back to `--api-token "$LINEAR_API_KEY"` if
-   `LINEAR_API_TOKEN` is unset). Include description, comments, relations,
-   children, project, cycle, labels, assignee, state.
+1. Read the issue with Linear MCP from one `codemode` script:
+   `mcp__linear__get_issue({ id, includeRelations: true })` (relations are
+   off by default) and `mcp__linear__list_comments` in parallel; `get_issue`
+   has no comments. Sub-issues: `list_issues({ parentId: id })`. Read each
+   related or parent issue that the description or comments point at, at
+   least its title, state, and description. If MCP is not authenticated, use
+   `linear issues read TEAM-N` (fall back to `--api-token "$LINEAR_API_KEY"`
+   if `LINEAR_API_TOKEN` is unset).
 2. Prior art on this machine: `rg -n "TEAM-N|team-n" .bonfire/index.md`,
    `git branch -a | rg -i "team-n"`, `ls ~/dev/*-worktrees* 2>/dev/null | rg -i
    "team-n"`, `gh pr list --search "TEAM-N" --state all --limit 5`, and
@@ -33,5 +39,9 @@ segment). Use the normalized `TEAM-N` everywhere below. Anything after `$1` in
 - Open questions or ambiguities that would change the approach.
 - Your recommended session shape: inline, familiar (brief), or golem (spec +
   gate), with one sentence why.
+
+End with lettered options for the next step, the recommended one marked.
+When the open questions would change the approach, include "check the plan
+with counsel" as one of them.
 
 Then stop and wait.
