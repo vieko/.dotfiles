@@ -161,9 +161,10 @@ deliverable; anything else is supplementary.
 ### "merge it" closes the loop
 
 After the announcement the user replies `merge it` (or `merge when
-green`). That reply is the merge instruction; do not ask again. In a repo
-whose `AGENTS.md` requires a Slack post before merge (`~/dev/gtm`), the
-reply is `posted` (often `posted, merge it`) and means the same. Sequence:
+green`, or `posted`). That reply is the merge instruction; do not ask
+again. In a repo whose `AGENTS.md` requires a Slack post before merge
+(`~/dev/gtm`), the user does the post, and the merge instruction confirms
+that it is done: do not ask whether it was posted. Sequence:
 
 1. Wait for required checks green and review approval (use the repo's
    PR-wait mechanism if it has one; otherwise
