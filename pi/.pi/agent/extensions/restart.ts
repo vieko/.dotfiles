@@ -17,7 +17,8 @@
  * (PI_COUNSEL, SIGIL_ROLE, SIGIL_ROOM) is carried over, since the pane's
  * shell never had it. Outside tmux or Rex it prints the command instead.
  *
- * Upstream request for launcher support: earendil-works/pi#11748.
+ * Launcher support upstream (earendil-works/pi#11748) was declined on
+ * 2026-11-04, so this extension is the permanent fix.
  *
  * The prompt cache does not survive a restart; `/compact` first makes the
  * one rewrite cheaper.
