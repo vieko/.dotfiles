@@ -101,7 +101,9 @@ async function main() {
       sudo -n chmod 755 /usr/local/bin/anvil
       cd / && anvil --help | grep -q -- --gate-timeout`));
     await phase('seal', () => sh(`set -eo pipefail
-      rm -rf ${HOME}/seed ${HOME}/.npm/_logs ${HOME}/.cache/node ${HOME}/.anvil
+      rm -rf ${HOME}/seed ${HOME}/.npm/_logs ${HOME}/.anvil
+      # ~/.cache/node is corepack's pnpm cache; without it the first pnpm call downloads pnpm, which gateway-only egress blocks.
+      cd / && COREPACK_ENABLE_NETWORK=0 pnpm -v >/dev/null
       sudo -n mkdir -p /opt/anvil-snapshot
       printf '%s  pnpm-lock.yaml\\n' ${lockfileHash} | sudo -n tee /opt/anvil-snapshot/lockfile.sha256 >/dev/null
       printf '%s\\n' '${JSON.stringify({ gtmSha, anvilSha, pnpm: PNPM_VERSION, builtAt: new Date().toISOString() })}' | sudo -n tee /opt/anvil-snapshot/build.json >/dev/null
