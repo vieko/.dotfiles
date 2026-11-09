@@ -148,7 +148,9 @@ export async function runController(requestPath, effects) {
     if (!setupProbe.out.includes('GATEWAY_OK') || !setupProbe.out.includes('GITHUB_OK')) throw new Error('setup network policy probe contradicted policy');
     await output('bash', ['-lc', `mkdir -p ${q(home+'/input')} ${q(remoteRepo)} && git -C ${q(remoteRepo)} init -q && git -C ${q(remoteRepo)} remote add origin ${q(req.repoUrl)} && git -C ${q(remoteRepo)} fetch --depth=1 --filter=blob:none origin ${q(req.forkSha)} && git -C ${q(remoteRepo)} checkout --detach ${q(req.forkSha)}`]);
     const inputs = [{ path: remoteSpec, content: specContent }];
-    for (const c of contractContents) inputs.push({ path: `${home}/input/${c.name}`, content: c.content });
+    // anvil resolves --contract relative to the source repo and copies it into the worktree, so
+    // contracts land untracked under the clone; anvil's status checks run in the worktree only.
+    for (const c of contractContents) inputs.push({ path: `${remoteRepo}/.anvil-input/${c.name}`, content: c.content });
     await sdk.writeFiles(sandbox, inputs);
     // TODO(#59): live approval must verify this snapshot metadata path and hash provenance.
     const lock = await output('bash', ['-lc', 'cat /opt/anvil-snapshot/lockfile.sha256'], true);
@@ -167,7 +169,7 @@ export async function runController(requestPath, effects) {
     dispatched = true;
     manifest.status = 'dispatched';
     await fs.writeFile(path.join(state.artifactDir, 'manifest.json'), JSON.stringify(manifest, null, 2));
-    const anvilArgs = ['run', remoteSpec, '-C', remoteRepo, '--model', req.model, '-v', '--reasoning', '--json', '--from', req.forkSha, '--gate-timeout', req.gateTimeout, ...req.gate.flatMap(x => ['--verify', x]), ...req.scopes.flatMap(x => ['--scope', x]), ...req.contracts.flatMap(x => ['--contract', `${home}/input/${path.basename(x)}`])];
+    const anvilArgs = ['run', remoteSpec, '-C', remoteRepo, '--model', req.model, '-v', '--reasoning', '--json', '--from', req.forkSha, '--gate-timeout', req.gateTimeout, ...req.gate.flatMap(x => ['--verify', x]), ...req.scopes.flatMap(x => ['--scope', x]), ...req.contracts.flatMap(x => ['--contract', `.anvil-input/${path.basename(x)}`])];
     let runError;
     const anvilStartedAt = clock.now().getTime();
     try {

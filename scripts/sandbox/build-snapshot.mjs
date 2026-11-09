@@ -80,6 +80,7 @@ async function main() {
     await phase('toolchain', () => sh(`set -eo pipefail
       sudo -n apt-get -qq update >/dev/null && sudo -n apt-get -qq install -y build-essential >/dev/null
       corepack enable >/dev/null 2>&1 || sudo -n corepack enable
+      curl -fsSL https://raw.githubusercontent.com/rhysd/actionlint/main/scripts/download-actionlint.bash | sudo -n bash -s -- latest /usr/local/bin >/dev/null && actionlint --version
       corepack prepare pnpm@${PNPM_VERSION} --activate
       node -v; pnpm -v; make --version | head -1`));
     await phase('upload-seed', async () => {
