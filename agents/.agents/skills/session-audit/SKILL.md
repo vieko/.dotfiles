@@ -64,6 +64,10 @@ converges on pi-reported $ and the repricing note can be dropped.
      `~/dev` package edits, sigil board name in its descriptions) or a
      `project_context` section (AGENTS.md edited). With
      `supportsMidConvoToolChanges: false` each one is a full rewrite.
+     Week 45 added two more: an `mcp_servers`-only change (an MCP server
+     with no static `description` in `~/.pi/agent/mcp.json` gains its
+     summary on connect; give every server one) and a `pi-redact` entry
+     with fresh values just before the miss (pi-redact#4).
    - `modelswitch` / `compaction`: expected, small.
 4. **Models.** Per-model unexplained-miss rate should be roughly equal; an
    outlier model points at its provider path.
@@ -160,7 +164,14 @@ proposing templates or interpreting a false report label as an omission.
   Compare terra vs sol on malformed edits, $/turn, and review rounds per
   task. Terra becomes the familiar default only with 0 malformed edits and
   no more review rounds than sol; otherwise the alias comes off. The rule
-  is in PHYREXIA.md Vessels.
+  is in PHYREXIA.md Vessels. Week 45: 2 tasks only (both first-review
+  accepts, 0/6 malformed, $0.010/turn vs sol $0.024); familiar volume
+  fell to 5. Decide at week 46 only with ~10 tasks, else week 47.
+
+- **One-token decisions** (rule 10-11, end-of-step sentence 11-01):
+  20% -> 23% in week 45. Two text changes, no movement in four windows.
+  Recommended closing it at week 45; if the user agrees, stop reporting
+  the rate.
 
 - **Sol repair-spec pilot**: closed 2026-10-26 with no data. Repair specs
   stopped appearing (2 in weeks 39-43, both fable); golems run luna and
@@ -172,9 +183,10 @@ proposing templates or interpreting a false report label as an omission.
   verdicts were "stop"/"revise" often enough to have earned their cost.
   Week 43: $0.98/ut including counsel vs $1.02-1.22 in fable weeks;
   counsel 14% of session spend with 0% cache read (pi-counsel fix open).
-  Week 44: $0.77/ut, counsel 7.9%. The cache fix (0.2.1) is live but
-  untested in production: counsel uses a 5m TTL and no two consults in
-  one session landed within 5 min.
+  Week 44: $0.77/ut, counsel 7.9%. Week 45: $0.87/ut with counsel
+  (10.5%), opus-only sessions $0.76/ut, hand-picked fable seats $1.41/ut.
+  The cache fix (0.2.1) is proven: 2 consults within 5 min of the prior
+  one read 95K and 352K from cache for ~$0.30 each.
 - **sonnet-5 edit loss**: `-m sonnet` dispatches keep feeding the A/B;
   report the malformed-edit rate if any ran.
 - **1h TTL net**: +$362 (wk 36) then +$120/12d (wks 37-38). If it goes
@@ -203,5 +215,7 @@ opus-5.5), dotfiles extensions `gateway-routing.ts` and `context-cost.ts`
 `/lede`, `summon-golem -e`, anvil per-attempt USD cost, PHYREXIA.md rules
 "astra is a bounded vessel" and "split repair specs", pi AGENTS.md
 "posted closes the loop", matter-of-fact lettered options (pi-prose 0.3.1),
-model picker trimmed to 6 per host (09-22). Check their state before
+model picker trimmed to 6 per host (09-22), sigil#77 (board name in
+tool descriptions), pi-redact#4 (echo hiding rewrites sent messages),
+habit-nudges `stale` key (11-01), static MCP `description` rule (11-09). Check their state before
 re-recommending.

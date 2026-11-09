@@ -238,3 +238,30 @@ old row so drift is visible.
 - Open trial: terra familiars (`-m terra`, gpt-6.1-terra) from 11-02.
   Week-46 audit: compare terra vs sol on edit health, $/turn, and review
   rounds per familiar task (PHYREXIA.md Vessels has the decision rule).
+
+## Week 45 (2026-11-01 18:00 to 2026-11-09 15:43, 8 days incl. weekend), PHYREXIA
+
+- 70 sessions with turns, 5,770 assistant turns, 584 user turns, 5,309
+  tool calls (159 errors; 107 bash nonzero, 27 timeout). True $462 (=
+  pi-reported), $0.79/ut ($0.87 with counsel). Weekdays $406 = $68/day.
+- Split: cacheRead $180, cacheWrite $200, output $82.
+- Models: opus-5.5 $316 (57 sessions, $0.67/ut), fable-5.1 $142 (7
+  sessions, all switched by hand at start, $1.38/ut), sol $4, terra $0.45.
+- 1h TTL: premium $74 vs $253 avoided; net +$179.
+- Context: 24% of turns >= 200K carried 31% of spend; max 545K (one
+  stacked-PR session, 139 turns >= 400K). Top session $49.
+- Misses: first 33; idle 52 ($72, avg 143K); compaction 12 ($11);
+  unexplained 16 ($27): 7 superlogical `mcp_servers` description flip
+  (fixed 11-09, static description in mcp.json), 4 pi-redact echo
+  rewrites (pi-redact#4), 2 sigil board name (sigil#77), 2 pi 1.5.0
+  reload, 1 transport. opus 0.13%, fable 0.77%.
+- Edit health: 0/141 malformed. Hard stops: 12 (8 aborts, 4 timeouts in
+  one internet drop).
+- Counsel: 36 consults in 22 sessions, $48.59 (10.5%), 26 revise / 10
+  proceed. First cache reads: 2 consults (95K for $0.34, 352K for $0.29).
+- Nudges: renew 16 shown, 6 left, 10 kept going; stale 2 (new key).
+- Constructs: 15 dispatches (10 luna golems, 3 sol + 2 terra familiars).
+  anvil 6 local runs, 5 passed, $0.35; 4 sandbox-lane runs not in anvil
+  status (import failed / 403). Terra 2 tasks, both first-review accepts.
+- One-token decisions: 136 of 585 (23%), up from 20% after the 11-01
+  end-of-step sentence.
