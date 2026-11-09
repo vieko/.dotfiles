@@ -269,7 +269,7 @@ export async function runController(requestPath, effects) {
       try {
         await Promise.all(pendingLogs);
         let runResult = {}; try { runResult = JSON.parse(await fs.readFile(path.join(state.artifactDir, 'anvil-result.json'), 'utf8')); } catch {}
-        await fs.writeFile(path.join(state.artifactDir, 'handoff-result.json'), JSON.stringify({ exitCode, passed: state.verdict === 'green' ? true : state.verdict === 'red' ? false : null, verdict: state.verdict, voidReason: runResult.voidReason ?? (state.verdict === 'void' ? 'controller interrupted or result inconclusive' : null), attempts: runResult.attempts ?? null, cost: runResult.cost ?? null, timeoutMs: req.timeoutMs, provenance: { repoUrl: req.repoUrl, forkSha: req.forkSha, snapshotId: state.snapshotId ?? req.snapshotId, dispatchId: req.dispatchId, summonerAddress: req.summonerAddress }, ...state }, null, 2));
+        await fs.writeFile(path.join(state.artifactDir, 'handoff-result.json'), JSON.stringify({ exitCode, passed: state.verdict === 'green' ? true : state.verdict === 'red' ? false : null, verdict: state.verdict, voidReason: runResult.voidReason ?? (state.verdict === 'void' ? 'controller interrupted or result inconclusive' : null), attempts: runResult.attempts ?? null, cost: runResult.cost ?? runResult.usage?.cost ?? null, timeoutMs: req.timeoutMs, provenance: { repoUrl: req.repoUrl, forkSha: req.forkSha, snapshotId: state.snapshotId ?? req.snapshotId, dispatchId: req.dispatchId, summonerAddress: req.summonerAddress }, ...state }, null, 2));
       } catch (e) { say(`handoff result write failed: ${e.message}`); }
     }
   }
