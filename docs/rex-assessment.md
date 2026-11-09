@@ -198,7 +198,9 @@ by installers) moved into .bash_exports; .local/bin was already there.
 
 - Rex agent skill installed 2026-10-31 (`rex skill setup`): stub skill in
   `~/.agents/skills/rex` (gitignored) and `~/.claude/skills/rex`, Claude Code
-  and Codex SessionStart hooks; session naming off. Pi has no hook and needs
+  and Codex SessionStart hooks. Session naming started off and has been on
+  since 2026-11-03 (`rex skill setup --session-naming`, which rewrites the
+  tracked Claude Code hook). Pi has no hook and needs
   none (REX_SESSION/REX_BLOCK are in its env). It covers non-Pi terminals;
   pi-post stays the agent-to-agent channel.
 
@@ -210,8 +212,10 @@ keys `Workspace.*`). To match Ghostty on a new machine:
 - Theme: `rex -C <host> do client.theme.import path=$HOME/.config/rex/themes/one-half-dark`
   (Ghostty's One Half Dark with our cursor colors; tracked in `rex/`).
   Import makes it the dark theme. Appearance: dark.
-- Font: Settings, Terminal, Typography: Berkeley Mono, style Retina
-  (`Workspace.terminalFontName`, `Workspace.terminalFontStyle`).
+- Font: Settings, Terminal, Typography: Berkeley Mono, style Retina, size
+  14 to match Ghostty's macOS `font-size` (`Workspace.terminalFontName`,
+  `Workspace.terminalFontStyle`, `Workspace.terminalFontPointSize`).
+  Cmd+= zoom does not persist; set the size here.
 - Cursor: block, no blink.
 - Remote Control: on (Settings, Rex Server).
 
