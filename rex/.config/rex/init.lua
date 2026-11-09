@@ -13,6 +13,9 @@
 local TERMINAL = "com.superlogical.terminal"
 local SHELL = "com.superlogical.terminal.shell"
 
+-- tmux's preset layouts, in its `next-layout` order.
+local LAYOUTS = { "even-horizontal", "even-vertical", "main-horizontal", "main-vertical", "tiled" }
+
 -- Bindings ------------------------------------------------------------------
 
 -- Each binding spells out its full key, so `rex keymap` names the line that
@@ -72,6 +75,11 @@ rex.bind("ctrl+a>x", "pane.close")
 rex.bind("ctrl+a>shift+1", "pane.move_to_new_tab") -- !
 rex.bind("ctrl+a>f", "pane.float")
 rex.bind("ctrl+a>shift+y", "copy_cwd") -- Y (tmux-yank)
+
+-- Panes: preset layouts (tmux Space). A named one is in the palette or
+-- `rex do layout name=tiled`. See the layout action below.
+rex.bind("ctrl+a>space", "layout", { name = "next" })
+rex.bind("ctrl+a>shift+space", "layout", { name = "previous" })
 
 -- Find, palette, help
 rex.bind("ctrl+a>[", "client.find.open")
@@ -133,6 +141,136 @@ rex.action{
       focus = true,
       layout = { block = { flavor = SHELL, options = { cwd = pane_dir(ctx.block_id) } } },
     })
+  end,
+}
+
+-- Preset layouts. A plan is a tree whose leaves are indexes into the tab's
+-- blocks in layout order; realize() rebuilds the tab into it with
+-- session.move_block, so every process keeps running.
+
+local MAIN_RATIO = 0.6 -- main pane share (tmux main-pane-width/height)
+
+-- Even chain: each item gets 1/#items of the space along dir.
+local function chain(dir, items, from)
+  from = from or 1
+  if from == #items then return items[from] end
+  return { dir = dir, ratio = 1 / (#items - from + 1), before = items[from], after = chain(dir, items, from + 1) }
+end
+
+local function range(a, b)
+  local t = {}
+  for i = a, b do t[#t + 1] = i end
+  return t
+end
+
+local function plan(name, n)
+  if name == "even-horizontal" then return chain("horizontal", range(1, n)) end
+  if name == "even-vertical" then return chain("vertical", range(1, n)) end
+  if name == "main-vertical" or name == "main-horizontal" then
+    local outer = name == "main-vertical" and "horizontal" or "vertical"
+    local inner = outer == "horizontal" and "vertical" or "horizontal"
+    return { dir = outer, ratio = MAIN_RATIO, before = 1, after = chain(inner, range(2, n)) }
+  end
+  if name == "tiled" then
+    -- tmux's grid: grow rows, then columns, until it fits; fill row by row.
+    local rows, cols = 1, 1
+    while rows * cols < n do
+      rows = rows + 1
+      if rows * cols < n then cols = cols + 1 end
+    end
+    local lines = {}
+    for first = 1, n, cols do
+      lines[#lines + 1] = chain("horizontal", range(first, math.min(first + cols - 1, n)))
+    end
+    return chain("vertical", lines)
+  end
+  error("unknown layout: " .. tostring(name), 0)
+end
+
+-- Structure without ratios, e.g. h(b,v(b,b)), to compare a plan with the tab.
+local function plan_shape(node)
+  if type(node) ~= "table" then return "b" end
+  return node.dir:sub(1, 1) .. "(" .. plan_shape(node.before) .. "," .. plan_shape(node.after) .. ")"
+end
+
+local function view_shape(node)
+  if node.block_id then return "b" end
+  local s = node.split
+  return s.direction:sub(1, 1) .. "(" .. view_shape(s.before) .. "," .. view_shape(s.after) .. ")"
+end
+
+local function view_leaves(node, out)
+  if node.block_id then
+    out[#out + 1] = node.block_id
+  else
+    view_leaves(node.split.before, out)
+    view_leaves(node.split.after, out)
+  end
+  return out
+end
+
+local function first_leaf(node)
+  while type(node) == "table" do node = node.before end
+  return node
+end
+
+-- Block 1 stays put. For each split, the first block of its after side moves
+-- beside the first block of its before side, then both sides recurse.
+local function realize(node, ids)
+  if type(node) ~= "table" then return end
+  check(rex.session.move_block{
+    block_id = ids[first_leaf(node.after)],
+    anchor_block_id = ids[first_leaf(node.before)],
+    direction = node.dir,
+    side = "after",
+    ratio = node.ratio,
+  })
+  realize(node.before, ids)
+  realize(node.after, ids)
+end
+
+local function active_tiled_layout()
+  local view = check(rex.session.view{})
+  for _, w in ipairs(view.windows or {}) do
+    if w.window_id == view.active_window_id then
+      for _, layer in ipairs(w.layers or {}) do
+        if layer.kind == "tiled" then return layer.layout end
+      end
+    end
+  end
+  error("no tiled layer in the active window", 0)
+end
+
+-- next/previous: the tab's state is its shape, so cycling survives reloads.
+-- Layouts with the same shape as the tab (2 panes: h and v only) are skipped.
+local function pick(name, n, current)
+  if name ~= "next" and name ~= "previous" then return name end
+  local step = name == "next" and 1 or -1
+  local at = 0
+  for i, l in ipairs(LAYOUTS) do
+    if plan_shape(plan(l, n)) == current then at = i break end
+  end
+  if at == 0 then at = step == 1 and 0 or 1 end
+  for k = 1, #LAYOUTS do
+    local l = LAYOUTS[(at - 1 + step * k) % #LAYOUTS + 1]
+    if plan_shape(plan(l, n)) ~= current then return l end
+  end
+  return LAYOUTS[1]
+end
+
+rex.action{
+  name = "layout",
+  title = "Select Layout",
+  description = "Arrange the tab's tiled panes as a tmux preset, or step through the presets (tmux select-layout / next-layout).",
+  keywords = "layout tiled even horizontal vertical main select next previous arrange",
+  args = { name = "string?" },
+  run = function(ctx, args)
+    local root = active_tiled_layout()
+    local ids = view_leaves(root, {})
+    if #ids < 2 then return { layout = "single", panes = #ids } end
+    local name = pick(args.name or "next", #ids, view_shape(root))
+    realize(plan(name, #ids), ids)
+    return { layout = name, panes = #ids }
   end,
 }
 
