@@ -339,7 +339,13 @@ async function main() {
   // Resolve the request path first so a relative argument still means the caller's cwd.
   process.chdir(path.dirname(fileURLToPath(import.meta.url)));
   const { Sandbox } = await import('@vercel/sandbox');
-  const env = process.env;
+  const env = { ...process.env };
+  if (!env.VERCEL_TOKEN) {
+    // The login shell has no VERCEL_TOKEN; `vercel login` stores one the SDK can use.
+    const { getAuth } = await import('@vercel/sandbox/dist/auth/index.js');
+    const token = getAuth()?.token;
+    if (token) env.VERCEL_TOKEN = token;
+  }
   const sdk = {
     create: opts => Sandbox.create(opts),
     runCommand: (sb, opts) => sb.runCommand(opts),

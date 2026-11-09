@@ -336,7 +336,8 @@ argument is a module path on Node 24, not a glob.
 
 ### Required configuration and request
 
-The dispatching shell must provide `VERCEL_TOKEN` and `AI_GATEWAY_API_KEY`,
+The dispatching shell must provide `AI_GATEWAY_API_KEY` and `VERCEL_TOKEN`
+(when unset, the controller uses the `vercel login` CLI auth store),
 plus `VERCEL_TEAM_ID`, `VERCEL_PROJECT_ID`, and
 `ANVIL_SANDBOX_SNAPSHOT_ID` for the approved existing resources; their values
 must match `teamId`, `projectId`, and `snapshotId` in the request. Make these
