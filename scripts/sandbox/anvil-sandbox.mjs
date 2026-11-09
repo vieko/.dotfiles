@@ -136,6 +136,9 @@ export async function runController(requestPath, effects) {
     const agentPolicy = { allow: { 'ai-gateway.vercel.sh': [gatewayRule] } };
     sandbox = await sdk.create({ token: env.VERCEL_TOKEN, teamId: req.teamId, projectId: req.projectId, source: { type: 'snapshot', snapshotId: req.snapshotId }, resources: { vcpus: req.vcpus }, timeout: req.timeoutMs, persistent: false, networkPolicy: setupPolicy, env: { CI: '1', GIT_TERMINAL_PROMPT: '0', AI_GATEWAY_API_KEY: 'brokered-by-sandbox-firewall' } });
     state.sandboxId = sandbox.name ?? sandbox.id;
+    const phaseStart = clock.now().getTime(); let phaseAt = phaseStart;
+    const phase = name => { const t = clock.now().getTime(); say(`phase ${name} ${t - phaseAt}ms (t+${t - phaseStart}ms)`); phaseAt = t; };
+    phase('create');
     const sandboxDeadline = clock.now().getTime() + req.timeoutMs;
     manifest.sandboxId = state.sandboxId;
     await fs.writeFile(path.join(state.artifactDir, 'manifest.json'), JSON.stringify(manifest, null, 2));
@@ -150,6 +153,7 @@ export async function runController(requestPath, effects) {
     const setupProbe = await output('bash', ['-lc', `git ls-remote --exit-code ${q(req.repoUrl)} HEAD >/dev/null && printf GITHUB_OK; curl -fsS -o /dev/null https://ai-gateway.vercel.sh/v1/models && printf GATEWAY_OK`], true);
     if (!setupProbe.out.includes('GATEWAY_OK') || !setupProbe.out.includes('GITHUB_OK')) throw new Error('setup network policy probe contradicted policy');
     await output('bash', ['-lc', `mkdir -p ${q(home+'/input')} ${q(remoteRepo)} && git -C ${q(remoteRepo)} init -q && git -C ${q(remoteRepo)} remote add origin ${q(req.repoUrl)} && git -C ${q(remoteRepo)} fetch --depth=1 --filter=blob:none origin ${q(req.forkSha)} && git -C ${q(remoteRepo)} checkout --detach ${q(req.forkSha)}`]);
+    phase('clone');
     const inputs = [{ path: remoteSpec, content: specContent }];
     // anvil resolves --contract relative to the source repo and copies it into the worktree, so
     // contracts land untracked under the clone; anvil's status checks run in the worktree only.
@@ -162,6 +166,7 @@ export async function runController(requestPath, effects) {
     await sdk.setNetworkPolicy(sandbox, agentPolicy);
     const agentProbe = await output('bash', ['-lc', '(curl -fsS -m 5 https://github.com/ >/dev/null && echo GITHUB_OPEN || echo GITHUB_BLOCKED); (curl -fsS -m 5 https://registry.npmjs.org/ >/dev/null && echo REGISTRY_OPEN || echo REGISTRY_BLOCKED); (curl -fsS -m 5 https://ai-gateway.vercel.sh/v1/models >/dev/null && echo GATEWAY_OK || echo GATEWAY_BLOCKED)'], true);
     if (!agentProbe.out.includes('GITHUB_BLOCKED') || !agentProbe.out.includes('REGISTRY_BLOCKED') || !agentProbe.out.includes('GATEWAY_OK')) throw new Error('agent network policy probe contradicted policy');
+    phase('lock-policy');
     const baseline = await output('git', ['-C', remoteRepo, 'worktree', 'list', '--porcelain']);
     worktreesBefore = parseWorktrees(baseline.out);
     manifest.remoteWorktreesBefore = worktreesBefore;
@@ -186,6 +191,7 @@ export async function runController(requestPath, effects) {
       let parsed; try { parsed = JSON.parse(safeResult); } catch { parsed = null; }
       state.verdict = clock.isInterrupted?.() ? 'void' : parsed?.passed === true && r.exitCode === 0 ? 'green' : parsed?.passed === false || r.exitCode === 1 ? 'red' : 'void';
       exitCode = state.verdict === 'green' ? 0 : state.verdict === 'red' ? 1 : 2;
+      phase('anvil');
     } catch (e) {
       runError = e; state.verdict = 'void'; exitCode = dispatched ? 2 : 4; say(`run error: ${e.message}`);
     }
@@ -229,7 +235,7 @@ export async function runController(requestPath, effects) {
     }
   } finally {
     if (sandbox) {
-      try { await sdk.stop(sandbox); state.stopStatus = 'stopped'; }
+      try { await sdk.stop(sandbox); state.stopStatus = 'stopped'; say(`sandbox stopped ${clock.now().toISOString()}`); }
       catch (e) { state.stopStatus = 'failed'; state.stopError = String(e.message); say(`sandbox stop failed: ${e.message}`); }
     }
     if (req && state.artifactDir) {
