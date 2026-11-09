@@ -12,6 +12,10 @@ const KEYS = ['repoUrl','forkSha','specPath','gate','scopes','contracts','model'
 const SECRET_ENV = ['VERCEL_TOKEN','AI_GATEWAY_API_KEY'];
 const GH_STS_URL = 'https://gh-sts.vercel-infra.com/token';
 const GH_STS_SETUP_BUDGET_MS = 10 * 60_000;
+// The universal image's user is `vercel` with HOME=/vercel (spike log, anvil#59), not /home/vercel.
+const REMOTE_HOME = '/vercel';
+/** anvil's per-repo state bucket (packages/cli/src/state-paths.ts): the absolute path, separators to dashes, wrapped in `--`. */
+export const anvilBucket = repoRoot => `--${repoRoot.replace(/^[/\\]/, '').replace(/[/\\:]/g, '-')}--`;
 const SHA_RE = /^[0-9a-f]{40}$/i;
 const COLLECTION_RESERVE_MS = 5 * 60_000;
 const q = (s) => `'${String(s).replaceAll("'", "'\\''")}'`;
@@ -135,8 +139,7 @@ export async function runController(requestPath, effects) {
     const sandboxDeadline = clock.now().getTime() + req.timeoutMs;
     manifest.sandboxId = state.sandboxId;
     await fs.writeFile(path.join(state.artifactDir, 'manifest.json'), JSON.stringify(manifest, null, 2));
-    // The universal image's user is `vercel` with HOME=/vercel (spike log, anvil#59), not /home/vercel.
-    const home = '/vercel', remoteRepo = `${home}/repo`, remoteSpec = `${home}/input/${req.dispatchId}-spec.md`;
+    const home = REMOTE_HOME, remoteRepo = `${home}/repo`, remoteSpec = `${home}/input/${req.dispatchId}-spec.md`;
     const runRemote = (cmd, args = [], options = {}) => sdk.runCommand(sandbox, { cmd, args, ...options });
     const output = async (cmd, args = [], allowFail = false) => {
       const r = await runRemote(cmd, args);
@@ -193,7 +196,7 @@ export async function runController(requestPath, effects) {
     try {
       const retrievalErrors = [];
       try {
-        const collect = await output('bash', ['-lc', `set -e; cd ${q(state.remoteWorktree ?? remoteRepo)}; idx=/tmp/golem-index-$$; trap 'rm -f "$idx"' EXIT; GIT_INDEX_FILE=$idx git read-tree ${q(req.forkSha)}; GIT_INDEX_FILE=$idx git add -A; GIT_INDEX_FILE=$idx git diff --cached --binary ${q(req.forkSha)} > /tmp/golem.patch; tar -czf /tmp/anvil-state.tgz -C ${q(home)} .anvil 2>/dev/null || true; test -f /tmp/timings.json || printf '{"collectionPending":true}' > /tmp/timings.json`], true);
+        const collect = await output('bash', ['-lc', `set -e; cd ${q(state.remoteWorktree ?? remoteRepo)}; idx=/tmp/golem-index-$$; trap 'rm -f "$idx"' EXIT; GIT_INDEX_FILE=$idx git read-tree ${q(req.forkSha)}; GIT_INDEX_FILE=$idx git add -A; GIT_INDEX_FILE=$idx git diff --cached --binary ${q(req.forkSha)} -- . ':!.anvil-input' > /tmp/golem.patch; tar -czf /tmp/anvil-state.tgz -C ${q(home)} .anvil 2>/dev/null || true; test -f /tmp/timings.json || printf '{"collectionPending":true}' > /tmp/timings.json`], true);
         if (collect.code !== 0) retrievalErrors.push(`remote collection command exit ${collect.code}`);
       } catch (e) { retrievalErrors.push(`remote collection command: ${e.message}`); }
       for (const [remote, local] of [['/tmp/golem.patch','golem.patch'], ['/tmp/anvil-state.tgz','anvil-state.tgz'], ['/tmp/anvil.log','anvil.log'], ['/tmp/anvil-result.json','anvil-result.json'], ['/tmp/timings.json','timings.json']]) {
@@ -246,7 +249,7 @@ async function discoverRemoteWorktree(sandbox, repo, before, sdk) {
   const command = await sdk.runCommand(sandbox, { cmd: 'git', args: ['-C', repo, 'worktree', 'list', '--porcelain'] });
   const out = String(await command.output('both'));
   if(command.exitCode!==0) throw new Error(`git worktree list failed (${command.exitCode}): ${out.slice(-1000)}`);
-  const candidates = parseWorktrees(out).filter(p => p !== repo && !before.includes(p) && p.startsWith('/home/vercel/'));
+  const candidates = parseWorktrees(out).filter(p => p !== repo && !before.includes(p) && p.startsWith(REMOTE_HOME + '/'));
   if (candidates.length > 1) throw new Error(`ambiguous new worktrees: ${candidates.join(', ')}`);
   return candidates[0] ?? repo;
 }
@@ -258,12 +261,12 @@ async function assertRegularContained(fs, base, file, label) {
   const st = await fs.lstat(file); if (!st.isFile()) throw new Error(`${label} must be a regular file: ${file}`);
 }
 async function collectPartial(sandbox, state, fs, log, sdk, req) {
-  const repo = '/home/vercel/repo';
+  const repo = `${REMOTE_HOME}/repo`;
   let discoveryFailed=false;
   try { state.remoteWorktree = await discoverRemoteWorktree(sandbox, repo, [], sdk); }
   catch(e) { discoveryFailed=true; state.remoteWorktree=repo; log(`remote worktree discovery failed: ${e.message}`); }
   try {
-    const r = await sdk.runCommand(sandbox, { cmd: 'bash', args: ['-lc', `if [ -d ${q(state.remoteWorktree+'/.git')} ] || [ -f ${q(state.remoteWorktree+'/.git')} ]; then cd ${q(state.remoteWorktree)}; idx=/tmp/golem-index-$$; trap 'rm -f "$idx"' EXIT; GIT_INDEX_FILE=$idx git read-tree ${q(req.forkSha)} && GIT_INDEX_FILE=$idx git add -A && GIT_INDEX_FILE=$idx git diff --cached --binary ${q(req.forkSha)} > /tmp/golem.patch; fi; tar -czf /tmp/anvil-state.tgz -C /home/vercel .anvil 2>/dev/null || true; : > /tmp/anvil.log; : > /tmp/anvil-result.json; test -f /tmp/timings.json || printf '{"collectionPending":true}' > /tmp/timings.json`] });
+    const r = await sdk.runCommand(sandbox, { cmd: 'bash', args: ['-lc', `if [ -d ${q(state.remoteWorktree+'/.git')} ] || [ -f ${q(state.remoteWorktree+'/.git')} ]; then cd ${q(state.remoteWorktree)}; idx=/tmp/golem-index-$$; trap 'rm -f "$idx"' EXIT; GIT_INDEX_FILE=$idx git read-tree ${q(req.forkSha)} && GIT_INDEX_FILE=$idx git add -A && GIT_INDEX_FILE=$idx git diff --cached --binary ${q(req.forkSha)} -- . ':!.anvil-input' > /tmp/golem.patch; fi; tar -czf /tmp/anvil-state.tgz -C ${REMOTE_HOME} .anvil 2>/dev/null || true; : > /tmp/anvil.log; : > /tmp/anvil-result.json; test -f /tmp/timings.json || printf '{"collectionPending":true}' > /tmp/timings.json`] });
     await r.output('both');
   } catch (e) { log(`remote partial collection preparation failed: ${e.message}`); }
   let complete = true;
@@ -285,8 +288,8 @@ async function importArtifacts({ req, state, fs, git, exec, artifactDir, clock, 
   await fs.mkdir(stage, { recursive: false });
   const listingResult = await exec.run('tar', ['-tzf', archive], { cwd: stage });
   const names = String(listingResult.stdout ?? '').split('\n').filter(Boolean);
-  const bucket = await git.stateBucket(req.localRepo);
-  if (!names.some(n => n.startsWith(`.anvil/${bucket}/runs/`) && n.endsWith('.json'))) throw new Error(`records archive contains no run record for bucket ${bucket}`);
+  const remoteBucket = anvilBucket(`${REMOTE_HOME}/repo`), bucket = anvilBucket(path.resolve(req.localRepo));
+  if (!names.some(n => n.startsWith(`.anvil/${remoteBucket}/runs/`) && n.endsWith('.json'))) throw new Error(`records archive contains no run record for bucket ${remoteBucket}`);
   for (const n of names) if (path.isAbsolute(n) || n.startsWith(String.fromCharCode(92)) || /^[A-Za-z]:[\\/]/.test(n) || n.split(/[\\/]/).includes('..')) throw new Error(`unsafe archive path: ${n}`);
   const verbose = await exec.run('tar', ['-tvzf', archive], { cwd: stage });
   if (String(verbose.stdout ?? '').split('\n').some(line => /^[lh]/.test(line))) throw new Error('archive symlink/hardlink entries are refused');
@@ -294,7 +297,7 @@ async function importArtifacts({ req, state, fs, git, exec, artifactDir, clock, 
   const stateHome = clock.env?.XDG_STATE_HOME ? path.join(clock.env.XDG_STATE_HOME, 'anvil') : path.join(clock.homeDir, '.anvil');
   const base = path.join(stateHome, bucket), plans = [];
   for (const kind of ['runs','sessions']) {
-    const source = path.join(stage, '.anvil', bucket, kind);
+    const source = path.join(stage, '.anvil', remoteBucket, kind);
     if (!await fs.exists(source)) continue;
     const sourceStat = await fs.lstat(source);
     if (sourceStat.isSymbolicLink() || !sourceStat.isDirectory()) throw new Error(`unsafe ${kind} records directory`);
@@ -365,7 +368,6 @@ async function main() {
     lockfileHash: async dir => { for (const f of ['pnpm-lock.yaml','package-lock.json','yarn.lock']) if (await fs.exists(path.join(dir, f))) { const { stdout } = await exec.run('shasum', ['-a', '256', path.join(dir, f)]); return stdout.split(/\s/)[0]; } throw new Error('snapshot has no supported lockfile'); },
     applyCheck: async (dir, patch) => exec.run('git', ['apply', '--check', patch], { cwd: dir }),
     apply: async (dir, patch) => exec.run('git', ['apply', patch], { cwd: dir }),
-    stateBucket: async repo => path.basename(repo).replace(/[^A-Za-z0-9_-]/g, '_'),
     verifyImported: async (repo, dispatchId) => { const { stdout } = await exec.run('anvil', ['status', '--json', '-C', repo], { cwd: repo }); if (!String(stdout).includes(dispatchId)) throw new Error(`anvil status did not find imported dispatch ${dispatchId}`); },
   };
   let interrupted = false;

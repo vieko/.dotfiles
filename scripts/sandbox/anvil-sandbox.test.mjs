@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import fsNative from 'node:fs/promises';
 import os from 'node:os';
 import path from 'node:path';
-import { runController } from './anvil-sandbox.mjs';
+import { runController, anvilBucket } from './anvil-sandbox.mjs';
 
 const keys=['repoUrl','forkSha','specPath','gate','scopes','contracts','model','snapshotId','teamId','projectId','ghStsPolicy','vcpus','timeoutMs','localRepo','dispatchId','summonerAddress'];
 const OIDC='OIDC_TOKEN_marker';
@@ -25,7 +25,8 @@ async function fixture(options={}) {
       if(opts.cmd==='anvil' && options.throwRun) throw new Error('simulated run failure');
       let stdout='',stderr='',exitCode=0;
       const line=opts.args?.at(-1)||'';
-      if(opts.cmd==='bash' && line.includes('GITHUB_BLOCKED')) stdout='GITHUB_BLOCKED REGISTRY_BLOCKED GATEWAY_OK';
+      if(opts.cmd==='git' && opts.args?.includes('--porcelain')) stdout=runNumber>(options.anvilRunNumber??6)?'worktree /vercel/repo\nHEAD aaa\n\nworktree /vercel/repo-anvil/anvil-spec-x\nHEAD bbb\nbranch refs/heads/anvil/spec/x\n':'worktree /vercel/repo\nHEAD aaa\n';
+      else if(opts.cmd==='bash' && line.includes('GITHUB_BLOCKED')) stdout='GITHUB_BLOCKED REGISTRY_BLOCKED GATEWAY_OK';
       else if(opts.cmd==='bash' && line.includes('/opt/anvil-snapshot')) stdout=options.lockMismatch?'bad-hash':`${sha}\n`;
       else if(opts.cmd==='bash' && line.includes('GATEWAY_OK')) stdout=options.setupContradiction?'':'GATEWAY_OKGITHUB_OK';
       else if(opts.cmd==='anvil') {stdout=JSON.stringify({passed:options.verdict==='red'?false:options.verdict==='void'?null:true,attempts:1,branch:'remote-branch'});stderr='agent log';exitCode=options.verdict==='red'?1:0;}
@@ -41,9 +42,9 @@ async function fixture(options={}) {
   const git={
     async assertClean(){calls.push(['clean']);}, async refuseCollision(){calls.push(['collision']);}, async worktreeAdd(){calls.push(['worktree']);},
     async lockfileHash(){return sha;}, async applyCheck(){calls.push(['apply-check']);if(options.applyCheckFailure)throw new Error('patch rejected');},
-    async apply(){calls.push(['apply']);}, async stateBucket(){return 'repo-bucket';}, async verifyImported(repo,id){calls.push(['verify-imported',id]);if(options.verifyFailure)throw new Error('status missing dispatch');},
+    async apply(){calls.push(['apply']);}, async verifyImported(repo,id){calls.push(['verify-imported',id]);if(options.verifyFailure)throw new Error('status missing dispatch');},
   };
-  const exec={async run(cmd,args,opts={}){calls.push(['exec',cmd,args]); if(args[0]==='-tzf')return{stdout:options.archivePath??'.anvil/repo-bucket/runs/run.json'};if(args[0]==='-tvzf')return{stdout:options.archiveVerbose??''};if(args[0]==='-xzf'){const target=path.join(opts.cwd,'.anvil','repo-bucket','runs','run.json');await fsNative.mkdir(path.dirname(target),{recursive:true});await fsNative.writeFile(target,JSON.stringify(options.archiveRecord??{branch:'remote',pid:123}));}return{stdout:''};}};
+  const exec={async run(cmd,args,opts={}){calls.push(['exec',cmd,args]); if(args[0]==='-tzf')return{stdout:options.archivePath??'.anvil/--vercel-repo--/runs/run.json'};if(args[0]==='-tvzf')return{stdout:options.archiveVerbose??''};if(args[0]==='-xzf'){const target=path.join(opts.cwd,'.anvil','--vercel-repo--','runs','run.json');await fsNative.mkdir(path.dirname(target),{recursive:true});await fsNative.writeFile(target,JSON.stringify(options.archiveRecord??{branch:'remote',pid:123}));}return{stdout:''};}};
   const logs=[];
   const credentials={
     async getOidcToken(){calls.push(['oidc']);return OIDC;},
@@ -96,12 +97,19 @@ test('unsafe patch and apply-check failure are refused',async()=>{
  for(const opts of [{patch:'diff --git a/../escape b/../escape\n--- a/../escape\n+++ b/../escape\n'},{patch:'diff --git a/link b/link\nnew file mode 120000\n--- /dev/null\n+++ b/link\n+target\n'},{applyCheckFailure:true}]){const f=await fixture(opts);const r=await f.run();assert.equal(r.exitCode,3);assert.equal(f.calls.some(c=>c[0]==='apply'),false);await f.clean();}
 });
 test('record import rewrites branch, removes pid, and annotates sandbox',async()=>{
- const f=await fixture({archivePath:'.anvil/repo-bucket/runs/run.json',archiveRecord:{branch:'remote',pid:123,note:'original'}});const r=await f.run();assert.equal(r.exitCode,0);const imported=JSON.parse(await fsNative.readFile(path.join(f.home,'.anvil','repo-bucket','runs','run.json'),'utf8'));assert.equal(imported.branch,'golem/dispatch-123');assert.equal('pid' in imported,false);assert.match(imported.note,/sandbox-test/);assert.equal(r.importStatus,'complete');await f.clean();
+ const f=await fixture({archivePath:'.anvil/--vercel-repo--/runs/run.json',archiveRecord:{branch:'remote',pid:123,note:'original'}});const r=await f.run();assert.equal(r.exitCode,0);const imported=JSON.parse(await fsNative.readFile(path.join(f.home,'.anvil',anvilBucket(f.repo),'runs','run.json'),'utf8'));assert.equal(imported.branch,'golem/dispatch-123');assert.equal('pid' in imported,false);assert.match(imported.note,/sandbox-test/);assert.equal(r.importStatus,'complete');await f.clean();
 });
 test('unsafe archive paths and archive symlinks are refused',async()=>{
- for(const opts of [{archivePath:'.anvil/repo-bucket/runs/../escape.json'},{archiveVerbose:'lrwxrwxrwx user/group 0 link -> /tmp/out'}]){const f=await fixture(opts);const r=await f.run();assert.equal(r.exitCode,3);assert.equal(f.calls.some(c=>c[0]==='exec'&&c[2][0]==='-xzf'),false);await f.clean();}
+ for(const opts of [{archivePath:'.anvil/--vercel-repo--/runs/../escape.json'},{archiveVerbose:'lrwxrwxrwx user/group 0 link -> /tmp/out'}]){const f=await fixture(opts);const r=await f.run();assert.equal(r.exitCode,3);assert.equal(f.calls.some(c=>c[0]==='exec'&&c[2][0]==='-xzf'),false);await f.clean();}
 });
 test('local status verification failure blocks green handoff',async()=>{const f=await fixture({verifyFailure:true});const r=await f.run();assert.equal(r.exitCode,3);assert.match(r.importStatus,/status missing dispatch/);await f.clean();});
 test('record collision refuses import without overwriting local record',async()=>{
- const f=await fixture({archivePath:'.anvil/repo-bucket/runs/run.json',archiveRecord:{branch:'remote',pid:123}});const target=path.join(f.home,'.anvil','repo-bucket','runs','run.json');await fsNative.mkdir(path.dirname(target),{recursive:true});await fsNative.writeFile(target,'local');const r=await f.run();assert.equal(r.exitCode,3);assert.equal(await fsNative.readFile(target,'utf8'),'local');await f.clean();
+ const f=await fixture({archivePath:'.anvil/--vercel-repo--/runs/run.json',archiveRecord:{branch:'remote',pid:123}});const target=path.join(f.home,'.anvil',anvilBucket(f.repo),'runs','run.json');await fsNative.mkdir(path.dirname(target),{recursive:true});await fsNative.writeFile(target,'local');const r=await f.run();assert.equal(r.exitCode,3);assert.equal(await fsNative.readFile(target,'utf8'),'local');await f.clean();
 });
+
+test('collection runs in the worktree anvil created under the sandbox home, excluding the contract seed',async()=>{
+ const f=await fixture();const r=await f.run();assert.equal(r.exitCode,0);
+ const collect=f.calls.find(c=>c[0]==='remote'&&c[1].cmd==='bash'&&String(c[1].args.at(-1)).includes('/tmp/golem.patch'));
+ assert.ok(collect,'collection command present');const line=collect[1].args.at(-1);
+ assert.ok(line.includes("cd '/vercel/repo-anvil/anvil-spec-x'"),line.slice(0,200));assert.ok(line.includes(":!.anvil-input"));
+ await f.clean();});
