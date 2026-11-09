@@ -327,12 +327,12 @@ Learned on GTMENG-3352 (2026-09-17). Both cost a wasted dispatch.
 The sandbox lane is an opt-in handoff from `summon-golem.sh --sandbox`; the
 ordinary local golem path remains the default. It runs the controller in
 `scripts/sandbox/anvil-sandbox.mjs`, not anvil-side orchestration. This lane is
-currently a controller seam: **do not dispatch until a snapshot has been
-built, reviewed, approved, and the live broker probes have been proven.** It
-never creates a snapshot or Vercel project. Tests run with `npm test` in
-`scripts/sandbox` (after `npm install` there) or
-`node --test scripts/sandbox/anvil-sandbox.test.mjs`; a bare directory
-argument is a module path on Node 24, not a glob.
+live since the GTMENG-4177 replay of 2026-11-09 (ledger on anvil#59). It
+creates a snapshot only when a request says `rebuildSnapshot: true`, and never
+a Vercel project. Tests run with `npm test` in `scripts/sandbox` (after
+`npm install` there) or `node --test scripts/sandbox/anvil-sandbox.test.mjs
+scripts/sandbox/snapshot-registry.test.mjs`; a bare directory argument is a
+module path on Node 24, not a glob.
 
 ### Required configuration and request
 
@@ -368,9 +368,11 @@ running `summon-golem.sh --sandbox`. It contains only the controller's
 allowlisted inputs: `repoUrl`, `forkSha` (40-hex commit), `specPath` (relative
 to the request file), `gate` (non-empty commands), `scopes`, `contracts`
 (relative request-local files), `model`, `ghStsPolicy` (required safe policy
-identifier), optional `gateTimeout` (default `600s`), `snapshotId`, `teamId`,
+identifier), optional `gateTimeout` (default `600s`), optional
+`rebuildSnapshot` (default false; see below), `snapshotId`, `teamId`,
 `projectId`, `vcpus`, `timeoutMs`, `localRepo`, `dispatchId`, and
-`summonerAddress`. The timeout must leave at least five minutes for
+`summonerAddress`. Contracts are seeded into the clone at `.anvil-input/`
+and excluded from the patch. The timeout must leave at least five minutes for
 collection. Use a unique dispatch ID and a clean local repository; the
 controller refuses branch/worktree collisions. `--link`, symlinked inputs,
 traversal, unknown keys, and host paths in gate commands are rejected. The
@@ -380,14 +382,26 @@ rule).
 ### Snapshot build and approval
 
 `scripts/sandbox/build-snapshot.mjs` builds the snapshot outside dispatch:
-build-essential, pnpm, a pnpm store warmed from a local `git archive` of one
-gtm commit (no GitHub credential), and anvil at a pinned revision on PATH as
-`anvil`. It keeps no checkout, credential, or run record, and writes the
+build-essential, shellcheck (so actionlint checks `run:` blocks), actionlint,
+pnpm with corepack's cache, a pnpm store warmed from a local `git archive` of
+one gtm commit (no GitHub credential), and anvil at a pinned revision on PATH
+as `anvil`. It keeps no checkout, credential, or run record, and writes the
 lockfile SHA-256 to `/opt/anvil-snapshot/lockfile.sha256` and the pins to
 `/opt/anvil-snapshot/build.json`; the controller compares the hash with the
 fork checkout before changing from setup egress to gateway-only egress, so a
-gtm lockfile change means a rebuild. It prints the snapshot id as JSON;
-export it as `ANVIL_SANDBOX_SNAPSHOT_ID`. **The first dispatch using each new snapshot requires explicit spend
+gtm lockfile change means a rebuild (about 3 minutes). It prints the snapshot
+record as JSON and appends it to the local registry
+`$XDG_STATE_HOME/anvil-sandbox/snapshots.json` (`scripts/sandbox/snapshot-registry.mjs`);
+export the id as `ANVIL_SANDBOX_SNAPSHOT_ID`.
+
+Before `Sandbox.create`, the controller checks the approved snapshot against
+the registry. When its lockfile hash differs from the fork's, it uses the
+newest registered snapshot of the same repo with a matching hash (no spend);
+otherwise, with `rebuildSnapshot: true` in the request, it runs
+`build-snapshot.mjs --ref <forkSha>` and dispatches on the new snapshot, logging
+the id so `ANVIL_SANDBOX_SNAPSHOT_ID` can be updated; without that key it exits
+4 before creating anything. A snapshot the registry does not know skips this
+check and relies on the in-sandbox hash comparison. **The first dispatch using each new snapshot requires explicit spend
 approval**, even if it is a dry-looking validation run. IDs must refer to an
 already-existing approved snapshot, team, and project. Do not use this lane to
 probe Vercel or create resources without that approval.
@@ -427,10 +441,6 @@ spend: use the sandbox ID and recorded expiry for manual cleanup.
 Controller exit status: `0` green and imported; `1` gate red; `2` void or
 inconclusive; `3` green but retrieval/import failed; `4` controller error
 before dispatch. Stop failure is recorded but does not change that status.
-
-`TODO(#59): live approval must prove the snapshot's recorded lockfile hash
-path, SDK policy replacement confirmation, denial probes, and record import
-are valid for the chosen Vercel project before the first paid dispatch.`
 
 ## History & lineage
 

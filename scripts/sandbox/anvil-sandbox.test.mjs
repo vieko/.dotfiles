@@ -13,7 +13,7 @@ async function fixture(options={}) {
   const root=await fsNative.mkdtemp(path.join(os.tmpdir(),'anvil-sandbox-test-'));
   const home=path.join(root,'home'); await fsNative.mkdir(home);
   const repo=path.join(root,'repo'); await fsNative.mkdir(repo);
-  const req={repoUrl:'https://github.com/acme/repo.git',forkSha:sha,specPath:'spec.md',gate:['npm test'],scopes:['src/**'],contracts:[],model:'luna',snapshotId:'snapshot-approved',teamId:'team-test',projectId:'project-test',ghStsPolicy:'vieko-golem-sandbox-development',vcpus:2,timeoutMs:600000,localRepo:repo,dispatchId:'dispatch-123',summonerAddress:'session-address'};
+  const req={repoUrl:'https://github.com/acme/repo.git',forkSha:sha,specPath:'spec.md',gate:['npm test'],scopes:['src/**'],contracts:[],model:'luna',snapshotId:'snapshot-approved',teamId:'team-test',projectId:'project-test',ghStsPolicy:'vieko-golem-sandbox-development',vcpus:2,timeoutMs:600000,localRepo:repo,dispatchId:'dispatch-123',summonerAddress:'session-address',...(options.req??{})};
   await fsNative.writeFile(path.join(root,'spec.md'),'spec contents\n');
   const request=path.join(root,'request.json'); await fsNative.writeFile(request,JSON.stringify(req));
   const calls=[]; let runNumber=0; let interruptedNow=false;
@@ -58,7 +58,8 @@ async function fixture(options={}) {
   const secrets=['V_TOKEN_marker',OIDC,GH,'AI_KEY_marker'];
   const old=Object.fromEntries(['VERCEL_TOKEN','AI_GATEWAY_API_KEY'].map(k=>[k,process.env[k]]));
   [process.env.VERCEL_TOKEN,process.env.AI_GATEWAY_API_KEY]=[secrets[0],secrets[3]];
-  return {root,home,repo,req,request,calls,sdk,fs,git,exec,credentials,logs,clock,secrets,old,async run(){try{return await runController(request,{sdk,fs,git,exec,credentials,clock,log:m=>logs.push(m)});}finally{for(const k of ['VERCEL_TOKEN','AI_GATEWAY_API_KEY']){if(old[k]===undefined)delete process.env[k];else process.env[k]=old[k];}}},async clean(){await fsNative.rm(root,{recursive:true,force:true});}};
+  const snapshots=options.registry?{async list(){return options.registry;},async build(args){calls.push(['build',args]);return options.built??{snapshotId:'snapshot-rebuilt',lockfileHash:sha};}}:undefined;
+  return {root,home,repo,req,request,calls,sdk,fs,git,exec,credentials,logs,clock,secrets,old,async run(){try{return await runController(request,{sdk,fs,git,exec,credentials,clock,snapshots,log:m=>logs.push(m)});}finally{for(const k of ['VERCEL_TOKEN','AI_GATEWAY_API_KEY']){if(old[k]===undefined)delete process.env[k];else process.env[k]=old[k];}}},async clean(){await fsNative.rm(root,{recursive:true,force:true});}};
 }
 
 for (const missing of keys) test(`request validation missing ${missing} has no create`,async()=>{
@@ -117,4 +118,26 @@ test('collection runs in the worktree anvil created under the sandbox home, excl
 test('session transcripts import as a directory per session under the local bucket',async()=>{
  const f=await fixture({archivePath:'.anvil/--vercel-repo--/runs/run.json',sessionDir:true});const r=await f.run();assert.equal(r.exitCode,0);
  const copied=await fsNative.readFile(path.join(f.home,'.anvil',anvilBucket(f.repo),'sessions','--vercel-repo-anvil-x--','t.jsonl'),'utf8');assert.equal(copied,'{}\n');
+ await f.clean();});
+
+test('registry: an approved snapshot with a stale lockfile gives way to a registered match',async()=>{
+ const f=await fixture({registry:[{snapshotId:'snapshot-approved',repo:'acme/repo',lockfileHash:'old',builtAt:'2026-01-01'},{snapshotId:'snapshot-fresh',repo:'acme/repo',lockfileHash:sha,builtAt:'2026-01-02'},{snapshotId:'snapshot-other-repo',repo:'acme/other',lockfileHash:sha,builtAt:'2026-01-03'}]});
+ const r=await f.run();assert.equal(r.exitCode,0);assert.equal(f.calls.find(c=>c[0]==='create')[1].source.snapshotId,'snapshot-fresh');
+ const handoff=JSON.parse(await fsNative.readFile(path.join(f.home,'scratch','logs','golem-repo-dispatch-123','handoff-result.json'),'utf8'));assert.equal(handoff.provenance.snapshotId,'snapshot-fresh');
+ await f.clean();});
+test('registry: a stale snapshot with no match and no rebuild approval stops before any sandbox is created',async()=>{
+ const f=await fixture({registry:[{snapshotId:'snapshot-approved',repo:'acme/repo',lockfileHash:'old',builtAt:'2026-01-01'}]});
+ const r=await f.run();assert.equal(r.exitCode,4);assert.ok(!f.calls.some(c=>c[0]==='create'));assert.ok(!f.calls.some(c=>c[0]==='build'));assert.ok(f.logs.some(l=>l.includes('rebuildSnapshot: true')));
+ await f.clean();});
+test('registry: rebuildSnapshot builds at the fork sha and dispatches on the new snapshot',async()=>{
+ const f=await fixture({registry:[{snapshotId:'snapshot-approved',repo:'acme/repo',lockfileHash:'old',builtAt:'2026-01-01'}],req:{rebuildSnapshot:true}});
+ const r=await f.run();assert.equal(r.exitCode,0);assert.deepEqual(f.calls.find(c=>c[0]==='build')[1],{repo:f.repo,ref:sha});assert.equal(f.calls.find(c=>c[0]==='create')[1].source.snapshotId,'snapshot-rebuilt');
+ await f.clean();});
+test('registry: a rebuild that does not match the fork lockfile is refused',async()=>{
+ const f=await fixture({registry:[{snapshotId:'snapshot-approved',repo:'acme/repo',lockfileHash:'old',builtAt:'2026-01-01'}],req:{rebuildSnapshot:true},built:{snapshotId:'snapshot-wrong',lockfileHash:'other'}});
+ const r=await f.run();assert.equal(r.exitCode,4);assert.ok(!f.calls.some(c=>c[0]==='create'));
+ await f.clean();});
+test('registry: an unknown approved snapshot keeps the in-sandbox hash check as the only guard',async()=>{
+ const f=await fixture({registry:[{snapshotId:'something-else',repo:'acme/repo',lockfileHash:'old',builtAt:'2026-01-01'}]});
+ const r=await f.run();assert.equal(r.exitCode,0);assert.equal(f.calls.find(c=>c[0]==='create')[1].source.snapshotId,'snapshot-approved');
  await f.clean();});

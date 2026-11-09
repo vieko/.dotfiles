@@ -6,9 +6,11 @@ import fsNative from 'node:fs/promises';
 import { execFile } from 'node:child_process';
 import { promisify } from 'node:util';
 import { getVercelOidcToken } from '@vercel/oidc';
+import { findSnapshot, listSnapshots, repoSlug } from './snapshot-registry.mjs';
 
 const execFileAsync = promisify(execFile);
-const KEYS = ['repoUrl','forkSha','specPath','gate','scopes','contracts','model','gateTimeout','snapshotId','teamId','projectId','ghStsPolicy','vcpus','timeoutMs','localRepo','dispatchId','summonerAddress'];
+const KEYS = ['repoUrl','forkSha','specPath','gate','scopes','contracts','model','gateTimeout','snapshotId','teamId','projectId','ghStsPolicy','vcpus','timeoutMs','localRepo','dispatchId','summonerAddress','rebuildSnapshot'];
+const OPTIONAL_KEYS = ['gateTimeout', 'rebuildSnapshot'];
 const SECRET_ENV = ['VERCEL_TOKEN','AI_GATEWAY_API_KEY'];
 const GH_STS_URL = 'https://gh-sts.vercel-infra.com/token';
 const GH_STS_SETUP_BUDGET_MS = 10 * 60_000;
@@ -24,7 +26,7 @@ const safeName = (s) => /^[A-Za-z0-9][A-Za-z0-9._-]{0,80}$/.test(s) && !s.includ
 export function validateRequest(r, requestPath) {
   if (!r || typeof r !== 'object' || Array.isArray(r)) throw new Error('request must be a JSON object');
   for (const k of Object.keys(r)) if (!KEYS.includes(k)) throw new Error(`unknown request key: ${k}`);
-  for (const k of KEYS) if (k !== 'gateTimeout' && (r[k] === undefined || r[k] === null || r[k] === '')) throw new Error(`missing required field: ${k}`);
+  for (const k of KEYS) if (!OPTIONAL_KEYS.includes(k) && (r[k] === undefined || r[k] === null || r[k] === '')) throw new Error(`missing required field: ${k}`);
   const repoParts = typeof r.repoUrl === 'string' ? r.repoUrl.split('/').slice(3) : [];
   if (!/^https:\/\/github\.com\/[A-Za-z0-9_.-]+\/[A-Za-z0-9_.-]+(?:\.git)?$/.test(r.repoUrl) || repoParts.length !== 2 || repoParts.some(x => x === '.' || x === '..')) throw new Error('repoUrl must be one HTTPS GitHub repository');
   if (!SHA_RE.test(r.forkSha)) throw new Error('forkSha must be a 40-character SHA');
@@ -38,6 +40,7 @@ export function validateRequest(r, requestPath) {
   for (const k of ['model','snapshotId','teamId','projectId','ghStsPolicy','dispatchId','summonerAddress']) if (typeof r[k] !== 'string' || !r[k].trim()) throw new Error(`${k} must be a non-empty string`);
   if (!safeName(r.dispatchId) || !safeName(r.snapshotId) || !safeName(r.ghStsPolicy)) throw new Error('snapshotId, dispatchId, and ghStsPolicy must be safe identifiers');
   if (!Number.isInteger(r.vcpus) || r.vcpus < 1 || r.vcpus > 32 || !Number.isInteger(r.timeoutMs) || r.timeoutMs <= COLLECTION_RESERVE_MS + 30_000) throw new Error('vcpus and timeoutMs must leave a five-minute collection window');
+  if (r.rebuildSnapshot !== undefined && typeof r.rebuildSnapshot !== 'boolean') throw new Error('rebuildSnapshot must be a boolean');
   if (r.gateTimeout !== undefined && (typeof r.gateTimeout !== 'string' || !/^\d+[smh]$/.test(r.gateTimeout))) throw new Error('gateTimeout must be a duration');
   const reqDir = path.resolve(path.dirname(requestPath));
   const spec = path.resolve(reqDir, r.specPath);
@@ -58,7 +61,7 @@ const sanitize = (x, secrets) => {
 
 /** All orchestration is injectable; only main() binds host and SDK effects. */
 export async function runController(requestPath, effects) {
-  const { sdk, fs, git, exec, clock, log, credentials } = effects;
+  const { sdk, fs, git, exec, clock, log, credentials, snapshots } = effects;
   let req, secrets = [], sandbox, exitCode = 4, dispatched = false, collected = false, worktreesBefore = [];
   const state = { sandboxId: null, stopStatus: 'not-started', retrievalStatus: 'not-started', importStatus: 'not-started', branch: null, worktree: null, remoteWorktree: null, artifactDir: null, verdict: 'inconclusive', stopError: null };
   const pendingLogs = [];
@@ -134,7 +137,31 @@ export async function runController(requestPath, effects) {
     ];
     const setupPolicy = { allow: { 'github.com': githubRules, 'ai-gateway.vercel.sh': [gatewayRule] } };
     const agentPolicy = { allow: { 'ai-gateway.vercel.sh': [gatewayRule] } };
-    sandbox = await sdk.create({ token: env.VERCEL_TOKEN, teamId: req.teamId, projectId: req.projectId, source: { type: 'snapshot', snapshotId: req.snapshotId }, resources: { vcpus: req.vcpus }, timeout: req.timeoutMs, persistent: false, networkPolicy: setupPolicy, env: { CI: '1', GIT_TERMINAL_PROMPT: '0', AI_GATEWAY_API_KEY: 'brokered-by-sandbox-firewall' } });
+    // Registry pre-check (anvil#59): the approved snapshot must have been built from the fork's
+    // lockfile. A snapshot the registry does not know skips this and relies on the in-sandbox hash
+    // check below. Reusing another registered snapshot costs nothing; a rebuild is spend, so it
+    // needs rebuildSnapshot: true in the request.
+    let snapshotId = req.snapshotId;
+    const records = snapshots ? await snapshots.list() : [];
+    const approved = records.find(r => r.snapshotId === snapshotId);
+    if (approved && approved.lockfileHash !== manifest.lockfileHash) {
+      const slug = repoSlug(req.repoUrl);
+      const match = findSnapshot(records, slug, manifest.lockfileHash);
+      if (match) {
+        say(`snapshot ${snapshotId} has lockfile ${approved.lockfileHash.slice(0, 12)}, fork has ${manifest.lockfileHash.slice(0, 12)}; using ${match.snapshotId} (built ${match.builtAt})`);
+        snapshotId = match.snapshotId;
+      } else if (req.rebuildSnapshot) {
+        say(`snapshot ${snapshotId} has lockfile ${approved.lockfileHash.slice(0, 12)}, fork has ${manifest.lockfileHash.slice(0, 12)}; rebuilding at ${req.forkSha.slice(0, 9)}`);
+        const built = await snapshots.build({ repo: req.localRepo, ref: req.forkSha });
+        if (!built?.snapshotId || built.lockfileHash !== manifest.lockfileHash) throw new Error('snapshot rebuild did not produce a matching snapshot');
+        snapshotId = built.snapshotId;
+        say(`snapshot ${snapshotId} built; update ANVIL_SANDBOX_SNAPSHOT_ID to approve it for later dispatches`);
+      } else throw new Error(`snapshot lockfile mismatch (snapshot ${approved.lockfileHash.slice(0, 12)}, fork ${manifest.lockfileHash.slice(0, 12)}); set rebuildSnapshot: true or run build-snapshot.mjs --ref ${req.forkSha}`);
+      manifest.snapshotId = snapshotId;
+      await fs.writeFile(path.join(state.artifactDir, 'manifest.json'), JSON.stringify(manifest, null, 2));
+    }
+    state.snapshotId = snapshotId;
+    sandbox = await sdk.create({ token: env.VERCEL_TOKEN, teamId: req.teamId, projectId: req.projectId, source: { type: 'snapshot', snapshotId }, resources: { vcpus: req.vcpus }, timeout: req.timeoutMs, persistent: false, networkPolicy: setupPolicy, env: { CI: '1', GIT_TERMINAL_PROMPT: '0', AI_GATEWAY_API_KEY: 'brokered-by-sandbox-firewall' } });
     state.sandboxId = sandbox.name ?? sandbox.id;
     const phaseStart = clock.now().getTime(); let phaseAt = phaseStart;
     const phase = name => { const t = clock.now().getTime(); say(`phase ${name} ${t - phaseAt}ms (t+${t - phaseStart}ms)`); phaseAt = t; };
@@ -159,7 +186,7 @@ export async function runController(requestPath, effects) {
     // contracts land untracked under the clone; anvil's status checks run in the worktree only.
     for (const c of contractContents) inputs.push({ path: `${remoteRepo}/.anvil-input/${c.name}`, content: c.content });
     await sdk.writeFiles(sandbox, inputs);
-    // TODO(#59): live approval must verify this snapshot metadata path and hash provenance.
+    // Final guard after the registry pre-check: the snapshot itself records the lockfile it was built from.
     const lock = await output('bash', ['-lc', 'cat /opt/anvil-snapshot/lockfile.sha256'], true);
     const remoteHash = lock.out.trim().split(/\s/)[0];
     if (!remoteHash || remoteHash !== manifest.lockfileHash) throw new Error('snapshot lockfile hash mismatch');
@@ -242,7 +269,7 @@ export async function runController(requestPath, effects) {
       try {
         await Promise.all(pendingLogs);
         let runResult = {}; try { runResult = JSON.parse(await fs.readFile(path.join(state.artifactDir, 'anvil-result.json'), 'utf8')); } catch {}
-        await fs.writeFile(path.join(state.artifactDir, 'handoff-result.json'), JSON.stringify({ exitCode, passed: state.verdict === 'green' ? true : state.verdict === 'red' ? false : null, verdict: state.verdict, voidReason: runResult.voidReason ?? (state.verdict === 'void' ? 'controller interrupted or result inconclusive' : null), attempts: runResult.attempts ?? null, cost: runResult.cost ?? null, timeoutMs: req.timeoutMs, provenance: { repoUrl: req.repoUrl, forkSha: req.forkSha, snapshotId: req.snapshotId, dispatchId: req.dispatchId, summonerAddress: req.summonerAddress }, ...state }, null, 2));
+        await fs.writeFile(path.join(state.artifactDir, 'handoff-result.json'), JSON.stringify({ exitCode, passed: state.verdict === 'green' ? true : state.verdict === 'red' ? false : null, verdict: state.verdict, voidReason: runResult.voidReason ?? (state.verdict === 'void' ? 'controller interrupted or result inconclusive' : null), attempts: runResult.attempts ?? null, cost: runResult.cost ?? null, timeoutMs: req.timeoutMs, provenance: { repoUrl: req.repoUrl, forkSha: req.forkSha, snapshotId: state.snapshotId ?? req.snapshotId, dispatchId: req.dispatchId, summonerAddress: req.summonerAddress }, ...state }, null, 2));
       } catch (e) { say(`handoff result write failed: ${e.message}`); }
     }
   }
@@ -401,7 +428,15 @@ async function main() {
   const abortController = new AbortController();
   const onSignal = () => { interrupted = true; abortController.abort(); };
   process.on('SIGINT', onSignal); process.on('SIGTERM', onSignal);
-  const result = await runController(requestPath, { sdk, fs, git, exec, credentials: { getOidcToken: () => getVercelOidcToken(), fetch: (...args) => globalThis.fetch(...args) }, clock: { now: () => new Date(), isInterrupted: () => interrupted, homeDir: os.homedir(), env, signal: abortController.signal }, log: m => console.error(m) });
+  const snapshots = {
+    list: () => listSnapshots(),
+    // build-snapshot.mjs logs to stderr (the golem log) and prints its record to stdout.
+    build: async ({ repo, ref }) => {
+      const { stdout } = await promisify(execFile)(process.execPath, [path.join(path.dirname(fileURLToPath(import.meta.url)), 'build-snapshot.mjs'), '--repo', repo, '--ref', ref], { stdio: ['ignore', 'pipe', 'inherit'], maxBuffer: 2 ** 24, timeout: 30 * 60_000 });
+      return JSON.parse(stdout);
+    },
+  };
+  const result = await runController(requestPath, { sdk, fs, git, exec, snapshots, credentials: { getOidcToken: () => getVercelOidcToken(), fetch: (...args) => globalThis.fetch(...args) }, clock: { now: () => new Date(), isInterrupted: () => interrupted, homeDir: os.homedir(), env, signal: abortController.signal }, log: m => console.error(m) });
   process.off('SIGINT', onSignal); process.off('SIGTERM', onSignal); process.exitCode = result.exitCode;
 }
 

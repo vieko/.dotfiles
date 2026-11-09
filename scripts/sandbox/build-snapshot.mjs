@@ -26,6 +26,7 @@ import { fileURLToPath } from 'node:url';
 import { parseArgs, promisify } from 'node:util';
 import { Sandbox } from '@vercel/sandbox';
 import { getAuth } from '@vercel/sandbox/dist/auth/index.js';
+import { recordSnapshot, registryPath, repoSlug } from './snapshot-registry.mjs';
 
 const execFileAsync = promisify(execFile);
 const here = path.dirname(fileURLToPath(import.meta.url));
@@ -78,7 +79,9 @@ async function main() {
     const home = (await sh('printf %s "$HOME"')).trim();
     if (home !== HOME) throw new Error(`sandbox HOME is ${home}, expected ${HOME}; update the controller`);
     await phase('toolchain', () => sh(`set -eo pipefail
-      sudo -n apt-get -qq update >/dev/null && sudo -n apt-get -qq install -y build-essential >/dev/null
+      # shellcheck: actionlint runs it on workflow run blocks only when the binary is on PATH;
+      # without it a broken line continuation passed the GTMENG-4177 replay gate (anvil#59).
+      sudo -n apt-get -qq update >/dev/null && sudo -n apt-get -qq install -y build-essential shellcheck >/dev/null && shellcheck --version | head -2
       corepack enable >/dev/null 2>&1 || sudo -n corepack enable
       curl -fsSL https://raw.githubusercontent.com/rhysd/actionlint/main/scripts/download-actionlint.bash | sudo -n bash -s -- latest /usr/local/bin >/dev/null && actionlint --version
       corepack prepare pnpm@${PNPM_VERSION} --activate
@@ -114,7 +117,11 @@ async function main() {
   } finally {
     if (!opts['keep-sandbox']) await sandbox.stop().catch(e => say(`stop failed: ${e.message}`));
   }
-  console.log(JSON.stringify({ snapshotId, teamId: link.orgId, projectId: link.projectId, gtmSha, anvilSha, lockfileHash }, null, 2));
+  const repo = repoSlug(await git(opts.repo, ['remote', 'get-url', 'origin']));
+  const record = { snapshotId, repo, gtmSha, anvilSha, lockfileHash, pnpm: PNPM_VERSION, vcpus: Number(opts.vcpus), builtAt: new Date().toISOString() };
+  await recordSnapshot(record);
+  say(`recorded in ${registryPath()}`);
+  console.log(JSON.stringify({ ...record, teamId: link.orgId, projectId: link.projectId }, null, 2));
 }
 
 main().catch(e => { say(`[ERROR] ${e.message}`); process.exitCode = 1; });
