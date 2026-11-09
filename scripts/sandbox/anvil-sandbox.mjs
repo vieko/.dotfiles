@@ -346,10 +346,21 @@ async function main() {
   const { Sandbox } = await import('@vercel/sandbox');
   const env = { ...process.env };
   if (!env.VERCEL_TOKEN) {
-    // The login shell has no VERCEL_TOKEN; `vercel login` stores one the SDK can use.
+    // The login shell has no VERCEL_TOKEN; `vercel login` stores one the SDK can use. The CLI's
+    // token lives 8 h and the SDK does not refresh it (replay-3 died with a 403 at Sandbox.create),
+    // so when it cannot cover the whole dispatch, `vercel whoami` makes the CLI refresh its store.
     const { getAuth } = await import('@vercel/sandbox/dist/auth/index.js');
-    const token = getAuth()?.token;
-    if (token) env.VERCEL_TOKEN = token;
+    let request = {};
+    try { request = JSON.parse(await fsNative.readFile(requestPath, 'utf8')); } catch {}
+    const needUntil = Date.now() + (Number(request.timeoutMs) || 60 * 60_000) + COLLECTION_RESERVE_MS;
+    const covers = auth => auth?.token && (!auth.expiresAt || auth.expiresAt.getTime() > needUntil);
+    let auth = getAuth();
+    if (!covers(auth)) {
+      try { await promisify(execFile)('vercel', ['whoami'], { stdio: ['ignore', 'pipe', 'pipe'], timeout: 60_000 }); } catch {}
+      auth = getAuth();
+    }
+    if (!covers(auth)) { console.error('controller error: Vercel CLI credential is missing or expires before this dispatch would end; run `vercel login`'); process.exitCode = 4; return; }
+    env.VERCEL_TOKEN = auth.token;
   }
   const sdk = {
     create: opts => Sandbox.create(opts),
