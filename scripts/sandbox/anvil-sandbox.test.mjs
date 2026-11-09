@@ -44,7 +44,7 @@ async function fixture(options={}) {
     async lockfileHash(){return sha;}, async applyCheck(){calls.push(['apply-check']);if(options.applyCheckFailure)throw new Error('patch rejected');},
     async apply(){calls.push(['apply']);}, async verifyImported(repo,id){calls.push(['verify-imported',id]);if(options.verifyFailure)throw new Error('status missing dispatch');},
   };
-  const exec={async run(cmd,args,opts={}){calls.push(['exec',cmd,args]); if(args[0]==='-tzf')return{stdout:options.archivePath??'.anvil/--vercel-repo--/runs/run.json'};if(args[0]==='-tvzf')return{stdout:options.archiveVerbose??''};if(args[0]==='-xzf'){const target=path.join(opts.cwd,'.anvil','--vercel-repo--','runs','run.json');await fsNative.mkdir(path.dirname(target),{recursive:true});await fsNative.writeFile(target,JSON.stringify(options.archiveRecord??{branch:'remote',pid:123}));}return{stdout:''};}};
+  const exec={async run(cmd,args,opts={}){calls.push(['exec',cmd,args]); if(args[0]==='-tzf')return{stdout:options.archivePath??'.anvil/--vercel-repo--/runs/run.json'};if(args[0]==='-tvzf')return{stdout:options.archiveVerbose??''};if(args[0]==='-xzf'){const target=path.join(opts.cwd,'.anvil','--vercel-repo--','runs','run.json');await fsNative.mkdir(path.dirname(target),{recursive:true});await fsNative.writeFile(target,JSON.stringify(options.archiveRecord??{branch:'remote',pid:123}));if(options.sessionDir){const sess=path.join(opts.cwd,'.anvil','--vercel-repo--','sessions','--vercel-repo-anvil-x--');await fsNative.mkdir(sess,{recursive:true});await fsNative.writeFile(path.join(sess,'t.jsonl'),'{}\n');}}return{stdout:''};}};
   const logs=[];
   const credentials={
     async getOidcToken(){calls.push(['oidc']);return OIDC;},
@@ -112,4 +112,9 @@ test('collection runs in the worktree anvil created under the sandbox home, excl
  const collect=f.calls.find(c=>c[0]==='remote'&&c[1].cmd==='bash'&&String(c[1].args.at(-1)).includes('/tmp/golem.patch'));
  assert.ok(collect,'collection command present');const line=collect[1].args.at(-1);
  assert.ok(line.includes("cd '/vercel/repo-anvil/anvil-spec-x'"),line.slice(0,200));assert.ok(line.includes(":!.anvil-input"));
+ await f.clean();});
+
+test('session transcripts import as a directory per session under the local bucket',async()=>{
+ const f=await fixture({archivePath:'.anvil/--vercel-repo--/runs/run.json',sessionDir:true});const r=await f.run();assert.equal(r.exitCode,0);
+ const copied=await fsNative.readFile(path.join(f.home,'.anvil',anvilBucket(f.repo),'sessions','--vercel-repo-anvil-x--','t.jsonl'),'utf8');assert.equal(copied,'{}\n');
  await f.clean();});

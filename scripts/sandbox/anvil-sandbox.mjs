@@ -301,17 +301,27 @@ async function importArtifacts({ req, state, fs, git, exec, artifactDir, clock, 
     if (!await fs.exists(source)) continue;
     const sourceStat = await fs.lstat(source);
     if (sourceStat.isSymbolicLink() || !sourceStat.isDirectory()) throw new Error(`unsafe ${kind} records directory`);
+    // runs/ holds one JSON per run; sessions/ holds one directory per session with its JSONL
+    // transcript(s) inside (anvil state-paths.ts). Both are copied flat under the local bucket.
     for (const entry of await fs.readdir(source)) {
       const from = path.join(source, entry), to = path.join(base, kind, entry);
       if (await fs.exists(to)) throw new Error(`record collision: ${to}`);
       const st = await fs.lstat(from);
-      if (st.isSymbolicLink() || !st.isFile()) throw new Error(`unsafe record file: ${from}`);
-      plans.push({ entry, from, to });
+      if (st.isSymbolicLink()) throw new Error(`unsafe record file: ${from}`);
+      if (st.isDirectory()) {
+        if (kind !== 'sessions') throw new Error(`unsafe record file: ${from}`);
+        for (const child of await fs.readdir(from)) {
+          const cst = await fs.lstat(path.join(from, child));
+          if (cst.isSymbolicLink() || !cst.isFile()) throw new Error(`unsafe session record: ${path.join(from, child)}`);
+          plans.push({ entry: child, from: path.join(from, child), to: path.join(to, child), raw: true });
+        }
+      } else if (st.isFile()) plans.push({ entry, from, to });
+      else throw new Error(`unsafe record file: ${from}`);
     }
   }
   for (const plan of plans) {
     await fs.mkdir(path.dirname(plan.to), { recursive: true });
-    if (plan.entry.endsWith('.json')) {
+    if (!plan.raw && plan.entry.endsWith('.json')) {
       const rec = JSON.parse(await fs.readFile(plan.from, 'utf8')), originalBranch = rec.branch ?? 'unknown';
       rec.branch = state.branch; delete rec.pid;
       rec.note = `Imported from sandbox ${state.sandboxId} (remote branch ${originalBranch})${rec.note ? `; ${rec.note}` : ''}`;
