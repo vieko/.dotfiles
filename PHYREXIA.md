@@ -180,10 +180,14 @@ when the work demands it.
   while gpt-6-sol had 0 malformed edits across 600+ GPT-family edit calls
   (measured on 6.0; the next audit's edit-health line covers 6.1).
   **Terra trial (since 2026-11-02):** `-m terra` (`gpt-6.1-terra:high`,
-  $1/$5, half sol on every token class) on the next ~10 familiar tasks;
-  sol stays the default. Decision point: the week-46 audit. Make terra
-  the default if its edit health is 0 malformed and its tasks land without
-  more review rounds than sol's; otherwise drop the alias. Gateway probe
+  $1/$5, half sol on every token class) on the next ~10 familiar tasks.
+  Opt-in ran only 2 tasks in week 45, so since 2026-11-09 terra is the
+  `summon-familiar.sh` default for the trial; pass `-m sol` when a task
+  needs sol. Decision point: the first audit with ~10 terra tasks (week
+  46 or 47). Keep terra
+  as the default if its edit health is 0 malformed and its tasks land
+  without more review rounds than sol's; otherwise revert the default to
+  sol and drop the alias. Gateway probe
   2026-11-02: thinking off and high both answer, read + edit round-trip
   clean. Anvil's `terra` alias means gpt-6.1-terra since anvil#61
   (pi 1.5.0 SDK); the first terra familiar landed that PR with one

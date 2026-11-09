@@ -15,7 +15,7 @@
 # Usage:
 #   summon-familiar.sh [-m alias] [-P] [-n] [-R] [-C] [-B board] [-w name] [-W name] <brief-path> [prompt override]
 #
-#   -m alias   vessel: haiku|sol|terra|sonnet|opus|fable|luna|astra (default: sol),
+#   -m alias   vessel: haiku|sol|terra|sonnet|opus|fable|luna|astra (default: terra, trial),
 #              or a raw gateway id with an explicit effort when the alias's
 #              default level is not what the summoning wants, e.g.
 #              openai/gpt-6-astra:xhigh (astra's ceiling; the alias binds :high)
@@ -93,7 +93,10 @@ alias_to_model() {
 # `models` entry in models.json). The sonnet-5 question is closed at 12.3 /
 # 10.7 / 12.0% across three audits; the open question is whether 5.5 drops
 # edits the same way. Read the edit-health line in the next audit.
-vessel="sol"
+# 2026-11-09: terra is the trial default until ~10 familiar tasks have run
+# (week-45 audit: 2 tasks in a week with `-m terra` opt-in). `-m sol` still
+# works; the audit decides terra or sol (PHYREXIA.md Vessels).
+vessel="terra"
 print_mode=0
 dry_run=0
 no_report=0

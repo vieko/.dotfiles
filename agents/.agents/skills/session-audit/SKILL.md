@@ -166,12 +166,17 @@ proposing templates or interpreting a false report label as an omission.
   no more review rounds than sol; otherwise the alias comes off. The rule
   is in PHYREXIA.md Vessels. Week 45: 2 tasks only (both first-review
   accepts, 0/6 malformed, $0.010/turn vs sol $0.024); familiar volume
-  fell to 5. Decide at week 46 only with ~10 tasks, else week 47.
+  fell to 5. Since 2026-11-09 terra is the `summon-familiar.sh` default
+  for the trial. Decide at the first audit with ~10 terra tasks (week 46
+  or 47): keep terra, or revert the default to sol.
+- **Fable seat** (agreed 2026-11-09): the Summoner stays on opus and
+  reaches fable through counsel. Report any session switched to fable
+  with its $/ut and whether the work was architecture or review.
 
-- **One-token decisions** (rule 10-11, end-of-step sentence 11-01):
-  20% -> 23% in week 45. Two text changes, no movement in four windows.
-  Recommended closing it at week 45; if the user agrees, stop reporting
-  the rate.
+- **One-token decisions**: closed 2026-11-09. 16-23% of user turns
+  across weeks 39-45; the 10-11 rule and the 11-01 end-of-step sentence
+  did not move it. Accepted as working style: the cost is attention, not
+  money. Do not report the rate or propose more prompt text for it.
 
 - **Sol repair-spec pilot**: closed 2026-10-26 with no data. Repair specs
   stopped appearing (2 in weeks 39-43, both fable); golems run luna and
