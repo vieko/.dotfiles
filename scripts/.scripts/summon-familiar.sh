@@ -73,7 +73,7 @@ alias_to_model() {
         terra)  echo "openai/gpt-6.1-terra:high" ;;  # trial since 2026-11-02: half sol's price; PHYREXIA.md Vessels
         sonnet) echo "anthropic/claude-sonnet-5.5:medium" ;;
         opus)   echo "anthropic/claude-opus-5.5:medium" ;;
-        fable)  echo "anthropic/claude-fable-5.1:high" ;;
+        fable)  echo "anthropic/claude-fable-5.2:high" ;;
         luna)   echo "openai/gpt-6-luna:high" ;;
         astra)  echo "openai/gpt-6-astra:high" ;;
         # Raw gateway id passthrough (provider/model[:effort]). Still goes

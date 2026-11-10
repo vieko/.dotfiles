@@ -233,6 +233,36 @@
             }
           }
         },
+        "anthropic/claude-fable-5.2": {
+          "inputLimits": {
+            "images": {
+              "resize": {
+                "maxWidth": 1568,
+                "maxHeight": 1568,
+                "maxBytes": 1048576,
+                "jpegQuality": 75
+              }
+            }
+          },
+          "promptCache": {
+            "short": 300,
+            "long": 3600
+          },
+          "compat": {
+            "supportsMidConvoSystemMessages": true,
+            "supportsMidConvoToolChanges": false,
+            "supportsStrictTools": true,
+            "supportsMidConvoEffort": true,
+            "vercelGatewayRouting": {
+              "only": [
+                "anthropic"
+              ],
+              "order": [
+                "anthropic"
+              ]
+            }
+          }
+        },
         "openai/gpt-6-astra": {
           "inputLimits": {
             "images": {
