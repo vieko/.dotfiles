@@ -73,6 +73,19 @@ panes. `summon-*.sh` and `remind-at.sh` pick tmux or Rex through
   `~/private/lanes/sandbox-golem.env`. Proven on anvil #59 (closed);
   gtm-only until anvil #63 (per-repo snapshot, optional clone credential).
 
+- **Scout** -- a read-only child run by the `scout` tool (dotfiles
+  `9c79797`, since 2026-11-10): haiku-5.5, tools `read,grep,find,ls`, up
+  to 8 tasks per call, 4 at a time, capped at $0.25 and 240 s each;
+  `PI_SCOUT=off` turns it off. It gathers and returns cited reports; it
+  writes nothing, so it is not a construct and has no diff to review. Its
+  report is an unreviewed claim: open the cited lines before an edit or a
+  spec depends on them. `/issue` uses it for the gather step. Point it at a
+  detached worktree at `origin/main` when the shared checkout is behind
+  (2026-11-10: `~/dev/gtm` was 9 commits and 187 files behind; the add
+  took 3 s). Measured in round 2 of the orchestration climb: 1 call, 3
+  tasks, $0.043, 22-48 s each, and its findings turned two of three "Do"
+  issues into decisions before any golem ran.
+
 ## Standing invariants
 
 - **The review gate applies to EVERY construct, not just Legions.** Each
@@ -253,18 +266,32 @@ when the work demands it.
   **Open proofs** (read with `~/.scripts/anvil-ledger`, which aggregates
   anvil's per-attempt run files; `--escalations` lists every run that left
   rung 0). Criteria fixed before the data, 2026-09-29:
-  1. *luna:xhigh retry rung* -- over the next ~20 escalations, passes at
-     least 4 (the mechanical share was ~5/19). 0-1 means the rung is only
-     latency; revert anvil#45.
-  2. *opus-5.5 strong tier* -- over the first ~15 escalations that reach
-     it: gate pass rate at or above fable's 16/19, cost per rung attempt
-     at or below $2 (fable: $3.18), and follow-up (`-repair`/`-fix`) rate
-     on opus-passed diffs no worse than fable's ~12%.
-  3. *luna-first on former fable specs* -- over the next ~15 specs that
-     would have been `-m fable`: expected cost per spec under $6 (fable
-     base averaged $12). Holds if luna's rung-0 rate on them is above
-     ~40%; fails if rung-1 cost on luna's partial worktree exceeds a cold
-     fable base.
+  1. *luna:xhigh retry rung* -- **closed 2026-11-10, unresolved.** The
+     criterion needed ~20 escalations; from 2026-09-29 to 11-10 the ladder
+     had 3 (luna rung 0 passed 39 of 43 runs, 90%). luna:xhigh passed 1 of
+     2, and the third was a scope void. At this rate the sample never
+     arrives. The rung costs cents, so anvil#45 stays as it is and nobody
+     tracks it. Reopen if escalations pass ~5 a month.
+  2. *opus-5.5 strong tier* -- **closed 2026-11-10, unresolved**, same
+     reason: 1 opus:high attempt in the window (a smoke-test spec, failed,
+     $0.04) against the ~15 the criterion needed. opus stays the strong
+     tier on the repricing argument above, not on observed passes.
+  3. *luna-first on former fable specs* -- **not run.** Since 2026-09-29,
+     4 golems took a fable base ($44.84 of the window's ~$50 golem spend)
+     and luna was never tried on any of them. The proof stays open; it
+     only runs if the next `-m fable` base is dispatched luna-first with a
+     reason recorded either way. Criterion unchanged: over the next ~15
+     specs that would have been `-m fable`, expected cost per spec under
+     $6 (fable base averaged $12). Holds if luna's rung-0 rate on them is
+     above ~40%; fails if rung-1 cost on luna's partial worktree exceeds a
+     cold fable base.
+  The fable row in the ledger also carries one stale record:
+  `gtmeng-3938-pr4a-build-spec` has been `state: running` since
+  2026-10-14 19:53 UTC. Its pid (33382) is gone, the anvil log stops in
+  attempt 1, and the result JSON is empty. This is the first instance of
+  the Pi Durable reopen trigger ("a `running` anvil record lost
+  mid-dispatch", Standing invariants); find the cause (killed window or
+  crash) before acting on it.
   4. *haiku-5.5 golem trial* (restarted 2026-10-11 on pi 1.1.0, anvil#52;
      count with `anvil-ledger --since 2026-10-11`) -- the next ~10
      mechanical specs (lint, formatter, small refactors, codemods) go
@@ -405,6 +432,36 @@ the layout.
   and one for opening PR #4539. When you write the brief, choose one: the
   familiar stops at a commit and the Summoner does the gated action itself,
   or the user approves in the familiar's window. Do not plan on relaying.
+- **Run a batch of issues from one flat coordinator** (orchestration
+  climb, 2026-11-10; scorecard `~/scratch/orchestration-climb-notes.md`).
+  Round 1 put a Summoner session on each of three issues: each stopped on
+  a menu and the user answered "(a)" 2 to 3 times per issue, and a
+  coordinator collecting their reports could not direct them. What worked
+  was workers stopping at a commit with a report and a prepared PR body,
+  and the session with the user's word doing push, PR and merge for all
+  of them (one user turn opened three PRs, one merged them). Round 2 made
+  that the whole shape: one session does scout gather, spec plus gate,
+  `summon-golem.sh`, review on the ping, re-commit, and a PR body with
+  `LEDE_PLACEHOLDER`, then gives the user one batch (ledes, "open them",
+  decisions, "merge when green"). Three issues took 3 directing user turns
+  and $3.10 of coordinator. Decide on keeping it after about 10 issues,
+  not one round.
+- **Re-commit anvil commits as the user before a gtm push.** gtm rejects
+  commits without a verified signature, and anvil commits as
+  `anvil@localhost`. In the golem's worktree: branch, then
+  `git rebase origin/main --exec 'git commit --amend --no-edit --reset-author'`
+  (or a soft reset and one signed commit with a real message), and check
+  the tree is unchanged against the golem's commit before pushing.
+- **Seed contracts from a base worktree, not the shared checkout.** anvil
+  copies `--contract` files only from the `-C` repo's working tree. Round
+  1 left a contract untracked in `~/dev/gtm`, which failed another
+  session's dispatch. Add a detached worktree at `origin/main`
+  (`~/dev/<repo>-worktrees/<id>-base`), write the contract there, run
+  `summon-golem.sh ... -C <base>`, and remove the base after the merge.
+- **`git worktree remove` on a gtm worktree can take over 90 s** (47 s
+  measured 2026-11-10 with a full `node_modules`). Run it alone, with a
+  long tool timeout, after `lsof -d cwd | grep -F <path>` comes back
+  empty.
 - **Familiars are summoned, never conscripted.** New task work always gets
   a fresh construct -- never dispatch a brief into an existing session
   found via `list_sessions` / pi-post. A session named for task A silently
@@ -490,6 +547,12 @@ the layout.
   scope; mirror CI's filters (quality.yml checks `*.ts *.tsx *.md` only).
   A gate the golem satisfied by touching config or out-of-scope files is a
   summoner bug, and the diff needs that part reverted before review.
+  Same lesson outside gtm, 2026-11-10: pi-post's `npm run check` is red
+  on this host at main (the SentinelOne argv kill on the oversize-body
+  test, see Host hazards), the spec did not say so, and the golem edited
+  `test/cli.test.ts` out of scope to get green; anvil voided a run whose
+  in-scope work was correct. Name known host-only failures in the spec, or
+  gate on the subset that can pass here.
   The other half of the dry run: the gate must *fail cleanly* on the fork
   SHA when the work is not done, not crash. Before anvil v0.5.0 a harness
   crash (verify-script traceback, `gate.mjs` the spec expects the golem to
