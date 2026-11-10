@@ -327,28 +327,41 @@ Learned on GTMENG-3352 (2026-09-17). Both cost a wasted dispatch.
 The sandbox lane is an opt-in handoff from `summon-golem.sh --sandbox`; the
 ordinary local golem path remains the default. It runs the controller in
 `scripts/sandbox/anvil-sandbox.mjs`, not anvil-side orchestration. This lane is
-live since the GTMENG-4177 replay of 2026-11-09 (ledger on anvil#59). It
+live since the GTMENG-4177 replay of 2026-11-09 (ledger on anvil#59), and went
+per-repo in anvil#63: snapshots are built and selected per repository (by
+`repo` + lockfile hash in the registry, not one environment-pinned id), the
+GitHub clone credential is optional (public repos clone anonymously; the
+private non-`vercel/*` credential case is still out of scope), and the
+builder detects pnpm or npm from the target repo instead of assuming pnpm. It
 creates a snapshot only when a request says `rebuildSnapshot: true`, and never
 a Vercel project. Tests run with `npm test` in `scripts/sandbox` (after
 `npm install` there) or `node --test scripts/sandbox/anvil-sandbox.test.mjs
-scripts/sandbox/snapshot-registry.test.mjs`; a bare directory argument is a
-module path on Node 24, not a glob.
+scripts/sandbox/snapshot-registry.test.mjs scripts/sandbox/snapshot-toolchain.test.mjs`;
+a bare directory argument is a module path on Node 24, not a glob.
 
 ### Required configuration and request
 
 The dispatching shell must provide `AI_GATEWAY_API_KEY` and `VERCEL_TOKEN`
 (when unset, the controller uses the `vercel login` CLI auth store),
-plus `VERCEL_TEAM_ID`, `VERCEL_PROJECT_ID`, and
-`ANVIL_SANDBOX_SNAPSHOT_ID` for the approved existing resources; their values
-must match `teamId`, `projectId`, and `snapshotId` in the request. Make these
-settings and credentials available in the login shell that executes the
-generated runner (the wrapper intentionally does not write them into the
-runner). The GitHub clone credential is minted at dispatch from the linked
-Vercel development project's OIDC identity via gh-sts, scoped to the requested
-repository with `contents: read` only. The minted credential is short-lived
-(one-hour lifetime) and the controller rejects it unless at least ten minutes
-remain for setup. No GitHub token is configured in the environment, request,
-`-e`, snapshot, or remote environment. The controller mints exactly once per
+plus `VERCEL_TEAM_ID` and `VERCEL_PROJECT_ID`; their values must match
+`teamId` and `projectId` in the request. `ANVIL_SANDBOX_SNAPSHOT_ID` and the
+request's `snapshotId` are optional (anvil#63): when the request sets
+`snapshotId`, it must still match `ANVIL_SANDBOX_SNAPSHOT_ID`, and the
+pre-check below runs as before; when it is absent, the pre-check is the
+selection -- the controller picks the newest registered snapshot for the
+request's repo slug and fork lockfile hash itself. Make these settings and
+credentials available in the login shell that executes the generated runner
+(the wrapper intentionally does not write them into the runner). `ghStsPolicy`
+in the request is also optional: when present, the GitHub clone credential is
+minted at dispatch from the linked Vercel development project's OIDC identity
+via gh-sts, scoped to the requested repository with `contents: read` only,
+and the minted credential is short-lived (one-hour lifetime); the controller
+rejects it unless at least ten minutes remain for setup. When `ghStsPolicy` is
+absent, no gh-sts call is made at all and the clone runs anonymously over
+https -- that only reaches public repos, and an unreachable repo with no
+policy fails with an error naming the credential gap rather than a generic
+probe failure. No GitHub token is configured in the environment, request,
+`-e`, snapshot, or remote environment. The controller mints at most once per
 dispatch and never retries a denial: gh-sts bans a
 source IP after repeated policy denials with no decay. `PI_SESSION_ADDRESS`
 is captured by the wrapper locally for the completion ping and is not copied
@@ -367,50 +380,76 @@ Prepare a request JSON file and point `ANVIL_SANDBOX_REQUEST` at it before
 running `summon-golem.sh --sandbox`. It contains only the controller's
 allowlisted inputs: `repoUrl`, `forkSha` (40-hex commit), `specPath` (relative
 to the request file), `gate` (non-empty commands), `scopes`, `contracts`
-(relative request-local files), `model`, `ghStsPolicy` (required safe policy
-identifier), optional `gateTimeout` (default `600s`), optional
-`rebuildSnapshot` (default false; see below), `snapshotId`, `teamId`,
+(relative request-local files), `model`, optional `ghStsPolicy` (safe policy
+identifier; see above), optional `gateTimeout` (default `600s`), optional
+`rebuildSnapshot` (default false; see below), optional `snapshotId`, `teamId`,
 `projectId`, `vcpus`, `timeoutMs`, `localRepo`, `dispatchId`, and
-`summonerAddress`. Contracts are seeded into the clone at `.anvil-input/`
-and excluded from the patch. The timeout must leave at least five minutes for
-collection. Use a unique dispatch ID and a clean local repository; the
-controller refuses branch/worktree collisions. `--link`, symlinked inputs,
-traversal, unknown keys, and host paths in gate commands are rejected. The
-wrapper still uses the completion ping over stdin (required by the SentinelOne
-rule).
+`summonerAddress`. An empty string for `snapshotId` or `ghStsPolicy` is still
+rejected -- omit the key to mean "absent", not `""`. Contracts are seeded into
+the clone at `.anvil-input/` and excluded from the patch. Gate and contract
+checks in the gate should pin field names, not exact expectation literals:
+attempt 1 of `gtmeng-4305-1` had correct code and failed on a contract grep
+for `sameCampaignMember: true`, and attempt 2 added a redundant assertion
+only to satisfy it. The timeout must leave
+at least five minutes for collection. Use a unique dispatch ID and a clean
+local repository; the controller refuses branch/worktree collisions.
+`--link`, symlinked inputs, traversal, unknown keys, and host paths in gate
+commands are rejected. The wrapper still uses the completion ping over stdin
+(required by the SentinelOne rule).
 
 ### Snapshot build and approval
 
-`scripts/sandbox/build-snapshot.mjs` builds the snapshot outside dispatch:
-build-essential, shellcheck (so actionlint checks `run:` blocks), actionlint,
-pnpm with corepack's cache, a pnpm store warmed from a local `git archive` of
-one gtm commit (no GitHub credential), and anvil at a pinned revision on PATH
-as `anvil`. It keeps no checkout, credential, or run record, and writes the
-lockfile SHA-256 to `/opt/anvil-snapshot/lockfile.sha256` and the pins to
-`/opt/anvil-snapshot/build.json`; the controller compares the hash with the
-fork checkout before changing from setup egress to gateway-only egress, so a
-gtm lockfile change means a rebuild (about 3 minutes). It prints the snapshot
+`scripts/sandbox/build-snapshot.mjs --repo <path> [--ref <ref>]` builds the
+snapshot for one local checkout outside dispatch: build-essential, shellcheck
+(so actionlint checks `run:` blocks), actionlint, the repo's package manager
+(pnpm via corepack, or npm, detected per `scripts/sandbox/snapshot-toolchain.mjs`
+from the ref's tree -- `packageManager` in `package.json` wins, else the
+lockfile on disk; a repo with both lockfiles, neither, or a `yarn.lock` is
+refused), a store or cache warmed from a local `git archive` of one commit of
+that repo (no GitHub credential), and anvil at a pinned revision on PATH as
+`anvil`. It keeps no checkout, credential, or run record, and writes the
+lockfile SHA-256 (with the real lockfile's name) to
+`/opt/anvil-snapshot/lockfile.sha256` and the pins (including `repo`,
+`packageManager`, and `lockfile`) to `/opt/anvil-snapshot/build.json`; the
+seal phase also re-runs the install offline in a copy of the seed without
+`node_modules` to prove the store or cache serves the lockfile with no
+network. An npm snapshot sets `offline=true` in the user npmrc first and the
+proof is plain `npm install`, the command anvil runs in a fresh worktree. The controller compares the hash with the fork checkout before
+changing from setup egress to gateway-only egress, so a lockfile change in
+the target repo means a rebuild (about 3 minutes). It prints the snapshot
 record as JSON and appends it to the local registry
-`$XDG_STATE_HOME/anvil-sandbox/snapshots.json` (`scripts/sandbox/snapshot-registry.mjs`);
-export the id as `ANVIL_SANDBOX_SNAPSHOT_ID`.
+`$XDG_STATE_HOME/anvil-sandbox/snapshots.json` (`scripts/sandbox/snapshot-registry.mjs`),
+recording `repo`, `repoSha`, `lockfile`, `lockfileHash`, `packageManager`,
+`anvilSha`, `vcpus`, and `builtAt`; older records keep their `gtmSha`/`pnpm`
+fields as-is (readers do not need them, so the file is never rewritten).
+Export the id as `ANVIL_SANDBOX_SNAPSHOT_ID` only if pinning one snapshot;
+leaving it unset and omitting `snapshotId` from the request lets the
+controller select by repo instead (see below).
 
-Before `Sandbox.create`, the controller checks the approved snapshot against
-the registry. When its lockfile hash differs from the fork's, it uses the
-newest registered snapshot of the same repo with a matching hash (no spend);
-otherwise, with `rebuildSnapshot: true` in the request, it runs
-`build-snapshot.mjs --ref <forkSha>` and dispatches on the new snapshot, logging
-the id so `ANVIL_SANDBOX_SNAPSHOT_ID` can be updated; without that key it exits
-4 before creating anything. A snapshot the registry does not know skips this
-check and relies on the in-sandbox hash comparison. **The first dispatch using each new snapshot requires explicit spend
+Before `Sandbox.create`, the controller resolves which snapshot to dispatch
+on. With `snapshotId` in the request: it checks the approved snapshot against
+the registry, and when its lockfile hash differs from the fork's, falls back
+to the selection below; a snapshot the registry does not know skips this
+check and relies on the in-sandbox hash comparison. With no `snapshotId`: the
+selection below is the only check, run unconditionally. Selection picks the
+newest registered snapshot of the request's repo slug with a lockfile hash
+matching the fork's (no spend); with no match and `rebuildSnapshot: true` in
+the request, it runs `build-snapshot.mjs --repo <localRepo> --ref <forkSha>`
+and dispatches on the new snapshot, logging the id so `ANVIL_SANDBOX_SNAPSHOT_ID`
+can be updated; with no match and no `rebuildSnapshot`, it exits 4 before
+creating anything, naming the repo slug and the rebuild command to run.
+**The first dispatch using each new snapshot requires explicit spend
 approval**, even if it is a dry-looking validation run. IDs must refer to an
 already-existing approved snapshot, team, and project. Do not use this lane to
 probe Vercel or create resources without that approval.
 
 The setup firewall is deny-by-default except for gateway access and the two
-fetch-only GitHub upload-pack matchers for the one requested repository. After
-clone and lockfile verification, egress is reduced to the AI gateway only.
-Both policies are probed before anvil starts. A contradictory probe aborts;
-never work around it by widening policy. The host requests a finite sandbox
+GitHub upload-pack matchers that attach the minted credential for the one
+requested repository only; with no `ghStsPolicy` there is no credential to
+attach, so github.com is a plain allow for the setup phase. After clone and
+lockfile verification, egress is reduced to the AI gateway only. Both
+policies are probed before anvil starts. A contradictory probe aborts; never
+work around it by widening policy. The host requests a finite sandbox
 lifetime and reserves the final five minutes for retrieval and stop.
 
 ### Artifacts and recovery

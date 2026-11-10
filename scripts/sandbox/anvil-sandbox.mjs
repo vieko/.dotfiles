@@ -10,7 +10,9 @@ import { findSnapshot, listSnapshots, repoSlug } from './snapshot-registry.mjs';
 
 const execFileAsync = promisify(execFile);
 const KEYS = ['repoUrl','forkSha','specPath','gate','scopes','contracts','model','gateTimeout','snapshotId','teamId','projectId','ghStsPolicy','vcpus','timeoutMs','localRepo','dispatchId','summonerAddress','rebuildSnapshot'];
-const OPTIONAL_KEYS = ['gateTimeout', 'rebuildSnapshot'];
+// snapshotId and ghStsPolicy are optional (anvil#63): a public repo needs no clone credential,
+// and a repo with no approved snapshot yet is selected from the registry instead of pinned.
+const OPTIONAL_KEYS = ['gateTimeout', 'rebuildSnapshot', 'snapshotId', 'ghStsPolicy'];
 const SECRET_ENV = ['VERCEL_TOKEN','AI_GATEWAY_API_KEY'];
 const GH_STS_URL = 'https://gh-sts.vercel-infra.com/token';
 const GH_STS_SETUP_BUDGET_MS = 10 * 60_000;
@@ -37,8 +39,10 @@ export function validateRequest(r, requestPath) {
   if ([...r.gate,...r.scopes,...r.contracts,r.model].some(x => /(^|[\s=])--link(?:[\s]|$)/.test(x) || /(?:~\/|\/(?:Users|home|tmp|var|private|workspace|mnt|root|opt)\/)/.test(x))) throw new Error('inputs may not use --link or host paths');
   if (r.model.startsWith('-') || r.scopes.some(x => x.startsWith('-'))) throw new Error('model and scope values may not be option-like');
   if (typeof r.localRepo !== 'string' || !path.isAbsolute(r.localRepo)) throw new Error('localRepo must be an absolute host path');
-  for (const k of ['model','snapshotId','teamId','projectId','ghStsPolicy','dispatchId','summonerAddress']) if (typeof r[k] !== 'string' || !r[k].trim()) throw new Error(`${k} must be a non-empty string`);
-  if (!safeName(r.dispatchId) || !safeName(r.snapshotId) || !safeName(r.ghStsPolicy)) throw new Error('snapshotId, dispatchId, and ghStsPolicy must be safe identifiers');
+  for (const k of ['model','teamId','projectId','dispatchId','summonerAddress']) if (typeof r[k] !== 'string' || !r[k].trim()) throw new Error(`${k} must be a non-empty string`);
+  for (const k of ['snapshotId','ghStsPolicy']) if (r[k] !== undefined && (typeof r[k] !== 'string' || !r[k].trim())) throw new Error(`${k} must be a non-empty string`);
+  if (!safeName(r.dispatchId)) throw new Error('dispatchId must be a safe identifier');
+  for (const k of ['snapshotId','ghStsPolicy']) if (r[k] !== undefined && !safeName(r[k])) throw new Error(`${k} must be a safe identifier`);
   if (!Number.isInteger(r.vcpus) || r.vcpus < 1 || r.vcpus > 32 || !Number.isInteger(r.timeoutMs) || r.timeoutMs <= COLLECTION_RESERVE_MS + 30_000) throw new Error('vcpus and timeoutMs must leave a five-minute collection window');
   if (r.rebuildSnapshot !== undefined && typeof r.rebuildSnapshot !== 'boolean') throw new Error('rebuildSnapshot must be a boolean');
   if (r.gateTimeout !== undefined && (typeof r.gateTimeout !== 'string' || !/^\d+[smh]$/.test(r.gateTimeout))) throw new Error('gateTimeout must be a duration');
@@ -77,7 +81,10 @@ export async function runController(requestPath, effects) {
     const reqStat = await fs.lstat(requestPath);
     if (reqStat.isSymbolicLink() || !reqStat.isFile()) throw new Error('request path must be a regular non-symlink file');
     const env = clock.env ?? {};
-    for(const [field,key] of [['teamId','VERCEL_TEAM_ID'],['projectId','VERCEL_PROJECT_ID'],['snapshotId','ANVIL_SANDBOX_SNAPSHOT_ID']]) if(!env[key]||req[field]!==env[key]) throw new Error(`${field} must match ${key}`);
+    for(const [field,key] of [['teamId','VERCEL_TEAM_ID'],['projectId','VERCEL_PROJECT_ID']]) if(!env[key]||req[field]!==env[key]) throw new Error(`${field} must match ${key}`);
+    // snapshotId is optional (anvil#63): when present it still has to be the one this controller is
+    // approved to use; when absent, the registry pre-check below picks the snapshot instead.
+    if (req.snapshotId !== undefined && (!env.ANVIL_SANDBOX_SNAPSHOT_ID || req.snapshotId !== env.ANVIL_SANDBOX_SNAPSHOT_ID)) throw new Error('snapshotId must match ANVIL_SANDBOX_SNAPSHOT_ID');
     secrets = SECRET_ENV.map(k => env[k]).filter(Boolean);
     if (secrets.length !== 2) throw new Error('VERCEL_TOKEN and AI_GATEWAY_API_KEY are required');
     secrets.push(`Bearer ${env.AI_GATEWAY_API_KEY}`);
@@ -108,55 +115,75 @@ export async function runController(requestPath, effects) {
     await fs.writeFile(path.join(state.artifactDir, 'request.json'), JSON.stringify({ ...req, absoluteSpecPath: undefined, requestDir: undefined }, null, 2));
     const manifest = { dispatchId: req.dispatchId, snapshotId: req.snapshotId, forkSha: req.forkSha, repoUrl: req.repoUrl, branch: state.branch, worktree: state.worktree, remoteWorktree: null, createdAt: clock.now().toISOString(), sandboxId: null, lockfileHash: await git.lockfileHash(state.worktree), status: 'allocated' };
     await fs.writeFile(path.join(state.artifactDir, 'manifest.json'), JSON.stringify(manifest, null, 2));
-    const oidc = await credentials.getOidcToken();
-    if (typeof oidc !== 'string' || !oidc) throw new Error('Vercel OIDC did not return a token');
-    secrets.push(oidc, `Bearer ${oidc}`);
-    const stsResponse = await credentials.fetch(GH_STS_URL, {
-      method: 'POST',
-      headers: { Authorization: `Bearer ${oidc}`, 'Content-Type': 'application/json' },
-      body: JSON.stringify({ owner: new URL(req.repoUrl).pathname.split('/')[1], repo: new URL(req.repoUrl).pathname.split('/')[2].replace(/\.git$/, ''), permissions: { contents: 'read' }, policy: req.ghStsPolicy }),
-    });
-    if (!stsResponse.ok) {
-      const responseBody = await stsResponse.text();
-      const denial = responseBody.includes('POLICY_DENIED') ? `; POLICY_DENIED: ${responseBody}` : '';
-      // gh-sts bans a source IP after repeated policy denials with no decay; never retry this request.
-      throw new Error(`gh-sts policy ${req.ghStsPolicy} failed (${stsResponse.status})${denial}`);
+    // ghStsPolicy is optional (anvil#63): a public repo clones anonymously over https, so there is
+    // no gh-sts request, no minted GitHub token, and no Authorization transform on the github.com
+    // rules below. Absent a policy, the anonymous git ls-remote probe later is the only proof the
+    // repo is reachable.
+    let gh, ghBasic;
+    if (req.ghStsPolicy) {
+      const oidc = await credentials.getOidcToken();
+      if (typeof oidc !== 'string' || !oidc) throw new Error('Vercel OIDC did not return a token');
+      secrets.push(oidc, `Bearer ${oidc}`);
+      const stsResponse = await credentials.fetch(GH_STS_URL, {
+        method: 'POST',
+        headers: { Authorization: `Bearer ${oidc}`, 'Content-Type': 'application/json' },
+        body: JSON.stringify({ owner: new URL(req.repoUrl).pathname.split('/')[1], repo: new URL(req.repoUrl).pathname.split('/')[2].replace(/\.git$/, ''), permissions: { contents: 'read' }, policy: req.ghStsPolicy }),
+      });
+      if (!stsResponse.ok) {
+        const responseBody = await stsResponse.text();
+        const denial = responseBody.includes('POLICY_DENIED') ? `; POLICY_DENIED: ${responseBody}` : '';
+        // gh-sts bans a source IP after repeated policy denials with no decay; never retry this request.
+        throw new Error(`gh-sts policy ${req.ghStsPolicy} failed (${stsResponse.status})${denial}`);
+      }
+      const stsBody = await stsResponse.json();
+      if (typeof stsBody?.token !== 'string' || !stsBody.token) throw new Error(`gh-sts policy ${req.ghStsPolicy} response did not include a token`);
+      const expiresAt = Date.parse(stsBody.expires_at);
+      if (!Number.isFinite(expiresAt)) throw new Error(`gh-sts policy ${req.ghStsPolicy} response had invalid expires_at`);
+      if (expiresAt - clock.now().getTime() < GH_STS_SETUP_BUDGET_MS) throw new Error(`gh-sts policy ${req.ghStsPolicy} token expires before the 10-minute setup budget`);
+      gh = stsBody.token;
+      ghBasic = Buffer.from(`x-access-token:${gh}`).toString('base64');
+      secrets.push(gh, ghBasic, `Basic ${ghBasic}`);
     }
-    const stsBody = await stsResponse.json();
-    if (typeof stsBody?.token !== 'string' || !stsBody.token) throw new Error(`gh-sts policy ${req.ghStsPolicy} response did not include a token`);
-    const expiresAt = Date.parse(stsBody.expires_at);
-    if (!Number.isFinite(expiresAt)) throw new Error(`gh-sts policy ${req.ghStsPolicy} response had invalid expires_at`);
-    if (expiresAt - clock.now().getTime() < GH_STS_SETUP_BUDGET_MS) throw new Error(`gh-sts policy ${req.ghStsPolicy} token expires before the 10-minute setup budget`);
-    const gh = stsBody.token, gateway = env.AI_GATEWAY_API_KEY;
-    const ghBasic = Buffer.from(`x-access-token:${gh}`).toString('base64');
-    secrets.push(gh, ghBasic, `Basic ${ghBasic}`);
+    const gateway = env.AI_GATEWAY_API_KEY;
     const gatewayRule = { transform: [{ headers: { Authorization: `Bearer ${gateway}` } }] };
-    const githubRules = [
+    // The match scopes the credential, not access: an allowed domain admits every request, and a
+    // rule must carry a transform, forwardURL, or response. An anonymous clone has no header to
+    // add, so it gets the plain allow (anvil#63).
+    const githubRules = gh ? [
       { match: { path: { exact: repoPath(req.repoUrl) + '/info/refs' }, method: ['GET'], queryString: [{ key: { exact: 'service' }, value: { exact: 'git-upload-pack' } }] }, transform: [{ headers: { Authorization: `Basic ${ghBasic}` } }] },
       { match: { path: { exact: repoPath(req.repoUrl) + '/git-upload-pack' }, method: ['POST'] }, transform: [{ headers: { Authorization: `Basic ${ghBasic}` } }] },
-    ];
+    ] : [];
     const setupPolicy = { allow: { 'github.com': githubRules, 'ai-gateway.vercel.sh': [gatewayRule] } };
     const agentPolicy = { allow: { 'ai-gateway.vercel.sh': [gatewayRule] } };
-    // Registry pre-check (anvil#59): the approved snapshot must have been built from the fork's
-    // lockfile. A snapshot the registry does not know skips this and relies on the in-sandbox hash
-    // check below. Reusing another registered snapshot costs nothing; a rebuild is spend, so it
-    // needs rebuildSnapshot: true in the request.
+    // Registry pre-check (anvil#59, per-repo anvil#63): the snapshot used must have been built from
+    // the fork's lockfile for this repo. With a pinned snapshotId, an unregistered snapshot skips
+    // this and relies on the in-sandbox hash check below; with no snapshotId, this pre-check is the
+    // only selection there is. Reusing another registered snapshot costs nothing; a rebuild is
+    // spend, so it needs rebuildSnapshot: true in the request.
     let snapshotId = req.snapshotId;
     const records = snapshots ? await snapshots.list() : [];
-    const approved = records.find(r => r.snapshotId === snapshotId);
-    if (approved && approved.lockfileHash !== manifest.lockfileHash) {
-      const slug = repoSlug(req.repoUrl);
+    const slug = repoSlug(req.repoUrl);
+    const approved = snapshotId !== undefined ? records.find(r => r.snapshotId === snapshotId) : undefined;
+    const needsSelection = snapshotId === undefined || (approved && approved.lockfileHash !== manifest.lockfileHash);
+    if (needsSelection) {
       const match = findSnapshot(records, slug, manifest.lockfileHash);
+      const mismatchLabel = snapshotId !== undefined
+        ? `snapshot lockfile mismatch (snapshot ${approved.lockfileHash.slice(0, 12)}, fork ${manifest.lockfileHash.slice(0, 12)})`
+        : `snapshot lockfile mismatch (no registered snapshot for ${slug} with lockfile ${manifest.lockfileHash.slice(0, 12)})`;
       if (match) {
-        say(`snapshot ${snapshotId} has lockfile ${approved.lockfileHash.slice(0, 12)}, fork has ${manifest.lockfileHash.slice(0, 12)}; using ${match.snapshotId} (built ${match.builtAt})`);
+        say(snapshotId !== undefined
+          ? `${mismatchLabel}; using ${match.snapshotId} (built ${match.builtAt})`
+          : `using registered snapshot ${match.snapshotId} for ${slug} (lockfile ${manifest.lockfileHash.slice(0, 12)}, built ${match.builtAt})`);
         snapshotId = match.snapshotId;
       } else if (req.rebuildSnapshot) {
-        say(`snapshot ${snapshotId} has lockfile ${approved.lockfileHash.slice(0, 12)}, fork has ${manifest.lockfileHash.slice(0, 12)}; rebuilding at ${req.forkSha.slice(0, 9)}`);
+        say(`${mismatchLabel}; rebuilding at ${req.forkSha.slice(0, 9)}`);
         const built = await snapshots.build({ repo: req.localRepo, ref: req.forkSha });
         if (!built?.snapshotId || built.lockfileHash !== manifest.lockfileHash) throw new Error('snapshot rebuild did not produce a matching snapshot');
         snapshotId = built.snapshotId;
-        say(`snapshot ${snapshotId} built; update ANVIL_SANDBOX_SNAPSHOT_ID to approve it for later dispatches`);
-      } else throw new Error(`snapshot lockfile mismatch (snapshot ${approved.lockfileHash.slice(0, 12)}, fork ${manifest.lockfileHash.slice(0, 12)}); set rebuildSnapshot: true or run build-snapshot.mjs --ref ${req.forkSha}`);
+        say(req.snapshotId !== undefined
+          ? `snapshot ${snapshotId} built; update ANVIL_SANDBOX_SNAPSHOT_ID to approve it for later dispatches`
+          : `snapshot ${snapshotId} built and registered for ${slug}`);
+      } else throw new Error(`${mismatchLabel}; set rebuildSnapshot: true or run build-snapshot.mjs --repo ${req.localRepo} --ref ${req.forkSha}`);
       manifest.snapshotId = snapshotId;
       await fs.writeFile(path.join(state.artifactDir, 'manifest.json'), JSON.stringify(manifest, null, 2));
     }
@@ -178,7 +205,14 @@ export async function runController(requestPath, effects) {
       return { code: r.exitCode, out: String(out) };
     };
     const setupProbe = await output('bash', ['-lc', `git ls-remote --exit-code ${q(req.repoUrl)} HEAD >/dev/null && printf GITHUB_OK; curl -fsS -o /dev/null https://ai-gateway.vercel.sh/v1/models && printf GATEWAY_OK`], true);
-    if (!setupProbe.out.includes('GATEWAY_OK') || !setupProbe.out.includes('GITHUB_OK')) throw new Error('setup network policy probe contradicted policy');
+    if (!setupProbe.out.includes('GATEWAY_OK')) throw new Error('setup network policy probe contradicted policy');
+    if (!setupProbe.out.includes('GITHUB_OK')) {
+      // No ghStsPolicy means no credential was minted: the clone has to work anonymously, and a
+      // failure here is the repo, not the policy. Private repos outside vercel/* are out of scope
+      // until a credential for them exists (anvil#63).
+      if (!req.ghStsPolicy) throw new Error(`repository ${req.repoUrl} is not reachable anonymously; private repos outside vercel/* need a credential (anvil#63)`);
+      throw new Error('setup network policy probe contradicted policy');
+    }
     await output('bash', ['-lc', `mkdir -p ${q(home+'/input')} ${q(remoteRepo)} && git -C ${q(remoteRepo)} init -q && git -C ${q(remoteRepo)} remote add origin ${q(req.repoUrl)} && git -C ${q(remoteRepo)} fetch --depth=1 --filter=blob:none origin ${q(req.forkSha)} && git -C ${q(remoteRepo)} checkout --detach ${q(req.forkSha)}`]);
     phase('clone');
     const inputs = [{ path: remoteSpec, content: specContent }];

@@ -31,3 +31,15 @@ test('record, list and find: newest matching snapshot wins, same id replaces', a
   assert.equal(findSnapshot(all, 'acme/other', 'h1'), null);
   await fs.rm(dir, { recursive: true });
 });
+
+// Two unrelated repos can share a lockfile hash by accident (an empty lockfile, a trivial one);
+// that is not evidence the snapshot was built for both, so findSnapshot never crosses repos
+// (anvil#63).
+test('findSnapshot ignores a record of another repo even with a matching lockfile hash', () => {
+  const records = [
+    { snapshotId: 'shared-hash-other-repo', repo: 'acme/other', lockfileHash: 'shared', builtAt: '2026-02-01T00:00:00Z' },
+    { snapshotId: 'shared-hash-this-repo', repo: 'acme/repo', lockfileHash: 'shared', builtAt: '2026-01-01T00:00:00Z' },
+  ];
+  assert.equal(findSnapshot(records, 'acme/repo', 'shared')?.snapshotId, 'shared-hash-this-repo');
+  assert.equal(findSnapshot(records, 'acme/missing', 'shared'), null);
+});

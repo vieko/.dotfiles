@@ -3,9 +3,10 @@ import assert from 'node:assert/strict';
 import fsNative from 'node:fs/promises';
 import os from 'node:os';
 import path from 'node:path';
-import { runController, anvilBucket } from './anvil-sandbox.mjs';
+import { runController, validateRequest, anvilBucket } from './anvil-sandbox.mjs';
 
-const keys=['repoUrl','forkSha','specPath','gate','scopes','contracts','model','snapshotId','teamId','projectId','ghStsPolicy','vcpus','timeoutMs','localRepo','dispatchId','summonerAddress'];
+// snapshotId and ghStsPolicy are optional (anvil#63); their own tests live below this loop.
+const keys=['repoUrl','forkSha','specPath','gate','scopes','contracts','model','teamId','projectId','vcpus','timeoutMs','localRepo','dispatchId','summonerAddress'];
 const OIDC='OIDC_TOKEN_marker';
 const GH='GH_STS_TOKEN_marker';
 const sha='a'.repeat(40);
@@ -28,7 +29,7 @@ async function fixture(options={}) {
       if(opts.cmd==='git' && opts.args?.includes('--porcelain')) stdout=runNumber>(options.anvilRunNumber??6)?'worktree /vercel/repo\nHEAD aaa\n\nworktree /vercel/repo-anvil/anvil-spec-x\nHEAD bbb\nbranch refs/heads/anvil/spec/x\n':'worktree /vercel/repo\nHEAD aaa\n';
       else if(opts.cmd==='bash' && line.includes('GITHUB_BLOCKED')) stdout='GITHUB_BLOCKED REGISTRY_BLOCKED GATEWAY_OK';
       else if(opts.cmd==='bash' && line.includes('/opt/anvil-snapshot')) stdout=options.lockMismatch?'bad-hash':`${sha}\n`;
-      else if(opts.cmd==='bash' && line.includes('GATEWAY_OK')) stdout=options.setupContradiction?'':'GATEWAY_OKGITHUB_OK';
+      else if(opts.cmd==='bash' && line.includes('GATEWAY_OK')) stdout=options.setupContradiction==='github'?'GATEWAY_OK':options.setupContradiction?'':'GATEWAY_OKGITHUB_OK';
       else if(opts.cmd==='anvil') {stdout=JSON.stringify({passed:options.verdict==='red'?false:options.verdict==='void'?null:true,attempts:1,branch:'remote-branch'});stderr='agent log';exitCode=options.verdict==='red'?1:0;}
       const result={exitCode,output:async stream=>stream==='stdout'?stdout:stream==='stderr'?stderr:`${stdout}${stderr}`};
       return result;
@@ -66,6 +67,18 @@ for (const missing of keys) test(`request validation missing ${missing} has no c
   const f=await fixture(); delete f.req[missing]; await fsNative.writeFile(f.request,JSON.stringify(f.req));
   const r=await f.run(); assert.equal(r.exitCode,4); assert.equal(f.calls.some(c=>c[0]==='create'),false); await f.clean();
 });
+
+const baseRequest={repoUrl:'https://github.com/acme/repo.git',forkSha:sha,specPath:'spec.md',gate:['npm test'],scopes:['src/**'],contracts:[],model:'luna',snapshotId:'snapshot-approved',teamId:'team-test',projectId:'project-test',ghStsPolicy:'vieko-golem-sandbox-development',vcpus:2,timeoutMs:600000,localRepo:'/tmp/repo',dispatchId:'dispatch-123',summonerAddress:'session-address'};
+test('validateRequest accepts a request missing snapshotId, ghStsPolicy, or both (anvil#63)',async()=>{
+  for(const drop of [['snapshotId'],['ghStsPolicy'],['snapshotId','ghStsPolicy']]){
+    const r={...baseRequest};for(const k of drop)delete r[k];
+    const validated=validateRequest(r,'/tmp/request.json');
+    for(const k of drop)assert.equal(k in validated,false);
+  }
+});
+test('validateRequest rejects an empty snapshotId or ghStsPolicy rather than treating it as absent',async()=>{
+  for(const k of ['snapshotId','ghStsPolicy'])assert.throws(()=>validateRequest({...baseRequest,[k]:''},'/tmp/request.json'),/non-empty string/);
+});
 test('request rejects bad SHA, empty gate, --link, traversal, unknown keys before allocation',async()=>{
   for(const mutate of [r=>r.forkSha='bad',r=>r.gate=[],r=>r.gate=['anvil run --link'],r=>r.specPath='../outside',r=>r.extra=true]){
     const f=await fixture();mutate(f.req);await fsNative.writeFile(f.request,JSON.stringify(f.req));const out=await f.run();assert.equal(out.exitCode,4);assert.equal(f.calls.some(c=>c[0]==='create'),false);await f.clean();
@@ -84,7 +97,19 @@ test('policies have fetch-only GitHub matchers, gateway-only agent policy, no wi
 test('gh-sts policy denial exits 4 once before any sandbox call and logs the policy',async()=>{const f=await fixture({denied:true});const r=await f.run();assert.equal(r.exitCode,4);assert.equal(f.calls.filter(c=>c[0]==='mint').length,1);assert.equal(f.calls.some(c=>c[0]==='create'||c[0]==='remote'),false);assert.ok(f.logs.some(line=>line.includes(f.req.ghStsPolicy)&&line.includes('403')&&line.includes('POLICY_DENIED')));await f.clean();});
 test('gh-sts server error exits 4 without retry or sandbox creation',async()=>{const f=await fixture({failed:true});const r=await f.run();assert.equal(r.exitCode,4);assert.equal(f.calls.filter(c=>c[0]==='mint').length,1);assert.equal(f.calls.some(c=>c[0]==='create'),false);await f.clean();});
 test('gh-sts token below the 10-minute setup budget is refused',async()=>{const f=await fixture({expiresAt:'2026-01-01T00:09:59.999Z'});const r=await f.run();assert.equal(r.exitCode,4);assert.equal(f.calls.filter(c=>c[0]==='mint').length,1);assert.equal(f.calls.some(c=>c[0]==='create'),false);await f.clean();});
-test('missing ghStsPolicy fails validation before mint',async()=>{const f=await fixture();delete f.req.ghStsPolicy;await fsNative.writeFile(f.request,JSON.stringify(f.req));const r=await f.run();assert.equal(r.exitCode,4);assert.equal(f.calls.some(c=>c[0]==='mint'||c[0]==='oidc'||c[0]==='create'),false);await f.clean();});
+test('no ghStsPolicy: public repo dispatches with no gh-sts request and a plain github.com allow',async()=>{
+ const f=await fixture();delete f.req.ghStsPolicy;await fsNative.writeFile(f.request,JSON.stringify(f.req));const r=await f.run();if(r.exitCode!==0)console.error(f.logs,f.calls);assert.equal(r.exitCode,0);
+ assert.equal(f.calls.some(c=>c[0]==='mint'),false);
+ const create=f.calls.find(c=>c[0]==='create')[1];const p=create.networkPolicy;
+ assert.deepEqual(p.allow['github.com'],[]);
+ assert.deepEqual(p.allow['ai-gateway.vercel.sh'][0].transform[0].headers,{Authorization:`Bearer AI_KEY_marker`});
+ await f.clean();
+});
+test('no ghStsPolicy: an anonymously unreachable repo names the credential gap (anvil#63)',async()=>{
+ const f=await fixture({setupContradiction:'github'});delete f.req.ghStsPolicy;await fsNative.writeFile(f.request,JSON.stringify(f.req));const r=await f.run();assert.equal(r.exitCode,4);
+ assert.ok(f.logs.some(l=>l.includes('not reachable anonymously')&&l.includes('vercel/*')&&l.includes('anvil#63')));
+ await f.clean();
+});
 test('policy contradiction aborts before anvil, still collects and stops',async()=>{const f=await fixture({setupContradiction:true});const r=await f.run();assert.equal(r.exitCode,4);assert.equal(f.calls.some(c=>c[0]==='remote'&&c[1].cmd==='anvil'),false);assert.ok(f.calls.some(c=>c[0]==='read'));assert.equal(f.calls.at(-1)[0],'stop');await f.clean();});
 test('OIDC and minted secrets never enter remote env/args, written files, logs, or manifest',async()=>{
  const f=await fixture();const result=await f.run();const ghBasic=Buffer.from(`x-access-token:${GH}`).toString('base64');const basic=`Basic ${ghBasic}`;const sensitive=[...f.secrets,...f.secrets.map(s=>Buffer.from(s).toString('base64')),ghBasic,basic];const serialized=JSON.stringify(f.calls.filter(c=>['remote','writeFiles'].includes(c[0])));for(const s of sensitive)assert.equal(serialized.includes(s),false);for(const line of f.logs)for(const s of sensitive)assert.equal(line.includes(s),false);const manifest=await fsNative.readFile(path.join(result.artifactDir,'manifest.json'),'utf8');for(const s of sensitive)assert.equal(manifest.includes(s),false);const files=await fsNative.readdir(result.artifactDir);for(const name of files){const file=path.join(result.artifactDir,name);if((await fsNative.lstat(file)).isFile()){const text=await fsNative.readFile(file);for(const s of sensitive)assert.equal(text.includes(s),false);}}await f.clean();
@@ -140,4 +165,17 @@ test('registry: a rebuild that does not match the fork lockfile is refused',asyn
 test('registry: an unknown approved snapshot keeps the in-sandbox hash check as the only guard',async()=>{
  const f=await fixture({registry:[{snapshotId:'something-else',repo:'acme/repo',lockfileHash:'old',builtAt:'2026-01-01'}]});
  const r=await f.run();assert.equal(r.exitCode,0);assert.equal(f.calls.find(c=>c[0]==='create')[1].source.snapshotId,'snapshot-approved');
+ await f.clean();});
+
+test('registry: no snapshotId in the request selects the registered match for the repo and lockfile',async()=>{
+ const f=await fixture({req:{snapshotId:undefined},registry:[{snapshotId:'snapshot-other-repo',repo:'acme/other',lockfileHash:sha,builtAt:'2026-01-01'},{snapshotId:'snapshot-match',repo:'acme/repo',lockfileHash:sha,builtAt:'2026-01-02'}]});
+ const r=await f.run();if(r.exitCode!==0)console.error(f.logs,f.calls);assert.equal(r.exitCode,0);assert.equal(f.calls.find(c=>c[0]==='create')[1].source.snapshotId,'snapshot-match');
+ await f.clean();});
+test('registry: no snapshotId and no match with rebuildSnapshot builds at the fork sha',async()=>{
+ const f=await fixture({req:{snapshotId:undefined,rebuildSnapshot:true},registry:[{snapshotId:'snapshot-other-repo',repo:'acme/other',lockfileHash:sha,builtAt:'2026-01-01'}]});
+ const r=await f.run();assert.equal(r.exitCode,0);assert.deepEqual(f.calls.find(c=>c[0]==='build')[1],{repo:f.repo,ref:sha});assert.equal(f.calls.find(c=>c[0]==='create')[1].source.snapshotId,'snapshot-rebuilt');
+ await f.clean();});
+test('registry: no snapshotId, no match, no rebuild stops before any sandbox is created',async()=>{
+ const f=await fixture({req:{snapshotId:undefined},registry:[{snapshotId:'snapshot-other-repo',repo:'acme/other',lockfileHash:sha,builtAt:'2026-01-01'}]});
+ const r=await f.run();assert.equal(r.exitCode,4);assert.ok(!f.calls.some(c=>c[0]==='create'));assert.ok(f.logs.some(l=>l.includes('acme/repo')&&l.includes('rebuildSnapshot: true')));
  await f.clean();});
