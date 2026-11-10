@@ -22,7 +22,9 @@ segment). Use the normalized `TEAM-N` everywhere below. Anything after `$1` in
    least its title, state, and description. If MCP is not authenticated, use
    `linear issues read TEAM-N` (fall back to `--api-token "$LINEAR_API_KEY"`
    if `LINEAR_API_TOKEN` is unset).
-2. Prior art on this machine: `rg -n "TEAM-N|team-n" .bonfire/index.md`,
+2. Prior art on this machine: `rg -n -o ".{0,160}(TEAM-N|team-n).{0,240}"
+   .bonfire/index.md .bonfire/index-archive.md 2>/dev/null` (the lines there
+   run to several KB; the `-o` window keeps a hit to one screen line),
    `git branch -a | rg -i "team-n"`, `ls ~/dev/*-worktrees* 2>/dev/null | rg -i
    "team-n"`, `gh pr list --search "TEAM-N" --state all --limit 5`, and
    `ls ~/scratch | rg -i "team-n"` for specs, handoffs, or notes.
