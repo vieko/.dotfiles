@@ -207,7 +207,8 @@ auth.json regardless. Do not:
   agentic keys.
 - run `op inject` from within agent tasks (re-prompts for auth).
 
-If a Pi provider key is missing, add it via `/login` (writes auth.json). For
+If a Pi provider key is missing, add it via `/login` (writes auth.json), or
+from the shell with `pi auth login <provider> --api-key` (Pi 1.5.1+). For
 env-based secrets on op-enabled machines, the manifest is `env.op` (`op://` refs).
 
 On op-less hosts, `.bash_profile` hydrates `AI_GATEWAY_API_KEY` from Pi via

@@ -197,8 +197,9 @@ proposing templates or interpreting a false report label as an omission.
 - **1h TTL net**: +$362 (wk 36) then +$120/12d (wks 37-38). If it goes
   negative, `PI_CACHE_RETENTION=long` comes off.
 - **`cacheWarming: "idle"`**: closed 2026-09-29. Never fired on a 1h tier
-  (refresh at 54 min vs a fixed 30 min idle cap; pi#10180). Back to the
-  `"streaming"` default; reopen if upstream scales the cap with the TTL.
+  (refresh at 54 min vs a fixed 30 min idle cap; pi#10180). Pi 1.5.1 made
+  `"idle"` the default with the same cap, so `settings.base.json` pins
+  `"streaming"`; reopen if upstream scales the cap with the TTL.
 
 ## Write-up shape
 

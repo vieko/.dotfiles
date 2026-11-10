@@ -8,6 +8,7 @@
   "enableInstallTelemetry": false,
   "quietStartup": "header",
   "showCacheMissNotices": true,
+  "cacheWarming": "streaming",
   "editorPaddingX": 1,
   "treeFilterMode": "user-only",
   "sessionShareDestination": "gist",
