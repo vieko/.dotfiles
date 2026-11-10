@@ -33,7 +33,7 @@ const isReportOf = (entry) => {
 	const text = textOf(entry.content);
 	if (entry.type !== "custom_message" || entry.customType !== "pi-post" || !text.startsWith("Message from pi session")) return false;
 	const message = entry.details?.message;
-	const sender = message?.from?.name ?? /^Message from pi session ([^\n(]+?)(?: \(|:)/.exec(text)?.[1]?.trim() ?? "";
+	const sender = message?.from?.name ?? /^Message from pi session ([^\n([]+?)(?: \[| \(|:)/.exec(text)?.[1]?.trim() ?? "";
 	const body = message?.body ?? text.slice(text.indexOf("\n") + 1).split("\n\nThis came from another pi session")[0];
 	// Exclude dispatches and coordination even when a construct sends them.
 	if (/^\s*(?:summoner review|scope change|ack(?:nowledged)?\b|approved\b|relaying\b|please\b|go\b|proceed\b|can you\b|could you\b|report back when\b)/i.test(body)) return false;
