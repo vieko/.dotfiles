@@ -26,8 +26,12 @@ segment). Use the normalized `TEAM-N` everywhere below. Anything after `$1` in
    `git branch -a | rg -i "team-n"`, `ls ~/dev/*-worktrees* 2>/dev/null | rg -i
    "team-n"`, `gh pr list --search "TEAM-N" --state all --limit 5`, and
    `ls ~/scratch | rg -i "team-n"` for specs, handoffs, or notes.
-3. Only then read the code the issue points at, enough to know where things
-   live and what already exists. Skim, do not audit.
+3. Only then find the code the issue points at. When the `scout` tool is
+   available, hand it the reading: one task per area, each with the issue
+   text and the question (a scout has not seen this conversation). Work from
+   its reports and open only the cited lines the approach depends on. Without
+   `scout`, read enough yourself to know where things live and what already
+   exists. Skim, do not audit.
 
 **Report** (compact; I know the codebase):
 
