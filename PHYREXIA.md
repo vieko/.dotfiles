@@ -61,16 +61,17 @@ panes. `summon-*.sh` and `remind-at.sh` pick tmux or Rex through
   ship -- a Legion multiplies the mechanics, never the judgment; a green gate
   cannot distinguish "make the test pass" from "the test was lying").
 
-  **Sandbox lane (spiked 2026-10-20, not built).** A golem ran the
-  GTMENG-4177 replay on a 4 vCPU Vercel Sandbox: passed first try, wall
-  time on par with local, about $0.15 of sandbox per golem, no secret in
-  the VM (firewall-brokered gateway key, fetch-only clone matcher). It is
-  the way past the 6-golem ceiling, but `summon-golem.sh` has no sandbox
-  mode yet. Results and the build list live in anvil #59; the CLI gate
-  timeout (120 s, too short at 4 vCPU) is anvil #58 and blocks it. The
-  spike's Vercel project `vieko-golem-sandbox` (team
-  `vercel-internal-playground`) is kept for the lane; delete it if the
-  lane is dropped.
+  **Sandbox lane (live since 2026-11-09).** `summon-golem.sh --sandbox`
+  runs a golem on a 4 vCPU Vercel Sandbox (project `vieko-golem-sandbox`,
+  team `vercel-internal-playground`) from a snapshot of the gtm checkout;
+  no secret in the VM (development OIDC, gh-sts `contents: read`, gateway
+  key brokered by the firewall). Setup is ~17 s, a gtm run 6 to 13 min,
+  ~$0.01 to $0.05 of model per run. It is the way past the 6-golem
+  ceiling. Every snapshot build and dispatch is spend and needs the user's
+  approval each time. Controller and builder: `scripts/sandbox/`
+  (`docs/agent-maintenance.md`, "Sandbox lane"); ids in
+  `~/private/lanes/sandbox-golem.env`. Proven on anvil #59 (closed);
+  gtm-only until anvil #63 (per-repo snapshot, optional clone credential).
 
 ## Standing invariants
 
