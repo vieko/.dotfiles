@@ -413,7 +413,10 @@ sleep 1
 printf 'bash %q' "$runner" | "$term" send "$pane_id"
 # Summon ledger: shared with summon-familiar.sh (one grep audits all
 # constructs' vessel bindings -- see the 2026-08-30 fable-drift audit).
-echo "$(date +%Y-%m-%dT%H:%M:%S%z) kind=golem vessel=$vessel window=$window pane=$pane_id spec=$spec${golem_env[*]+ env=${golem_env[*]}}" >> "$LOG_DIR/summons.log"
+# Keys only: -e values can be credentials, and summons.log is plaintext.
+env_keys=()
+for kv in "${golem_env[@]+"${golem_env[@]}"}"; do env_keys+=("${kv%%=*}"); done
+echo "$(date +%Y-%m-%dT%H:%M:%S%z) kind=golem vessel=$vessel window=$window pane=$pane_id spec=$spec${env_keys[*]+ env=${env_keys[*]}}" >> "$LOG_DIR/summons.log"
 echo "summoned: window $window (pane $pane_id), vessel $vessel"
 echo "log: $log"
 echo "result: $result"
