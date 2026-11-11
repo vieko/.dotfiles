@@ -9,7 +9,7 @@
  * retries and queued messages count toward one run. It stops on
  * agent_settled, which fires once per run. Aborted runs print nothing
  * (Esc is you, not news); a run that ended on a model error prints
- * "error" instead of "done". Times are Mountain Time, 24-hour.
+ * "error" instead of "done". Times are system local time, 24-hour.
  *
  * Interactive mode only. Uses ctx.ui.notify, so the line is not saved to
  * the session; the session JSONL already timestamps every entry.
@@ -18,7 +18,6 @@
 import type { ExtensionAPI } from "@earendil-works/pi-coding-agent";
 
 const clock = new Intl.DateTimeFormat("en-GB", {
-	timeZone: "America/Edmonton",
 	hour: "2-digit",
 	minute: "2-digit",
 	hourCycle: "h23",

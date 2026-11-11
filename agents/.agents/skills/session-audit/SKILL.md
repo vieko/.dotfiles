@@ -19,7 +19,7 @@ anvil status --all --since 7d        # golem verdicts + USD (anvil >= 0.3.1); go
 The script counts each session entry once: `/fork` copies the parent's
 entries (same ids) into the child file, and before 2026-10-05 the audit
 summed both (week 40: +443 turns, +$36, +$4.44 counsel). A `Fork duplicates
-skipped` line prints when it happens. Dates are local midnight (`AUDIT_TZ`, default America/Edmonton). `--json` keeps
+skipped` line prints when it happens. Dates are local midnight (`AUDIT_TZ`, default: the system time zone). `--json` keeps
 the raw per-session rows for follow-up questions. The script reprices 1h cache
 writes at 2x input on Anthropic models for turns pi billed at the 5m rate
 (pi#9210, fixed in pi 0.99.0 on 2026-09-29; detected per turn from the billed

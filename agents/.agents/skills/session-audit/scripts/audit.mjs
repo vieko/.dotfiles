@@ -44,7 +44,7 @@ const isReportOf = (entry) => {
 	const constructResult = /^(?:fam|golem)-/.test(sender) && /\b(?:verification|deviations|committed|pushed)\b/i.test(body) && /\b(?:pass(?:ed)?|fail(?:ed)?|blocked|complete(?:d)?|committed|pushed)\b/i.test(body);
 	return status || constructResult;
 };
-const TZ = process.env.AUDIT_TZ ?? "America/Edmonton";
+const TZ = process.env.AUDIT_TZ ?? Intl.DateTimeFormat().resolvedOptions().timeZone;
 
 // Pricing: before pi 0.99.0, pi billed 1h cache writes at the 5m rate via the
 // gateway (pi#9210, fixed 2026-09-29). Anthropic charges 2x input for 1h

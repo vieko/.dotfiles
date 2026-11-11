@@ -290,8 +290,8 @@ a third of the sampled ones answered such a menu.
 
 ## Timestamps
 
-Report times to the user in Mountain Time (America/Edmonton), not raw UTC ISO
-strings. Session files and bonfire entries store UTC internally -- convert
+Report times to the user in the system's local time zone (what `date`
+prints), not raw UTC ISO strings. Session files and bonfire entries store UTC internally -- convert
 before quoting them.
 
 ## Shell behavior
