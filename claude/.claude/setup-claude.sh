@@ -15,14 +15,18 @@
 # Merge: host fragment deep-merges over the base; permissions.allow/ask/deny
 # are concatenated (base first, duplicates dropped) instead of replaced.
 #
-# Claude Code also writes to settings.json at runtime (/model, /effort,
-# "always allow"). Those writes are NOT carried over: base + fragment win. The
-# previous file is saved to ~/.claude/settings.prev.json and the differing
-# top-level keys are printed, so promote anything worth keeping into the base
-# or the fragment and rerun.
+# Runtime edits: Claude Code and other tools also write to settings.json
+# (/model, /effort, "always allow", `rex skill setup`). Each run saves the plain
+# base + fragment result to ~/.claude/settings.generated.json. The next run
+# diffs the live file against it, applies those edits on top of the new base +
+# fragment, and lists them so they can be promoted into a tracked file. Arrays
+# merge as sets (entries added or removed at runtime stay added or removed).
+# When the base or fragment also changed the same key, the tracked value wins.
+# The previous file is always kept at ~/.claude/settings.prev.json.
 #
 # Run once after stowing, and again whenever the base or a fragment changes.
 #   --check   print what would change and exit without writing
+#   --reset   drop runtime edits: write base + fragment only
 
 set -euo pipefail
 
@@ -44,16 +48,25 @@ command -v jq >/dev/null 2>&1 || {
 }
 
 check=0
-[[ "${1:-}" == "--check" ]] && check=1
+reset=0
+for arg in "$@"; do
+  case "$arg" in
+    --check) check=1 ;;
+    --reset) reset=1 ;;
+    *) echo "usage: $0 [--check] [--reset]" >&2; exit 2 ;;
+  esac
+done
 
 base="settings.base.json"
 host="$( (hostname -s 2>/dev/null || hostname) | tr '[:upper:]' '[:lower:]')"
 fragment="hosts/settings.${host}.json"
 out="${SCRIPT_DIR}/settings.json"
 prev="${HOME}/.claude/settings.prev.json"
+lastgen="${HOME}/.claude/settings.generated.json"
 
 tmp="$(mktemp)"
-trap 'rm -f "$tmp"' EXIT
+final="$(mktemp)"
+trap 'rm -f "$tmp" "$final"' EXIT
 
 if [[ -f "$fragment" ]]; then
   jq -s '
@@ -74,17 +87,72 @@ jq -e 'type == "object"' "$tmp" >/dev/null || {
   exit 1
 }
 
-if [[ -f "$out" ]] && jq -e . "$out" >/dev/null 2>&1; then
+cp "$tmp" "$final"
+live_ok=0
+[[ -f "$out" ]] && jq -e . "$out" >/dev/null 2>&1 && live_ok=1
+
+# Leaf diff: objects recurse, everything else (arrays included) is a leaf.
+# Edits are runtime changes from lastgen to live; apply them to the new output.
+jq_lib='
+  def leaves(p): if type == "object" and length > 0
+    then to_entries[] as $e | $e.value | leaves(p + [$e.key])
+    else [p, .] end;
+  def has_path($p): any(paths; . == $p);
+  def dotted: map(tostring) | join(".");
+  def edits($last; $live):
+    [ ($live | leaves([])) as [$p, $v]
+      | ($last | has_path($p)) as $had
+      | ($last | getpath($p)) as $o
+      | if $had and ($o | type) == "array" and ($v | type) == "array" then
+          (($v - $o) as $add | ($o - $v) as $del
+           | if ($add + $del | length) > 0
+             then {op: "array", path: $p, add: $add, del: $del} else empty end)
+        elif $had and $o == $v then empty
+        else {op: "set", path: $p, value: $v} end ]
+    + [ ($last | leaves([])) as [$p, $v]
+      | select(($live | has_path($p)) | not) | {op: "del", path: $p} ];
+'
+
+if [[ "$live_ok" == 1 && -f "$lastgen" && "$reset" == 0 ]] && jq -e . "$lastgen" >/dev/null 2>&1; then
+  edits="$(jq -n -c --slurpfile last "$lastgen" --slurpfile live "$out" \
+    "${jq_lib} edits(\$last[0]; \$live[0])")"
+  if [[ "$edits" != "[]" ]]; then
+    # Apply each edit unless the tracked files changed that path too.
+    jq -n --slurpfile new "$tmp" --slurpfile last "$lastgen" --argjson edits "$edits" "${jq_lib}"'
+      reduce $edits[] as $e ($new[0];
+        if ((getpath($e.path)) != ($last[0] | getpath($e.path))) and $e.op != "array" then .
+        elif $e.op == "set" then setpath($e.path; $e.value)
+        elif $e.op == "del" then delpaths([$e.path])
+        else (getpath($e.path) // []) as $n
+          | if ($n | type) == "array"
+            then setpath($e.path; ($n - $e.del) + ($e.add - $n))
+            else . end
+        end)' >"$final"
+    echo "note: runtime edits kept on top of base + fragment (promote them, or rerun with --reset):" >&2
+    jq -r --slurpfile new "$tmp" --slurpfile last "$lastgen" "${jq_lib}"'
+      .[] | .path as $p | ($p | dotted) as $k
+      | if .op == "array" then
+          "  \($k): " + ([(.add[] | "+" + tojson), (.del[] | "-" + tojson)] | join(" "))
+        elif ($new[0] | getpath($p)) != ($last[0] | getpath($p)) then
+          "  \($k): skipped, base or fragment changed it too"
+        elif .op == "del" then "  \($k): removed"
+        else "  \($k) = \(.value | tojson)" end' <<<"$edits" >&2
+  fi
+elif [[ "$live_ok" == 1 && "$reset" == 0 ]]; then
   drift="$(jq -n -r --slurpfile live "$out" --slurpfile new "$tmp" '
     ($live[0] | keys) + ($new[0] | keys) | unique
     | map(select($live[0][.] != $new[0][.])) | join(", ")')"
   if [[ -n "$drift" ]]; then
-    echo "note: top-level keys that differ from the current settings.json: ${drift}" >&2
-    echo "  (base + fragment win; the current file is kept at ${prev})" >&2
-  else
-    echo "${out} already matches base + fragment for host '${host}'."
-    exit 0
+    echo "note: no ${lastgen} to tell runtime edits apart; base + fragment win for: ${drift}" >&2
   fi
+fi
+
+if [[ "$live_ok" == 1 ]] && jq -n -e --slurpfile a "$out" --slurpfile b "$final" '$a[0] == $b[0]' >/dev/null; then
+  if [[ "$check" == 0 ]]; then
+    cp "$tmp" "$lastgen"
+  fi
+  echo "${out} is up to date for host '${host}'."
+  exit 0
 fi
 
 if [[ "$check" == 1 ]]; then
@@ -99,6 +167,8 @@ fi
 
 # Write through, never rename over: ~/.claude/settings.json is a stow symlink
 # to this file and must stay one.
-cat "$tmp" >"$out"
+cat "$final" >"$out"
+mkdir -p "$(dirname "$lastgen")"
+cp "$tmp" "$lastgen"
 
 echo "Generated ${out} for host '${host}'."
