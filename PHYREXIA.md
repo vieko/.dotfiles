@@ -446,12 +446,14 @@ the layout.
   decisions, "merge when green"). Three issues took 3 directing user turns
   and $3.10 of coordinator. Decide on keeping it after about 10 issues,
   not one round.
-- **Re-commit anvil commits as the user before a gtm push.** gtm rejects
-  commits without a verified signature, and anvil commits as
-  `anvil@localhost`. In the golem's worktree: branch, then
-  `git rebase origin/main --exec 'git commit --amend --no-edit --reset-author'`
-  (or a soft reset and one signed commit with a real message), and check
-  the tree is unchanged against the golem's commit before pushing.
+- **Golem commits are pushable as they are since anvil#65** (`520f9b2`,
+  2026-11-10). Anvil commits as the configured `user.name`/`user.email`
+  and falls back to `anvil@localhost` only when either is unset; git
+  config does the signing, so gtm's verified-commit rule passes. Before
+  that, every gtm golem branch needed a `--reset-author` re-commit. A
+  soft reset and one commit with a real message is still the way to
+  replace the `anvil: <spec>` message; check the tree is unchanged
+  against the golem's commit before pushing.
 - **Seed contracts from a base worktree, not the shared checkout.** anvil
   copies `--contract` files only from the `-C` repo's working tree. Round
   1 left a contract untracked in `~/dev/gtm`, which failed another
