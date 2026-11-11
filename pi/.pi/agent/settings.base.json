@@ -4,7 +4,7 @@
   "defaultModel": "anthropic/claude-opus-5.5",
   "theme": "one-dark",
   "tuiMode": "fullscreen",
-  "defaultThinkingLevel": "high",
+  "defaultThinkingLevel": "medium",
   "enableInstallTelemetry": false,
   "quietStartup": "header",
   "showCacheMissNotices": true,
