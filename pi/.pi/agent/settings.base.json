@@ -14,7 +14,7 @@
   "sessionShareDestination": "gist",
   "packages": [
     "git:github.com/vieko/bonfire@v7.6.0",
-    "git:github.com/vieko/pi-prose@v0.4.0",
+    "git:github.com/vieko/pi-prose@v0.4.1",
     "git:github.com/vieko/pi-post@v0.8.2",
     "npm:pi-counsel@0.3.0",
     "npm:@vieko/pi-redact@0.1.2"
