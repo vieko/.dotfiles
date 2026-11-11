@@ -28,6 +28,11 @@ fi
 # Runs after brew shellenv so fnm is found, but prepends PATH so Node takes priority
 if command -v fnm &>/dev/null; then
     eval "$(fnm env --use-on-cd)"
+
+    # fnm never removes its per-shell symlinks; unpruned they slow cold node
+    # lookups past starship's command_timeout. Daily, in background.
+    [[ -x "$HOME/.scripts/fnm-prune.sh" ]] &&
+        { "$HOME/.scripts/fnm-prune.sh" --daily &>/dev/null & disown; }
 fi
 
 # Pre-load 1Password-managed secrets into the shell env.
