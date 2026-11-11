@@ -224,7 +224,9 @@ when the work demands it.
   including deep refactors: let the ladder climb. The one standing
   exception is the moderation trap below (purge / delete / redact verbs ->
   `-m fable` up front). Any other `-m fable` base names WHY in the
-  summoning; "raw capability" is not a reason on its own -- the record has
+  summoning, with `summon-golem.sh -r <reason>`: the script logs it in
+  `summons.log` and nags when a fable or opus base has none (since
+  2026-11-11); "raw capability" is not a reason on its own -- the record has
   no spec that failed on luna and passed on fable that the ladder would not
   have reached anyway, and the three specs that failed everything failed on
   fable too. Ladder (anvil#45): `luna:high -> luna:xhigh -> opus:high ->

@@ -29,12 +29,16 @@
 # review pipeline (PHYREXIA.md standing invariant).
 #
 # Usage:
-#   summon-golem.sh [-m alias] [-e K=V]... [-n] [--sandbox] [-R] [-k] [-B board] <name> <spec-or-prompt> [anvil args...]
+#   summon-golem.sh [-m alias] [-r reason] [-e K=V]... [-n] [--sandbox] [-R] [-k] [-B board] <name> <spec-or-prompt> [anvil args...]
 #
 #   -m alias   vessel: haiku|sol|sonnet|opus|fable|astra|luna|terra|glm (anvil's aliases;
 #              astra needs anvil >= 0.3.1, sol the 2026-09-22 alias refresh).
 #              Default: luna (PHYREXIA golem binding -- cross-family worker
 #              under an Anthropic reviewer diversifies failure modes)
+#   -r reason  why the base is not luna, as one word or a hyphenated phrase
+#              (moderation, governance-paths, ...). Logged as reason=<...> in
+#              summons.log. A fable or opus base without it prints a nag
+#              and still runs (PHYREXIA.md Vessels, open proof 3)
 #   -n         dry run: print the runner script and window command, run nothing
 #   -R         no report-back: skip the completion ping. Deliberate opt-out
 #              only -- the golem then finishes silently (golem-2055 mode:
@@ -99,10 +103,12 @@ no_report=0
 keep_window=0
 golem_env=()
 board=""
+reason=""
 
-while getopts "m:e:nRkB:" opt; do
+while getopts "m:r:e:nRkB:" opt; do
     case "$opt" in
         m) vessel="$OPTARG" ;;
+        r) reason="${OPTARG//[[:space:]]/-}" ;;
         e) [[ "$OPTARG" == *=* ]] || { echo "error: -e expects KEY=VALUE, got: $OPTARG" >&2; exit 2; }
            golem_env+=("$OPTARG") ;;
         n) dry_run=1 ;;
@@ -114,9 +120,21 @@ while getopts "m:e:nRkB:" opt; do
 done
 shift $((OPTIND - 1))
 
-[[ $# -ge 2 ]] || { echo "usage: summon-golem.sh [-m alias] [-e K=V]... [-n] [-R] [-k] [-B board] <name> <spec-or-prompt> [anvil args...]" >&2; exit 2; }
+[[ $# -ge 2 ]] || { echo "usage: summon-golem.sh [-m alias] [-r reason] [-e K=V]... [-n] [-R] [-k] [-B board] <name> <spec-or-prompt> [anvil args...]" >&2; exit 2; }
 
 alias_ok "$vessel" || { echo "error: unknown vessel alias: $vessel (anvil aliases: haiku|sol|sonnet|opus|fable|astra|luna|terra|glm)" >&2; exit 2; }
+
+# Strong-base nag (2026-11-11): in 30 days, 4 fable-base golems were $44.84 of
+# about $50 of golem spend and luna was tried on none of them, so open proof 3
+# (PHYREXIA.md Vessels) had no data. Warn, never refuse; -r records the reason.
+case "$vessel" in
+    fable|opus)
+        if [[ -z "$reason" ]]; then
+            echo "nag: $vessel golem with no -r reason -- luna is the base, and the ladder reaches opus on its own." >&2
+            echo "     A purge/delete/redact spec is a reason (-r moderation). Name any other with -r; it goes in summons.log." >&2
+        fi
+        ;;
+esac
 
 # A scoped PATH must still reach the tools the runner needs. golem-gtmeng-3319
 # (2026-09-22) died twice with `anvil: command not found` / `pnpm: command not
@@ -416,7 +434,7 @@ printf 'bash %q' "$runner" | "$term" send "$pane_id"
 # Keys only: -e values can be credentials, and summons.log is plaintext.
 env_keys=()
 for kv in "${golem_env[@]+"${golem_env[@]}"}"; do env_keys+=("${kv%%=*}"); done
-echo "$(date +%Y-%m-%dT%H:%M:%S%z) kind=golem vessel=$vessel window=$window pane=$pane_id spec=$spec${env_keys[*]+ env=${env_keys[*]}}" >> "$LOG_DIR/summons.log"
+echo "$(date +%Y-%m-%dT%H:%M:%S%z) kind=golem vessel=$vessel window=$window pane=$pane_id spec=$spec${reason:+ reason=$reason}${env_keys[*]+ env=${env_keys[*]}}" >> "$LOG_DIR/summons.log"
 echo "summoned: window $window (pane $pane_id), vessel $vessel"
 echo "log: $log"
 echo "result: $result"
