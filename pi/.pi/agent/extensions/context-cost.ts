@@ -26,6 +26,11 @@
  *   picker prices it: everything after the dropped entry is re-written into
  *   the cache on the next turn, so a recent entry is nearly free and an old
  *   one costs about what a miss would.
+ *   On preserved-thinking models (Opus 5.5, Fable 5.x) the edit also
+ *   invalidates every thinking block after it, so the model re-thinks and
+ *   output tokens rise. Fable 5.2 rejects a mismatched prefix with a 400
+ *   unless the request sets block_binding drop_block, which pi 1.5.2 sends
+ *   only for mid-conversation-effort models. Test before relying on it there.
  *
  * It never compacts or clears on its own. Thresholds: PI_CTX_WARN_TOKENS
  * (default 150000). TTL follows PI_CACHE_RETENTION: long = 1h on Anthropic
