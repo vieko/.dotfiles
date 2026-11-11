@@ -141,6 +141,9 @@ if [[ -n "$board" ]]; then
     board_env="SIGIL_ROOM=$board"
 fi
 role_env="SIGIL_ROLE=familiar"
+# A worker's first prompt is "Read .../familiar-prompt-..."; as a bonfire row
+# it helps nobody, and it replaced the summoner's in-flight block (bonfire#50).
+bonfire_env="BONFIRE=off"
 
 # sigil#51 roles, set here and never guessed: the construct reads SIGIL_ROLE,
 # and the summoner gets a role file under its pi-post address, which sigil
@@ -304,7 +307,7 @@ if [[ $print_mode -eq 1 ]]; then
     # starts. The brief slug keeps same-second parallel dispatches apart.
     brief_slug="$(basename "$brief_abs" .md)"
     log="$LOG_DIR/familiar-$(date +%Y%m%d-%H%M%S)-${brief_slug}-${vessel//[\/:]/-}.log"
-    cmd=(env ${counsel_env:+"$counsel_env"} ${board_env:+"$board_env"} "$role_env" pi -p --provider "$PROVIDER" --model "$model" "$prompt")
+    cmd=(env ${counsel_env:+"$counsel_env"} ${board_env:+"$board_env"} "$role_env" "$bonfire_env" pi -p --provider "$PROVIDER" --model "$model" "$prompt")
     if [[ $dry_run -eq 1 ]]; then
         echo "dry-run (print mode):"
         printf '  '; printf '%q ' "${cmd[@]}"; printf '\n  log: %s\n' "$log"
@@ -338,7 +341,7 @@ else
     term="$HOME/.scripts/construct-term.sh"
     backend="$("$term" backend 2>/dev/null)" \
         || { echo "error: pane/window mode requires tmux or Rex (use -P for in-band)" >&2; exit 1; }
-    pi_cmd="${counsel_env:+$counsel_env }${board_env:+$board_env }$role_env pi --provider \"$PROVIDER\" --model \"$model\" \"$prompt\""
+    pi_cmd="${counsel_env:+$counsel_env }${board_env:+$board_env }$role_env $bonfire_env pi --provider \"$PROVIDER\" --model \"$model\" \"$prompt\""
     if [[ $dry_run -eq 1 ]]; then
         if [[ -n "$window_name" ]]; then
             echo "dry-run (window mode, $backend): new window $window_name, then type:"

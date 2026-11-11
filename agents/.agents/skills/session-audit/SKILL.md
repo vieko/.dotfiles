@@ -173,6 +173,15 @@ proposing templates or interpreting a false report label as an omission.
   reaches fable through counsel. Report any session switched to fable
   with its $/ut and whether the work was architecture or review.
 
+- **Redaction families** (started 2026-11-11, pi-redact#6): each
+  `pi-redact` entry now counts its new values by family (a vendor shape,
+  or `uuid`, `prefixed-id`, `identifier`, `high-entropy`). The detector
+  hides identifiers that are not secrets (session ids, snapshot ids,
+  constant names). After one full window, read "Redactions, by family":
+  a shape family that is most of the count and has no vendor shape is an
+  allowlist candidate, `uuid` first. The allowlist is the second half of
+  pi-redact#6 and is not built.
+
 - **Menu shadow** (started 2026-11-11): `menu-shadow.ts` logs, for each
   reply to a lettered menu with a marked recommendation, what a live
   "proceed" nudge would have done (`proceed` when the recommended option

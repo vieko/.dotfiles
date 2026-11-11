@@ -140,6 +140,9 @@ const nudges = [];
 // menu-shadow appends a `menu-shadow` custom entry per reply to a lettered menu
 // that marked a recommendation ({rec, options, verdict, gate, reply, waitMs}).
 const menuShadow = [];
+// pi-redact appends a `pi-redact` custom entry per channel event that hid new
+// values ({source, values, vendor, families}); `families` since pi-redact#7.
+const redactions = [];
 // sigil's map observer appends a `sigil-map-run` custom entry per run (map,
 // model, cost, input/output tokens, ms, ops, applied, rejected, error). Like
 // counsel, its spend is outside totals.tru; the footer no longer shows it.
@@ -196,6 +199,11 @@ for (const dir of readdirSync(root)) {
 			if (e.type === "custom" && e.customType === "nudge" && e.data) {
 				const nts = new Date(e.timestamp).getTime();
 				if (nts >= since && nts <= until) nudges.push({ ts: nts, when: mt(nts), dir: s.dir, key: e.data.key ?? "?", turns: e.data.turns ?? null, days: e.data.days ?? null, after: L.slice(i + 1).filter((x) => x.type === "message" && x.message?.role === "user").length });
+				continue;
+			}
+			if (e.type === "custom" && e.customType === "pi-redact" && e.data) {
+				const rts = new Date(e.timestamp).getTime();
+				if (rts >= since && rts <= until) redactions.push({ dir: s.dir, source: e.data.source ?? "?", values: e.data.values ?? 0, vendor: e.data.vendor ?? 0, families: e.data.families ?? null });
 				continue;
 			}
 			if (e.type === "custom" && e.customType === "menu-shadow" && e.data) {
@@ -478,6 +486,25 @@ if (menuShadow.length) {
 	const waits = menuShadow.map((m) => m.waitMs).filter((w) => typeof w === "number").sort((a, b) => a - b);
 	if (waits.length) P(`Median wait for a reply: ${Math.round(waits[Math.floor(waits.length / 2)] / 1000)} s`);
 } else P(`None recorded (menu-shadow logs since 2026-11-11).`);
+P();
+P(`## Redactions (\`pi-redact\` entries: ${redactions.length})`);
+if (redactions.length) {
+	const values = sum(redactions, (r) => r.values);
+	const vendor = sum(redactions, (r) => r.vendor);
+	P(`Values hidden: ${values} in ${new Set(redactions.map((r) => r.dir)).size} dirs; ${vendor} with a vendor shape (${values ? Math.round((100 * vendor) / values) : 0}%).`);
+	const fam = {};
+	let unlabelled = 0;
+	for (const r of redactions) {
+		if (!r.families) unlabelled += r.values;
+		else for (const [k, n] of Object.entries(r.families)) fam[k] = (fam[k] ?? 0) + n;
+	}
+	const famRows = Object.entries(fam).sort((a, b) => b[1] - a[1]);
+	if (famRows.length) P(`By family: ${famRows.map(([k, n]) => `${k}=${n}`).join(", ")}`);
+	if (unlabelled) P(`No family on ${unlabelled} values (entries written before pi-redact#7, 2026-11-11, or by a session still on the old code).`);
+	const src = {};
+	for (const r of redactions) src[r.source] = (src[r.source] ?? 0) + r.values;
+	P(`By channel: ${Object.entries(src).sort((a, b) => b[1] - a[1]).slice(0, 8).map(([k, n]) => `${k}=${n}`).join(", ")}`);
+} else P(`None recorded.`);
 P();
 P(`## Sigil observer (\`sigil-map-run\` entries: ${sigilRuns.length})`);
 if (sigilRuns.length) {
