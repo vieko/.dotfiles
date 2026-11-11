@@ -5,6 +5,10 @@
   "theme": "one-dark",
   "tuiMode": "fullscreen",
   "defaultThinkingLevel": "medium",
+  "modelThinkingLevels": {
+    "vercel-ai-gateway/anthropic/claude-fable-5.2": "high",
+    "vercel-ai-gateway/anthropic/claude-opus-5.5": "medium"
+  },
   "enableInstallTelemetry": false,
   "quietStartup": "header",
   "showCacheMissNotices": true,
