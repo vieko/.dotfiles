@@ -30,6 +30,8 @@ const SCRIPT = join(homedir(), ".scripts", "remind-at.sh");
 const STATE_DIR = join(homedir(), ".local", "state", "reminders");
 const REGISTRY = join(homedir(), ".pi", "agent", "post", "registry");
 const STATUS_KEY = "reminders";
+// remind-at.sh parses `at` with the system zone; name the same zone to the model.
+const LOCAL_TZ = Intl.DateTimeFormat().resolvedOptions().timeZone || "system local time";
 const ACTIONS = ["list", "show", "resume", "done", "cancel"];
 
 interface Reminder {
@@ -216,7 +218,7 @@ export default function (pi: ExtensionAPI) {
 				description: "Lowercase id [a-z0-9-], issue first, e.g. gtmeng-3924-flip or inc-8334-noindex-check",
 			}),
 			at: Type.String({
-				description: 'Local time "YYYY-MM-DD HH:MM" (America/Edmonton), or relative "+90m", "+2h", "+3d"',
+				description: `Local time "YYYY-MM-DD HH:MM" (${LOCAL_TZ}), or relative "+90m", "+2h", "+3d"`,
 			}),
 			title: Type.String({ description: "Alert title, max 60 chars, one line: what this is about" }),
 			ask: Type.String({ description: "Alert text, max 140 chars, one line: the one thing to do now" }),
