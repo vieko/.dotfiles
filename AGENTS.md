@@ -55,9 +55,10 @@ Rules that apply on every edit. Layout, rationale, and bootstrap steps are in
   `hosts/settings.<host>.json`, `setup-claude.sh`, `agents/`,
   and `statusline.sh`. It does not track the generated `settings.json`. Change
   `settings.base.json` or a host fragment, then run
-  `claude/.claude/setup-claude.sh`; runtime writes Claude Code makes to
-  `settings.json` (/model, /effort, "always allow") are lost on the next
-  run unless promoted into the base or a fragment.
+  `claude/.claude/setup-claude.sh`. Runtime writes to `settings.json`
+  (/model, /effort, "always allow", `rex skill setup`) are carried over
+  and listed on each run; promote them into a tracked file, or drop them
+  with `--reset`.
 - **`opencode/`** is a bounded trial, not a Summoner runtime. Keep it as
   maintained config unless it earns a standing weekly role.
 

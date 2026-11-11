@@ -112,7 +112,14 @@ Claude Code follows the same pattern: run `claude/.claude/setup-claude.sh`
 once after `stow claude` on a fresh machine, and again whenever
 `claude/.claude/settings.base.json` or `claude/.claude/hosts/settings.<host>.json`
 changes. It generates the gitignored `claude/.claude/settings.json` that
-`~/.claude/settings.json` links to.
+`~/.claude/settings.json` links to. Unlike Pi, Claude Code and other tools
+write into that file at runtime (/model, /effort, "always allow",
+`rex skill setup`). The script saves the plain base + fragment result to
+`~/.claude/settings.generated.json`; the next run diffs the live file against
+it, keeps those edits on top of the new output, and lists them so you can
+promote them. Arrays merge as sets. When a tracked file changed the same key,
+the tracked value wins. `--reset` drops all runtime edits, `--check` writes
+nothing, and the previous file is kept at `~/.claude/settings.prev.json`.
 
 ## Host PR waiter
 
@@ -166,9 +173,10 @@ self-contained directories.
 `~/.agents/skills/rex` is a third kind: a 13-line stub that `rex skill setup`
 writes on a Mac with Rex (it runs `rex __internal skill`, so the guide follows
 the installed Rex). It is gitignored too; run `rex skill setup` once per
-machine. The same command adds a `SessionStart` hook to
-`claude/.claude/settings.json`, which is tracked; the hook ends in `|| true`,
-so it does nothing where `rex` is missing. `rex skill status` shows what is
+machine. The same command adds a `SessionStart` hook to the generated
+`claude/.claude/settings.json`; the hook is also in `settings.base.json`, so
+every host gets it, and it ends in `|| true`, so it does nothing where `rex`
+is missing. `rex skill status` shows what is
 installed, `rex skill remove` undoes it.
 
 (Lineage notes for retired names — forge, old bonfire commands — live in
@@ -255,13 +263,17 @@ node agents/.agents/scripts/sync-verbs.mjs
 # 3. (optional) confirm no drift remains
 node agents/.agents/scripts/sync-verbs.mjs --check   # exit 1 on drift
 
-# 4. commit dotfiles: verbs.json + claude/settings.json together
+# 4. regenerate settings.json, then commit verbs.json + claude/settings.base.json together
+claude/.claude/setup-claude.sh
 ```
 
 ## `claude/`
 
-Claude Code config. Stows to `~/.claude/`. Tracks `settings.json` and
-`statusline.sh` — matches the same "config not state" philosophy as `pi/`.
+Claude Code config. Stows to `~/.claude/`. Tracks `settings.base.json`,
+`hosts/settings.<host>.json`, `setup-claude.sh`, `agents/` (subagent
+definitions) and `statusline.sh` -- the same "config not state" philosophy as
+`pi/`. The generated `settings.json` is gitignored; see the end of the `pi/`
+section for how `setup-claude.sh` builds it.
 It has no output styles: the copies of pi-prose's styles were never stowed
 or selected, so they were removed rather than kept in sync.
 
