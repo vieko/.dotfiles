@@ -137,6 +137,9 @@ const counsel = [];
 // "acted" for renew = at most 3 user prompts followed in that file (the user
 // left for /new or /fork); anything more means the session kept going.
 const nudges = [];
+// menu-shadow appends a `menu-shadow` custom entry per reply to a lettered menu
+// that marked a recommendation ({rec, options, verdict, gate, reply, waitMs}).
+const menuShadow = [];
 // sigil's map observer appends a `sigil-map-run` custom entry per run (map,
 // model, cost, input/output tokens, ms, ops, applied, rejected, error). Like
 // counsel, its spend is outside totals.tru; the footer no longer shows it.
@@ -193,6 +196,11 @@ for (const dir of readdirSync(root)) {
 			if (e.type === "custom" && e.customType === "nudge" && e.data) {
 				const nts = new Date(e.timestamp).getTime();
 				if (nts >= since && nts <= until) nudges.push({ ts: nts, when: mt(nts), dir: s.dir, key: e.data.key ?? "?", turns: e.data.turns ?? null, days: e.data.days ?? null, after: L.slice(i + 1).filter((x) => x.type === "message" && x.message?.role === "user").length });
+				continue;
+			}
+			if (e.type === "custom" && e.customType === "menu-shadow" && e.data) {
+				const mts = new Date(e.timestamp).getTime();
+				if (mts >= since && mts <= until) menuShadow.push({ dir: s.dir, verdict: e.data.verdict ?? "?", gate: e.data.gate ?? null, reply: e.data.reply ?? "?", waitMs: e.data.waitMs ?? null });
 				continue;
 			}
 			if (e.type === "custom" && e.customType === "sigil-map-run" && e.data) {
@@ -451,6 +459,25 @@ if (nudges.length) {
 		for (const n of renew.slice(0, 8)) P(`- ${n.when} ${n.dir} turns=${n.turns} days=${n.days} prompts after=${n.after}`);
 	}
 } else P(`None recorded (habit-nudges logs nudges since 2026-10-05; earlier windows cannot show them).`);
+P();
+P(`## Menu shadow (\`menu-shadow\` entries: ${menuShadow.length})`);
+if (menuShadow.length) {
+	const share = (n, d) => (d ? `${n} (${Math.round((100 * n) / d)}%)` : "0");
+	for (const v of ["proceed", "ask"]) {
+		const rows = menuShadow.filter((m) => m.verdict === v);
+		const by = (r) => rows.filter((m) => m.reply === r).length;
+		P(`${v}: ${rows.length}. rec ${share(by("rec"), rows.length)}, rec-plus ${share(by("rec-plus"), rows.length)}, free ${share(by("free"), rows.length)}, other ${share(by("other"), rows.length)}`);
+	}
+	const proceed = menuShadow.filter((m) => m.verdict === "proceed");
+	const against = proceed.filter((m) => m.reply === "free" || m.reply === "other").length;
+	P(`A live nudge would have gone against the reply on ${share(against, proceed.length)} of its ${proceed.length} proceeds (baseline 2026-10-11..11-03: 16 of 60, 27%).`);
+	const gates = {};
+	for (const m of menuShadow) if (m.gate) gates[m.gate] = (gates[m.gate] ?? 0) + 1;
+	const top = Object.entries(gates).sort((a, b) => b[1] - a[1]).slice(0, 8);
+	if (top.length) P(`Held by: ${top.map(([k, v]) => `${k}=${v}`).join(", ")}`);
+	const waits = menuShadow.map((m) => m.waitMs).filter((w) => typeof w === "number").sort((a, b) => a - b);
+	if (waits.length) P(`Median wait for a reply: ${Math.round(waits[Math.floor(waits.length / 2)] / 1000)} s`);
+} else P(`None recorded (menu-shadow logs since 2026-11-11).`);
 P();
 P(`## Sigil observer (\`sigil-map-run\` entries: ${sigilRuns.length})`);
 if (sigilRuns.length) {

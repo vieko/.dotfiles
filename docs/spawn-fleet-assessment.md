@@ -69,6 +69,8 @@ adding a new one.
 1. Sent-back nudge in `habit-nudges.ts`: when a turn ends on a menu whose
    recommended option is local and reversible, tell the agent to proceed.
    Shadow mode first: log the verdict and compare with the reply.
+   Shadow mode built 2026-11-11 as `pi/.pi/agent/extensions/menu-shadow.ts`;
+   the criteria are in the session-audit skill, "Open experiments".
 2. Spec-size warning in `summon-golem.sh` for luna specs above ~800 words.
 3. Stall nudge: a session-hour above ~$13 (p99), an anvil run above 10M
    cumulative context, or a construct window with spend and no commit for

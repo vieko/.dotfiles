@@ -173,6 +173,19 @@ proposing templates or interpreting a false report label as an omission.
   reaches fable through counsel. Report any session switched to fable
   with its $/ut and whether the work was architecture or review.
 
+- **Menu shadow** (started 2026-11-11): `menu-shadow.ts` logs, for each
+  reply to a lettered menu with a marked recommendation, what a live
+  "proceed" nudge would have done (`proceed` when the recommended option
+  names no gated action, else `ask`) and what the user did (`rec`,
+  `rec-plus`, `other`, `free`). Nothing is shown and no prompt text
+  changes. Replay of 2026-10-11..11-03 with the same code: 60 `proceed`
+  verdicts; rec 57%, rec-plus 17%, free 23%, other 3%. Criteria, fixed
+  before the data, at the first audit with 40 or more `proceed` entries:
+  build the live nudge if `free` + `other` is 15% or less of them; drop
+  the extension and the proposal if it is above 25%; in between, extend
+  once by 40 and then drop. Report the "Menu shadow" section, not the
+  one-token rate below.
+
 - **One-token decisions**: closed 2026-11-09. 16-23% of user turns
   across weeks 39-45; the 10-11 rule and the 11-01 end-of-step sentence
   did not move it. Accepted as working style: the cost is attention, not
