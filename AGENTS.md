@@ -10,7 +10,7 @@ Read `.bonfire/index.md` for current state. Host-native bonfire adapters keep
 it current; there are no commands to run. Pi loads the adapter from the
 `packages` pin in `pi/.pi/agent/settings.base.json` (PHYREXIA swaps the pin for
 `~/dev/bonfire` via `hosts/packages.phyrexia.json`); Claude Code runs it from
-a `Stop` hook in `claude/.claude/settings.json`; other agents use
+a `Stop` hook in `claude/.claude/settings.base.json`; other agents use
 `/skill:bonfire end` explicitly. Install detail: `docs/agent-packages.md`.
 
 ## Dotfiles Management
@@ -48,9 +48,16 @@ Rules that apply on every edit. Layout, rationale, and bootstrap steps are in
   cross-agent skills. `bonfire` and `anvil` are gitignored symlinks into
   `~/dev`; regenerate them with `agents/.agents/setup-skill-symlinks.sh`.
   After editing `agents/.agents/verbs.json`, run
-  `node agents/.agents/scripts/sync-verbs.mjs` and commit
-  `claude/.claude/settings.json` with it.
-- **`claude/`** tracks Claude Code `settings.json` and `statusline.sh`.
+  `node agents/.agents/scripts/sync-verbs.mjs`, commit
+  `claude/.claude/settings.base.json` with it, and rerun
+  `claude/.claude/setup-claude.sh`.
+- **`claude/`** tracks Claude Code `settings.base.json`,
+  `hosts/settings.<host>.json`, `setup-claude.sh`, `agents/`,
+  and `statusline.sh`. It does not track the generated `settings.json`. Change
+  `settings.base.json` or a host fragment, then run
+  `claude/.claude/setup-claude.sh`; runtime writes Claude Code makes to
+  `settings.json` (/model, /effort, "always allow") are lost on the next
+  run unless promoted into the base or a fragment.
 - **`opencode/`** is a bounded trial, not a Summoner runtime. Keep it as
   maintained config unless it earns a standing weekly role.
 

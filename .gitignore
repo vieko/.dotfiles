@@ -33,3 +33,6 @@ pi/.pi/agent/models-store.json
 
 # Controller deps for the sandbox golem lane (scripts/sandbox/package.json); npm install locally.
 scripts/sandbox/node_modules/
+
+# Generated per host by claude/.claude/setup-claude.sh from settings.base.json + hosts/settings.<host>.json.
+claude/.claude/settings.json

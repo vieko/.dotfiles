@@ -1,0 +1,17 @@
+{
+  "extraKnownMarketplaces": {
+    "vercel-plugin": {
+      "source": {
+        "source": "directory",
+        "path": "/Users/vieko/.cache/add-plugin/https%3A%2F%2Fgithub.com%2Fvercel-labs%2Fvercel-plugin"
+      }
+    }
+  },
+  "permissions": {
+    "allow": [
+      "Bash(xargs:*)",
+      "Bash(node:*)",
+      "Bash(python3:*)"
+    ]
+  }
+}

@@ -108,6 +108,12 @@ whenever `settings.base.json` or a host fragment changes. Because the generated
 `settings.json` is gitignored, the old `lastChangelogVersion` churn is gone —
 Pi writes into a file git no longer tracks.
 
+Claude Code follows the same pattern: run `claude/.claude/setup-claude.sh`
+once after `stow claude` on a fresh machine, and again whenever
+`claude/.claude/settings.base.json` or `claude/.claude/hosts/settings.<host>.json`
+changes. It generates the gitignored `claude/.claude/settings.json` that
+`~/.claude/settings.json` links to.
+
 ## Host PR waiter
 
 `scripts/.scripts/pr-wait.sh` stows to `~/.scripts/pr-wait.sh`. It works in any
@@ -179,7 +185,7 @@ Pi clones to `~/.pi/agent/git/github.com/vieko/bonfire/`, and the root
 clone.
 
 The Claude Code adapter is wired via a `Stop` hook entry in
-`claude/.claude/settings.json` pointing to
+`claude/.claude/settings.base.json` pointing to
 `$HOME/dev/bonfire/claude/update-bonfire.mjs`. This requires
 `~/dev/bonfire/` cloned (see the deploy checklist); the `$HOME`-relative path
 is portable across macOS and Linux, so no per-OS editing is needed.
@@ -230,8 +236,9 @@ Two consumers read it:
 
 - **Pi** — `pi/.pi/agent/extensions/spinner-verbs.ts` reads
   `~/.agents/verbs.json` at runtime. Always current; nothing to regenerate.
-- **Claude Code** — `claude/.claude/settings.json` `spinnerVerbs.verbs`
-  (flat array, lives in dotfiles, synced).
+- **Claude Code** — `claude/.claude/settings.base.json` `spinnerVerbs.verbs`
+  (flat array, lives in dotfiles, synced; rerun
+  `claude/.claude/setup-claude.sh` to regenerate `settings.json`).
 
 Claude's synced copy is regenerated from the canonical JSON by
 `agents/.agents/scripts/sync-verbs.mjs`. Both the canonical file and the synced

@@ -1,0 +1,22 @@
+{
+  "modelSettings": {
+    "claude-opus-5-5": {
+      "effortLevel": "high"
+    }
+  },
+  "advisorModel": "fable",
+  "autoMode": {
+    "soft_deny": [
+      "$defaults",
+      "vercel env pull in any repo: forbidden by global docs, clobbers .env.local",
+      "State-changing vercel commands (deploys, --prod) without an explicit in-turn instruction",
+      "In /home/vieko/dev/battlemox: writes to results/matchups.json, or pnpm matchups:push against a real (non-dry-run, non-scratch) database"
+    ],
+    "environment": [
+      "$defaults",
+      "**Host addendum, cloud**: projects on this machine deploy on Vercel and use Neon Postgres; treat both as the configured cloud providers",
+      "**Host addendum, secrets**: secrets live in per-project .env.local files; never print DATABASE_URL or player emails",
+      "**Host addendum, sensitive targets**: in addition to the heuristic above, any production database reachable via DATABASE_URL"
+    ]
+  }
+}

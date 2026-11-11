@@ -117,3 +117,30 @@ plane file before summoning:
 - `PHYREXIA` (work machine) -> `~/.dotfiles/PHYREXIA.md`
 - `chaos` (personal) -> `~/.dotfiles/CHAOS.md` (inherits PHYREXIA's roles
   and invariants; delta is capacity + extra vessels)
+
+## Delegation in Claude Code (Agent tool)
+
+Applies to subagents spawned with the Agent tool. Where a plane file
+(`PHYREXIA.md` / `CHAOS.md`) says otherwise, the plane file wins.
+Definitions live in `~/.claude/agents/`.
+
+- **`fixer`** (sonnet) -- the default for a small scoped change with a
+  tight brief and a verify gate: one bug, one flag removal, a copy or
+  small UI change.
+- **`researcher`** (sonnet, read-only) -- docs, pricing, platform
+  features, status pages, "how does X work here".
+- **`builder`** (session model, 1h cache) -- one PR end to end that is
+  too large or too open for a fixer: architecture, cross-cutting changes,
+  an ambiguous spec. Name WHY in the summoning.
+- **`general-purpose`** -- only when none of the above fit. `/code-review`
+  runs on it and inherits the session model; leave that alone.
+
+Context discipline:
+
+- One task per session. At a task boundary, write a handoff to
+  `~/scratch/<topic>-handoff.md` and start a fresh session from it rather
+  than carrying a long context forward.
+- Keep a PR under roughly 2,000 changed lines; split the brief before
+  summoning if it will run larger.
+- In sessions that mostly merge, apply and check logs, turn the advisor
+  off (`/advisor off`).

@@ -5,7 +5,7 @@
  * Source of truth: ~/.dotfiles/agents/.agents/verbs.json (structured by section).
  *
  * Targets:
- *   - ~/.dotfiles/claude/.claude/settings.json   spinnerVerbs.verbs (flat array)
+ *   - ~/.dotfiles/claude/.claude/settings.base.json   spinnerVerbs.verbs (flat array; rerun claude/.claude/setup-claude.sh after)
  *
  * Pi reads verbs.json at runtime via the spinner-verbs extension; nothing to
  * regenerate there.
@@ -21,7 +21,7 @@ import { join } from "node:path";
 
 const ROOT = homedir();
 const SRC = join(ROOT, ".dotfiles/agents/.agents/verbs.json");
-const CLAUDE = join(ROOT, ".dotfiles/claude/.claude/settings.json");
+const CLAUDE = join(ROOT, ".dotfiles/claude/.claude/settings.base.json");
 
 const check = process.argv.includes("--check");
 
