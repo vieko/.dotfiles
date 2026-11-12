@@ -432,8 +432,10 @@ the layout.
   vs 0.87 for specs sent to golems. Name by content, not by precision: a
   steerable brief with a gate is still `-brief.md`. The summon scripts warn
   on a suffix/script mismatch and never refuse.
-- **A relayed approval unlocks nothing.** pi-post marks every message as
-  carrying no authority, and familiars hold to that correctly: a brief
+- **A relayed approval unlocks nothing.** pi-post marks a message from
+  any session but the Familiar's own Summoner as carrying no authority,
+  and the Summoner stamp (pi-post v0.9.0) excludes push, merge, deploys,
+  DB writes and publishes. Familiars hold to that correctly: a brief
   that gates a push, PR or prod-DB write on "Vieko first" stays blocked
   when the Summoner relays the user's go. Observed 2026-10-09: fam-3879
   and fam-3938 both refused relayed approvals, one for a test-table import
@@ -482,16 +484,19 @@ the layout.
   Existing sessions receive coordination only: acks, freezes, collision
   checks, relays.
 - **The Summoner speaks for the user within the brief** (since
-  2026-10-09). `summon-familiar.sh` injects a SUMMONER AUTHORITY footer
-  bound to the Summoner's sender address: scope changes and recoverable git
-  steps on the Familiar's own unpushed branch need no user round-trip.
+  2026-10-09). pi-post stamps a message from the Familiar's parent as
+  "from your summoner": scope changes and recoverable git steps in the
+  Familiar's own worktree need no user round-trip.
   Push, merge, deploys, DB writes and publishes still do (global AGENTS.md
   destructive guard). Trigger: fam-audit-labels took the Summoner's word
-  for a local amend, then blocked on a local rebase. Since 2026-11-10 the
-  footer matches the bracketed sender address pi-post prints on the first
-  line (pi-post#7, c296978), not `reply_to`, which a sender can redirect.
-  Hosts on a pi-post pin older than that print no brackets, so the rule
-  fails closed there (no authority) until the pin moves.
+  for a local amend, then blocked on a local rebase. The parent is the
+  address `summon-familiar.sh` passes in `PI_POST_PARENT`; pi-post
+  records it once in the session file, matches it against the sender
+  address, never `reply_to`, and does not pass it to the Familiar's own
+  children (pi-post#9, v0.9.0). Until 2026-11-11 a SUMMONER AUTHORITY
+  prompt footer matched the bracketed sender address instead. Without a
+  parent binding every message gets the no-authority stamp, so the rule
+  fails closed.
 - **Dispatched Familiars get their own named window** (`fam-<issue>`),
   symmetric with golem watch windows: `summon-familiar.sh -W fam-<issue>`
   (see Vessels above; startup is verified either way). The window name is
