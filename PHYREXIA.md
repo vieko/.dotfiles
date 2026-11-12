@@ -287,13 +287,15 @@ when the work demands it.
      $6 (fable base averaged $12). Holds if luna's rung-0 rate on them is
      above ~40%; fails if rung-1 cost on luna's partial worktree exceeds a
      cold fable base.
-  The fable row in the ledger also carries one stale record:
-  `gtmeng-3938-pr4a-build-spec` has been `state: running` since
-  2026-10-14 19:53 UTC. Its pid (33382) is gone, the anvil log stops in
-  attempt 1, and the result JSON is empty. This is the first instance of
-  the Pi Durable reopen trigger ("a `running` anvil record lost
-  mid-dispatch", Standing invariants); find the cause (killed window or
-  crash) before acting on it.
+  The fable row in the ledger had one stale record, closed 2026-11-11:
+  `gtmeng-3938-pr4a-build-spec` was `state: running` from 2026-10-14
+  until `anvil status --all --prune` marked it failed. Cause: a sol
+  session ran `anvil run` inline through the bash tool with a 1800 s
+  timeout, and the tool killed the run at 30 minutes, in attempt 1 (the
+  tool result is "Command timed out after 1800 seconds"; `summons.log`
+  has no line for it). The caller killed it; anvil did not crash. This
+  is not the Pi Durable reopen trigger ("a `running` anvil record lost
+  mid-dispatch", Standing invariants).
   4. *haiku-5.5 golem trial* (restarted 2026-10-11 on pi 1.1.0, anvil#52;
      count with `anvil-ledger --since 2026-10-11`) -- the next ~10
      mechanical specs (lint, formatter, small refactors, codemods) go
@@ -392,7 +394,11 @@ against the configured provider's catalog.
   Never hand-roll `anvil run` inside a tmux window (observed 2026-08-21:
   golem-2055 dispatched bare -- no ping, discovery by sleep-and-capture
   polling). Running anvil inline in the summoner's own turn, blocking on
-  it, remains fine -- the wrapper exists for detached runs.
+  it, remains fine -- the wrapper exists for detached runs. Inline is
+  only for a run that ends well inside the tool timeout: a timeout kills
+  anvil with no exit path, so the record stays `running` and no result is
+  written (2026-10-14, above). A fable base or a slow gate goes through
+  `summon-golem.sh`.
 
 Both fail loudly at summon time -- misbindings, and a missing report-back
 address (deliberate silent constructs need the explicit `-R` opt-out).
