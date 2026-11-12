@@ -17,7 +17,7 @@
   "treeFilterMode": "user-only",
   "sessionShareDestination": "gist",
   "packages": [
-    "git:github.com/vieko/bonfire@v7.7.0",
+    "git:github.com/vieko/bonfire@v7.8.0",
     "git:github.com/vieko/pi-prose@v0.4.1",
     "git:github.com/vieko/pi-post@v0.9.1",
     "npm:pi-counsel@0.3.0",
