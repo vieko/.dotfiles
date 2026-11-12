@@ -126,9 +126,12 @@ When a check must happen later, schedule it; do not ask the user to come
 back and tell you. In Pi, use the `remind` tool. Elsewhere, run
 `~/.scripts/remind-at.sh --to <pi session> --title ... --ask ... <slug>
 "YYYY-MM-DD HH:MM" -` (macOS, targets pi sessions only). It survives
-reboots and resumes the session. To wait for a condition (PR checks, a
-deploy), use the repo's `*-wait.sh --detach --notify` instead; for a PR in
-a repo without one, use `~/.scripts/pr-wait.sh <pr> --detach --notify`.
+reboots and resumes the session. A session that is offline with more
+than 100K tokens of context is not resumed: the reminder starts a new
+session from the brief, so the brief must stand alone. To wait for a
+condition (PR checks, a deploy), use the repo's `*-wait.sh --detach
+--notify` instead; for a PR in a repo without one, use
+`~/.scripts/pr-wait.sh <pr> --detach --notify`.
 
 ## Commit message style
 

@@ -6,7 +6,8 @@
 # Usage:
 #   remind-at.sh [--to <target>] --title <text> --ask <text> <slug> "<YYYY-MM-DD HH:MM>" <brief|->
 #   remind-at.sh --list [--tsv]      pending and open reminders (--tsv: for scripts)
-#   remind-at.sh --resume <slug>     open the reminder's session, then close it
+#   remind-at.sh --resume <slug> [--same]  open the reminder's session, then close it
+#                                    (--same: the old session, also when it is large)
 #   remind-at.sh --done <slug>       close an open reminder
 #   remind-at.sh --cancel <slug>     remove a pending or open reminder
 #
@@ -27,6 +28,14 @@
 # slug, where the queued brief is the first thing it reads. A session
 # with no file to resume gets a new pi session in that window, seeded with the
 # brief. A failed resume leaves the reminder open with its brief.
+#
+# Large offline session: when the target is offline and its last turn had more
+# than REMIND_FRESH_LIMIT tokens of context (default 100000), the brief is not
+# sent to it. Resume starts a new session in the same directory, with the same
+# model, seeded with the brief, and the old session gets a one-line note.
+# Resuming a large session writes its whole context to the cache again: 35
+# such wakes cost $57 in 30 days (2026-11). REMIND_FRESH=off turns this off;
+# --resume <slug> --same opens the old session for one reminder.
 #
 # Why it looks like this:
 #   - GTMENG-3924 (2026-10-08): the first hand-rolled version fired on time and
@@ -61,12 +70,13 @@ REX_APP_ID=com.superlogical.rex
 LABEL_PREFIX="dev.vieko.reminder"
 UID_DOMAIN="gui/$(id -u)"
 TITLE_MAX=60 ASK_MAX=140
+FRESH_LIMIT=${REMIND_FRESH_LIMIT:-100000}
 
 die() { echo "error: $*" >&2; exit 2; }
 log() { printf '%s [%s] %s\n' "$(date '+%Y-%m-%d %H:%M:%S %Z')" "$1" "$2" >> "$LOG"; }
 plist_of() { echo "$AGENTS_DIR/$LABEL_PREFIX.$1.plist"; }
 valid_slug() { [[ "$1" =~ ^[a-z0-9][a-z0-9-]{0,62}$ ]] || die "slug must be lowercase [a-z0-9-]"; }
-close_state() { rm -f "$STATE_DIR/$1".{meta,txt,sent,snooze}; }
+close_state() { rm -f "$STATE_DIR/$1".{meta,txt,sent,snooze,fresh}; }
 reg_field() { /usr/bin/plutil -extract "$2" raw -o - "$REGISTRY/$1.json" 2>/dev/null; }
 
 # Modal alert with argv passing, so no AppleScript quoting of user text.
@@ -220,6 +230,146 @@ open_pi_window() {
   return 1
 }
 
+# Sets T_SID, T_CWD, T_NAME, T_PID (empty when offline) and T_FILE for a
+# pi-post address. Exit 1 when no record and no session file match it.
+target_info() {
+  local addr=$1
+  T_SID="" T_CWD="" T_NAME=$addr T_PID="" T_FILE=""
+  if [[ -f "$REGISTRY/$addr.json" ]]; then
+    T_SID=$(reg_field "$addr" sessionId || true) T_CWD=$(reg_field "$addr" cwd || true)
+    T_NAME=$(reg_field "$addr" name || echo "$addr") T_PID=$(reg_live_pid "$addr" || true)
+  else
+    IFS=$'\t' read -r T_SID T_CWD < <(session_by_address "$addr") || return 1
+  fi
+  [[ -n "$T_SID" ]] && T_FILE=$(find "$HOME/.pi/agent/sessions" -name "*_$T_SID.jsonl" -print -quit 2>/dev/null)
+  return 0
+}
+
+# Prints "tokens|provider|model|thinking" for a session file: the context
+# size of its last assistant turn and the model that ran it. Reads the head
+# and the last 4 MB only; a session file can be tens of MB.
+session_tail_info() {
+  "${NODE:-node}" - "$1" <<'JS'
+const fs = require("node:fs");
+const file = process.argv[2];
+const size = fs.statSync(file).size, fd = fs.openSync(file, "r");
+const chunk = (pos, len) => { const b = Buffer.alloc(len); fs.readSync(fd, b, 0, len, pos); return b.toString("utf8").split("\n"); };
+const TAIL = 4 * 1024 * 1024;
+const head = size > TAIL ? chunk(0, Math.min(65536, size - TAIL)) : [];
+const tail = chunk(Math.max(0, size - TAIL), Math.min(TAIL, size));
+fs.closeSync(fd);
+let tokens = 0, provider = "", model = "", thinking = "";
+for (const line of [...head, ...tail]) {
+  let e;
+  try { e = JSON.parse(line); } catch { continue; }
+  if (e.type === "thinking_level_change" && e.thinkingLevel) thinking = e.thinkingLevel;
+  const m = e.type === "message" ? e.message : null;
+  if (m?.role === "assistant" && m.usage?.totalTokens > 0) { tokens = m.usage.totalTokens; provider = m.provider ?? ""; model = m.model ?? ""; }
+}
+if (!tokens) process.exit(1);
+console.log([tokens, provider, model, thinking].join("|"));
+JS
+}
+
+# Prints session_tail_info when a reminder for this address should start a
+# new session: the target is offline, has a session file, and its last turn
+# was above the limit. Exit 1 otherwise.
+fresh_plan() {
+  local info
+  [[ "${REMIND_FRESH:-}" != off ]] || return 1
+  target_info "$1" || return 1
+  [[ -z "$T_PID" && -n "$T_FILE" && -d "$T_CWD" ]] || return 1
+  info=$(session_tail_info "$T_FILE") || return 1
+  (( ${info%%|*} > FRESH_LIMIT )) || return 1
+  echo "$info"
+}
+
+# Sends the brief to the target once. Args: slug, seconds late (or "").
+send_brief() {
+  local slug=$1 late=${2:-0} brief out rc
+  [[ -f "$STATE_DIR/$slug.sent" ]] && return 0
+  brief=$(cat "$STATE_DIR/$slug.txt" 2>/dev/null)
+  (( late > 120 )) && brief="[late by $(( late / 60 )) min] $brief"
+  out=$(printf '%s' "$brief" | "${NODE:-node}" "$PIPOST" send --to "$TARGET" --from "reminder:$slug" 2>&1); rc=$?
+  log "$slug" "pi-post send --to $TARGET rc=$rc ${out//$'\n'/ }"
+  : > "$STATE_DIR/$slug.sent"
+}
+
+# Starts a new pi session for a reminder whose target is offline and large
+# ($slug.fresh has its session_tail_info). The session runs in the target's
+# directory with the target's model, seeded from a file, never from argv
+# (the SentinelOne rule in summon-golem.sh). Exit 0 only when pi is running.
+start_fresh() {
+  local addr=$1 slug=$2 tokens provider model thinking seed where note client cpid tsess pane rsess t0 fresh_addr
+  local -a args=()
+  target_info "$addr" || { echo "$addr matches no session"; return 1; }
+  [[ -d "$T_CWD" ]] || { echo "$addr has no cwd"; return 1; }
+  [[ -s "$STATE_DIR/$slug.txt" ]] || { echo "reminder $slug has no brief to start from"; return 1; }
+  IFS='|' read -r tokens provider model thinking < "$STATE_DIR/$slug.fresh"
+  seed="$(dirname "$LOG")/reminder-$slug-$(date +%Y%m%d-%H%M%S).md"
+  {
+    printf 'This is reminder %s, due %s. Session %s (%s) set it. That session is offline with %sK tokens of context, so the reminder starts this new session and not that one.\n\n' \
+      "$slug" "$(date -r "${DUE:-$(date +%s)}" '+%Y-%m-%d %H:%M %Z')" "$T_NAME" "$addr" "$(( tokens / 1000 ))"
+    printf 'You have none of the context of that session. The brief below was written to stand alone. If it lacks a fact you need, search the old session file for that fact (grep); do not read the whole file: %s\n\n' "$T_FILE"
+    printf 'Give the result to the user here. The old session gets a note that points to this file, not your result.\n\n--- Brief ---\n\n'
+    cat "$STATE_DIR/$slug.txt"
+    printf '\n'
+  } > "$seed"
+  [[ -n "$provider" && -n "$model" ]] && args+=(--provider "$provider" --model "$model${thinking:+:$thinking}")
+  args+=("@$seed" "Do the reminder in the attached file.")
+  t0=$(date +%s)
+  read -r _ client cpid tsess < <("$TMUX_BIN" list-clients -F '#{client_activity} #{client_name} #{client_pid} #{session_name}' 2>/dev/null | sort -rn | head -1) || true
+  if [[ -z "$client" ]] && rex_up; then
+    rsess=$(open_pi_rex "$T_CWD" "$slug" "" "${args[@]}") ||
+      { echo "pi did not start in Rex session $slug; run: cd $T_CWD && pi @$seed"; return 1; }
+    rex_show "$rsess" || true
+    where="Rex session $slug"
+  elif [[ -n "$client" ]]; then
+    pane=$(open_pi_window "$tsess" "$T_CWD" "$slug" "" "${args[@]}") ||
+      { echo "pi did not start in window $slug${pane:+ ($pane)}; run: cd $T_CWD && pi @$seed"; return 1; }
+    "$TMUX_BIN" switch-client -c "$client" -t "$pane" || true
+    activate_terminal "$cpid"
+    where="window $slug ($pane)"
+  else
+    echo "no attached tmux client and no Rex server; run: cd $T_CWD && pi @$seed"; return 1
+  fi
+  # The new session's address, when it has registered: the newest record in
+  # this directory that started after t0.
+  fresh_addr=$("${NODE:-node}" - "$REGISTRY" "$T_CWD" "$t0" <<'JS' 2>/dev/null || true
+const fs = require("node:fs"), path = require("node:path");
+const [dir, cwd, t0] = process.argv.slice(2);
+let best;
+for (const f of fs.readdirSync(dir)) {
+  if (!f.endsWith(".json")) continue;
+  try {
+    const r = JSON.parse(fs.readFileSync(path.join(dir, f), "utf8"));
+    if (r.cwd === cwd && r.startedAt >= Number(t0) * 1000 && (!best || r.startedAt > best.startedAt)) best = r;
+  } catch {}
+}
+if (best) console.log(best.address);
+JS
+)
+  note="Reminder $slug fired while this session was offline with $(( tokens / 1000 ))K tokens of context, so it ran in a new session${fresh_addr:+ ($fresh_addr)} in $where, not here. Its brief is in $seed. No action is needed in this session; do not do the task of the reminder again."
+  printf '%s' "$note" | "${NODE:-node}" "$PIPOST" send --to "$addr" --from "reminder:$slug" >/dev/null 2>&1 || true
+  echo "started a new session${fresh_addr:+ $fresh_addr} in $where; $T_NAME is offline with $(( tokens / 1000 ))K tokens and got a note"
+}
+
+# Opens the session for a reminder. A reminder marked fresh starts a new
+# session while its target is still offline. With --same, or when the target
+# is live again, the target gets the brief it was not sent and is opened.
+open_for() {
+  local slug=$1 same=${2:-}
+  if [[ -f "$STATE_DIR/$slug.fresh" && -z "$same" ]] && target_info "$TARGET" && [[ -z "$T_PID" ]]; then
+    start_fresh "$TARGET" "$slug"
+    return
+  fi
+  if [[ -f "$STATE_DIR/$slug.fresh" ]]; then
+    send_brief "$slug" >/dev/null 2>&1
+    rm -f "$STATE_DIR/$slug.fresh"
+  fi
+  resume_session "$TARGET" "$slug"
+}
+
 # Opens the session behind a pi-post address: focuses its pane when it is
 # live, resumes it in a new named window when it is offline, and starts a new
 # session with the brief when there is nothing to resume. Exit 0 only when
@@ -325,11 +475,11 @@ cmd_cancel() {
 }
 
 cmd_resume() {
-  local slug=$1 out
+  local slug=$1 same=${2:-} out
   [[ -f "$STATE_DIR/$slug.meta" ]] || die "no reminder named $slug"
   # shellcheck disable=SC1090 # reason: written by this script with printf %q
   source "$STATE_DIR/$slug.meta"
-  if out=$(resume_session "$TARGET" "$slug"); then
+  if out=$(open_for "$slug" "$same"); then
     log "$slug" "resume: $out"; echo "[OK] $out"
     cmd_cancel "$slug"
   else
@@ -356,18 +506,26 @@ cmd_fire() {
   fi
   rm -f "$(plist_of "$slug")"
 
-  if [[ ! -f "$STATE_DIR/$slug.sent" ]]; then
-    local brief; brief=$(cat "$STATE_DIR/$slug.txt" 2>/dev/null)
-    (( late > 120 )) && brief="[late by $(( late / 60 )) min] $brief"
-    out=$(printf '%s' "$brief" | "$NODE" "$PIPOST" send --to "$TARGET" --from "reminder:$slug" 2>&1); rc=$?
-    log "$slug" "pi-post send --to $TARGET rc=$rc ${out//$'\n'/ }"
-    : > "$STATE_DIR/$slug.sent"
+  # A large offline target does not get the brief: Resume starts a new
+  # session with it (start_fresh). Every other target gets it now.
+  local plan
+  if [[ ! -f "$STATE_DIR/$slug.sent" && ! -f "$STATE_DIR/$slug.fresh" ]]; then
+    if plan=$(fresh_plan "$TARGET"); then
+      printf '%s\n' "$plan" > "$STATE_DIR/$slug.fresh"
+      log "$slug" "target is offline with ${plan%%|*} tokens (limit $FRESH_LIMIT); brief held, Resume starts a new session"
+    else
+      send_brief "$slug" "$late"
+    fi
   fi
 
   name=$(reg_field "$TARGET" name || echo "$TARGET")
   msg=$ASK
   (( late > 120 )) && msg="$msg (late by $(( late / 60 )) min)"
   msg="$msg"$'\n\n'"Session: $name"
+  if [[ -f "$STATE_DIR/$slug.fresh" ]]; then
+    plan=$(cat "$STATE_DIR/$slug.fresh")
+    msg="$msg (offline, $(( ${plan%%|*} / 1000 ))K tokens)"$'\n'"Resume opens a new session with the brief."
+  fi
   while [[ -f "$meta" ]]; do
     out=$(alert "$TITLE" "$msg" buttons 2>&1); rc=$?
     log "$slug" "alert rc=$rc ${out//$'\n'/ }"
@@ -383,7 +541,7 @@ cmd_fire() {
       Resume)
         # The reminder closes only once pi runs; a failed resume leaves it
         # open in --list with its brief, for remind-at.sh --resume <slug>.
-        if out=$(resume_session "$TARGET" "$slug"); then log "$slug" "resume: $out"; close_state "$slug"
+        if out=$(open_for "$slug"); then log "$slug" "resume: $out"; close_state "$slug"
         else log "$slug" "resume failed: $out"
           alert "Resume failed: $TITLE" "$out"$'\n\n'"The reminder stays open. Retry: remind-at.sh --resume $slug" >/dev/null 2>&1; fi
         break ;;
@@ -400,7 +558,9 @@ case "${1:-}" in
   --done) valid_slug "${2:?usage: remind-at.sh --done <slug>}"
     [[ -f "$STATE_DIR/$2.meta" ]] || die "no reminder named $2"
     cmd_cancel "$2"; log "$2" "closed with --done"; echo "[OK] closed $2"; exit 0 ;;
-  --resume) valid_slug "${2:?usage: remind-at.sh --resume <slug>}"; cmd_resume "$2"; exit 0 ;;
+  --resume) valid_slug "${2:?usage: remind-at.sh --resume <slug> [--same]}"
+    [[ -z "${3:-}" || "$3" == --same ]] || die "usage: remind-at.sh --resume <slug> [--same]"
+    cmd_resume "$2" "${3:-}"; exit 0 ;;
   --fire) valid_slug "${2:?}"; cmd_fire "$2"; exit 0 ;;
 esac
 
@@ -410,7 +570,7 @@ while [[ $# -gt 0 ]]; do
     --to) to=${2:?--to needs a value}; shift 2 ;;
     --title) title=${2:?--title needs a value}; shift 2 ;;
     --ask) ask=${2:?--ask needs a value}; shift 2 ;;
-    -h|--help) sed -n '2,28p' "$0"; exit 0 ;;
+    -h|--help) sed -n '2,38p' "$0"; exit 0 ;;
     --) shift; break ;;
     -*) die "unknown flag $1" ;;
     *) break ;;
