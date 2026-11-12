@@ -19,7 +19,7 @@
   "packages": [
     "git:github.com/vieko/bonfire@v7.7.0",
     "git:github.com/vieko/pi-prose@v0.4.1",
-    "git:github.com/vieko/pi-post@v0.9.0",
+    "git:github.com/vieko/pi-post@v0.9.1",
     "npm:pi-counsel@0.3.0",
     "npm:@vieko/pi-redact@0.2.0"
   ],
