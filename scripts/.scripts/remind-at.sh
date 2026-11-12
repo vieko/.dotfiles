@@ -300,7 +300,7 @@ send_brief() {
 # directory with the target's model, seeded from a file, never from argv
 # (the SentinelOne rule in summon-golem.sh). Exit 0 only when pi is running.
 start_fresh() {
-  local addr=$1 slug=$2 tokens provider model thinking seed where note client cpid tsess pane rsess t0 fresh_addr
+  local addr=$1 slug=$2 tokens provider model thinking seed where note client cpid tsess pane rsess fresh_sid fresh_addr
   local -a args=()
   target_info "$addr" || { echo "$addr matches no session"; return 1; }
   [[ -d "$T_CWD" ]] || { echo "$addr has no cwd"; return 1; }
@@ -316,16 +316,21 @@ start_fresh() {
     printf '\n'
   } > "$seed"
   [[ -n "$provider" && -n "$model" ]] && args+=(--provider "$provider" --model "$model${thinking:+:$thinking}")
-  args+=("@$seed" "Do the reminder in the attached file.")
-  t0=$(date +%s)
+  # Choose the new session's id here, so its address is known before pi
+  # starts. Two reminders resumed in the same second in one directory both
+  # reported the newest record there (2026-11-12, 3725 and 4470).
+  fresh_sid=$("${NODE:-node}" -e 'console.log(require("node:crypto").randomUUID())') ||
+    { echo "could not make a session id"; return 1; }
+  fresh_addr=$("${NODE:-node}" -e 'const c=require("node:crypto");console.log("s-"+c.createHash("sha256").update("session\0"+process.argv[1]).digest("hex").slice(0,12))' "$fresh_sid")
+  args+=(--session-id "$fresh_sid" "@$seed" "Do the reminder in the attached file.")
   read -r _ client cpid tsess < <("$TMUX_BIN" list-clients -F '#{client_activity} #{client_name} #{client_pid} #{session_name}' 2>/dev/null | sort -rn | head -1) || true
   if [[ -z "$client" ]] && rex_up; then
-    rsess=$(open_pi_rex "$T_CWD" "$slug" "" "${args[@]}") ||
+    rsess=$(open_pi_rex "$T_CWD" "$slug" "$fresh_addr" "${args[@]}") ||
       { echo "pi did not start in Rex session $slug; run: cd $T_CWD && pi @$seed"; return 1; }
     rex_show "$rsess" || true
     where="Rex session $slug"
   elif [[ -n "$client" ]]; then
-    pane=$(open_pi_window "$tsess" "$T_CWD" "$slug" "" "${args[@]}") ||
+    pane=$(open_pi_window "$tsess" "$T_CWD" "$slug" "$fresh_addr" "${args[@]}") ||
       { echo "pi did not start in window $slug${pane:+ ($pane)}; run: cd $T_CWD && pi @$seed"; return 1; }
     "$TMUX_BIN" switch-client -c "$client" -t "$pane" || true
     activate_terminal "$cpid"
@@ -333,25 +338,9 @@ start_fresh() {
   else
     echo "no attached tmux client and no Rex server; run: cd $T_CWD && pi @$seed"; return 1
   fi
-  # The new session's address, when it has registered: the newest record in
-  # this directory that started after t0.
-  fresh_addr=$("${NODE:-node}" - "$REGISTRY" "$T_CWD" "$t0" <<'JS' 2>/dev/null || true
-const fs = require("node:fs"), path = require("node:path");
-const [dir, cwd, t0] = process.argv.slice(2);
-let best;
-for (const f of fs.readdirSync(dir)) {
-  if (!f.endsWith(".json")) continue;
-  try {
-    const r = JSON.parse(fs.readFileSync(path.join(dir, f), "utf8"));
-    if (r.cwd === cwd && r.startedAt >= Number(t0) * 1000 && (!best || r.startedAt > best.startedAt)) best = r;
-  } catch {}
-}
-if (best) console.log(best.address);
-JS
-)
-  note="Reminder $slug fired while this session was offline with $(( tokens / 1000 ))K tokens of context, so it ran in a new session${fresh_addr:+ ($fresh_addr)} in $where, not here. Its brief is in $seed. No action is needed in this session; do not do the task of the reminder again."
+  note="Reminder $slug fired while this session was offline with $(( tokens / 1000 ))K tokens of context, so it ran in a new session ($fresh_addr) in $where, not here. Its brief is in $seed. No action is needed in this session; do not do the task of the reminder again."
   printf '%s' "$note" | "${NODE:-node}" "$PIPOST" send --to "$addr" --from "reminder:$slug" >/dev/null 2>&1 || true
-  echo "started a new session${fresh_addr:+ $fresh_addr} in $where; $T_NAME is offline with $(( tokens / 1000 ))K tokens and got a note"
+  echo "started a new session $fresh_addr in $where; $T_NAME is offline with $(( tokens / 1000 ))K tokens and got a note"
 }
 
 # Opens the session for a reminder. A reminder marked fresh starts a new
