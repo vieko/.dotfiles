@@ -26,6 +26,7 @@ const HOME = homedir();
 const WRAPPERS = new Set(["sudo", "env", "command", "exec", "time", "nohup", "nice", "caffeinate"]);
 const SHELLS = new Set(["bash", "sh", "zsh", "dash"]);
 const PKG = new Set(["npm", "pnpm", "yarn", "bun", "npx", "bunx", "turbo"]);
+const RUNNABLE = new Set(["drizzle-kit", "prisma", "changeset", "vercel", "vc"]);
 
 // Private keys and credential stores. Public keys and ssh config are fine.
 const SECRET_PATHS = [
@@ -167,9 +168,10 @@ function checkWords(w, raw) {
 		if (s.some((x) => /^db:(migrate|push|reset|drop)(\b|:|$)/.test(x)))
 			return { tier: "confirm", rule: "db-migrate", reason: "applies a schema change to whichever DB DATABASE_URL points at" };
 		if (prog === "pnpm" && s[0] === "deploy") return null; // pnpm deploy copies a workspace package locally
-		// npx drizzle-kit push / pnpm exec prisma db push / npx vercel: check the tool after the runner.
-		const at = w.findIndex((x) => ["drizzle-kit", "prisma", "changeset", "vercel", "vc"].includes(x));
-		if (at > 0) return checkWords(w.slice(at), raw);
+		// The runner executes a tool: npx vercel, pnpm exec prisma, pnpm dlx vercel,
+		// pnpm drizzle-kit. Not `pnpm add vercel`: the tool there is a package name.
+		const tool = ["exec", "dlx", "x"].includes(s[0]) ? s[1] : prog === "npx" || prog === "bunx" || prog === "pnpm" || prog === "yarn" ? s[0] : undefined;
+		if (tool && RUNNABLE.has(tool)) return checkWords(w.slice(w.indexOf(tool, 1)), raw);
 		return null;
 	}
 
