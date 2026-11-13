@@ -60,6 +60,8 @@
       "Bash(vercel logs:*)",
       "Bash(vercel ls:*)",
       "Bash(vercel env ls:*)",
+      "Bash(vercel env pull:*)",
+      "Bash(vercel pull:*)",
       "Bash(tsx apps/deal-bot/scripts/kb-search.ts:*)",
       "Bash(agent-browser open:*)",
       "Bash(agent-browser screenshot:*)",

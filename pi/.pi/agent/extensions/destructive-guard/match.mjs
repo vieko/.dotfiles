@@ -13,7 +13,10 @@
  *   confirm  needs the user's yes in the session; blocked when nobody can answer
  *
  * Matching looks at command position only, so a commit message, an echo, or a
- * heredoc body that mentions `vercel env pull` does not match.
+ * heredoc body that mentions `git push --force` does not match.
+ *
+ * `vercel env pull` and `vercel pull` are allowed (dotfiles 8c27705: keyless
+ * dev and Vercel Connect need the linked project's OIDC token).
  */
 
 import { homedir } from "node:os";
@@ -151,10 +154,6 @@ function checkWords(w, raw) {
 	if (prog === "vercel" || prog === "vc") {
 		const pos = w.slice(1).filter((x) => !x.startsWith("-"));
 		const sub = pos[0];
-		if (sub === "env" && pos[1] === "pull")
-			return { tier: "never", rule: "vercel-env-pull", reason: "vercel env pull overwrites .env.local; forbidden on this machine (use `vercel env ls`)" };
-		if (sub === "pull")
-			return { tier: "confirm", rule: "vercel-pull", reason: "vercel pull writes .vercel/.env files over local ones" };
 		const deploys = new Set(["deploy", "promote", "rollback", "redeploy"]);
 		if (sub === undefined || deploys.has(sub) || w.includes("--prod") || w.includes("--production"))
 			return { tier: "confirm", rule: "vercel-deploy", reason: "this deploys or changes a live deployment" };

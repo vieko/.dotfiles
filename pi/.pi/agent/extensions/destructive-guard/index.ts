@@ -3,7 +3,7 @@
  *
  * Pi has no permission layer: every tool call runs. This extension adds the
  * deny-rule layer for the commands the "Destructive command guard" in
- * ~/.pi/agent/AGENTS.md names (env pull, deploys, publishes, migrations,
+ * ~/.pi/agent/AGENTS.md names (deploys, publishes, migrations,
  * force-push, credential reads). Rules live in match.mjs, which the Claude
  * Code PreToolUse hook (claude-hook.mjs) also uses.
  *

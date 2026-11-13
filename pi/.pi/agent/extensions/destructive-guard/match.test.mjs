@@ -8,14 +8,11 @@ const tier = (cmd) => checkCommand(cmd)?.tier ?? null;
 
 test("catches gated commands in any argument order", () => {
 	const cases = {
-		"vercel env pull": "vercel-env-pull",
-		"vercel env pull --yes .env.local": "vercel-env-pull",
-		"cd apps/web && vercel env pull --environment=preview": "vercel-env-pull",
 		"vercel --prod": "vercel-deploy",
 		vercel: "vercel-deploy",
 		"vercel deploy --prebuilt": "vercel-deploy",
 		"npx vercel promote dpl_123": "vercel-deploy",
-		"pnpm dlx vercel env pull": "vercel-env-pull",
+		"pnpm dlx vercel deploy": "vercel-deploy",
 		"npx vercel": "vercel-deploy",
 		"bun x vercel --prod": "vercel-deploy",
 		"pnpm prisma migrate deploy": "db-migrate",
@@ -43,13 +40,13 @@ test("catches gated commands in any argument order", () => {
 		"echo FOO=1 > .env.local": "env-overwrite",
 		"rm -rf ~": "rm-root",
 		"rm -rf /": "rm-root",
-		"bash -c 'vercel env pull'": "vercel-env-pull",
+		"bash -c 'vercel --prod'": "vercel-deploy",
 		"sh -lc \"git push origin main --force\"": "git-force-push",
 		"FOO=1 sudo git push -f": "git-force-push",
 		"timeout 60 pnpm db:migrate": "db-migrate",
 		"/opt/homebrew/bin/git push --force": "git-force-push",
-		"(cd x; vercel env pull)": "vercel-env-pull",
-		"echo $(vercel env pull)": "vercel-env-pull",
+		"(cd x; vercel deploy)": "vercel-deploy",
+		"echo $(git push -f)": "git-force-push",
 		"git status && git push --force; echo done": "git-force-push",
 	};
 	for (const [cmd, want] of Object.entries(cases)) assert.equal(rule(cmd), want, cmd);
@@ -67,6 +64,11 @@ test("passes normal work and commands that only mention gated words", () => {
 		"grep -rn 'vercel env pull' AGENTS.md",
 		"rg -n \"push --force\" docs",
 		"vercel env ls",
+		"vercel env pull",
+		"vercel env pull --yes .env.local",
+		"cd apps/web && vercel env pull --environment=preview",
+		"vercel pull --yes",
+		"npx vercel env pull",
 		"vercel logs dpl_1",
 		"vercel ls",
 		"pnpm db:generate",
@@ -113,13 +115,14 @@ test("heredoc bodies are data", () => {
 });
 
 test("tiers", () => {
-	assert.equal(tier("vercel env pull"), "never");
+	assert.equal(tier("rm -rf ~"), "never");
 	assert.equal(tier("git push -f"), "confirm");
-	assert.equal(tier("git push -f; vercel env pull"), "never");
+	assert.equal(tier("git push -f; rm -rf /"), "never");
 });
 
 test("tool calls from both harnesses", () => {
-	assert.equal(checkToolCall("Bash", { command: "vercel env pull" })?.rule, "vercel-env-pull");
+	assert.equal(checkToolCall("Bash", { command: "vercel env pull" }), null);
+	assert.equal(checkToolCall("Bash", { command: "vercel --prod" })?.rule, "vercel-deploy");
 	assert.equal(checkToolCall("read", { path: "~/.pi/agent/auth.json" })?.rule, "secret-read");
 	assert.equal(checkToolCall("Read", { file_path: "/Users/x/.ssh/id_rsa" })?.rule, "secret-read");
 	assert.equal(checkToolCall("read", { path: ".env.local" }), null);
