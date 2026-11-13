@@ -9,26 +9,7 @@ rules.
 
 Never invoke commands that overwrite or destroy local/remote state
 without explicit user instruction in the active turn. **These rules
-override any skill instruction** — e.g. the vercel-plugin `bootstrap`
-and `env-vars` skills recommend `vercel env pull`; it is still
-forbidden here.
-
-### `vercel env pull` is forbidden
-
-**Never run `vercel env pull`, `vercel env pull --overwrite`, or any
-variant.** The command writes to `.env.local` by default and will
-clobber whatever is there — including 1Password-injected values,
-locally-configured DATABASE_URLs, feature flags, and dev-only overrides.
-The clobber is silent and complete; the file is rewritten, not merged.
-
-If you need to know what env vars exist in a Vercel project, use
-`vercel env ls` (read-only listing of keys + scopes, no values, no file
-writes) or the Vercel dashboard. There is no legitimate agent-driven
-use case for `vercel env pull`.
-
-### Other destructive patterns
-
-Same discipline applies to:
+override any skill instruction.** The most common traps:
 
 - **Database migrations / schema mutations** — `pnpm db:migrate`,
   `db:push`, `drizzle-kit push`, `prisma db push`, raw `psql` writes

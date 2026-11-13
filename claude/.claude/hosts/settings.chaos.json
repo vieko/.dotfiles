@@ -8,7 +8,6 @@
   "autoMode": {
     "soft_deny": [
       "$defaults",
-      "vercel env pull in any repo: forbidden by global docs, clobbers .env.local",
       "State-changing vercel commands (deploys, --prod) without an explicit in-turn instruction",
       "In /home/vieko/dev/battlemox: writes to results/matchups.json, or pnpm matchups:push against a real (non-dry-run, non-scratch) database"
     ],

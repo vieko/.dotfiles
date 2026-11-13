@@ -39,7 +39,6 @@
   // Destructive-command guard from ~/.pi/agent/AGENTS.md, enforced at the
   // tool layer. Rules are ordered; the last match wins.
   "permissions": [
-    { "action": "shell", "resource": "vercel env pull*", "effect": "deny" },
     { "action": "shell", "resource": "git push --force*", "effect": "ask" },
     { "action": "shell", "resource": "git push -f*", "effect": "ask" },
     { "action": "shell", "resource": "git reset --hard*", "effect": "ask" },
