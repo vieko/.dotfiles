@@ -161,13 +161,25 @@ daily-thread rule):
 Don't substitute a longer recap for the pitch — the pitch is the
 deliverable; anything else is supplementary.
 
-### "merge it" closes the loop
+### When a merge needs its own word
 
-After the announcement the user replies `merge it` (or `merge when
-green`, or `posted`). That reply is the merge instruction; do not ask
-again. In a repo whose `AGENTS.md` requires a Slack post before merge
-(`~/dev/gtm`), the user does the post, and the merge instruction confirms
-that it is done: do not ask whether it was posted. Sequence:
+**Personal repos** (owner `vieko` on GitHub, no repo `AGENTS.md` that
+asks for a Slack post or a second reviewer): the user's word to push and
+open the PR also covers the merge. Do not wait for a separate `merge it`.
+Run the sequence below once checks are green. Stop and wait for the user
+instead when a check fails, a review asks for changes, or the user
+comments on the PR or asks a question before the merge. Two weeks of
+sessions (2026-10-29 to 2026-11-12) had no "hold" reply in 122 PRs; in
+these repos the second word only added a turn.
+
+**Team repos** (`~/dev/gtm`, any `vercel/*` repo, anything with other
+reviewers): after the announcement the user replies `merge it` (or
+`merge when green`, or `posted`). That reply is the merge instruction; do
+not ask again. In a repo whose `AGENTS.md` requires a Slack post before
+merge (`~/dev/gtm`), the user does the post, and the merge instruction
+confirms that it is done: do not ask whether it was posted.
+
+Sequence:
 
 1. Wait for required checks green and review approval (use the repo's
    PR-wait mechanism if it has one; otherwise
@@ -184,8 +196,9 @@ that it is done: do not ask whether it was posted. Sequence:
    for that issue, and report the merge SHA in one line.
 
 Blockers (red check, changes requested, merge conflict) get reported once
-with the concrete cause; the merge instruction does not authorize
-force-pushes, admin-merges, or bypassing required checks.
+with the concrete cause. Neither a merge instruction nor a PR approval
+in a personal repo authorizes force-pushes, admin-merges, or bypassing
+required checks.
 
 ## Tool & review notes
 

@@ -99,6 +99,34 @@ plane file before summoning:
 - `chaos` (personal) -> `~/.dotfiles/CHAOS.md` (inherits PHYREXIA's roles
   and invariants; delta is capacity + extra vessels)
 
+## PRs and merges
+
+Copied from `~/.pi/agent/AGENTS.md` ("PR announcements"); that file is
+canonical, keep the two in step.
+
+When you open a PR, end the reply with the PR title and URL on their own
+lines, then one sentence on what the PR brings (call out flag-gated
+work). Repo rules may add more (`~/dev/gtm` adds a Slack one-liner).
+
+A merge needs the user's word:
+
+- **Personal repos** (owner `vieko`, no repo rule asking for a Slack post
+  or a second reviewer): the user's word to push and open the PR also
+  covers the merge once checks are green. Stop and wait instead when a
+  check fails, a review asks for changes, or the user comments or asks a
+  question before the merge.
+- **Team repos** (`~/dev/gtm`, `vercel/*`, anything with other
+  reviewers): merge only after the user replies `merge it`, `merge when
+  green` or `posted` in this session. Do not ask again after that reply,
+  and do not ask whether the Slack post is done.
+
+Merge with `gh pr merge <n> --squash`, never `--delete-branch` (it also
+removes the head branch's worktree). Confirm `MERGED`, then remove the
+worktree, the local branch and the remote branch, and report the merge
+SHA. Report a red check, requested changes or a conflict once, with the
+cause. No approval authorizes force-pushes, admin-merges or bypassing
+required checks.
+
 ## Delegation in Claude Code (Agent tool)
 
 Applies to subagents spawned with the Agent tool. Where a plane file
