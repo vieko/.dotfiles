@@ -342,6 +342,8 @@ when the work demands it.
        average under ~3 minutes: there is no attention to save.
      - Fewer than ~6 qualifying specs by the week-44 audit: extend once,
        then drop.
+     PR-level form for docs-only PRs: `docs/lowrisk-merge-lane.md` and
+     `~/.scripts/pr-lowrisk-check.sh` (dry run; not enabled).
 - **Legion** -- `sol` members (`haiku` only for purely mechanical
   batches -- historically unused at 4.5 prices; 5.5 since 2026-10-08
   costs a tenth of that, so revisit with the golem trial above). At a 3-member ceiling, member cost is
