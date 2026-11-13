@@ -230,6 +230,8 @@ when the work demands it.
   1. *luna:xhigh retry rung* and 2. *opus-5.5 strong tier* -- closed
      2026-11-10 without enough samples (3 escalations against the ~20
      needed). Nobody tracks them; reopen if escalations pass ~5 a month.
+     opus stays the strong tier on the repricing argument above, not on
+     observed passes. `-m sol` stays available as a golem worker.
   3. *luna-first on former fable specs* -- **not run.** Since 2026-09-29,
      4 golems took a fable base ($44.84 of the window's ~$50 golem spend)
      and luna was never tried on any of them. The proof stays open; it
