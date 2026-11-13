@@ -88,7 +88,7 @@ panes. `summon-*.sh` and `remind-at.sh` pick tmux or Rex through
 
 ## Standing invariants
 
-- **The review gate applies to EVERY construct, not just Legions.** Each
+- **The review gate applies to every construct, not just Legions.** Each
   construct's diff passes one review pipeline, and judgment sits with the
   session holding the richest context (usually the Summoner). A green gate
   cannot distinguish "make the test pass" from "the test was lying"; the
@@ -97,32 +97,13 @@ panes. `summon-*.sh` and `remind-at.sh` pick tmux or Rex through
   Golem) trials one impact-tiered exception for low-impact mechanical
   golems; until it holds, there is no exception.
 
-- **Pi Durable is not a construct substrate here** (assessed 2026-10-11,
-  https://earendil.com/posts/pi-durable/). It is an experimental framework
-  for always-on, multi-surface, multi-human agents with checkpointed tasks;
-  it does not replace the Pi coding agent. Summoner and Familiars are
-  one-person terminal sessions, which is Pi 1.0's design center. Golems
-  run anvil on the pi 1.1.0 coding-agent SDK (anvil #52); Durable's
-  crash-resume has no buyer there (anvil #54: 0 non-terminal records in
-  236 runs, and anvil commits only on gate-pass). Reopen on any of: a
-  `running` anvil record lost mid-dispatch; a wish for a Slack-reachable or
-  always-on agent on Scourge; or Pi moving the coding agent itself onto
-  Durable, at which point anvil follows the SDK.
-
-  The same verdict covers **harness-on-world** (`~/dev/harness-on-world`,
-  vercel-labs; assessed 2026-10-11): Pi and fx sessions as runs on a
-  Workflow SDK World, the transcript a fold of the event log, crash
-  mid-tool resumed with an interrupted result, steer as a durable inbox.
-  Its bench prices the layer at ~400-500 ms per tool call on `server/on`
-  (bash tool gap 374-505 ms vs 7 ms raw) and 800-1000 ms on the hybrid
-  lane, a tax no construct here has a claim on. It would fix two hazards,
-  not a role: "silence means still running" (backstop + heartbeats) and
-  the window name as the in-flight signal (the dashboard reads every
-  session), but the PoC itself lists liveness as the primitive the World
-  lacks and builds it from side streams and queue delays. One extra reopen
-  trigger on top of Durable's: constructs leaving this host (a Legion on
-  Vercel Sandbox past the 6-golem CPU ceiling). On that day this repo's
-  sandbox lane is the reference, not Pi Durable.
+- **Pi Durable and harness-on-world are not construct substrates here**
+  (assessed 2026-10-11). Durable targets always-on, multi-human agents;
+  harness-on-world adds ~400-1000 ms per tool call. Reopen on any of: a
+  `running` anvil record lost mid-dispatch; a wish for a Slack-reachable
+  or always-on agent on Scourge; Pi moving the coding agent onto Durable;
+  or constructs leaving this host, where this repo's sandbox lane is the
+  reference.
 
 ## Host hazards
 
@@ -237,47 +218,18 @@ when the work demands it.
   tier is `opus` = claude-opus-5.5 since the 2026-09-22 alias refresh: on
   anvil's token profile (~98% cache reads) opus-5.5 undercuts fable-5.1 on
   cache-read (0.20 vs 0.25), cache-write (5 vs 12.5) and output (20 vs 50).
-  **Unproven as of 2026-09-29:** zero escalations have landed on opus-5.5
-  yet; the ~50% saving is fable's tokens repriced, not observed. Before that
-  it was `fable` over opus-5 (anvil#37) on the cache-read argument, which
-  5.5 inverted. Aliases: `haiku/sol/sonnet/opus/fable/astra/luna/terra/glm`.
+  Aliases: `haiku/sol/sonnet/opus/fable/astra/luna/terra/glm`.
   Same-model effort climbs are a mid-conversation effort change on one
   cache-warm session (pi 0.85 `supportsMidConvoEffort`); the luna->opus
   switch is a fresh conversation over the same worktree, so luna's partial
   work carries.
 
-  Record 2026-09-04..24 (`anvil-ledger --since 2026-09-04`, 80 runs): luna base 63 runs, 43
-  passed on rung 0 (68%), 16 passed on the strong rung, 4 failed; luna's own
-  attempts cost ~$1.20 total ($0.02 avg), the strong rungs $74 ($3.18 avg).
-  Fable base 17 runs, 16 passed, $224 ($12 avg) -- 75% of all golem spend,
-  and luna was never tried on those specs. No run has ever passed on
-  attempt 3; every pass was rung 0 or 1. The strong model's own effort climb
-  (`fable:high -> fable:xhigh`) ran 3 times and rescued 0. An earlier
-  version of this entry claimed "59/62, all first attempt"; the 59 is right,
-  the "all first attempt" was not -- 30% of default golems hit the strong
-  rung.
-
-  Sol pilot: **dropped 2026-09-29** before it started. The premise ("~1/25
-  of fable's price") was list input price misread; on anvil's cache-read
-  profile sol and opus-5.5 share the 0.20 cache-read rate, and repricing
-  the 22 actual strong-rung attempts gives sol $0.98 vs opus $1.50 vs fable
-  $3.18 per attempt. $0.50 per rescue does not buy a second review loop.
-  `-m sol` stays available as a same-family-as-luna worker when one is
-  wanted.
-
   **Open proofs** (read with `~/.scripts/anvil-ledger`, which aggregates
   anvil's per-attempt run files; `--escalations` lists every run that left
   rung 0). Criteria fixed before the data, 2026-09-29:
-  1. *luna:xhigh retry rung* -- **closed 2026-11-10, unresolved.** The
-     criterion needed ~20 escalations; from 2026-09-29 to 11-10 the ladder
-     had 3 (luna rung 0 passed 39 of 43 runs, 90%). luna:xhigh passed 1 of
-     2, and the third was a scope void. At this rate the sample never
-     arrives. The rung costs cents, so anvil#45 stays as it is and nobody
-     tracks it. Reopen if escalations pass ~5 a month.
-  2. *opus-5.5 strong tier* -- **closed 2026-11-10, unresolved**, same
-     reason: 1 opus:high attempt in the window (a smoke-test spec, failed,
-     $0.04) against the ~15 the criterion needed. opus stays the strong
-     tier on the repricing argument above, not on observed passes.
+  1. *luna:xhigh retry rung* and 2. *opus-5.5 strong tier* -- closed
+     2026-11-10 without enough samples (3 escalations against the ~20
+     needed). Nobody tracks them; reopen if escalations pass ~5 a month.
   3. *luna-first on former fable specs* -- **not run.** Since 2026-09-29,
      4 golems took a fable base ($44.84 of the window's ~$50 golem spend)
      and luna was never tried on any of them. The proof stays open; it

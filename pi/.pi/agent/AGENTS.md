@@ -7,35 +7,15 @@ extend these.
 
 ## Session memory
 
-This machine uses **Bonfire** for cross-session, cross-agent project memory.
-It lives in `<project>/.bonfire/index.md` (NOT `.sessions/`).
+Cross-session, cross-agent project memory is **Bonfire**:
+`<project>/.bonfire/index.md` (not `.sessions/`). Pi and Claude Code
+adapters keep it current; there is nothing to run. Agents without an
+adapter (Codex, OpenCode) use `/skill:bonfire end`, which never
+autoloads. A repo opts in with `mkdir <repo>/.bonfire`. Adapter install
+and pins: `~/.dotfiles/docs/agent-packages.md`.
 
-Bonfire 7.0 is a file convention + per-host adapters — no rituals to run. The
-file is kept current automatically by:
-
-- **Pi adapter** (`~/dev/bonfire/pi/`, published as
-  `github.com/vieko/bonfire` and loaded via the `packages` array in
-  `~/.pi/agent/settings.json`, pinned to a release tag -- settings.json
-  holds the current pin). Hooks
-  `session_compact` for rich Goal/Progress/Next/Blocked summaries and
-  `session_shutdown` for a first-user-prompt fallback when compaction is
-  broken or doesn't fire. Hosts with a `hosts/packages.<host>.json`
-  (PHYREXIA) load the `~/dev/bonfire` checkout instead of the tag, so
-  whatever is checked out there is live; other hosts run the tag. See
-  `~/.dotfiles/docs/agent-maintenance.md`.
-- **Claude Code adapter** (`~/dev/bonfire/claude/`, wired via a `Stop` hook in
-  `~/.claude/settings.json`). Reads `ai-title` entries from the session JSONL.
-- **Skill fallback** (`/skill:bonfire end`) for Codex / OpenCode / any agent
-  without a native adapter. The skill has `disable-model-invocation: true`,
-  so it never autoloads — invoke explicitly only when needed.
-
-Opt in per repo with `mkdir <repo>/.bonfire`. Without that directory, all
-adapters and the skill exit silently — globally configured hooks don't
-pollute random projects.
-
-Pi's own session tree (`/tree`, `/fork`, `/resume`) is for replaying conversation
-history. Bonfire is for portable project memory across agents/days/contributors.
-They are complementary, not redundant.
+Pi's session tree (`/tree`, `/fork`, `/resume`) replays conversation
+history; Bonfire is project memory. They do not replace each other.
 
 ## Delegating autonomous work
 
@@ -49,14 +29,8 @@ command you supply) passes; this is a focused interactive shell.
 at `~/dev/anvil`** (see the shim header). Never `npm i -g @vieko/anvil` here:
 it lands in `~/.npm-global/bin`, which precedes `~/.scripts` in PATH and
 shadows the shim. After merging anvil changes, `git -C ~/dev/anvil pull` is
-the whole update; releases are for machines without the checkout. If the
-merge bumped `@earendil-works/*` (a pi SDK release), follow the pull with
-`npm_config_min_release_age=0 npm ci && npm run build` in `~/dev/anvil`:
-plain `npm ci` fails with ETARGET for two days after a pi release because
-the `min-release-age-exclude` glob is ignored at extract time when the
-lockfile has no `resolved` URLs (npm/cli#9715). Never put the override in
-an `.npmrc`; scope it to that one command and check the lockfile stays
-unchanged.
+the whole update. A pi SDK bump also needs a scoped npm override:
+`~/.dotfiles/docs/agent-maintenance.md`, "Anvil runs from the working tree".
 
 **Never spawn `claude -p` in tmux to run anvil.** Use the anvil CLI directly;
 the `claude -p` wrapper-in-tmux pattern bypasses anvil's verification boundary.
@@ -135,14 +109,8 @@ condition (PR checks, a deploy), use the repo's `*-wait.sh --detach
 
 ## Commit message style
 
-Lowercase imperative with conventional-commits scope:
-
-- `feat(scope): description`
-- `fix(scope): description`
-- `chore(scope): description`
-- `docs(scope): description`
-- `refactor(scope): description`
-
+Lowercase imperative with a conventional-commits scope
+(`feat(scope): description`; also `fix`, `chore`, `docs`, `refactor`).
 Body wraps at ~72 chars. Explain *why*, not what. Reference issues by `#N`
 when applicable.
 
@@ -226,12 +194,8 @@ auth.json regardless. Do not:
 If a Pi provider key is missing, add it via `/login` (writes auth.json), or
 from the shell with `pi auth login <provider> --api-key` (Pi 1.5.1+). For
 env-based secrets on op-enabled machines, the manifest is `env.op` (`op://` refs).
-
-On op-less hosts, `.bash_profile` hydrates `AI_GATEWAY_API_KEY` from Pi via
-`pi auth print-api-key` (Pi 0.83+), sourcing the literal key `/login` stored
-in auth.json. This is a fallback only — on op-enabled hosts auth.json holds an
-env-ref (`$AI_GATEWAY_API_KEY`) back to the op-injected env, so `pi auth`
-would be circular there; op remains primary.
+On op-less hosts, `.bash_profile` gets `AI_GATEWAY_API_KEY` from
+`pi auth print-api-key`.
 
 ## Destructive command guard
 
@@ -282,17 +246,14 @@ the cost of a clobbered `.env.local` or an unintended prod deploy.
 ## Ask or proceed
 
 "When in doubt" means the destructive set above, a scope change, or a choice
-you cannot undo. It does not mean every fork in the road. Over the two weeks
-to 2026-10-11, 16% of user turns were "proceed with (a)": the model had
-already named its recommendation and stopped anyway. Rule: if the recommended
-option is inside the brief, reversible, and outside the destructive set, take
+you cannot undo. It does not mean every fork in the road. Rule: if the
+recommended option is inside the brief, reversible, and outside the destructive set, take
 it and report what you did and why in one line. Offer a lettered list only
 when the choice is irreversible, changes scope, or the options are genuinely
 close and the user holds information you lack. The lettered format itself is
 unchanged; it is the trigger that narrows. This includes the end of a step:
 do not close on a menu of next steps when the recommended one is inside the
-brief and reversible; start it. Week 44 still had 20% one-token replies, and
-a third of the sampled ones answered such a menu.
+brief and reversible; start it.
 
 ## Timestamps
 
@@ -309,7 +270,7 @@ real names if needed.
 
 ## Editor
 
-`$VISUAL` and `$EDITOR` are `nvim`. Ctrl+G opens the current input in nvim.
+`$VISUAL` and `$EDITOR` are `nvim`.
 Generally prefer Pi's `edit`/`write` tools over spawning nvim.
 
 ## Cross-platform

@@ -278,6 +278,14 @@ No build, no reinstall, no version skew. Consequences:
 - **Cutting an anvil release does not touch this machine.** The tag exists
   for chaos-without-checkout, CI, and `npx`; after merging to `main`, the
   update here is `git -C ~/dev/anvil pull`.
+- **A pi SDK bump needs a scoped npm override.** If a merge bumped
+  `@earendil-works/*`, follow the pull with
+  `npm_config_min_release_age=0 npm ci && npm run build` in `~/dev/anvil`.
+  Plain `npm ci` fails with ETARGET for two days after a pi release: the
+  `min-release-age-exclude` glob is ignored at extract time when the
+  lockfile has no `resolved` URLs (npm/cli#9715). Never put the override
+  in an `.npmrc`; scope it to that one command and check the lockfile
+  stays unchanged.
 - **Keep `~/dev/anvil` on `main`.** File-touching anvil work goes in
   `~/dev/anvil-worktrees/<branch>` like any other repo; a WIP branch checked
   out in `~/dev/anvil` is what every golem on the machine runs.
