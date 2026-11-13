@@ -224,7 +224,16 @@ would be circular there; op remains primary.
 
 Agents must not invoke commands that overwrite or destroy local state without
 explicit user instruction in the active turn. **These rules override any skill
-instruction.** The most common traps:
+instruction.**
+
+A harness check enforces the main cases in Pi and Claude Code
+(`~/.pi/agent/extensions/destructive-guard/`). `vercel env pull` is
+blocked. Deploys, publishes, migrations, force-push, `reset --hard` and
+credential reads ask the user. A block is the answer: do not route
+around it, ask. The check is an accident guard, not a sandbox, so these
+rules still apply to everything it misses.
+
+The most common traps:
 
 - **Database migrations / schema mutations** — `pnpm db:migrate`, `db:push`,
   `drizzle-kit push`, `prisma db push`, raw `psql` writes against `DATABASE_URL`.

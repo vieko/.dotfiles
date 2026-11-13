@@ -17,12 +17,10 @@
       "Bash(jq:*)",
       "Bash(lsof:*)",
       "Bash(ps:*)",
-      "Bash(kill:*)",
       "Bash(date:*)",
       "Bash(command:*)",
       "Bash(source:*)",
       "Bash(test:*)",
-      "Bash(curl:*)",
       "Bash(grep:*)",
       "Bash(redis-cli:*)",
       "Bash([ -n \"$TMUX\" ])",
@@ -38,7 +36,6 @@
       "Bash(pnpm turbo lint:*)",
       "Bash(pnpm turbo run build:*)",
       "Bash(pnpm drizzle-kit:*)",
-      "Bash(pnpm db:migrate:*)",
       "Bash(pnpm db:generate:*)",
       "Bash(pnpm db:branch:*)",
       "Bash(pnpm db:utils test:*)",
@@ -57,20 +54,17 @@
       "Bash(linear projects:*)",
       "Bash(linear teams:*)",
       "Bash(linear users:*)",
-      "Bash(neonctl:*)",
       "Bash(vercel blob put:*)",
       "Bash(vercel switch:*)",
       "Bash(vercel project:*)",
       "Bash(vercel logs:*)",
       "Bash(vercel ls:*)",
-      "Bash(vercel env:*)",
-      "Bash(psql:*)",
+      "Bash(vercel env ls:*)",
       "Bash(tsx apps/deal-bot/scripts/kb-search.ts:*)",
       "Bash(agent-browser open:*)",
       "Bash(agent-browser screenshot:*)",
       "Bash(agent-browser snapshot:*)",
       "Bash(agent-browser close:*)",
-      "Bash(source .env.local)",
       "WebSearch",
       "WebFetch(domain:docs.exa.ai)",
       "WebFetch(domain:vercel.com)",
@@ -92,10 +86,28 @@
     "ask": [
       "Bash(.claude/scripts/*)"
     ],
+    "deny": [
+      "Read(~/.ssh/id_*)",
+      "Read(~/.pi/agent/auth.json)",
+      "Read(~/.config/gh/hosts.yml)",
+      "Read(~/.aws/credentials)"
+    ],
     "defaultMode": "auto"
   },
   "model": "fable",
   "hooks": {
+    "PreToolUse": [
+      {
+        "matcher": "Bash|Read|Write|Edit|MultiEdit|Grep",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "f=$HOME/.pi/agent/extensions/destructive-guard/claude-hook.mjs; [ -f \"$f\" ] && node \"$f\" || true",
+            "timeout": 5
+          }
+        ]
+      }
+    ],
     "Stop": [
       {
         "hooks": [
