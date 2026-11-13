@@ -18,6 +18,13 @@ prints QUALIFIES or REFUSES and the merge command it would run. Proof 5
 has no data rows (`~/scratch/review-tier-trial-notes.md`), and its
 week-44 deadline has passed.
 
+Since da78e7b, personal repos already merge on green: the user's word to
+open the PR covers the merge. So the lane removes no human turn there,
+and team repos keep their `merge it`. What the lane still adds is the
+part Anthropic pairs with auto-merge: a fresh-context review before
+merge, and a path check that keeps instruction and skill files out of the
+no-human path. Use it, if at all, as a pre-merge step in personal repos.
+
 ## Qualifying PR
 
 All of these hold:
@@ -39,12 +46,13 @@ All of these hold:
 
 ## Enabling (user decision)
 
-1. Pick the repos. Start with the user's own repos (dotfiles, anvil,
-   bonfire, sigil), not `vercel/gtm`, which requires a Slack post and
-   review approval.
-2. Turn on "Allow auto-merge" in each repo's GitHub settings.
-3. After the SHIP verdict and a QUALIFIES result, run the printed
-   `gh pr merge <n> --auto --squash`. GitHub merges when checks pass.
+1. Scope: personal repos only (dotfiles, anvil, bonfire, sigil).
+   `vercel/gtm` requires a Slack post and review approval.
+2. Before the personal-repo merge in `~/.pi/agent/AGENTS.md`, run the
+   checker. On REFUSES, a behavior path is in the diff: get the user's
+   word or a fresh-context SHIP before merging.
+3. Optional: turn on "Allow auto-merge" and use the printed
+   `gh pr merge <n> --auto --squash`.
 4. Log each lane merge in `~/scratch/review-tier-trial-notes.md`. Revert
    to full review on the first lane merge that needs a follow-up fix.
 
