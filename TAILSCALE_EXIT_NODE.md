@@ -91,6 +91,10 @@ Do it while the laptop is on the *other* exit node (or none).
 - Setup → Network Access (org-level trusted IPs)
 - Connected App / External Client App IP restrictions (any integration
   using static IPs)
+- The local-scripts service account's profile login IP ranges (JWT
+  bearer grant from `scripts/op-dev.sh GTM_WORKFLOWS`)
+
+Verified 2026-11-13: JWT grant + SOQL query succeed through egress-nue.
 
 ## Rebuild from scratch
 
