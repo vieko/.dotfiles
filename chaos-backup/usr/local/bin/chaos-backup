@@ -21,7 +21,7 @@ fi
 # NOTE: ~/.ssh, ~/.gnupg, ~/.aws are intentionally NOT here — secrets stay out of this
 # single-passphrase repo. Regenerate keys/creds if the drive dies, or stash in charon.
 SRC=( /home/vieko/dev /home/vieko/.dotfiles /home/vieko/Documents /home/vieko/backups
-      /home/vieko/Pictures )
+      /home/vieko/Pictures /home/vieko/scratch )
 
 # NOTE: ~/Downloads is intentionally NOT backed up — it's a transient drawer; the
 # irreplaceable assets that lived there were moved into ~/Documents and ~/Pictures.
