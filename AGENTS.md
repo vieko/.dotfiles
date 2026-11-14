@@ -31,7 +31,7 @@ packages not listed here (e.g. `aws`, `gh`, `gnupg`, `cargo`, `zed`, `picom`,
 
 **Cross-platform packages:** bash, git, kitty, ghostty, tmux, nvim, starship, bat, btop, lazygit, yazi, assets, claude, pi, opencode, agents, slack
 **macOS-only:** macos, macos-keyboard, aerospace, sketchybar, karabiner, rex (trial; see `docs/rex-assessment.md`)
-**Linux-only:** hypr, waybar, dunst, fuzzel, mako, rofi, sway, i3, polybar, ptyxis (run `ptyxis/setup-ptyxis.sh` once after stowing)
+**Linux-only:** hypr, waybar, dunst, fuzzel, mako, rofi, sway, i3, polybar, ptyxis (run `ptyxis/setup-ptyxis.sh` once after stowing), rex-server (Rex host over Tailscale; see `docs/rex-assessment.md`)
 
 ### Agent-related Packages
 

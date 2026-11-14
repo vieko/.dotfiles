@@ -204,6 +204,31 @@ by installers) moved into .bash_exports; .local/bin was already there.
   none (REX_SESSION/REX_BLOCK are in its env). It covers non-Pi terminals;
   pi-post stays the agent-to-agent channel.
 
+## Linux hosts (chaos, 2026-11-13)
+
+chaos runs a personal Rex server that joins the tailnet as its own
+device, `chaos-rex.tailc2994c.ts.net`. Rex on Linux is a server only;
+the Mac app and CLI connect to it. To set up another Linux host:
+
+1. Install the preview package (needs sudo; on Fedora, first
+   `sudo dnf remove Rex` if the unrelated package is there):
+   `curl -fsSL https://pkgs.superlogical.com/rex/install.sh | sh -s -- --channel preview`
+2. `stow rex-server`. Its drop-in adds `--tailscale --tailscale-hostname
+   %H-rex` to `rex.service`. `rex server install -- --tailscale` does not
+   work on Linux: it takes no server flags there.
+3. `loginctl enable-linger` (once), then
+   `systemctl --user daemon-reload && systemctl --user enable --now rex.socket rex.service`.
+   Enabling the service, not only the socket, brings the tailnet listener
+   up at boot instead of on the first local `rex` command.
+4. `rex server status` prints a Tailscale sign-in link; approve the
+   device as vieko@github.
+5. On the Mac: `rex hosts add <host> https://<host>-rex.tailc2994c.ts.net`,
+   and Add Remote Host in the app (CLI hosts do not sync to the app yet).
+
+The package's systemd trigger printed "Failed to start transient service
+unit" during install; it did not stop the install. chaos's shell does not
+auto-attach tmux, so a Rex tab there opens a plain login shell.
+
 ## Rex app settings (not in a config file yet)
 
 Rex keeps appearance in the app (`defaults read com.superlogical.rex`,
