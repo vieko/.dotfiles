@@ -159,17 +159,18 @@ Sequence:
    PR-wait mechanism if it has one; otherwise
    `~/.scripts/pr-wait.sh <n> --detach --notify`, which waits for checks.
    Add `--for checks,review` only where a review is required).
-2. `gh pr merge <n> --squash` (no `--delete-branch`), then confirm
-   `MERGED`. gh 2.99+ `--delete-branch` also removes the head branch's
-   worktree, even when a job is running from it.
-3. Close the loop: check the Linear issue after the merge has returned
-   (the GitHub integration moves a linked issue to Done within seconds;
-   never set it in the same parallel batch as the merge) and move it only
-   if it did not move. Then clean up explicitly. Check nothing runs from the worktree
-   (`lsof -d cwd | grep -F <path>` is empty), remove it, delete the local branch, and
-   `git push origin --delete <branch>` (skip for a stacked base until its
-   child is retargeted). Close any construct window (`fam-*`, `golem-*`)
-   for that issue, and report the merge SHA in one line.
+2. Run `~/.scripts/pr-merge.sh <n>` from the repo. It refuses a PR that
+   is not CLEAN, squash-merges (never `--delete-branch`: gh 2.99+ also
+   removes the head branch's worktree), confirms `MERGED`, waits for the
+   linked Linear issue to reach Done (the GitHub integration moves it
+   within seconds) and reports it, then removes the worktree unless a
+   process runs there or it is dirty, deletes the local branch, and
+   deletes the remote one unless a stacked PR uses it as its base.
+   Exit 3 means merged with cleanup left; the output says what.
+3. Close the loop: move the Linear issue only if the script warned it did
+   not move (never set it in the same parallel batch as the merge), close
+   any construct window (`fam-*`, `golem-*`) for that issue, and report
+   the merge SHA in one line.
 
 Blockers (red check, changes requested, merge conflict) get reported once
 with the concrete cause. Neither a merge instruction nor a PR approval

@@ -10,6 +10,8 @@
 #                                    (--same: the old session, also when it is large)
 #   remind-at.sh --done <slug>       close an open reminder
 #   remind-at.sh --cancel <slug>     remove a pending or open reminder
+#   remind-at.sh --open <address> [label]  focus or resume any pi session the
+#                                    way Resume does (used by pi-halted.sh)
 #
 #   <slug>   lowercase id, e.g. gtmeng-3924-flip (label dev.vieko.reminder.<slug>)
 #   --title  alert title, max 60 chars: what this is about
@@ -551,6 +553,10 @@ case "${1:-}" in
     [[ -z "${3:-}" || "$3" == --same ]] || die "usage: remind-at.sh --resume <slug> [--same]"
     cmd_resume "$2" "${3:-}"; exit 0 ;;
   --fire) valid_slug "${2:?}"; cmd_fire "$2"; exit 0 ;;
+  --open) [[ "${2:-}" =~ ^s-[0-9a-f]{12}$ ]] || die "usage: remind-at.sh --open <s-address> [label]"
+    [[ -z "${3:-}" ]] || valid_slug "$3"
+    out=$(resume_session "$2" "${3:-}") || die "$out"
+    echo "[OK] $out"; exit 0 ;;
 esac
 
 to="" title="" ask=""
@@ -559,7 +565,7 @@ while [[ $# -gt 0 ]]; do
     --to) to=${2:?--to needs a value}; shift 2 ;;
     --title) title=${2:?--title needs a value}; shift 2 ;;
     --ask) ask=${2:?--ask needs a value}; shift 2 ;;
-    -h|--help) sed -n '2,38p' "$0"; exit 0 ;;
+    -h|--help) sed -n '2,40p' "$0"; exit 0 ;;
     --) shift; break ;;
     -*) die "unknown flag $1" ;;
     *) break ;;
