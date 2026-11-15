@@ -347,23 +347,50 @@ status() {
     title="$(printf 'golem %s' "$NAME" | base64 | tr -d '\n')"
     printf '\033]7501;state=%s:id=golem:app=golem:title=%s:msg=%s\033\\' "$1" "$title" "$msg"
 }
+# One line of anvil's own reason: first line, "anvil: " prefixes and any
+# parenthetical (it can carry a command) removed. A failed gate command
+# says only that, never the command.
+reason_line() {
+    local r="$1"
+    r="${r%%$'\n'*}"
+    while [[ "$r" == "anvil: "* ]]; do r="${r#anvil: }"; done
+    r="${r%% (*}"
+    [[ "$r" == "Command failed"* ]] && r="a gate command failed"
+    printf '%s' "${r:0:100}"
+}
 STATUSED=0
+# Rex groups records by state, so the state and the first words of msg say
+# why the golem stopped: green, void (scope breach), setup failure before
+# the agent ran, red gate, or stopped by the user (idle, per OSC 7501).
 status_close() {
     [[ $STATUSED -eq 1 ]] && return 0
     STATUSED=1
-    local code="$1" passed="" attempts=""
+    local code="$1" passed="" attempts="" verdict="" reason="" line
     if [[ -s "$RESULT" ]]; then
         passed="$(jq -r '.passed // empty' "$RESULT" 2>/dev/null)"
         attempts="$(jq -r '.attempts // empty' "$RESULT" 2>/dev/null)"
+        verdict="$(jq -r '.timeline[-1].verdict // .verdict // empty' "$RESULT" 2>/dev/null)"
+        reason="$(jq -r '.voidReason // .timeline[-1].errors // empty' "$RESULT" 2>/dev/null)"
+    elif [[ -s "$LOG" ]]; then
+        line="$(grep -a 'anvil: ' "$LOG" | tail -n 1)"
+        reason="${line#*anvil: }"
     fi
+    reason="$(reason_line "$reason")"
+    local tries="${attempts:-?} attempt"; [[ "$attempts" == 1 ]] || tries+=s
     if [[ "$code" == 0 && "$passed" == true ]]; then
-        status done "golem $NAME passed (attempts: ${attempts:-?})"
+        status done "$NAME: gate green, review pending ($tries)"
+    elif [[ "$code" == interrupted || "$code" == 130 || "$code" == 143 ]]; then
+        status idle "$NAME: stopped before the gate finished"
+    elif [[ "$verdict" == void ]]; then
+        status error "$NAME: void, ${reason:-see the result JSON}"
+    elif [[ -z "$attempts" || "$attempts" == 0 ]]; then
+        status error "$NAME: setup failed before the agent ran, ${reason:-see the log}"
     else
-        status error "golem $NAME failed (exit $code); see the result JSON"
+        status error "$NAME: gate red after $tries${reason:+, $reason}"
     fi
 }
 trap 'status_close "${ANVIL_STATUS:-interrupted}"; map_close "${ANVIL_STATUS:-interrupted}"; ping "${ANVIL_STATUS:-interrupted}"' EXIT
-status working "golem $NAME: anvil running"
+status working "$NAME: anvil running"
 
 EOF
     if [[ $sandbox_enabled -eq 1 ]]; then
