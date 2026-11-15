@@ -15,7 +15,7 @@
 # Usage:
 #   summon-familiar.sh [-m alias] [-P] [-n] [-R] [-C] [-B board] [-w name] [-W name] <brief-path> [prompt override]
 #
-#   -m alias   vessel: haiku|sol|terra|sonnet|opus|fable|luna|astra (default: terra, trial),
+#   -m alias   vessel: haiku|sol|sonnet|opus|fable|luna|astra (default: sol),
 #              or a raw gateway id with an explicit effort when the alias's
 #              default level is not what the summoning wants, e.g.
 #              openai/gpt-6-astra:xhigh (astra's ceiling; the alias binds :high)
@@ -70,7 +70,6 @@ alias_to_model() {
     case "$1" in
         haiku)  echo "anthropic/claude-haiku-5.5:low" ;;
         sol)    echo "openai/gpt-6.1-sol:high" ;;  # 6.1 since 2026-10-09, matching anvil's alias and the picker
-        terra)  echo "openai/gpt-6.1-terra:high" ;;  # trial since 2026-11-02: half sol's price; PHYREXIA.md Vessels
         sonnet) echo "anthropic/claude-sonnet-5.5:medium" ;;
         opus)   echo "anthropic/claude-opus-5.5:medium" ;;
         fable)  echo "anthropic/claude-fable-5.2:high" ;;
@@ -93,10 +92,11 @@ alias_to_model() {
 # `models` entry in models.json). The sonnet-5 question is closed at 12.3 /
 # 10.7 / 12.0% across three audits; the open question is whether 5.5 drops
 # edits the same way. Read the edit-health line in the next audit.
-# 2026-11-09: terra is the trial default until ~10 familiar tasks have run
-# (week-45 audit: 2 tasks in a week with `-m terra` opt-in). `-m sol` still
-# works; the audit decides terra or sol (PHYREXIA.md Vessels).
-vessel="terra"
+# Terra trial (2026-11-02..11-15) closed at the week-46 audit: 8 tasks, cheap
+# and clean in review, but 2 of 92 edit calls lost the newText key, and the
+# rule fixed before the trial needed 0. Default back to sol, alias dropped;
+# a raw `openai/gpt-6.1-terra:high` still passes through for a one-off.
+vessel="sol"
 print_mode=0
 dry_run=0
 no_report=0

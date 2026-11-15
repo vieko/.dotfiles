@@ -265,3 +265,28 @@ old row so drift is visible.
   status (import failed / 403). Terra 2 tasks, both first-review accepts.
 - One-token decisions: 136 of 585 (23%), up from 20% after the 11-01
   end-of-step sentence.
+
+## Week 46 (2026-11-09 16:43 to 2026-11-15 11:31 CST, 6 days incl. weekend), PHYREXIA
+
+- 77 sessions with turns, 5,343 assistant turns, 500 user turns, 5,072
+  tool calls (167 errors). True $385 (= pi-reported), $0.77/ut ($0.90 with
+  counsel). Weekdays 11-10..13 $323 = $81/day.
+- Split: cacheRead $146, cacheWrite $157, output $82.
+- Models: opus-5.5 $261 (60 sessions, $0.60/ut), fable-5.2/5.1 $122 (10
+  sessions, 6 switched by hand at start, $2.14/ut), terra $3 (6).
+- 1h TTL: premium $58 vs $134 avoided; net +$75.
+- Context: 23% of turns >= 200K carried 34% of spend; max 464K.
+- Misses: first 35; idle 30 ($31, avg 119K); compaction 17 ($15);
+  unexplained 14 ($17), opus 0.30%: 2 transport retries, 2 prompt
+  changes, rest size tax.
+- Edit health: opus 0/87, fable 0/25, terra 2/86 (closed the trial).
+- Hard stops: 56 (12 aborts, 26 DNS in one outage, 16 timeouts).
+- Counsel: 47 consults in 20 sessions, $65.46 (17.0%), 42 revise / 5
+  proceed, cache read 0% (no same-model repeat within 5 min; 1h TTL
+  modeled worse). Familiars with -C: 6 consults, $7.93.
+- Nudges: renew 14 shown, 7 left, 7 kept going.
+- Menu shadow: 20 entries from 11-12, 3 proceed.
+- Redactions (partial): identifier 57% of tagged values.
+- Constructs: 39 dispatches; anvil 23 runs, 19 first-attempt, $4.85.
+- Terra trial closed: familiar default back to sol, alias dropped.
+- Three reboots; 12 recovery sessions, $39.

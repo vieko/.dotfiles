@@ -159,16 +159,10 @@ proposing templates or interpreting a false report label as an omission.
 
 ## Open experiments (settle before proposing new ones)
 
-- **Terra familiars** (started 2026-11-02, decide at the week-46 audit):
-  `-m terra` (gpt-6.1-terra, half sol's price) on ~10 familiar tasks.
-  Compare terra vs sol on malformed edits, $/turn, and review rounds per
-  task. Terra becomes the familiar default only with 0 malformed edits and
-  no more review rounds than sol; otherwise the alias comes off. The rule
-  is in PHYREXIA.md Vessels. Week 45: 2 tasks only (both first-review
-  accepts, 0/6 malformed, $0.010/turn vs sol $0.024); familiar volume
-  fell to 5. Since 2026-11-09 terra is the `summon-familiar.sh` default
-  for the trial. Decide at the first audit with ~10 terra tasks (week 46
-  or 47): keep terra, or revert the default to sol.
+- **Terra familiars**: closed 2026-11-15 (week 46). 8 tasks, $0.007/turn,
+  no follow-up steering, but 2/92 malformed edits (`newText` key lost)
+  against a fixed bar of 0. Familiar default back to sol, alias dropped.
+  Report any raw-id terra familiar's edit health if one runs.
 - **Fable seat** (agreed 2026-11-09): the Summoner stays on opus and
   reaches fable through counsel. Report any session switched to fable
   with its $/ut and whether the work was architecture or review.
@@ -182,7 +176,8 @@ proposing templates or interpreting a false report label as an omission.
   allowlist candidate, `uuid` first. The allowlist is the second half of
   pi-redact#6 and is not built.
 
-- **Menu shadow** (started 2026-11-11): `menu-shadow.ts` logs, for each
+- **Menu shadow** (started 2026-11-11; first entry 11-12 09:40 MT, since
+  only processes started after the install load it): `menu-shadow.ts` logs, for each
   reply to a lettered menu with a marked recommendation, what a live
   "proceed" nudge would have done (`proceed` when the recommended option
   names no gated action, else `ask`) and what the user did (`rec`,
