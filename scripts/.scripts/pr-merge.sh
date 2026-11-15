@@ -5,9 +5,10 @@
 # AGENTS.md ("PR announcements"), as one command.
 #
 # Usage:
-#   pr-merge.sh <pr> [--allow-unstable] [--keep-branch] [--no-linear]
+#   pr-merge.sh <pr> [--dry-run] [--allow-unstable] [--keep-branch] [--no-linear]
 #
 #   Run it inside the repo (main checkout or any worktree of it).
+#   --dry-run         print what it would do; change nothing.
 #   --allow-unstable  merge when GitHub reports UNSTABLE (required checks
 #                     pass, a non-required one failed). Default: refuse.
 #   --keep-branch     merge only; leave worktree and branches alone.
@@ -37,13 +38,14 @@ set -uo pipefail
 
 die() { echo "error: $*" >&2; exit 2; }
 
-pr="" allow_unstable=0 keep_branch=0 linear=1
+pr="" allow_unstable=0 keep_branch=0 linear=1 dry=0
 while [[ $# -gt 0 ]]; do
   case "$1" in
+    --dry-run) dry=1 ;;
     --allow-unstable) allow_unstable=1 ;;
     --keep-branch) keep_branch=1 ;;
     --no-linear) linear=0 ;;
-    -h|--help) sed -n '2,34p' "$0"; exit 0 ;;
+    -h|--help) sed -n '2,35p' "$0"; exit 0 ;;
     -*) die "unknown flag $1" ;;
     *) [[ -z "$pr" ]] || die "one PR at a time"; pr=${1#\#} ;;
   esac
@@ -63,24 +65,36 @@ if [[ "$state" == MERGED ]]; then
 elif [[ "$state" != OPEN ]]; then
   echo "[ERROR] #$pr is $state"; exit 1
 else
+  # GitHub computes mergeability lazily; UNKNOWN right after a push.
+  for _ in {1..10}; do
+    [[ "$mss" == UNKNOWN ]] || break
+    sleep 2
+    info=$(gh pr view "$pr" --json state,mergeStateStatus,headRefName,baseRefName,isCrossRepository,url,mergeCommit 2>/dev/null) && mss=$(field .mergeStateStatus)
+  done
   case "$mss" in
     CLEAN|HAS_HOOKS) ;;
     UNSTABLE) (( allow_unstable )) || { echo "[ERROR] #$pr is UNSTABLE: a non-required check failed. Rerun with --allow-unstable if that is expected."; exit 1; } ;;
-    *) echo "[ERROR] #$pr is not mergeable: $mss (BLOCKED = checks or review pending, BEHIND = update the branch, DIRTY = conflicts)"; exit 1 ;;
+    *) echo "[ERROR] #$pr is not mergeable: $mss (BLOCKED = checks or review pending, BEHIND = update the branch, DIRTY = conflicts)"
+       (( dry )) || exit 1 ;;
   esac
-  out=$(gh pr merge "$pr" --squash 2>&1) || { echo "[ERROR] gh pr merge: $out"; exit 1; }
+  if (( dry )); then
+    echo "[DRY] would squash-merge #$pr ($mss), then clean up $head"
+  else
+    out=$(gh pr merge "$pr" --squash 2>&1) || { echo "[ERROR] gh pr merge: $out"; exit 1; }
+  fi
   for _ in {1..15}; do
+    (( dry )) && break
     info=$(gh pr view "$pr" --json state,mergeStateStatus,headRefName,baseRefName,isCrossRepository,url,mergeCommit 2>/dev/null) || continue
     [[ "$(field .state)" == MERGED ]] && break
     sleep 2
   done
-  [[ "$(field .state)" == MERGED ]] || { echo "[ERROR] #$pr did not reach MERGED within 30 s (state $(field .state))"; exit 1; }
+  (( dry )) || [[ "$(field .state)" == MERGED ]] || { echo "[ERROR] #$pr did not reach MERGED within 30 s (state $(field .state))"; exit 1; }
 fi
 sha=$(field '.mergeCommit.oid // ""' | cut -c1-10)
-echo "[OK] #$pr merged ${sha:+as $sha}"
+(( dry )) || echo "[OK] #$pr merged ${sha:+as $sha}"
 
 # Linear: the issue key comes from the branch (vieko/gtmeng-4761 -> GTMENG-4761).
-if (( linear )) && key=$(grep -oiE '[a-z]{2,10}-[0-9]+' <<<"$head" | head -1) && [[ -n "$key" ]] && command -v linear >/dev/null; then
+if (( linear && !dry )) && key=$(grep -oiE '[a-z]{2,10}-[0-9]+' <<<"$head" | head -1) && [[ -n "$key" ]] && command -v linear >/dev/null; then
   key=$(tr 'a-z' 'A-Z' <<<"$key") lstate=""
   # linearis returns the state name only (no type), so match final names.
   final='^(Done|Canceled|Cancelled|Duplicate|Closed|Released)$'
@@ -103,24 +117,29 @@ main_wt=$(git worktree list --porcelain | awk '/^worktree /{print substr($0,10);
 if [[ -n "$wt" && "$wt" != "$main_wt" ]]; then
   if lsof -d cwd 2>/dev/null | grep -qF "$wt"; then echo "[WARN] worktree $wt: a process has its cwd there; left it"; left=1
   elif [[ -n "$(git -C "$wt" status --porcelain 2>/dev/null)" ]]; then echo "[WARN] worktree $wt has uncommitted changes; left it"; left=1
+  elif (( dry )); then echo "[DRY] would remove worktree $wt"
   elif git worktree remove "$wt" 2>/dev/null || git worktree remove --force "$wt" 2>/dev/null; then echo "[OK] removed worktree $wt"
   else echo "[WARN] could not remove worktree $wt"; left=1; fi
 elif [[ "$wt" == "$main_wt" && -n "$wt" ]]; then
   echo "[WARN] the main checkout is on $head; switch it off the branch to delete it"; left=1
 fi
-git worktree prune 2>/dev/null
+(( dry )) || git worktree prune 2>/dev/null
 
 if git show-ref --verify --quiet "refs/heads/$head"; then
-  if git branch -D "$head" >/dev/null 2>&1; then echo "[OK] deleted local branch $head"
+  if (( dry )); then echo "[DRY] would delete local branch $head"
+  elif git branch -D "$head" >/dev/null 2>&1; then echo "[OK] deleted local branch $head"
   else echo "[WARN] could not delete local branch $head"; left=1; fi
 fi
 
 if [[ "$cross" == true ]]; then
   echo "[INFO] head is on a fork; remote branch left to its owner"
-elif [[ -n "$(gh pr list --base "$head" --state open --json number --jq '.[].number' 2>/dev/null)" ]]; then
-  echo "[INFO] open PRs are stacked on $head; remote branch kept until they are retargeted"
+elif ! stacked=$(gh pr list --base "$head" --state open --json number --jq '.[].number' 2>&1); then
+  echo "[WARN] could not check for PRs stacked on $head ($stacked); remote branch kept"; left=1
+elif [[ -n "$stacked" ]]; then
+  echo "[INFO] open PRs are stacked on $head (#${stacked//$'\n'/, #}); remote branch kept until they are retargeted"
 elif git ls-remote --exit-code --heads origin "$head" >/dev/null 2>&1; then
-  if out=$(timeout 180 git push -q origin --delete "$head" 2>&1); then echo "[OK] deleted origin/$head"
+  if (( dry )); then echo "[DRY] would delete origin/$head"
+  elif out=$(timeout 180 git push -q origin --delete "$head" 2>&1); then echo "[OK] deleted origin/$head"
   else echo "[WARN] could not delete origin/$head: $(grep -v '^remote:' <<<"$out" | tail -1)"; left=1; fi
 else
   echo "[OK] origin/$head already gone"

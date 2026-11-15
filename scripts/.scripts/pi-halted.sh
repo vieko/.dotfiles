@@ -14,11 +14,14 @@
 #   pi-halted.sh --uninstall     remove it
 #
 # How it decides: pi-post keeps a record per session with a heartbeat
-# (`lastSeen`, every 30 s) and the process id. A clean exit removes the pid,
-# so a record that still has a pid and was last seen before this boot was
-# running when the Mac went down. Records seen within 20 minutes of the
-# newest such heartbeat, and within 24 hours of the boot, count (the minutes
-# before the crash, not sessions whose tab was killed days earlier).
+# (`lastSeen`, every 30 s) and the process id. On a clean restart macOS
+# sends SIGTERM; pi-post's shutdown hook then strips the pid and stamps
+# lastSeen, so the sessions running at the time were last seen within a
+# minute or two of the shutdown time in `last reboot` (tested 2026-11-15:
+# SIGTERM and SIGHUP both strip the pid). After a crash there is no
+# shutdown line and no hook: those records keep their pid, and the ones
+# seen within 20 minutes of the newest heartbeat count. Records more than
+# 24 hours older than the boot never count.
 #
 # Before a resume, each session gets a queued pi-post note saying it was
 # stopped by a restart and asking for a two-line status before it does
@@ -56,22 +59,48 @@ boot_epoch() {
   else awk '/^btime/ {print $2}' /proc/stat; fi
 }
 
+# Epoch of the last clean shutdown before this boot, or empty after a crash.
+# macOS `last reboot` lists "shutdown time  Thu Nov 12 06:52" (minute, no year).
+shutdown_epoch() {
+  [[ "${OSTYPE:-}" == darwin* ]] || return 0
+  local line ep boot
+  line=$(last reboot 2>/dev/null | awk '/^shutdown time/ {print $3, $4, $5, $6; exit}')
+  [[ -n "$line" ]] || return 0
+  ep=$(date -j -f "%a %b %d %H:%M %Y" "$line $(date +%Y)" +%s 2>/dev/null) || return 0
+  (( ep > $(date +%s) )) && ep=$(date -j -f "%a %b %d %H:%M %Y" "$line $(( $(date +%Y) - 1 ))" +%s)
+  boot=$(boot_epoch)
+  # Only a shutdown that belongs to this boot (just before it) counts.
+  (( ep <= boot + 60 && boot - ep < 1800 )) && echo "$ep"
+}
+
 # TSV: address, name, cwd, state, ctxK, last seen (local), last prompt.
 list_tsv() {
-  "$NODE" - "$REGISTRY" "$SESSIONS" "$(boot_epoch)" "$WINDOW_MIN" "$MAX_AGE_H" <<'JS'
+  "$NODE" - "$REGISTRY" "$SESSIONS" "$(boot_epoch)" "$WINDOW_MIN" "$MAX_AGE_H" "$(shutdown_epoch)" <<'JS'
 const fs = require("node:fs"), path = require("node:path");
-const [registry, sessions, bootS, windowMin, maxAgeH] = process.argv.slice(2);
+const [registry, sessions, bootS, windowMin, maxAgeH, shutdownS] = process.argv.slice(2);
 const boot = Number(bootS) * 1000;
 let recs = [];
 for (const f of fs.readdirSync(registry)) {
   if (!f.endsWith(".json")) continue;
   try { recs.push(JSON.parse(fs.readFileSync(path.join(registry, f), "utf8"))); } catch {}
 }
-// Older than MAX_AGE_H before boot: died some other way (killed tab), not in this restart.
-recs = recs.filter((r) => r.pid !== undefined && r.lastSeen < boot && r.lastSeen >= boot - Number(maxAgeH) * 3600e3 && r.sessionId);
+recs = recs.filter((r) => r.sessionId && r.lastSeen < boot && r.lastSeen >= boot - Number(maxAgeH) * 3600e3);
+if (shutdownS) {
+  // Clean restart: macOS sends SIGTERM, pi-post's shutdown hook strips the
+  // pid and stamps lastSeen, so every running session was last seen within
+  // a minute or two of the shutdown time (minute resolution).
+  const sd = Number(shutdownS) * 1000;
+  recs = recs.filter((r) => r.lastSeen >= sd - 3 * 60e3 && r.lastSeen <= sd + 2 * 60e3);
+} else {
+  // Crash or power loss: no shutdown hook ran, so the pid stayed. Take the
+  // heartbeats in the minutes before the newest one.
+  recs = recs.filter((r) => r.pid !== undefined);
+  if (!recs.length) process.exit(0);
+  const crash = Math.max(...recs.map((r) => r.lastSeen));
+  recs = recs.filter((r) => r.lastSeen >= crash - Number(windowMin) * 60e3);
+}
 if (!recs.length) process.exit(0);
-const crash = Math.max(...recs.map((r) => r.lastSeen));
-recs = recs.filter((r) => r.lastSeen >= crash - Number(windowMin) * 60e3).sort((a, b) => b.lastSeen - a.lastSeen);
+recs.sort((a, b) => b.lastSeen - a.lastSeen);
 const files = {};
 for (const d of fs.readdirSync(sessions)) {
   let fl; try { fl = fs.readdirSync(path.join(sessions, d)); } catch { continue; }
@@ -145,7 +174,7 @@ on run argv
   set n to item 1 of argv
   set AppleScript's text item delimiters to linefeed
   set itemsList to text items of (item 2 of argv)
-  set r to choose from list itemsList with title "pi: " & n & " sessions stopped by the restart" with prompt "Resume these sessions? Each opens in a new Rex session and starts with a two-line status." default items itemsList OK button name "Resume" cancel button name "Later" with multiple selections allowed
+  set r to choose from list itemsList with title "pi: " & n & " sessions stopped by the restart" with prompt "Pick the sessions to resume. Each opens in a new Rex session, rereads its whole context (about $1 per 100K), and starts with a two-line status." OK button name "Resume" cancel button name "Later" with multiple selections allowed
   if r is false then return ""
   return r as text
 end run
