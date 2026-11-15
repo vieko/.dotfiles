@@ -320,6 +320,12 @@ Rules from now on:
 - Activity customization is in Settings, Notifications, Program Activity
   (per state: tab marks, notifications, Dock badge, sound; include idle)
   and grouping by session or by priority. The text in a row comes from
-  the program's OSC 7501 report, so our own tools can say more (for
-  example the golem's spec name and gate step).
+  the program's OSC 7501 report, so our own tools can say more.
+  Applied 2026-11-14: settings per state (Blocked and Error: everything
+  on; Done: no sound; Working: tab dots only; idle off; each process on;
+  group by priority), prefix `a` opens Activity, familiars start with
+  `pi --name <brief slug>` so their rows name the task, and a stopped
+  golem says why: gate green, void, setup failed before the agent ran,
+  gate red after N attempts, or idle when stopped by the user. Before,
+  every non-green golem said "failed (exit 1)".
 - Recheck the open items in a month (reminder `rex-open-items-recheck`).

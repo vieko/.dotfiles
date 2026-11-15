@@ -85,6 +85,8 @@ rex.bind("ctrl+a>shift+space", "layout", { name = "previous" })
 rex.bind("ctrl+a>[", "client.find.open")
 rex.bind("ctrl+a>shift+;", "client.palette.toggle") -- :
 rex.bind("ctrl+a>shift+/", "keys_card") -- ?
+-- Activity: every program across sessions and hosts, blocked first.
+rex.bind("ctrl+a>a", "pane.view_activity")
 
 -- Resize mode: hjkl in 5% steps, HJKL in 15%, Escape or Enter leaves.
 rex.mode("resize", { exclusive = true })
