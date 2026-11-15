@@ -140,6 +140,9 @@ const nudges = [];
 // menu-shadow appends a `menu-shadow` custom entry per reply to a lettered menu
 // that marked a recommendation ({rec, options, verdict, gate, reply, waitMs}).
 const menuShadow = [];
+// Familiar sessions: the first prompt is a summon-familiar dispatch.
+const FAMILIAR_RE = /familiar-prompt|brief\.md and (follow|execute)|spec\.md and execute|MANDATORY REPORT-BACK/i;
+const familiars = [];
 // pi-redact appends a `pi-redact` custom entry per channel event that hid new
 // values ({source, values, vendor, families}); `families` since pi-redact#7.
 const redactions = [];
@@ -349,6 +352,25 @@ for (const dir of readdirSync(root)) {
 			prev = e;
 			prevIdx = i;
 		}
+		// Familiar routing: did the Summoner (or the user, typing in the pane)
+		// steer this familiar before its final report? Summoner messages arrive
+		// as pi-post custom messages from a "pi session"; golem pings come from a
+		// "process" and do not count.
+		const firstUser = L.find((e) => e.type === "message" && e.message?.role === "user");
+		if (s.inWindow && firstUser && FAMILIAR_RE.test(textOf(firstUser.message.content))) {
+			const outs = [];
+			L.forEach((e, i) => {
+				if (e.type === "message" && e.message?.role === "assistant") for (const c of e.message.content ?? []) if (c.type === "toolCall" && c.name === "send_message") outs.push({ i, b: String(c.arguments?.body ?? "") });
+			});
+			const fin = outs.find((o) => /\b(complete|completed|done|ready for review|finished|landed)\b/i.test(o.b.slice(0, 250))) ?? outs.at(-1);
+			const fi = fin ? fin.i : Infinity;
+			let mid = 0, post = 0;
+			L.forEach((e, i) => {
+				const steer = (e.type === "custom_message" && e.customType === "pi-post" && /^Message from pi session/.test(String(e.content))) || (e.type === "message" && e.message?.role === "user" && e !== firstUser);
+				if (steer) i < fi ? mid++ : post++;
+			});
+			familiars.push({ dir: s.dir, model: [...s.models][0] ?? "?", bucket: mid ? "steered" : post ? "review-only" : "none", mid, post, tru: s.tru });
+		}
 		if (s.inWindow) sessions.push({ ...s, models: [...s.models], avgCtxK: s.turns ? Math.round(s.ctxSum / s.turns / 1000) : 0, maxCtxK: Math.round(s.maxCtx / 1000) });
 	}
 }
@@ -484,7 +506,10 @@ if (menuShadow.length) {
 	const top = Object.entries(gates).sort((a, b) => b[1] - a[1]).slice(0, 8);
 	if (top.length) P(`Held by: ${top.map(([k, v]) => `${k}=${v}`).join(", ")}`);
 	const waits = menuShadow.map((m) => m.waitMs).filter((w) => typeof w === "number").sort((a, b) => a - b);
-	if (waits.length) P(`Median wait for a reply: ${Math.round(waits[Math.floor(waits.length / 2)] / 1000)} s`);
+	if (waits.length) {
+		const q = (x) => Math.round(waits[Math.floor(x * (waits.length - 1))] / 1000);
+		P(`Wait for a reply: median ${q(0.5)} s, p75 ${q(0.75)} s, p90 ${q(0.9)} s (n=${waits.length}). The needs-you view decision reads p90.`);
+	}
 } else P(`None recorded (menu-shadow logs since 2026-11-11).`);
 P();
 P(`## Redactions (\`pi-redact\` entries: ${redactions.length})`);
@@ -523,6 +548,15 @@ if (sigilRuns.length) {
 	for (const r of failed) errs[r.error.slice(0, 40)] = (errs[r.error.slice(0, 40)] ?? 0) + 1;
 	if (failed.length) P(`Errors: ${Object.entries(errs).sort((a, b) => b[1] - a[1]).map(([k, v]) => `${k}=${v}`).join(", ")}.`);
 } else P(`None recorded. The observer writes one entry per run in repos with \`.sigil/\` (or with \`/sigil-map on\`).`);
+P();
+P(`## Familiar routing (${familiars.length} familiar sessions)`);
+if (familiars.length) {
+	const b = {};
+	for (const f of familiars) b[f.bucket] = (b[f.bucket] ?? 0) + 1;
+	const n = familiars.length;
+	P(`steered mid-flight ${b.steered ?? 0}, review-only ${b["review-only"] ?? 0}, none ${b.none ?? 0}. Not steered: ${Math.round((100 * ((b["review-only"] ?? 0) + (b.none ?? 0))) / n)}% (baseline 30 days to 11-15: 46%, 17 of 37). Not-steered familiars are golem (gate) or \`-P\` (no decision) shaped.`);
+	P(`$ by bucket: ${["steered", "review-only", "none"].map((k) => `${k} ${usd(sum(familiars.filter((f) => f.bucket === k), (f) => f.tru))}`).join(", ")}.`);
+} else P(`None in window.`);
 P();
 P(`## Constructs`);
 const summons = join(homedir(), "scratch/logs/summons.log");

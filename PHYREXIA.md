@@ -366,6 +366,13 @@ address (deliberate silent constructs need the explicit `-R` opt-out).
 Encode the invariant (know what's summoned; runs must be discoverable), not
 the layout.
 
+- **Route at dispatch by the decision the work needs.** A gate exists:
+  golem. No gate and no decision expected mid-run (a review, a survey, a
+  fix the brief fully decides): `summon-familiar.sh -P`. A decision
+  expected mid-run: window familiar. In the 30 days to 2026-11-15, 17 of
+  37 familiars got no Summoner message before their report (8 none, 9
+  review only). The weekly audit's "Familiar routing" line counts this;
+  the target is under 25% not steered.
 - **Specs go to golems, briefs go to familiars.** `~/scratch/<id>-spec.md`
   (a verifiable end state, a gate) is summon-golem input; `<id>-brief.md`
   (work that needs steering or judgment mid-run) is summon-familiar input.

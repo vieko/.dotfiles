@@ -163,6 +163,17 @@ proposing templates or interpreting a false report label as an omission.
   all landed through review, but 2/92 malformed edits (`newText` key lost)
   against a fixed bar of 0. Familiar default back to sol, alias dropped.
   Report any raw-id terra familiar's edit health if one runs.
+- **Routing at dispatch** (started 2026-11-15): PHYREXIA.md routes by the
+  decision the work needs (gate: golem; no decision: `-P`; decision:
+  window familiar). Read "Familiar routing": not-steered share was 46%
+  (17 of 37) in the 30 days before. Target under 25% by week 48; if it
+  does not move, the rule is prose nobody reads at dispatch and the next
+  lever is a prompt in `summon-familiar.sh` ("does this brief expect a
+  decision?").
+- **Needs-you view** (decide at week 47): read the menu-shadow wait p90
+  (1,117 s = 19 min, n=23, to 11-15). Build a "waiting on you" list (sigil
+  lobby panel or CLI, from pi-post liveness plus session files) only if
+  p90 stays above ~15 min with 10+ sessions live; otherwise drop it.
 - **Fable seat** (agreed 2026-11-09): the Summoner stays on opus and
   reaches fable through counsel. Report any session switched to fable
   with its $/ut and whether the work was architecture or review.
