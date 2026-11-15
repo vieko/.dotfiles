@@ -160,7 +160,7 @@ proposing templates or interpreting a false report label as an omission.
 ## Open experiments (settle before proposing new ones)
 
 - **Terra familiars**: closed 2026-11-15 (week 46). 8 tasks, $0.007/turn,
-  no follow-up steering, but 2/92 malformed edits (`newText` key lost)
+  all landed through review, but 2/92 malformed edits (`newText` key lost)
   against a fixed bar of 0. Familiar default back to sol, alias dropped.
   Report any raw-id terra familiar's edit health if one runs.
 - **Fable seat** (agreed 2026-11-09): the Summoner stays on opus and

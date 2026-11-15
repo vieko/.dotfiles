@@ -176,7 +176,7 @@ when the work demands it.
   (measured on 6.0; the next audit's edit-health line covers 6.1).
   **Terra trial (2026-11-02..11-15): closed, reverted to sol.** 8
   familiar tasks on `gpt-6.1-terra:high` ($1/$5, half sol): $0.007/turn,
-  no follow-up steering, but 2 of 92 edit calls (week 46, one sigil
+  all landed through normal review, but 2 of 92 edit calls (week 46, one sigil
   task) lost the `newText` key, and the rule fixed before the trial
   required 0 malformed. The familiar alias is gone; a raw
   `openai/gpt-6.1-terra:high` still passes through. Anvil keeps its own
