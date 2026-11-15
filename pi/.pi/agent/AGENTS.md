@@ -17,6 +17,12 @@ and pins: `~/.dotfiles/docs/agent-packages.md`.
 Pi's session tree (`/tree`, `/fork`, `/resume`) replays conversation
 history; Bonfire is project memory. They do not replace each other.
 
+## Closing a session
+
+When the user asks "anything else for this session?", "good to close?" or
+the like, answer with the checklist in `~/.pi/agent/prompts/wrap.md` (the
+`/wrap` template): read it and follow it, with evidence, not memory.
+
 ## Delegating autonomous work
 
 For complex multi-step refactors, large rewrites, or anything that wants to run
@@ -156,8 +162,10 @@ Sequence:
 2. `gh pr merge <n> --squash` (no `--delete-branch`), then confirm
    `MERGED`. gh 2.99+ `--delete-branch` also removes the head branch's
    worktree, even when a job is running from it.
-3. Close the loop: move the Linear issue if the PR body didn't auto-close
-   it, then clean up explicitly. Check nothing runs from the worktree
+3. Close the loop: check the Linear issue after the merge has returned
+   (the GitHub integration moves a linked issue to Done within seconds;
+   never set it in the same parallel batch as the merge) and move it only
+   if it did not move. Then clean up explicitly. Check nothing runs from the worktree
    (`lsof -d cwd | grep -F <path>` is empty), remove it, delete the local branch, and
    `git push origin --delete <branch>` (skip for a stacked base until its
    child is retargeted). Close any construct window (`fam-*`, `golem-*`)
