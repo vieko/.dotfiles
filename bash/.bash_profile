@@ -69,8 +69,12 @@ fi
 # deletes files whose server is gone or restarted, so the secrets live about
 # as long as that server, like a tmux server's env. Shells outside Rex never
 # read the file. A lock makes the panes that layout restore opens at once
-# wait for the first inject instead of prompting each.
-_opRexCache=""
+# wait for the first inject instead of prompting each. They wait while the
+# lock's shell lives (up to 5 minutes): after a reboot 1Password wants the
+# typed password, and a 20s wait gave one prompt per tab (2026-11 trial).
+# A pane that waited and still has no file skips the inject; the notice
+# below points to op-hydrate.
+_opRexCache="" _opRexOwner="" _opRexWaited=""
 if [[ "$OSTYPE" == darwin* ]]; then
     _opRexDir="$(getconf DARWIN_USER_TEMP_DIR 2>/dev/null)op-env-rex"
     _opRexId=$(stat -f '%i-%B' "$HOME/Library/Application Support/rex/server.sock" 2>/dev/null)
@@ -83,11 +87,28 @@ if [[ "$OSTYPE" == darwin* ]]; then
 fi
 if [[ -n "$_opRexCache" && -z "$AI_GATEWAY_API_KEY" ]]; then
     mkdir -p -m 700 "$_opRexDir"
-    # A lock older than a minute belongs to a shell that died mid-inject.
-    find "$_opRexDir/lock" -maxdepth 0 -mmin +1 -exec rmdir {} \; 2>/dev/null
-    if [[ ! -s "$_opRexCache" ]] && ! mkdir "$_opRexDir/lock" 2>/dev/null; then
-        for _ in {1..100}; do [[ -s "$_opRexCache" ]] && break; sleep 0.2; done
-    fi
+    for _ in {1..1500}; do
+        [[ -s "$_opRexCache" ]] && break
+        # The shell we waited for is done and wrote nothing: do not prompt again.
+        [[ -n "$_opRexWaited" && ! -d "$_opRexDir/lock" ]] && break
+        if mkdir "$_opRexDir/lock" 2>/dev/null; then
+            echo $$ > "$_opRexDir/lock/pid"
+            _opRexOwner=1
+            break
+        fi
+        _opRexPid=$(cat "$_opRexDir/lock/pid" 2>/dev/null)
+        if [[ -n "$_opRexPid" ]] && kill -0 "$_opRexPid" 2>/dev/null; then
+            _opRexWaited=1
+        elif [[ -n "$_opRexPid" ]]; then
+            rm -rf "$_opRexDir/lock"   # its shell died mid-inject
+            _opRexWaited=""
+            continue
+        else
+            # No pid yet (just created) or a lock from an older version.
+            find "$_opRexDir/lock" -maxdepth 0 -mmin +1 -exec rm -rf {} + 2>/dev/null
+        fi
+        sleep 0.2
+    done
     if [[ -s "$_opRexCache" ]]; then
         set -a
         . "$_opRexCache"
@@ -98,6 +119,7 @@ fi
 
 if [[ -z "$OP_ENV_HYDRATED" ]] \
         && [[ -z "$AI_GATEWAY_API_KEY" ]] \
+        && [[ -z "$_opRexWaited" || -n "$_opRexOwner" ]] \
         && command -v op &>/dev/null \
         && [[ -r "$HOME/.dotfiles/bash/env.op" ]] \
         && op account list &>/dev/null 2>&1; then
@@ -113,8 +135,8 @@ if [[ -z "$OP_ENV_HYDRATED" ]] \
     fi
     unset _opEnv
 fi
-[[ -n "$_opRexCache" ]] && rmdir "$_opRexDir/lock" 2>/dev/null
-unset _opRexCache _opRexDir _opRexId _opRexFile
+[[ -n "$_opRexOwner" ]] && rm -rf "$_opRexDir/lock"
+unset _opRexCache _opRexDir _opRexId _opRexFile _opRexOwner _opRexPid _opRexWaited
 
 # A login shell racing 1Password at boot (app not yet unlocked) skips the
 # block above silently, and a tmux server started from it seeds every pane
