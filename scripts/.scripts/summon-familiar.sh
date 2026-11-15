@@ -169,6 +169,14 @@ brief="$1"; shift
 brief_abs="$(cd "$(dirname "$brief")" 2>/dev/null && pwd)/$(basename "$brief")" || true
 [[ -r "$brief_abs" ]] || { echo "error: brief not readable: $brief" >&2; exit 1; }
 
+# Session name: the brief's slug without its kind. Pi reports it as the
+# message on its Rex Activity row (working, done), and pi-post lists the
+# familiar under it; unnamed, the row says only "pi".
+session_name="$(basename "$brief_abs" .md)"
+for kind in brief spec handoff notes; do session_name="${session_name%-"$kind"}"; done
+session_name="${session_name//[^A-Za-z0-9._-]/-}"
+[[ "$session_name" == -* || -z "$session_name" ]] && session_name="fam$session_name"
+
 # Kind check: warn, never refuse. A 2026-10-09 audit found the suffix
 # unreliable -- most *-spec.md files sent to familiars read as briefs
 # (gtmeng-3910-spec.md opens with "Familiar brief. Steerable").
@@ -306,7 +314,7 @@ if [[ $print_mode -eq 1 ]]; then
     # starts. The brief slug keeps same-second parallel dispatches apart.
     brief_slug="$(basename "$brief_abs" .md)"
     log="$LOG_DIR/familiar-$(date +%Y%m%d-%H%M%S)-${brief_slug}-${vessel//[\/:]/-}.log"
-    cmd=(env ${counsel_env:+"$counsel_env"} ${board_env:+"$board_env"} "$role_env" "$bonfire_env" ${parent_env:+"$parent_env"} pi -p --provider "$PROVIDER" --model "$model" "$prompt")
+    cmd=(env ${counsel_env:+"$counsel_env"} ${board_env:+"$board_env"} "$role_env" "$bonfire_env" ${parent_env:+"$parent_env"} pi -p --name "$session_name" --provider "$PROVIDER" --model "$model" "$prompt")
     if [[ $dry_run -eq 1 ]]; then
         echo "dry-run (print mode):"
         printf '  '; printf '%q ' "${cmd[@]}"; printf '\n  log: %s\n' "$log"
@@ -340,7 +348,7 @@ else
     term="$HOME/.scripts/construct-term.sh"
     backend="$("$term" backend 2>/dev/null)" \
         || { echo "error: pane/window mode requires tmux or Rex (use -P for in-band)" >&2; exit 1; }
-    pi_cmd="${counsel_env:+$counsel_env }${board_env:+$board_env }$role_env $bonfire_env ${parent_env:+$parent_env }pi --provider \"$PROVIDER\" --model \"$model\" \"$prompt\""
+    pi_cmd="${counsel_env:+$counsel_env }${board_env:+$board_env }$role_env $bonfire_env ${parent_env:+$parent_env }pi --name $session_name --provider \"$PROVIDER\" --model \"$model\" \"$prompt\""
     if [[ $dry_run -eq 1 ]]; then
         if [[ -n "$window_name" ]]; then
             echo "dry-run (window mode, $backend): new window $window_name, then type:"
