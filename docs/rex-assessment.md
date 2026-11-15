@@ -1,6 +1,7 @@
 # Rex as a replacement for Ghostty + tmux (phyrexia), 2026-10-31
 
-Status: evaluation. Trial prep done 2026-10-31 (see "Applied" at the end).
+Status: kept (decided 2026-11-14, see "Reassessment 2026-11-14"). Rex is
+the daily terminal on phyrexia. Trial prep done 2026-10-31 (see "Applied").
 Detail below is a snapshot of Rex beta builds; recheck the changelog
 before acting on any gap.
 
@@ -256,3 +257,69 @@ and Alt+Backspace deletes a word in Pi under Rex with no extra binding.
 - Long unattended runs stay in tmux until Rex can upgrade without killing
   agents.
 - Reassess on 2026-11-14: keep, extend, or roll back.
+
+## Reassessment 2026-11-14: keep
+
+Decision: keep Rex as the daily terminal. tmux stays installed as the
+fallback for a run that must survive a Rex server restart. Ghostty stays
+configured.
+
+Evidence from the trial:
+
+- 59 of 60 constructs from 2026-10-31 to 2026-11-13 ran in Rex tabs
+  (`~/scratch/logs/summons.log`), long golems included; the one other was
+  a print-mode familiar. The "long runs stay in tmux" rule was not used.
+- The laptop restarted a few times on its own. Tabs came back, running
+  sessions stopped, no work lost that the user saw.
+- Keys: no problems seen. Golem and agent status in the sidebar and the
+  Activity view (Working, Done) helped. Agents used the Rex skill.
+- 1Password: the user typed the password once per tab after restarts. The
+  cause was the per-server cache lock: restored panes waited 20s for the
+  first pane's prompt, and after a reboot 1Password wants the typed
+  password, which takes longer, so each pane ran its own inject. Fixed in
+  `7961432` (wait while the lock's shell lives, up to 5 minutes; a pane
+  that waited on a failed prompt does not prompt again). Tested with a
+  stub `op`: three panes and a 30s approval give one inject. Confirm on
+  the next reboot: one prompt in total.
+
+Rex status checked (changelog to Mac preview.30 and Server & CLI
+preview.19, 2026-11-13):
+
+- Still open: scrollback in layout restore, server restart without
+  killing processes (1565320686338052178, deferred), keyboard copy mode
+  (1558373508117958686, accepted), settings in config files
+  (1556737365475598464, accepted), a CLI that lists built-in shortcuts
+  (1562929722755649678 active, 1565309554022031464 deferred), public block
+  plugins, push notifications to iOS (1562899915489808545 accepted; agent
+  state push 1566890849713918244 deferred).
+- Shipped: global Toggle Visibility (`client.visibility.toggle`, Mac
+  preview.25); not needed, Aerospace already opens windows. App relaunch
+  for updates keeps programs running (Mac preview.26); a server restart
+  still kills them. Pi OSC 133 vs 7501 (1565813108620927117) is fixed in
+  Pi 1.5.0.
+- Copy mode stopgaps from the community: `tomarrell/rex-tmux-copy` (the
+  pane's scrollback in tmux copy mode, in a floating pane) and a floating
+  nvim gist in the copy mode thread. Not adopted.
+
+Deferred items, decided:
+
+- Lua events watchdog: dropped. `child_exited` still fires for the tab's
+  shell, and the watchdog dies on restarts; the pi-post ping covers it.
+- OSC 7501 in `pr-wait.sh`: dropped. It runs detached with no terminal.
+- remind-at alert as a Rex tab: not now. Rex does not push program
+  status to the phone yet. Recheck when push notifications ship.
+- keybind-audit Rex defaults: waiting for a CLI that lists them.
+
+Rules from now on:
+
+- Update or restart the Rex server only when `construct-term.sh list`
+  and `anvil status` show nothing running. On 2026-11-14 the server ran
+  preview.14 while the app shipped preview.18; preview.19 fixes lost
+  sessions on server start and stop.
+- A run that must survive a server restart or update goes in tmux.
+- Activity customization is in Settings, Notifications, Program Activity
+  (per state: tab marks, notifications, Dock badge, sound; include idle)
+  and grouping by session or by priority. The text in a row comes from
+  the program's OSC 7501 report, so our own tools can say more (for
+  example the golem's spec name and gate step).
+- Recheck the open items in a month (reminder `rex-open-items-recheck`).
