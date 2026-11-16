@@ -465,10 +465,14 @@ new snapshot, and without it the controller exits 4 naming the repo slug and
 the rebuild command. The match kind is logged and recorded as
 `snapshotMatch` in the manifest and handoff result.
 After selection it compares the snapshot's registered `anvilSha` with
-`origin/main` of `~/dev/anvil` (no fetch). When they differ, a request with
-`rebuildSnapshot: true` rebuilds once; otherwise the dispatch goes ahead on
-the old anvil, logs `stale anvil <old>..<current>`, and records `anvilStale`
-in the manifest, the handoff result, and the completion ping. An exit 4
+`origin/main` of `~/dev/anvil` (no fetch; push anvil first). When they
+differ, the setup phase updates the snapshot's anvil clone to the current
+sha (`git fetch` + `checkout`, and `npm ci` only when anvil's
+`package-lock.json` changed), with `registry.npmjs.org` allowed in setup
+only; the log has `anvil refresh <old>..<new>` and `phase anvil-refresh`,
+and `anvilRefresh` is recorded in the manifest, the handoff result, and the
+completion ping. A failed refresh is exit 4 before dispatch. An anvil
+release therefore never forces a snapshot rebuild. An exit 4
 ping quotes the controller's refusal line.
 **The first dispatch using each new snapshot requires explicit spend
 approval**, even if it is a dry-looking validation run. IDs must refer to an

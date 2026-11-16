@@ -320,10 +320,10 @@ EOF
         if [[ $sandbox_enabled -eq 1 ]]; then
             cat <<'EOF'
     local handoff="${SANDBOX_HANDOFF:-}"
-    local details="" stale=""
+    local details="" refresh=""
     if [[ -s "$handoff" ]]; then
-        stale="$(jq -r 'if .anvilStale then "anvilStale=\(.anvilStale.snapshot)..\(.anvilStale.current)" else empty end' "$handoff" 2>/dev/null)"
-        details="sandbox=$(jq -r '.sandboxId // "?"' "$handoff" 2>/dev/null) stop=$(jq -r '.stopStatus // "?"' "$handoff" 2>/dev/null) retrieval=$(jq -r '.retrievalStatus // "?"' "$handoff" 2>/dev/null) import=$(jq -r '.importStatus // "?"' "$handoff" 2>/dev/null) branch=$(jq -r '.branch // "?"' "$handoff" 2>/dev/null) worktree=$(jq -r '.worktree // "?"' "$handoff" 2>/dev/null) artifacts=$(dirname "$handoff") verdict=$(jq -r '.verdict // "?"' "$handoff" 2>/dev/null) voidReason=$(jq -r '.voidReason // "?"' "$handoff" 2>/dev/null) attempts=$(jq -r '.attempts // "?"' "$handoff" 2>/dev/null) cost=$(jq -r '.cost // "?"' "$handoff" 2>/dev/null) timeoutMs=$(jq -r '.timeoutMs // "?"' "$handoff" 2>/dev/null) provenance=$(jq -c '.provenance // {}' "$handoff" 2>/dev/null)${stale:+ $stale}"
+        refresh="$(jq -r 'if .anvilRefresh then "anvilRefresh=\(.anvilRefresh.from)..\(.anvilRefresh.to)" else empty end' "$handoff" 2>/dev/null)"
+        details="sandbox=$(jq -r '.sandboxId // "?"' "$handoff" 2>/dev/null) stop=$(jq -r '.stopStatus // "?"' "$handoff" 2>/dev/null) retrieval=$(jq -r '.retrievalStatus // "?"' "$handoff" 2>/dev/null) import=$(jq -r '.importStatus // "?"' "$handoff" 2>/dev/null) branch=$(jq -r '.branch // "?"' "$handoff" 2>/dev/null) worktree=$(jq -r '.worktree // "?"' "$handoff" 2>/dev/null) artifacts=$(dirname "$handoff") verdict=$(jq -r '.verdict // "?"' "$handoff" 2>/dev/null) voidReason=$(jq -r '.voidReason // "?"' "$handoff" 2>/dev/null) attempts=$(jq -r '.attempts // "?"' "$handoff" 2>/dev/null) cost=$(jq -r '.cost // "?"' "$handoff" 2>/dev/null) timeoutMs=$(jq -r '.timeoutMs // "?"' "$handoff" 2>/dev/null) provenance=$(jq -c '.provenance // {}' "$handoff" 2>/dev/null)${refresh:+ $refresh}"
     else
         details="sandbox=?, stop=?, retrieval=unknown, import=unknown, artifacts=see controller log"
     fi

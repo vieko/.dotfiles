@@ -21,6 +21,10 @@ const GH_STS_SETUP_BUDGET_MS = 10 * 60_000;
 const REMOTE_HOME = '/vercel';
 /** anvil's per-repo state bucket (packages/cli/src/state-paths.ts): the absolute path, separators to dashes, wrapped in `--`. */
 export const anvilBucket = repoRoot => `--${repoRoot.replace(/^[/\\]/, '').replace(/[/\\:]/g, '-')}--`;
+export function anvilRefreshCommand(from, to) {
+  if (!SHA_RE.test(from) || !SHA_RE.test(to)) throw new Error('anvil refresh shas must be 40-character hex values');
+  return `set -eo pipefail; cd /vercel/anvil && git fetch -q origin ${q(to)} && git checkout -q --detach ${q(to)} && if git diff --quiet ${q(from)} ${q(to)} -- package-lock.json; then :; else diff_status=$?; [ "$diff_status" -eq 1 ] || exit "$diff_status"; npm_config_min_release_age=0 npm ci --no-audit --no-fund --offline=false --prefer-offline || exit $?; fi && cd / && anvil --help | grep -q -- --gate-timeout`;
+}
 const SHA_RE = /^[0-9a-f]{40}$/i;
 const COLLECTION_RESERVE_MS = 5 * 60_000;
 const q = (s) => `'${String(s).replaceAll("'", "'\\''")}'`;
@@ -215,30 +219,15 @@ export async function runController(requestPath, effects) {
     manifest.snapshotMatch = snapshotMatch;
     state.snapshotMatch = snapshotMatch;
     if (nearMatch) setupPolicy.allow['registry.npmjs.org'] = [];
+    const currentAnvilSha = await snapshots?.currentAnvilSha?.();
+    if (!builtThisRun && chosenRecord?.anvilSha && currentAnvilSha && chosenRecord.anvilSha !== currentAnvilSha) {
+      state.anvilRefresh = { from: chosenRecord.anvilSha, to: currentAnvilSha };
+      manifest.anvilRefresh = state.anvilRefresh;
+      setupPolicy.allow['registry.npmjs.org'] = [];
+      say(`anvil refresh ${chosenRecord.anvilSha.slice(0, 9)}..${currentAnvilSha.slice(0, 9)}`);
+    }
     say(`${snapshotMatch} snapshot ${snapshotId} (snapshot lockfile ${String(chosenRecord?.lockfileHash ?? manifest.lockfileHash).slice(0, 12)}, fork lockfile ${manifest.lockfileHash.slice(0, 12)})`);
     await fs.writeFile(path.join(state.artifactDir, 'manifest.json'), JSON.stringify(manifest, null, 2));
-    const currentAnvilSha = await snapshots?.currentAnvilSha?.();
-    if (chosenRecord?.anvilSha && currentAnvilSha && chosenRecord.anvilSha !== currentAnvilSha) {
-      if (req.rebuildSnapshot && !builtThisRun) {
-        say(`stale anvil ${chosenRecord.anvilSha.slice(0, 9)}..${currentAnvilSha.slice(0, 9)}; rebuilding at ${req.forkSha.slice(0, 9)}`);
-        const built = await snapshots.build({ repo: req.localRepo, ref: req.forkSha });
-        if (!built?.snapshotId || built.lockfileHash !== manifest.lockfileHash) throw new Error('snapshot rebuild did not produce a matching snapshot');
-        snapshotId = built.snapshotId;
-        builtThisRun = true;
-        manifest.snapshotId = snapshotId;
-        manifest.snapshotMatch = 'exact';
-        state.snapshotMatch = 'exact';
-        nearMatch = false;
-        delete setupPolicy.allow['registry.npmjs.org'];
-        chosenRecord = built;
-        say(`snapshot ${snapshotId} rebuilt for current anvil`);
-      } else {
-        state.anvilStale = { snapshot: chosenRecord.anvilSha, current: currentAnvilSha };
-        manifest.anvilStale = state.anvilStale;
-        say(`stale anvil ${chosenRecord.anvilSha.slice(0, 9)}..${currentAnvilSha.slice(0, 9)}; rebuild with rebuildSnapshot: true`);
-      }
-      await fs.writeFile(path.join(state.artifactDir, 'manifest.json'), JSON.stringify(manifest, null, 2));
-    }
     state.snapshotId = snapshotId;
     sandbox = await sdk.create({ token: env.VERCEL_TOKEN, teamId: req.teamId, projectId: req.projectId, source: { type: 'snapshot', snapshotId }, resources: { vcpus: req.vcpus }, timeout: req.timeoutMs, persistent: false, networkPolicy: setupPolicy, env: { CI: '1', GIT_TERMINAL_PROMPT: '0', AI_GATEWAY_API_KEY: 'brokered-by-sandbox-firewall' } });
     state.sandboxId = sandbox.name ?? sandbox.id;
@@ -277,6 +266,13 @@ export async function runController(requestPath, effects) {
     const remoteHash = lock.out.trim().split(/\s/)[0];
     const expectedHash = nearMatch ? chosenRecord.lockfileHash : manifest.lockfileHash;
     if (!remoteHash || remoteHash !== expectedHash) throw new Error('snapshot lockfile hash mismatch');
+    if (state.anvilRefresh) {
+      const command = anvilRefreshCommand(state.anvilRefresh.from, state.anvilRefresh.to);
+      try {
+        const refreshed = await output('bash', ['-lc', command], true);
+        if (refreshed.code !== 0) throw new Error(`anvil refresh failed (${refreshed.code}): ${sanitize(refreshed.out.slice(-1500), secrets)}; rebuild with exactSnapshot: true, rebuildSnapshot: true`);
+      } finally { phase('anvil-refresh'); }
+    }
     if (nearMatch) {
       const command = deltaFetchCommand(manager);
       try {

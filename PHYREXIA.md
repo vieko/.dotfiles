@@ -74,7 +74,10 @@ panes. `summon-*.sh` and `remind-at.sh` pick tmux or Rex through
   Per-repo snapshots and the optional clone credential (anvil #63) are in
   `8851ff3` but not yet proven live outside gtm. Dispatch friction from
   the 2026-11-10 dogfood (clean check, lane env, summoner address,
-  refusal pings, stale-anvil notice) fixed 2026-11-15.
+  refusal pings) fixed 2026-11-15. Since then a lockfile change or an
+  anvil release no longer forces a rebuild: the controller picks the
+  newest snapshot of the repo, fetches the package delta, and updates
+  anvil in the setup phase (registry egress in setup only).
 
 - **Scout** -- a read-only child run by the `scout` tool (dotfiles
   `9c79797`, since 2026-11-10): haiku-5.5, tools `read,grep,find,ls`, up
