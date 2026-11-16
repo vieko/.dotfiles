@@ -364,6 +364,127 @@ test('pinned snapshot with no registry record dispatches without a stale warning
   } finally { await f.clean(); }
 });
 
+<<<<<<< HEAD
+||||||| parent of c22696c (Cover refresh skip for snapshots built in-run)
+test('anvil refresh skips npm ci when package-lock.json is unchanged', async () => {
+  const f = await fixture({ registry: [{ snapshotId: 'snapshot-approved', repo: 'acme/repo', lockfileHash: sha, anvilSha: sha }], currentAnvilSha: 'b'.repeat(40), refreshDiffExitCode: 0 });
+  try {
+    const result = await f.run();assert.equal(result.exitCode,0);
+    const refresh=f.calls.find(c=>c[0]==='remote'&&String(c[1].args?.at(-1)).includes('git fetch -q origin'))[1].args.at(-1);
+    assert.match(refresh,/git diff --quiet .* -- package-lock\.json/);
+    assert.equal(result.anvilRefresh.from,sha);
+    assert.equal(f.calls.some(c=>c[0]==='refresh-npmci'),false);
+  } finally { await f.clean(); }
+});
+
+test('failed anvil refresh exits 4 before anvil and stops the sandbox with sanitized output and rebuild hint', async () => {
+  const f = await fixture({ registry: [{ snapshotId: 'snapshot-approved', repo: 'acme/repo', lockfileHash: sha, anvilSha: sha }], currentAnvilSha: 'b'.repeat(40), refreshExitCode: 23, refreshOutput: `${'x'.repeat(700)}V_TOKEN_marker${'y'.repeat(1000)}` });
+  try {
+    const result = await f.run();assert.equal(result.exitCode,4);
+    assert.equal(f.calls.some(c=>c[0]==='remote'&&c[1].cmd==='anvil'),false);assert.equal(f.calls.at(-1)[0],'stop');
+    const line=f.logs.find(x=>x.includes('anvil refresh failed (23)'));
+    assert.ok(line?.includes('[REDACTED]'));assert.ok(line.includes('exactSnapshot: true, rebuildSnapshot: true'));assert.equal(line.includes('V_TOKEN_marker'),false);
+    assert.ok(f.logs.some(x=>x.includes('phase anvil-refresh')));
+  } finally { await f.clean(); }
+});
+
+test('registered snapshot without anvilSha and pinned snapshot without record do not refresh', async () => {
+  for (const registry of [
+    [{ snapshotId: 'snapshot-approved', repo: 'acme/repo', lockfileHash: sha }],
+    [{ snapshotId: 'other-snapshot', repo: 'acme/repo', lockfileHash: 'other-lock', anvilSha: sha }],
+  ]) {
+    const f=await fixture({registry,currentAnvilSha:'b'.repeat(40)});
+    try { const result=await f.run();assert.equal(result.exitCode,0);assert.equal(f.calls.some(c=>c[0]==='remote'&&String(c[1].args?.at(-1)).includes('git fetch -q origin')),false); }
+    finally { await f.clean(); }
+  }
+});
+
+test('anvil refresh does not run for fresh or unknown current sha and exact-match policy stays unchanged', async () => {
+  for (const currentAnvilSha of [sha,undefined]) {
+    const f=await fixture({registry:[{snapshotId:'snapshot-approved',repo:'acme/repo',lockfileHash:sha,anvilSha:sha}],currentAnvilSha});
+    try {
+      const result=await f.run();assert.equal(result.exitCode,0);
+      assert.equal(f.calls.some(c=>c[0]==='remote'&&String(c[1].args?.at(-1)).includes('git fetch -q origin')),false);
+      assert.deepEqual(Object.keys(f.calls.find(c=>c[0]==='create')[1].networkPolicy.allow).sort(),['ai-gateway.vercel.sh','github.com']);
+    } finally { await f.clean(); }
+  }
+});
+
+test('anvil refresh command rejects non-hex shas and builds the guarded refresh sequence', () => {
+  assert.throws(()=>anvilRefreshCommand('not-a-sha','b'.repeat(40)),/40-character hex/);
+  assert.throws(()=>anvilRefreshCommand('a'.repeat(40),'b'.repeat(39)+'z'),/40-character hex/);
+  const command=anvilRefreshCommand(sha,'b'.repeat(40));
+  assert.ok(command.includes(`cd /vercel/anvil && git fetch -q origin '${'b'.repeat(40)}' && git checkout -q --detach '${'b'.repeat(40)}'`));
+  assert.ok(command.includes(`git diff --quiet '${sha}' '${'b'.repeat(40)}' -- package-lock.json`));
+  assert.ok(command.includes('npm_config_min_release_age=0 npm ci --no-audit --no-fund --offline=false --prefer-offline'));
+  assert.ok(command.endsWith('cd / && anvil --help | grep -q -- --gate-timeout'));
+});
+
+=======
+test('anvil refresh skips npm ci when package-lock.json is unchanged', async () => {
+  const f = await fixture({ registry: [{ snapshotId: 'snapshot-approved', repo: 'acme/repo', lockfileHash: sha, anvilSha: sha }], currentAnvilSha: 'b'.repeat(40), refreshDiffExitCode: 0 });
+  try {
+    const result = await f.run();assert.equal(result.exitCode,0);
+    const refresh=f.calls.find(c=>c[0]==='remote'&&String(c[1].args?.at(-1)).includes('git fetch -q origin'))[1].args.at(-1);
+    assert.match(refresh,/git diff --quiet .* -- package-lock\.json/);
+    assert.equal(result.anvilRefresh.from,sha);
+    assert.equal(f.calls.some(c=>c[0]==='refresh-npmci'),false);
+  } finally { await f.clean(); }
+});
+
+test('failed anvil refresh exits 4 before anvil and stops the sandbox with sanitized output and rebuild hint', async () => {
+  const f = await fixture({ registry: [{ snapshotId: 'snapshot-approved', repo: 'acme/repo', lockfileHash: sha, anvilSha: sha }], currentAnvilSha: 'b'.repeat(40), refreshExitCode: 23, refreshOutput: `${'x'.repeat(700)}V_TOKEN_marker${'y'.repeat(1000)}` });
+  try {
+    const result = await f.run();assert.equal(result.exitCode,4);
+    assert.equal(f.calls.some(c=>c[0]==='remote'&&c[1].cmd==='anvil'),false);assert.equal(f.calls.at(-1)[0],'stop');
+    const line=f.logs.find(x=>x.includes('anvil refresh failed (23)'));
+    assert.ok(line?.includes('[REDACTED]'));assert.ok(line.includes('exactSnapshot: true, rebuildSnapshot: true'));assert.equal(line.includes('V_TOKEN_marker'),false);
+    assert.ok(f.logs.some(x=>x.includes('phase anvil-refresh')));
+  } finally { await f.clean(); }
+});
+
+test('snapshot built in this run never schedules an anvil refresh', async () => {
+  const f=await fixture({req:{snapshotId:undefined,exactSnapshot:true,rebuildSnapshot:true},registry:[],currentAnvilSha:'b'.repeat(40),built:{snapshotId:'snapshot-built',lockfileHash:sha,anvilSha:sha}});
+  try {
+    const result=await f.run();assert.equal(result.exitCode,0);assert.equal(f.calls.some(c=>c[0]==='build'),true);
+    assert.equal(f.calls.some(c=>c[0]==='remote'&&String(c[1].args?.at(-1)).includes('git fetch -q origin')),false);
+    assert.equal(result.anvilRefresh,undefined);
+  } finally { await f.clean(); }
+});
+
+test('registered snapshot without anvilSha and pinned snapshot without record do not refresh', async () => {
+  for (const registry of [
+    [{ snapshotId: 'snapshot-approved', repo: 'acme/repo', lockfileHash: sha }],
+    [{ snapshotId: 'other-snapshot', repo: 'acme/repo', lockfileHash: 'other-lock', anvilSha: sha }],
+  ]) {
+    const f=await fixture({registry,currentAnvilSha:'b'.repeat(40)});
+    try { const result=await f.run();assert.equal(result.exitCode,0);assert.equal(f.calls.some(c=>c[0]==='remote'&&String(c[1].args?.at(-1)).includes('git fetch -q origin')),false); }
+    finally { await f.clean(); }
+  }
+});
+
+test('anvil refresh does not run for fresh or unknown current sha and exact-match policy stays unchanged', async () => {
+  for (const currentAnvilSha of [sha,undefined]) {
+    const f=await fixture({registry:[{snapshotId:'snapshot-approved',repo:'acme/repo',lockfileHash:sha,anvilSha:sha}],currentAnvilSha});
+    try {
+      const result=await f.run();assert.equal(result.exitCode,0);
+      assert.equal(f.calls.some(c=>c[0]==='remote'&&String(c[1].args?.at(-1)).includes('git fetch -q origin')),false);
+      assert.deepEqual(Object.keys(f.calls.find(c=>c[0]==='create')[1].networkPolicy.allow).sort(),['ai-gateway.vercel.sh','github.com']);
+    } finally { await f.clean(); }
+  }
+});
+
+test('anvil refresh command rejects non-hex shas and builds the guarded refresh sequence', () => {
+  assert.throws(()=>anvilRefreshCommand('not-a-sha','b'.repeat(40)),/40-character hex/);
+  assert.throws(()=>anvilRefreshCommand('a'.repeat(40),'b'.repeat(39)+'z'),/40-character hex/);
+  const command=anvilRefreshCommand(sha,'b'.repeat(40));
+  assert.ok(command.includes(`cd /vercel/anvil && git fetch -q origin '${'b'.repeat(40)}' && git checkout -q --detach '${'b'.repeat(40)}'`));
+  assert.ok(command.includes(`git diff --quiet '${sha}' '${'b'.repeat(40)}' -- package-lock.json`));
+  assert.ok(command.includes('npm_config_min_release_age=0 npm ci --no-audit --no-fund --offline=false --prefer-offline'));
+  assert.ok(command.endsWith('cd / && anvil --help | grep -q -- --gate-timeout'));
+});
+
+>>>>>>> c22696c (Cover refresh skip for snapshots built in-run)
 test('credential expiry message reports remaining and required dispatch minutes', () => {
   const now = Date.parse('2026-01-01T00:00:00Z');
   assert.match(credentialExpiryMessage(null, 600_000, now), /no Vercel CLI credential found; run `vercel login`/);
