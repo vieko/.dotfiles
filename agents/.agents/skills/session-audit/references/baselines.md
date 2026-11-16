@@ -290,3 +290,8 @@ old row so drift is visible.
 - Constructs: 39 dispatches; anvil 23 runs, 19 first-attempt, $4.85.
 - Terra trial closed: familiar default back to sol, alias dropped.
 - Three reboots; 12 recovery sessions, $39.
+- Fix checks (re-run 11-16 over 11-09 15:43..11-16 09:17): superlogical
+  `mcp_servers` 0, pi-redact `context` 0 (tool 1/286 = no-redact rate),
+  sigil board name 0 after 11-09 16:22; 5 misses ($6.43) from sigil
+  feature merges changing tool descriptions (11-15/16). Counsel
+  unprompted 52/61 (85%, week 45 42%).
