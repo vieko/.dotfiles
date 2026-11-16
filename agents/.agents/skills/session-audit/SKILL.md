@@ -170,10 +170,12 @@ proposing templates or interpreting a false report label as an omission.
   does not move, the rule is prose nobody reads at dispatch and the next
   lever is a prompt in `summon-familiar.sh` ("does this brief expect a
   decision?").
-- **Needs-you view** (decide at week 47): read the menu-shadow wait p90
-  (1,117 s = 19 min, n=23, to 11-15). Build a "waiting on you" list (sigil
-  lobby panel or CLI, from pi-post liveness plus session files) only if
-  p90 stays above ~15 min with 10+ sessions live; otherwise drop it.
+- **Needs-you view**: closed 2026-11-15 without a new view. Rex Activity
+  (set up 11-14) is the list, and `question-status.ts` reports a turn
+  that ends on a lettered menu as `blocked`, so it shows there. At week
+  47, compare the menu-shadow wait p90 before and after 11-15 (to 11-15:
+  7,067 s, n=28). If it stays above ~15 min, propose the Rex Lua phone
+  push for `blocked` questions; otherwise drop the item.
 - **Fable seat** (agreed 2026-11-09): the Summoner stays on opus and
   reaches fable through counsel. Report any session switched to fable
   with its $/ut and whether the work was architecture or review.

@@ -328,4 +328,10 @@ Rules from now on:
   golem says why: gate green, void, setup failed before the agent ran,
   gate red after N attempts, or idle when stopped by the user. Before,
   every non-green golem said "failed (exit 1)".
+- Pi reports a turn that ends on a question as `done`, the same as
+  finished work. `question-status.ts` (2026-11-15) adds a child record
+  (`id=question`, `blocked`, `kind=question`) when a turn ends on a
+  lettered menu, with the options and the recommended one as the row
+  text, and clears it on the next prompt. Pi's own record is untouched;
+  check both with `rex block call program_status`.
 - Recheck the open items in a month (reminder `rex-open-items-recheck`).

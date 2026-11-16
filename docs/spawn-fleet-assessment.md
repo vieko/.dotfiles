@@ -86,6 +86,14 @@ adding a new one.
   exit node); blocked on anvil #58 like the sandbox lane. A wish for an
   always-on agent is a reopen trigger for the Pi Durable assessment.
 
+## Follow-up (2026-11-15)
+
+The week 47 needs-you view became `question-status.ts`: a turn that ends
+on a lettered menu reports `blocked` to Rex Activity instead of a separate
+view. Precedent judges, a sandbox owner, the spec-size warning and the
+stall nudge stay unbuilt: menu overrides depend on information not in the
+record, and golem and session spend is too low for the warnings to pay.
+
 ## Deferred
 
 The full trunk-only fleet model runs later on chaos as a separate project,
