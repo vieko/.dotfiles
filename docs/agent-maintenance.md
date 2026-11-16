@@ -445,17 +445,25 @@ leaving it unset and omitting `snapshotId` from the request lets the
 controller select by repo instead (see below).
 
 Before `Sandbox.create`, the controller resolves which snapshot to dispatch
-on. With `snapshotId` in the request: it checks the approved snapshot against
-the registry, and when its lockfile hash differs from the fork's, falls back
-to the selection below; a snapshot the registry does not know skips this
-check and relies on the in-sandbox hash comparison. With no `snapshotId`: the
-selection below is the only check, run unconditionally. Selection picks the
-newest registered snapshot of the request's repo slug with a lockfile hash
-matching the fork's (no spend); with no match and `rebuildSnapshot: true` in
-the request, it runs `build-snapshot.mjs --repo <localRepo> --ref <forkSha>`
-and dispatches on the new snapshot, logging the id so `ANVIL_SANDBOX_SNAPSHOT_ID`
-can be updated; with no match and no `rebuildSnapshot`, it exits 4 before
-creating anything, naming the repo slug and the rebuild command to run.
+on, in this order. **Exact**: a registered snapshot of the request's repo slug
+built from the fork's lockfile (a pinned `snapshotId` wins when it is one; a
+pinned snapshot the registry does not know relies on the in-sandbox hash
+check). **Near** (since 2026-11-15): with no exact match, the newest snapshot
+of the same repo with the same lockfile file name and, when the fork pins
+`packageManager`, the same manager version (a pinned qualifying snapshot
+wins). A near match adds `registry.npmjs.org` to the setup policy only and
+runs the delta fetch in the clone before the policy drops to gateway-only:
+`pnpm fetch --frozen-lockfile`, or for npm `npm ci --ignore-scripts
+--offline=false --prefer-offline` and removing `node_modules`. The stores
+are content-addressed, so this fetches only what the lockfile changed
+(`phase delta-install` in the log; a failure is exit 4 before dispatch).
+Records without `lockfile` and `packageManager` fields are never near
+candidates. **Rebuild**: only with no exact and no near candidate, or with
+`exactSnapshot: true` in the request; then `rebuildSnapshot: true` runs
+`build-snapshot.mjs --repo <localRepo> --ref <forkSha>` and dispatches on the
+new snapshot, and without it the controller exits 4 naming the repo slug and
+the rebuild command. The match kind is logged and recorded as
+`snapshotMatch` in the manifest and handoff result.
 After selection it compares the snapshot's registered `anvilSha` with
 `origin/main` of `~/dev/anvil` (no fetch). When they differ, a request with
 `rebuildSnapshot: true` rebuilds once; otherwise the dispatch goes ahead on

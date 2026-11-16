@@ -7,12 +7,13 @@ import { execFile } from 'node:child_process';
 import { promisify } from 'node:util';
 import { getVercelOidcToken } from '@vercel/oidc';
 import { findSnapshot, listSnapshots, repoSlug } from './snapshot-registry.mjs';
+import { deltaFetchCommand, detectPackageManager } from './snapshot-toolchain.mjs';
 
 const execFileAsync = promisify(execFile);
-const KEYS = ['repoUrl','forkSha','specPath','gate','scopes','contracts','model','gateTimeout','snapshotId','teamId','projectId','ghStsPolicy','vcpus','timeoutMs','localRepo','dispatchId','summonerAddress','rebuildSnapshot'];
+const KEYS = ['repoUrl','forkSha','specPath','gate','scopes','contracts','model','gateTimeout','snapshotId','teamId','projectId','ghStsPolicy','vcpus','timeoutMs','localRepo','dispatchId','summonerAddress','rebuildSnapshot','exactSnapshot'];
 // snapshotId and ghStsPolicy are optional (anvil#63): a public repo needs no clone credential,
 // and a repo with no approved snapshot yet is selected from the registry instead of pinned.
-const OPTIONAL_KEYS = ['gateTimeout', 'rebuildSnapshot', 'snapshotId', 'ghStsPolicy', 'summonerAddress'];
+const OPTIONAL_KEYS = ['gateTimeout', 'rebuildSnapshot', 'snapshotId', 'ghStsPolicy', 'summonerAddress', 'exactSnapshot'];
 const SECRET_ENV = ['VERCEL_TOKEN','AI_GATEWAY_API_KEY'];
 const GH_STS_URL = 'https://gh-sts.vercel-infra.com/token';
 const GH_STS_SETUP_BUDGET_MS = 10 * 60_000;
@@ -45,6 +46,7 @@ export function validateRequest(r, requestPath) {
   for (const k of ['snapshotId','ghStsPolicy']) if (r[k] !== undefined && !safeName(r[k])) throw new Error(`${k} must be a safe identifier`);
   if (!Number.isInteger(r.vcpus) || r.vcpus < 1 || r.vcpus > 32 || !Number.isInteger(r.timeoutMs) || r.timeoutMs <= COLLECTION_RESERVE_MS + 30_000) throw new Error('vcpus and timeoutMs must leave a five-minute collection window');
   if (r.rebuildSnapshot !== undefined && typeof r.rebuildSnapshot !== 'boolean') throw new Error('rebuildSnapshot must be a boolean');
+  if (r.exactSnapshot !== undefined && typeof r.exactSnapshot !== 'boolean') throw new Error('exactSnapshot must be a boolean');
   if (r.gateTimeout !== undefined && (typeof r.gateTimeout !== 'string' || !/^\d+[smh]$/.test(r.gateTimeout))) throw new Error('gateTimeout must be a duration');
   const reqDir = path.resolve(path.dirname(requestPath));
   const spec = path.resolve(reqDir, r.specPath);
@@ -114,7 +116,11 @@ export async function runController(requestPath, effects) {
     await git.refuseCollision(req.localRepo, state.branch, state.worktree);
     await git.worktreeAdd(req.localRepo, state.worktree, req.forkSha, state.branch);
     await fs.writeFile(path.join(state.artifactDir, 'request.json'), JSON.stringify({ ...req, absoluteSpecPath: undefined, requestDir: undefined }, null, 2));
-    const manifest = { dispatchId: req.dispatchId, snapshotId: req.snapshotId, forkSha: req.forkSha, repoUrl: req.repoUrl, branch: state.branch, worktree: state.worktree, remoteWorktree: null, createdAt: clock.now().toISOString(), sandboxId: null, lockfileHash: await git.lockfileHash(state.worktree), status: 'allocated' };
+    const packageJson = JSON.parse(await fs.readFile(path.join(state.worktree, 'package.json'), 'utf8'));
+    const managerFiles = [];
+    for (const file of ['pnpm-lock.yaml', 'package-lock.json', 'yarn.lock']) if (await fs.exists(path.join(state.worktree, file))) managerFiles.push(file);
+    const manager = detectPackageManager({ files: managerFiles, packageJson });
+    const manifest = { dispatchId: req.dispatchId, snapshotId: req.snapshotId, forkSha: req.forkSha, repoUrl: req.repoUrl, branch: state.branch, worktree: state.worktree, remoteWorktree: null, createdAt: clock.now().toISOString(), sandboxId: null, lockfileHash: await git.lockfileHash(state.worktree, manager.lockfile), status: 'allocated' };
     await fs.writeFile(path.join(state.artifactDir, 'manifest.json'), JSON.stringify(manifest, null, 2));
     // ghStsPolicy is optional (anvil#63): a public repo clones anonymously over https, so there is
     // no gh-sts request, no minted GitHub token, and no Authorization transform on the github.com
@@ -156,44 +162,61 @@ export async function runController(requestPath, effects) {
     ] : [];
     const setupPolicy = { allow: { 'github.com': githubRules, 'ai-gateway.vercel.sh': [gatewayRule] } };
     const agentPolicy = { allow: { 'ai-gateway.vercel.sh': [gatewayRule] } };
-    // Registry pre-check (anvil#59, per-repo anvil#63): the snapshot used must have been built from
-    // the fork's lockfile for this repo. With a pinned snapshotId, an unregistered snapshot skips
-    // this and relies on the in-sandbox hash check below; with no snapshotId, this pre-check is the
-    // only selection there is. Reusing another registered snapshot costs nothing; a rebuild is
-    // spend, so it needs rebuildSnapshot: true in the request.
+    // Reuse an exact snapshot first, then a compatible near snapshot whose content-addressed
+    // store can be warmed before dispatch. A pinned but unregistered snapshot retains the legacy
+    // in-sandbox hash guard; every rebuild still requires explicit spend approval.
     let snapshotId = req.snapshotId;
     const records = snapshots ? await snapshots.list() : [];
     let builtThisRun = false;
     let chosenRecord;
+    let snapshotMatch;
+    let nearMatch = false;
     const slug = repoSlug(req.repoUrl);
     const approved = snapshotId !== undefined ? records.find(r => r.snapshotId === snapshotId) : undefined;
-    const needsSelection = snapshotId === undefined || (approved && approved.lockfileHash !== manifest.lockfileHash);
-    if (needsSelection) {
-      const match = findSnapshot(records, slug, manifest.lockfileHash);
-      const mismatchLabel = snapshotId !== undefined
-        ? `snapshot lockfile mismatch (snapshot ${approved.lockfileHash.slice(0, 12)}, fork ${manifest.lockfileHash.slice(0, 12)})`
-        : `snapshot lockfile mismatch (no registered snapshot for ${slug} with lockfile ${manifest.lockfileHash.slice(0, 12)})`;
-      if (match) {
-        say(snapshotId !== undefined
-          ? `${mismatchLabel}; using ${match.snapshotId} (built ${match.builtAt})`
-          : `using registered snapshot ${match.snapshotId} for ${slug} (lockfile ${manifest.lockfileHash.slice(0, 12)}, built ${match.builtAt})`);
-        snapshotId = match.snapshotId;
-        chosenRecord = match;
-      } else if (req.rebuildSnapshot) {
-        say(`${mismatchLabel}; rebuilding at ${req.forkSha.slice(0, 9)}`);
+    const exactCandidates = records.filter(r => r.repo === slug && r.lockfileHash === manifest.lockfileHash);
+    const exact = approved && approved.repo === slug && approved.lockfileHash === manifest.lockfileHash
+      ? approved : findSnapshot(exactCandidates, slug, manifest.lockfileHash);
+    const pinnedManager = manager.version !== null;
+    const nearCandidates = records.filter(r => r.repo === slug && r.lockfileHash !== manifest.lockfileHash &&
+      typeof r.lockfile === 'string' && r.lockfile === manager.lockfile && typeof r.lockfileHash === 'string' && r.lockfileHash && typeof r.packageManager === 'string' && r.packageManager &&
+      (!pinnedManager || r.packageManager === `${manager.name}@${manager.version}`));
+    nearCandidates.sort((a, b) => String(b.builtAt).localeCompare(String(a.builtAt)));
+    const near = approved && nearCandidates.includes(approved) ? approved : nearCandidates[0];
+    const pinnedUnregistered = req.snapshotId !== undefined && !approved && !req.exactSnapshot;
+    const mismatchLabel = approved
+      ? `snapshot lockfile mismatch (snapshot ${String(approved.lockfileHash ?? 'unknown').slice(0, 12)}, fork ${manifest.lockfileHash.slice(0, 12)})`
+      : `snapshot lockfile mismatch (no registered snapshot for ${slug} with lockfile ${manifest.lockfileHash.slice(0, 12)})`;
+    if (req.exactSnapshot) {
+      if (req.rebuildSnapshot) {
+        say(`${mismatchLabel}; exactSnapshot requested, rebuilding at ${req.forkSha.slice(0, 9)}`);
         const built = await snapshots.build({ repo: req.localRepo, ref: req.forkSha });
         if (!built?.snapshotId || built.lockfileHash !== manifest.lockfileHash) throw new Error('snapshot rebuild did not produce a matching snapshot');
-        snapshotId = built.snapshotId;
-        builtThisRun = true;
-        chosenRecord = built;
-        say(req.snapshotId !== undefined
-          ? `snapshot ${snapshotId} built; update ANVIL_SANDBOX_SNAPSHOT_ID to approve it for later dispatches`
-          : `snapshot ${snapshotId} built and registered for ${slug}`);
-      } else throw new Error(`${mismatchLabel}; set rebuildSnapshot: true or run build-snapshot.mjs --repo ${req.localRepo} --ref ${req.forkSha}`);
+        snapshotId = built.snapshotId; builtThisRun = true; chosenRecord = built; snapshotMatch = 'exact';
+        say(`snapshot ${snapshotId} built for exactSnapshot request`);
+      } else throw new Error(`${mismatchLabel}; exactSnapshot requested; set rebuildSnapshot: true or run build-snapshot.mjs --repo ${req.localRepo} --ref ${req.forkSha}`);
       manifest.snapshotId = snapshotId;
-      await fs.writeFile(path.join(state.artifactDir, 'manifest.json'), JSON.stringify(manifest, null, 2));
-    }
-    chosenRecord ??= records.find(r => r.snapshotId === snapshotId);
+    } else if (pinnedUnregistered) {
+      chosenRecord = undefined; snapshotMatch = 'exact';
+    } else if (exact) {
+      snapshotId = exact.snapshotId; chosenRecord = exact; snapshotMatch = 'exact';
+    } else if (near) {
+      snapshotId = near.snapshotId; chosenRecord = near; snapshotMatch = 'near'; nearMatch = true;
+    } else if (req.rebuildSnapshot) {
+      say(`${mismatchLabel}; no compatible near snapshot; rebuilding at ${req.forkSha.slice(0, 9)}`);
+      const built = await snapshots.build({ repo: req.localRepo, ref: req.forkSha });
+      if (!built?.snapshotId || built.lockfileHash !== manifest.lockfileHash) throw new Error('snapshot rebuild did not produce a matching snapshot');
+      snapshotId = built.snapshotId; builtThisRun = true; chosenRecord = built; snapshotMatch = 'exact';
+      say(req.snapshotId !== undefined
+        ? `snapshot ${snapshotId} built; update ANVIL_SANDBOX_SNAPSHOT_ID to approve it for later dispatches`
+        : `snapshot ${snapshotId} built and registered for ${slug}`);
+      manifest.snapshotId = snapshotId;
+    } else throw new Error(`${mismatchLabel}; no compatible near snapshot; set rebuildSnapshot: true or run build-snapshot.mjs --repo ${req.localRepo} --ref ${req.forkSha}`);
+    manifest.snapshotId = snapshotId;
+    manifest.snapshotMatch = snapshotMatch;
+    state.snapshotMatch = snapshotMatch;
+    if (nearMatch) setupPolicy.allow['registry.npmjs.org'] = [];
+    say(`${snapshotMatch} snapshot ${snapshotId} (snapshot lockfile ${String(chosenRecord?.lockfileHash ?? manifest.lockfileHash).slice(0, 12)}, fork lockfile ${manifest.lockfileHash.slice(0, 12)})`);
+    await fs.writeFile(path.join(state.artifactDir, 'manifest.json'), JSON.stringify(manifest, null, 2));
     const currentAnvilSha = await snapshots?.currentAnvilSha?.();
     if (chosenRecord?.anvilSha && currentAnvilSha && chosenRecord.anvilSha !== currentAnvilSha) {
       if (req.rebuildSnapshot && !builtThisRun) {
@@ -203,6 +226,10 @@ export async function runController(requestPath, effects) {
         snapshotId = built.snapshotId;
         builtThisRun = true;
         manifest.snapshotId = snapshotId;
+        manifest.snapshotMatch = 'exact';
+        state.snapshotMatch = 'exact';
+        nearMatch = false;
+        delete setupPolicy.allow['registry.npmjs.org'];
         chosenRecord = built;
         say(`snapshot ${snapshotId} rebuilt for current anvil`);
       } else {
@@ -248,7 +275,15 @@ export async function runController(requestPath, effects) {
     // Final guard after the registry pre-check: the snapshot itself records the lockfile it was built from.
     const lock = await output('bash', ['-lc', 'cat /opt/anvil-snapshot/lockfile.sha256'], true);
     const remoteHash = lock.out.trim().split(/\s/)[0];
-    if (!remoteHash || remoteHash !== manifest.lockfileHash) throw new Error('snapshot lockfile hash mismatch');
+    const expectedHash = nearMatch ? chosenRecord.lockfileHash : manifest.lockfileHash;
+    if (!remoteHash || remoteHash !== expectedHash) throw new Error('snapshot lockfile hash mismatch');
+    if (nearMatch) {
+      const command = deltaFetchCommand(manager);
+      try {
+        const fetched = await output('bash', ['-lc', `cd ${q(remoteRepo)} && ${command}`], true);
+        if (fetched.code !== 0) throw new Error(`delta fetch command failed (${fetched.code}) [${command}]: ${sanitize(fetched.out.slice(-1500), secrets)}; rebuild with exactSnapshot: true, rebuildSnapshot: true`);
+      } finally { phase('delta-install'); }
+    }
     await sdk.setNetworkPolicy(sandbox, agentPolicy);
     const agentProbe = await output('bash', ['-lc', '(curl -fsS -m 5 https://github.com/ >/dev/null && echo GITHUB_OPEN || echo GITHUB_BLOCKED); (curl -fsS -m 5 https://registry.npmjs.org/ >/dev/null && echo REGISTRY_OPEN || echo REGISTRY_BLOCKED); (curl -fsS -m 5 https://ai-gateway.vercel.sh/v1/models >/dev/null && echo GATEWAY_OK || echo GATEWAY_BLOCKED)'], true);
     if (!agentProbe.out.includes('GITHUB_BLOCKED') || !agentProbe.out.includes('REGISTRY_BLOCKED') || !agentProbe.out.includes('GATEWAY_OK')) throw new Error('agent network policy probe contradicted policy');
@@ -453,7 +488,7 @@ export function hostGit({ exec, fs }) {
     },
     refuseCollision: async (repo, branch, worktree) => { const { stdout } = await exec.run('git', ['branch', '--list', branch], { cwd: repo }); if (stdout.trim() || await fs.exists(worktree)) throw new Error('branch or worktree collision'); },
     worktreeAdd: async (repo, dir, sha, branch) => exec.run('git', ['worktree', 'add', '-b', branch, dir, sha], { cwd: repo }),
-    lockfileHash: async dir => { for (const f of ['pnpm-lock.yaml','package-lock.json','yarn.lock']) if (await fs.exists(path.join(dir, f))) { const { stdout } = await exec.run('shasum', ['-a', '256', path.join(dir, f)]); return stdout.split(/\s/)[0]; } throw new Error('snapshot has no supported lockfile'); },
+    lockfileHash: async (dir, preferred) => { for (const f of preferred ? [preferred] : ['pnpm-lock.yaml','package-lock.json','yarn.lock']) if (await fs.exists(path.join(dir, f))) { const { stdout } = await exec.run('shasum', ['-a', '256', path.join(dir, f)]); return stdout.split(/\s/)[0]; } throw new Error('snapshot has no supported lockfile'); },
     applyCheck: async (dir, patch) => exec.run('git', ['apply', '--check', patch], { cwd: dir }),
     apply: async (dir, patch) => exec.run('git', ['apply', patch], { cwd: dir }),
     verifyImported: async (repo, dispatchId) => { const { stdout } = await exec.run('anvil', ['status', '--json', '-C', repo], { cwd: repo }); if (!String(stdout).includes(dispatchId)) throw new Error(`anvil status did not find imported dispatch ${dispatchId}`); },

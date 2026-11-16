@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { detectPackageManager, installCommand, offlineConfigCommand, offlineInstallCommand, toolchainScript } from './snapshot-toolchain.mjs';
+import { detectPackageManager, deltaFetchCommand, installCommand, offlineConfigCommand, offlineInstallCommand, toolchainScript } from './snapshot-toolchain.mjs';
 
 test('packageManager field wins over any lockfile on disk', () => {
   assert.deepEqual(detectPackageManager({ files: ['package-lock.json'], packageJson: { packageManager: 'pnpm@9.1.0' } }), { name: 'pnpm', version: '9.1.0', lockfile: 'pnpm-lock.yaml' });
@@ -35,6 +35,11 @@ test('install commands are frozen and offline-capable', () => {
   assert.equal(offlineInstallCommand({ name: 'npm' }), 'npm install --no-audit --no-fund');
   assert.equal(offlineConfigCommand({ name: 'npm' }), 'npm config set offline true --location=user');
   assert.equal(offlineConfigCommand({ name: 'pnpm' }), null);
+});
+
+test('delta fetch commands use the matching package manager and remove npm node_modules', () => {
+  assert.equal(deltaFetchCommand({ name: 'pnpm' }), 'pnpm fetch --frozen-lockfile');
+  assert.equal(deltaFetchCommand({ name: 'npm' }), 'npm ci --no-audit --no-fund --ignore-scripts --offline=false --prefer-offline && rm -rf node_modules');
 });
 
 test('toolchainScript puts pnpm on PATH at the detected or default version; npm needs nothing but node', () => {

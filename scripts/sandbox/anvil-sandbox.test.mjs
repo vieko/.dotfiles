@@ -33,7 +33,8 @@ async function fixture(options={}) {
       const line=opts.args?.at(-1)||'';
       if(opts.cmd==='git' && opts.args?.includes('--porcelain')) stdout=runNumber>(options.anvilRunNumber??6)?'worktree /vercel/repo\nHEAD aaa\n\nworktree /vercel/repo-anvil/anvil-spec-x\nHEAD bbb\nbranch refs/heads/anvil/spec/x\n':'worktree /vercel/repo\nHEAD aaa\n';
       else if(opts.cmd==='bash' && line.includes('GITHUB_BLOCKED')) stdout='GITHUB_BLOCKED REGISTRY_BLOCKED GATEWAY_OK';
-      else if(opts.cmd==='bash' && line.includes('/opt/anvil-snapshot')) stdout=options.lockMismatch?'bad-hash':`${sha}\n`;
+      else if(opts.cmd==='bash' && line.includes('/opt/anvil-snapshot')) stdout=options.lockMismatch?'bad-hash':`${options.remoteLockHash??options.registry?.find(record=>record.snapshotId===options.remoteSnapshotId)?.lockfileHash??sha}\n`;
+      else if(opts.cmd==='bash' && (line.includes('pnpm fetch --frozen-lockfile')||line.includes('npm ci --no-audit --no-fund --ignore-scripts'))) {stdout=options.deltaOutput??'';exitCode=options.deltaExitCode??0;}
       else if(opts.cmd==='bash' && line.includes('GATEWAY_OK')) stdout=options.setupContradiction==='github'?'GATEWAY_OK':options.setupContradiction?'':'GATEWAY_OKGITHUB_OK';
       else if(opts.cmd==='anvil') {stdout=JSON.stringify({passed:options.verdict==='red'?false:options.verdict==='void'?null:true,attempts:1,branch:'remote-branch'});stderr='agent log';exitCode=options.verdict==='red'?1:0;}
       const result={exitCode,output:async stream=>stream==='stdout'?stdout:stream==='stderr'?stderr:`${stdout}${stderr}`};
@@ -46,7 +47,7 @@ async function fixture(options={}) {
   };
   const fs={...fsNative,exists:async p=>{try{await fsNative.lstat(p);return true}catch{return false}}};
   const git={
-    async assertClean(){calls.push(['clean']);}, async refuseCollision(){calls.push(['collision']);}, async worktreeAdd(){calls.push(['worktree']);},
+    async assertClean(){calls.push(['clean']);}, async refuseCollision(){calls.push(['collision']);}, async worktreeAdd(repo,dir){calls.push(['worktree']);await fsNative.mkdir(dir,{recursive:true});await fsNative.writeFile(path.join(dir,'package.json'),JSON.stringify(options.packageJson??{}));const lockfile=options.lockfile??'pnpm-lock.yaml';await fsNative.writeFile(path.join(dir,lockfile),'lockfile\n');},
     async lockfileHash(){return sha;}, async applyCheck(){calls.push(['apply-check']);if(options.applyCheckFailure)throw new Error('patch rejected');},
     async apply(){calls.push(['apply']);}, async verifyImported(repo,id){calls.push(['verify-imported',id]);if(options.verifyFailure)throw new Error('status missing dispatch');},
   };
@@ -84,6 +85,11 @@ test('validateRequest accepts a request missing snapshotId, ghStsPolicy, or both
 test('validateRequest rejects empty optional strings rather than treating them as absent',async()=>{
   for(const k of ['snapshotId','ghStsPolicy','summonerAddress'])assert.throws(()=>validateRequest({...baseRequest,[k]:''},'/tmp/request.json'),/non-empty string/);
 });
+test('exactSnapshot accepts only a boolean request value',()=>{
+  assert.equal(validateRequest({...baseRequest,exactSnapshot:true},'/tmp/request.json').exactSnapshot,true);
+  assert.equal(validateRequest({...baseRequest,exactSnapshot:false},'/tmp/request.json').exactSnapshot,false);
+  assert.throws(()=>validateRequest({...baseRequest,exactSnapshot:'true'},'/tmp/request.json'),/exactSnapshot must be a boolean/);
+});
 test('pinned snapshot errors distinguish an unset controller pin from a different pin',async()=>{
   for(const [envValue,expected] of [[undefined,/not set in the controller's environment/],['different-pin',/differs from ANVIL_SANDBOX_SNAPSHOT_ID different-pin/]]){
     const f=await fixture();
@@ -101,7 +107,7 @@ test('request rejects bad SHA, empty gate, --link, traversal, unknown keys befor
 test('symlinked request inputs are rejected before sandbox creation',async()=>{const f=await fixture();await fsNative.unlink(path.join(f.root,'spec.md'));await fsNative.symlink(path.join(f.root,'outside.md'),path.join(f.root,'spec.md'));await fsNative.writeFile(path.join(f.root,'outside.md'),'spec');const r=await f.run();assert.equal(r.exitCode,4);assert.equal(f.calls.some(c=>c[0]==='create'),false);await f.clean();});
 test('policies have fetch-only GitHub matchers, gateway-only agent policy, no wildcard',async()=>{
   const f=await fixture();const r=await f.run();if(r.exitCode!==0)console.error(f.logs,f.calls);assert.equal(r.exitCode,0);const create=f.calls.find(c=>c[0]==='create')[1];const p=create.networkPolicy;
-  const mintCalls=f.calls.filter(c=>c[0]==='mint');assert.equal(mintCalls.length,1);assert.equal(f.calls.filter(c=>c[0]==='oidc').length,1);assert.equal(mintCalls[0][1],'https://gh-sts.vercel-infra.com/token');assert.equal(mintCalls[0][2].method,'POST');assert.equal(mintCalls[0][2].headers.Authorization,`Bearer ${OIDC}`);assert.deepEqual(JSON.parse(mintCalls[0][2].body),{owner:'acme',repo:'repo',permissions:{contents:'read'},policy:f.req.ghStsPolicy});
+  const mintCalls=f.calls.filter(c=>c[0]==='mint');assert.equal(mintCalls.length,1);assert.equal(f.calls.some(c=>c[0]==='remote'&&String(c[1].args?.at(-1)).includes('pnpm fetch --frozen-lockfile')),false);assert.equal(r.snapshotMatch,'exact');assert.equal(JSON.parse(await fsNative.readFile(path.join(r.artifactDir,'manifest.json'),'utf8')).snapshotMatch,'exact');assert.equal(JSON.parse(await fsNative.readFile(path.join(r.artifactDir,'handoff-result.json'),'utf8')).snapshotMatch,'exact');assert.equal(f.calls.filter(c=>c[0]==='oidc').length,1);assert.equal(mintCalls[0][1],'https://gh-sts.vercel-infra.com/token');assert.equal(mintCalls[0][2].method,'POST');assert.equal(mintCalls[0][2].headers.Authorization,`Bearer ${OIDC}`);assert.deepEqual(JSON.parse(mintCalls[0][2].body),{owner:'acme',repo:'repo',permissions:{contents:'read'},policy:f.req.ghStsPolicy});
   const ghHeaders=p.allow['github.com'].map(rule=>rule.transform[0].headers.Authorization);const ghBasic=`Basic ${Buffer.from(`x-access-token:${GH}`).toString('base64')}`;assert.deepEqual(ghHeaders,[ghBasic,ghBasic]);const createJson=JSON.stringify(create);assert.equal(createJson.split(ghBasic).length-1,2);assert.equal(createJson.includes(GH),false);assert.equal(JSON.stringify(f.calls.filter(c=>c[0]!=='create')).includes(GH),false);assert.equal(JSON.stringify(f.calls.filter(c=>c[0]!=='create')).includes(Buffer.from(GH).toString('base64')),false);
   assert.deepEqual(Object.keys(p.allow).sort(),['ai-gateway.vercel.sh','github.com']);assert.deepEqual(f.calls.find(c=>c[0]==='create')[1].source,{type:'snapshot',snapshotId:'snapshot-approved'});assert.equal(p.allow['github.com'].length,2);assert.equal(p.allow['*'],undefined);
   assert.deepEqual(Object.keys(f.calls.find(c=>c[0]==='policy')[1].allow),['ai-gateway.vercel.sh']);
@@ -164,6 +170,74 @@ test('registry: an approved snapshot with a stale lockfile gives way to a regist
  const r=await f.run();assert.equal(r.exitCode,0);assert.equal(f.calls.find(c=>c[0]==='create')[1].source.snapshotId,'snapshot-fresh');
  const handoff=JSON.parse(await fsNative.readFile(path.join(f.home,'scratch','logs','golem-repo-dispatch-123','handoff-result.json'),'utf8'));assert.equal(handoff.provenance.snapshotId,'snapshot-fresh');
  await f.clean();});
+test('registry near match fetches pnpm delta before gateway-only policy and records near provenance',async()=>{
+ const record={snapshotId:'snapshot-near',repo:'acme/repo',lockfileHash:'previous-lock-hash',lockfile:'pnpm-lock.yaml',packageManager:'pnpm@10.33.0',builtAt:'2026-01-02'};
+ const f=await fixture({req:{snapshotId:undefined},registry:[record],remoteLockHash:record.lockfileHash});
+ const r=await f.run();assert.equal(r.exitCode,0);assert.equal(r.snapshotMatch,'near');
+ const create=f.calls.find(c=>c[0]==='create')[1];assert.deepEqual(create.networkPolicy.allow['registry.npmjs.org'],[]);
+ const deltaIndex=f.calls.findIndex(c=>c[0]==='remote'&&String(c[1].args?.at(-1)).includes('pnpm fetch --frozen-lockfile'));
+ const policyIndex=f.calls.findIndex(c=>c[0]==='policy');assert.ok(deltaIndex>=0&&deltaIndex<policyIndex);
+ assert.deepEqual(f.calls.find(c=>c[0]==='policy')[1].allow,Object.fromEntries([['ai-gateway.vercel.sh',create.networkPolicy.allow['ai-gateway.vercel.sh']]]));
+ for(const file of ['manifest.json','handoff-result.json'])assert.equal(JSON.parse(await fsNative.readFile(path.join(r.artifactDir,file),'utf8')).snapshotMatch,'near');
+ assert.ok(f.logs.some(line=>line.includes('near snapshot snapshot-near')&&line.includes('previous-lo')&&line.includes(sha.slice(0,12))));await f.clean();
+});
+
+test('registry near match uses the pinned qualifying snapshot ahead of a newer candidate',async()=>{
+ const pinned={snapshotId:'snapshot-approved',repo:'acme/repo',lockfileHash:'pinned-lock',lockfile:'pnpm-lock.yaml',packageManager:'pnpm@10.33.0',builtAt:'2026-01-01'};
+ const newer={...pinned,snapshotId:'snapshot-newer',lockfileHash:'new-lock',builtAt:'2026-02-01'};
+ const f=await fixture({registry:[pinned,newer],remoteLockHash:pinned.lockfileHash});
+ const r=await f.run();assert.equal(r.exitCode,0);assert.equal(f.calls.find(c=>c[0]==='create')[1].source.snapshotId,pinned.snapshotId);assert.equal(r.snapshotMatch,'near');await f.clean();
+});
+
+test('registry near candidate rejects a different pinned manager version or lockfile name',async()=>{
+ for(const record of [
+  {lockfile:'pnpm-lock.yaml',packageManager:'pnpm@9.9.9'},
+  {lockfile:'package-lock.json',packageManager:'pnpm@10.33.0'},
+ ]){
+  const f=await fixture({req:{snapshotId:undefined},packageJson:{packageManager:'pnpm@10.33.0'},registry:[{snapshotId:'not-compatible',repo:'acme/repo',lockfileHash:'old',builtAt:'2026-01-01',...record}]});
+  const r=await f.run();assert.equal(r.exitCode,4);assert.equal(f.calls.some(c=>c[0]==='create'),false);assert.equal(f.calls.some(c=>c[0]==='build'),false);await f.clean();
+ }
+});
+
+test('registry exactSnapshot skips a near candidate and obeys rebuild approval',async()=>{
+ const near={snapshotId:'snapshot-near',repo:'acme/repo',lockfileHash:'old',lockfile:'pnpm-lock.yaml',packageManager:'pnpm@10.33.0',builtAt:'2026-01-01'};
+ const f=await fixture({req:{snapshotId:undefined,exactSnapshot:true},registry:[near]});
+ const r=await f.run();assert.equal(r.exitCode,4);assert.equal(f.calls.some(c=>c[0]==='create'),false);assert.equal(f.calls.some(c=>c[0]==='build'),false);assert.ok(f.logs.some(line=>line.includes('exactSnapshot requested')&&line.includes('rebuildSnapshot: true')));await f.clean();
+ const rebuild=await fixture({req:{snapshotId:undefined,exactSnapshot:true,rebuildSnapshot:true},registry:[near]});
+ const rebuilt=await rebuild.run();assert.equal(rebuilt.exitCode,0);assert.equal(rebuild.calls.some(c=>c[0]==='build'),true);assert.equal(rebuilt.snapshotMatch,'exact');await rebuild.clean();
+});
+
+test('registry near match for npm runs ci and removes the clone node_modules',async()=>{
+ const record={snapshotId:'npm-near',repo:'acme/repo',lockfileHash:'npm-old',lockfile:'package-lock.json',packageManager:'npm@10.2.0',builtAt:'2026-01-01'};
+ const f=await fixture({req:{snapshotId:undefined},packageJson:{packageManager:'npm@10.2.0'},lockfile:'package-lock.json',registry:[record],remoteLockHash:record.lockfileHash});
+ const r=await f.run();assert.equal(r.exitCode,0);const call=f.calls.find(c=>c[0]==='remote'&&String(c[1].args?.at(-1)).includes('npm ci --no-audit'));
+ assert.ok(call);assert.ok(call[1].args.at(-1).includes('--ignore-scripts --offline=false --prefer-offline && rm -rf node_modules'));assert.equal(r.snapshotMatch,'near');await f.clean();
+});
+
+test('near snapshot with stale anvil warns and dispatches without an automatic rebuild',async()=>{
+ const current='b'.repeat(40), record={snapshotId:'snapshot-approved',repo:'acme/repo',lockfileHash:'near-stale-hash',lockfile:'pnpm-lock.yaml',packageManager:'pnpm@10.33.0',anvilSha:sha,builtAt:'2026-01-01'};
+ const f=await fixture({registry:[record],currentAnvilSha:current,remoteLockHash:record.lockfileHash});
+ const r=await f.run();assert.equal(r.exitCode,0);assert.equal(r.snapshotMatch,'near');assert.equal(f.calls.some(call=>call[0]==='build'),false);
+ assert.ok(f.logs.some(line=>line.includes('stale anvil')&&line.includes('rebuildSnapshot: true')));
+ for(const file of ['manifest.json','handoff-result.json'])assert.deepEqual(JSON.parse(await fsNative.readFile(path.join(r.artifactDir,file),'utf8')).anvilStale,{snapshot:sha,current});
+ await f.clean();
+});
+
+test('near delta fetch failure sanitizes secrets in its bounded output',async()=>{
+ const record={snapshotId:'snapshot-near',repo:'acme/repo',lockfileHash:'record-lock-hash',lockfile:'pnpm-lock.yaml',packageManager:'pnpm@10.33.0',builtAt:'2026-01-01'};
+ const f=await fixture({req:{snapshotId:undefined},registry:[record],remoteLockHash:record.lockfileHash,deltaExitCode:23,deltaOutput:`${'x'.repeat(700)}V_TOKEN_marker${'y'.repeat(1000)}`});
+ const r=await f.run();assert.equal(r.exitCode,4);const line=f.logs.find(message=>message.includes('delta fetch command failed (23)'));
+ assert.ok(line?.includes('[REDACTED]'));assert.equal(line.includes('V_TOKEN_marker'),false);assert.ok(line.includes('exactSnapshot: true, rebuildSnapshot: true'));await f.clean();
+});
+
+test('near snapshot lock check uses the registered hash and failed delta fetch stops before dispatch',async()=>{
+ const record={snapshotId:'snapshot-near',repo:'acme/repo',lockfileHash:'record-lock-hash',lockfile:'pnpm-lock.yaml',packageManager:'pnpm@10.33.0',builtAt:'2026-01-01'};
+ const mismatch=await fixture({req:{snapshotId:undefined},registry:[record],remoteLockHash:sha});
+ const rejected=await mismatch.run();assert.equal(rejected.exitCode,4);assert.equal(mismatch.calls.some(c=>c[0]==='policy'),false);assert.equal(mismatch.calls.at(-1)[0],'stop');await mismatch.clean();
+ const f=await fixture({req:{snapshotId:undefined},registry:[record],remoteLockHash:record.lockfileHash,deltaExitCode:17,deltaOutput:'x'.repeat(2000)});
+ const r=await f.run();assert.equal(r.exitCode,4);assert.equal(f.calls.some(c=>c[0]==='remote'&&c[1].cmd==='anvil'),false);assert.equal(f.calls.at(-1)[0],'stop');const failureLog=f.logs.find(line=>line.includes('delta fetch command failed (17)'));assert.ok(failureLog?.includes('exactSnapshot: true, rebuildSnapshot: true'));assert.ok(failureLog.includes('x'.repeat(1500)));assert.ok(f.logs.some(line=>line.includes('phase delta-install')));await f.clean();
+});
+
 test('registry: a stale snapshot with no match and no rebuild approval stops before any sandbox is created',async()=>{
  const f=await fixture({registry:[{snapshotId:'snapshot-approved',repo:'acme/repo',lockfileHash:'old',builtAt:'2026-01-01'}]});
  const r=await f.run();assert.equal(r.exitCode,4);assert.ok(!f.calls.some(c=>c[0]==='create'));assert.ok(!f.calls.some(c=>c[0]==='build'));assert.ok(f.logs.some(l=>l.includes('rebuildSnapshot: true')));

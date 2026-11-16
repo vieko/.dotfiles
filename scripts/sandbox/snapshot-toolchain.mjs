@@ -38,6 +38,11 @@ export function installCommand(manager) {
   return manager.name === 'pnpm' ? 'pnpm install --frozen-lockfile' : 'npm ci --no-audit --no-fund';
 }
 
+/** Network-enabled fetch for a near snapshot before the agent policy is installed. */
+export function deltaFetchCommand(manager) {
+  return manager.name === 'pnpm' ? 'pnpm fetch --frozen-lockfile' : 'npm ci --no-audit --no-fund --ignore-scripts --offline=false --prefer-offline && rm -rf node_modules';
+}
+
 /**
  * What the seal phase runs in a node_modules-free copy to prove the snapshot serves the lockfile
  * with no network. For npm it is the command anvil runs in a fresh worktree (plain npm install),
