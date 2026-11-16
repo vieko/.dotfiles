@@ -67,7 +67,11 @@ converges on pi-reported $ and the repricing note can be dropped.
      Week 45 added two more: an `mcp_servers`-only change (an MCP server
      with no static `description` in `~/.pi/agent/mcp.json` gains its
      summary on connect; give every server one) and a `pi-redact` entry
-     with fresh values just before the miss (pi-redact#4).
+     with fresh values just before the miss (pi-redact#4). Sigil
+     feature merges that change its tool descriptions cost one rewrite
+     per live session (~$1.30; 5 misses, $6.43 on 11-15/16): accepted
+     2026-11-16 as the cost of developing sigil on PHYREXIA. Count them,
+     do not propose a fix.
    - `modelswitch` / `compaction`: expected, small.
 4. **Models.** Per-model unexplained-miss rate should be roughly equal; an
    outlier model points at its provider path.
