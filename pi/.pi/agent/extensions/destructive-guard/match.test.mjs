@@ -131,3 +131,30 @@ test("tool calls from both harnesses", () => {
 	assert.equal(checkToolCall("write", { path: ".env.example" }), null);
 	assert.equal(checkToolCall("edit", { path: "src/env.ts" }), null);
 });
+
+test("database writer scripts ask in every form", () => {
+	const asks = [
+		".claude/scripts/matchups-push-run.sh /tmp/t.json",
+		".claude/scripts/matchups-push-run.sh /tmp/t.json --dry-run",
+		"bash .claude/scripts/db-run.sh migrate",
+		"bash -x /home/v/dev/battlemox/.claude/scripts/db-run.sh migrate",
+		"/home/v/dev/battlemox/.claude/scripts/db-run-dev.sh import",
+		"cd .claude/scripts && ./db-run.sh pull",
+		"gh pr merge 1 --squash && ~/dev/battlemox/.claude/scripts/matchups-push-run.sh t.json",
+		"timeout 60 sh .claude/scripts/db-run.sh migrate --dry-run",
+		"source .claude/scripts/db-run.sh",
+		"bash -c '.claude/scripts/db-run.sh migrate'",
+	];
+	for (const c of asks) assert.equal(rule(c), "writer-script", c);
+	assert.equal(tier(asks[0]), "confirm");
+	const passes = [
+		".claude/scripts/records-run.sh feedback --status new",
+		"bash .claude/scripts/merge-queue.sh 620",
+		".claude/scripts/prune-run.sh",
+		"cat .claude/scripts/db-run.sh",
+		"git log -- .claude/scripts/matchups-push-run.sh",
+		"echo 'run db-run.sh migrate later'",
+		"bash -c 'echo hi'",
+	];
+	for (const c of passes) assert.equal(rule(c), null, c);
+});

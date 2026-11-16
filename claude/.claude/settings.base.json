@@ -86,7 +86,9 @@
       "Skill(linear-cli)"
     ],
     "ask": [
-      "Bash(.claude/scripts/*)"
+      "Bash(.claude/scripts/db-run.sh*)",
+      "Bash(.claude/scripts/db-run-dev.sh*)",
+      "Bash(.claude/scripts/matchups-push-run.sh*)"
     ],
     "deny": [
       "Read(~/.ssh/id_*)",

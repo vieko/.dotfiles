@@ -30,6 +30,13 @@ const WRAPPERS = new Set(["sudo", "env", "command", "exec", "time", "nohup", "ni
 const SHELLS = new Set(["bash", "sh", "zsh", "dash"]);
 const PKG = new Set(["npm", "pnpm", "yarn", "bun", "npx", "bunx", "turbo"]);
 const RUNNABLE = new Set(["drizzle-kit", "prisma", "changeset", "vercel", "vc"]);
+/**
+ * Wrapper scripts that write to a database (BattleMox's .claude/scripts/):
+ * matched by file name wherever the script is run from and however it is
+ * started (`bash <path>`, an absolute path, after `cd`, in a chain). The
+ * settings.json ask rule only sees the plain relative form.
+ */
+const WRITER_SCRIPTS = new Set(["db-run.sh", "db-run-dev.sh", "matchups-push-run.sh"]);
 
 // Private keys and credential stores. Public keys and ssh config are fine.
 const SECRET_PATHS = [
@@ -131,10 +138,21 @@ function pkgScripts(w) {
 	return w.slice(1).filter((x) => !x.startsWith("-"));
 }
 
+/** A writer script run directly, or handed to a shell or `source`. */
+function writerScript(w) {
+	const base = (x) => x.replace(/^.*\//, "");
+	if (WRITER_SCRIPTS.has(w[0])) return w[0];
+	if (SHELLS.has(w[0]) || w[0] === "source" || w[0] === ".") return w.slice(1).map(base).find((x) => WRITER_SCRIPTS.has(x)) ?? null;
+	return null;
+}
+
 /** @returns {Hit | null} */
 function checkWords(w, raw) {
 	if (!w.length) return null;
 	const [prog] = w;
+
+	const script = writerScript(w);
+	if (script) return { tier: "confirm", rule: "writer-script", reason: `${script} writes to a database (production or dev)` };
 
 	if (prog === "git") {
 		const { sub, args } = gitArgs(w);
@@ -226,7 +244,7 @@ export function checkCommand(command, depth = 0) {
 	let best = null;
 	for (const seg of segments(blanked)) {
 		const w = words(seg);
-		if (SHELLS.has(w[0])) continue; // its -c script is checked via `inner`
+		if (SHELLS.has(w[0]) && !writerScript(w)) continue; // its -c script is checked via `inner`
 		const hit = checkWords(w, seg);
 		if (hit && (!best || hit.tier === "never")) best = hit;
 		if (best?.tier === "never") return best;
