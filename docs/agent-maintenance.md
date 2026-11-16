@@ -398,7 +398,10 @@ identifier; see above), optional `gateTimeout` (default `600s`), optional
 `projectId`, `vcpus`, `timeoutMs`, `localRepo`, `dispatchId`, and optional
 `summonerAddress` (defaults to `ANVIL_SUMMONER_ADDRESS`). An empty string for `snapshotId` or `ghStsPolicy` is still
 rejected -- omit the key to mean "absent", not `""`. Contracts are seeded into
-the clone at `.anvil-input/` and excluded from the patch. Gate and contract
+the clone at `.anvil-input/` and excluded from the patch. Keep wall-clock
+budgets out of the gate: a 4 vCPU sandbox runs slower than this Mac, and on
+2026-11-15 `pi-redact-public-ids-1` failed a 5 s budget at 6.8 s, then bent
+the scanner to beat it on attempt 2 (dropped in review). Gate and contract
 checks in the gate should pin field names, not exact expectation literals:
 attempt 1 of `gtmeng-4305-1` had correct code and failed on a contract grep
 for `sameCampaignMember: true`, and attempt 2 added a redundant assertion
