@@ -12,7 +12,7 @@ const execFileAsync = promisify(execFile);
 const KEYS = ['repoUrl','forkSha','specPath','gate','scopes','contracts','model','gateTimeout','snapshotId','teamId','projectId','ghStsPolicy','vcpus','timeoutMs','localRepo','dispatchId','summonerAddress','rebuildSnapshot'];
 // snapshotId and ghStsPolicy are optional (anvil#63): a public repo needs no clone credential,
 // and a repo with no approved snapshot yet is selected from the registry instead of pinned.
-const OPTIONAL_KEYS = ['gateTimeout', 'rebuildSnapshot', 'snapshotId', 'ghStsPolicy'];
+const OPTIONAL_KEYS = ['gateTimeout', 'rebuildSnapshot', 'snapshotId', 'ghStsPolicy', 'summonerAddress'];
 const SECRET_ENV = ['VERCEL_TOKEN','AI_GATEWAY_API_KEY'];
 const GH_STS_URL = 'https://gh-sts.vercel-infra.com/token';
 const GH_STS_SETUP_BUDGET_MS = 10 * 60_000;
@@ -39,8 +39,8 @@ export function validateRequest(r, requestPath) {
   if ([...r.gate,...r.scopes,...r.contracts,r.model].some(x => /(^|[\s=])--link(?:[\s]|$)/.test(x) || /(?:~\/|\/(?:Users|home|tmp|var|private|workspace|mnt|root|opt)\/)/.test(x))) throw new Error('inputs may not use --link or host paths');
   if (r.model.startsWith('-') || r.scopes.some(x => x.startsWith('-'))) throw new Error('model and scope values may not be option-like');
   if (typeof r.localRepo !== 'string' || !path.isAbsolute(r.localRepo)) throw new Error('localRepo must be an absolute host path');
-  for (const k of ['model','teamId','projectId','dispatchId','summonerAddress']) if (typeof r[k] !== 'string' || !r[k].trim()) throw new Error(`${k} must be a non-empty string`);
-  for (const k of ['snapshotId','ghStsPolicy']) if (r[k] !== undefined && (typeof r[k] !== 'string' || !r[k].trim())) throw new Error(`${k} must be a non-empty string`);
+  for (const k of ['model','teamId','projectId','dispatchId']) if (typeof r[k] !== 'string' || !r[k].trim()) throw new Error(`${k} must be a non-empty string`);
+  for (const k of ['snapshotId','ghStsPolicy','summonerAddress']) if (r[k] !== undefined && (typeof r[k] !== 'string' || !r[k].trim())) throw new Error(`${k} must be a non-empty string`);
   if (!safeName(r.dispatchId)) throw new Error('dispatchId must be a safe identifier');
   for (const k of ['snapshotId','ghStsPolicy']) if (r[k] !== undefined && !safeName(r[k])) throw new Error(`${k} must be a safe identifier`);
   if (!Number.isInteger(r.vcpus) || r.vcpus < 1 || r.vcpus > 32 || !Number.isInteger(r.timeoutMs) || r.timeoutMs <= COLLECTION_RESERVE_MS + 30_000) throw new Error('vcpus and timeoutMs must leave a five-minute collection window');
@@ -84,7 +84,8 @@ export async function runController(requestPath, effects) {
     for(const [field,key] of [['teamId','VERCEL_TEAM_ID'],['projectId','VERCEL_PROJECT_ID']]) if(!env[key]||req[field]!==env[key]) throw new Error(`${field} must match ${key}`);
     // snapshotId is optional (anvil#63): when present it still has to be the one this controller is
     // approved to use; when absent, the registry pre-check below picks the snapshot instead.
-    if (req.snapshotId !== undefined && (!env.ANVIL_SANDBOX_SNAPSHOT_ID || req.snapshotId !== env.ANVIL_SANDBOX_SNAPSHOT_ID)) throw new Error('snapshotId must match ANVIL_SANDBOX_SNAPSHOT_ID');
+    if (req.snapshotId !== undefined && !env.ANVIL_SANDBOX_SNAPSHOT_ID) throw new Error(`request pins snapshotId ${req.snapshotId} but ANVIL_SANDBOX_SNAPSHOT_ID is not set in the controller's environment`);
+    if (req.snapshotId !== undefined && req.snapshotId !== env.ANVIL_SANDBOX_SNAPSHOT_ID) throw new Error(`request snapshotId ${req.snapshotId} differs from ANVIL_SANDBOX_SNAPSHOT_ID ${env.ANVIL_SANDBOX_SNAPSHOT_ID}`);
     secrets = SECRET_ENV.map(k => env[k]).filter(Boolean);
     if (secrets.length !== 2) throw new Error('VERCEL_TOKEN and AI_GATEWAY_API_KEY are required');
     secrets.push(`Bearer ${env.AI_GATEWAY_API_KEY}`);
@@ -162,6 +163,8 @@ export async function runController(requestPath, effects) {
     // spend, so it needs rebuildSnapshot: true in the request.
     let snapshotId = req.snapshotId;
     const records = snapshots ? await snapshots.list() : [];
+    let builtThisRun = false;
+    let chosenRecord;
     const slug = repoSlug(req.repoUrl);
     const approved = snapshotId !== undefined ? records.find(r => r.snapshotId === snapshotId) : undefined;
     const needsSelection = snapshotId === undefined || (approved && approved.lockfileHash !== manifest.lockfileHash);
@@ -175,16 +178,38 @@ export async function runController(requestPath, effects) {
           ? `${mismatchLabel}; using ${match.snapshotId} (built ${match.builtAt})`
           : `using registered snapshot ${match.snapshotId} for ${slug} (lockfile ${manifest.lockfileHash.slice(0, 12)}, built ${match.builtAt})`);
         snapshotId = match.snapshotId;
+        chosenRecord = match;
       } else if (req.rebuildSnapshot) {
         say(`${mismatchLabel}; rebuilding at ${req.forkSha.slice(0, 9)}`);
         const built = await snapshots.build({ repo: req.localRepo, ref: req.forkSha });
         if (!built?.snapshotId || built.lockfileHash !== manifest.lockfileHash) throw new Error('snapshot rebuild did not produce a matching snapshot');
         snapshotId = built.snapshotId;
+        builtThisRun = true;
+        chosenRecord = built;
         say(req.snapshotId !== undefined
           ? `snapshot ${snapshotId} built; update ANVIL_SANDBOX_SNAPSHOT_ID to approve it for later dispatches`
           : `snapshot ${snapshotId} built and registered for ${slug}`);
       } else throw new Error(`${mismatchLabel}; set rebuildSnapshot: true or run build-snapshot.mjs --repo ${req.localRepo} --ref ${req.forkSha}`);
       manifest.snapshotId = snapshotId;
+      await fs.writeFile(path.join(state.artifactDir, 'manifest.json'), JSON.stringify(manifest, null, 2));
+    }
+    chosenRecord ??= records.find(r => r.snapshotId === snapshotId);
+    const currentAnvilSha = await snapshots?.currentAnvilSha?.();
+    if (chosenRecord?.anvilSha && currentAnvilSha && chosenRecord.anvilSha !== currentAnvilSha) {
+      if (req.rebuildSnapshot && !builtThisRun) {
+        say(`stale anvil ${chosenRecord.anvilSha.slice(0, 9)}..${currentAnvilSha.slice(0, 9)}; rebuilding at ${req.forkSha.slice(0, 9)}`);
+        const built = await snapshots.build({ repo: req.localRepo, ref: req.forkSha });
+        if (!built?.snapshotId || built.lockfileHash !== manifest.lockfileHash) throw new Error('snapshot rebuild did not produce a matching snapshot');
+        snapshotId = built.snapshotId;
+        builtThisRun = true;
+        manifest.snapshotId = snapshotId;
+        chosenRecord = built;
+        say(`snapshot ${snapshotId} rebuilt for current anvil`);
+      } else {
+        state.anvilStale = { snapshot: chosenRecord.anvilSha, current: currentAnvilSha };
+        manifest.anvilStale = state.anvilStale;
+        say(`stale anvil ${chosenRecord.anvilSha.slice(0, 9)}..${currentAnvilSha.slice(0, 9)}; rebuild with rebuildSnapshot: true`);
+      }
       await fs.writeFile(path.join(state.artifactDir, 'manifest.json'), JSON.stringify(manifest, null, 2));
     }
     state.snapshotId = snapshotId;
@@ -303,7 +328,7 @@ export async function runController(requestPath, effects) {
       try {
         await Promise.all(pendingLogs);
         let runResult = {}; try { runResult = JSON.parse(await fs.readFile(path.join(state.artifactDir, 'anvil-result.json'), 'utf8')); } catch {}
-        await fs.writeFile(path.join(state.artifactDir, 'handoff-result.json'), JSON.stringify({ exitCode, passed: state.verdict === 'green' ? true : state.verdict === 'red' ? false : null, verdict: state.verdict, voidReason: runResult.voidReason ?? (state.verdict === 'void' ? 'controller interrupted or result inconclusive' : null), attempts: runResult.attempts ?? null, cost: runResult.cost ?? runResult.usage?.cost ?? null, timeoutMs: req.timeoutMs, provenance: { repoUrl: req.repoUrl, forkSha: req.forkSha, snapshotId: state.snapshotId ?? req.snapshotId, dispatchId: req.dispatchId, summonerAddress: req.summonerAddress }, ...state }, null, 2));
+        await fs.writeFile(path.join(state.artifactDir, 'handoff-result.json'), JSON.stringify({ exitCode, passed: state.verdict === 'green' ? true : state.verdict === 'red' ? false : null, verdict: state.verdict, voidReason: runResult.voidReason ?? (state.verdict === 'void' ? 'controller interrupted or result inconclusive' : null), attempts: runResult.attempts ?? null, cost: runResult.cost ?? runResult.usage?.cost ?? null, timeoutMs: req.timeoutMs, provenance: { repoUrl: req.repoUrl, forkSha: req.forkSha, snapshotId: state.snapshotId ?? req.snapshotId, dispatchId: req.dispatchId, summonerAddress: req.summonerAddress ?? clock.env?.ANVIL_SUMMONER_ADDRESS ?? null }, ...state }, null, 2));
       } catch (e) { say(`handoff result write failed: ${e.message}`); }
     }
   }
@@ -414,6 +439,34 @@ function checkPatchPath(name) {
   if (name.startsWith('"') || name.startsWith(String.fromCharCode(92)) || path.isAbsolute(name) || /^[A-Za-z]:[\\/]/.test(name) || name.split(/[\\/]/).includes('..')) throw new Error(`unsafe patch path: ${name}`);
 }
 
+export function hostGit({ exec, fs }) {
+  return {
+    assertClean: async repo => {
+      const { stdout } = await exec.run('git', ['status', '--porcelain'], { cwd: repo });
+      const tracked = stdout.split('\n').filter(line => line && !line.startsWith('??'));
+      if (tracked.length) {
+        const staged = tracked.some(line => line[0] !== ' ');
+        const unstaged = tracked.some(line => line[1] !== ' ');
+        const kinds = [staged && 'staged', unstaged && 'unstaged'].filter(Boolean).join(' and ');
+        throw new Error(`local repository must be clean (${kinds} tracked changes found)`);
+      }
+    },
+    refuseCollision: async (repo, branch, worktree) => { const { stdout } = await exec.run('git', ['branch', '--list', branch], { cwd: repo }); if (stdout.trim() || await fs.exists(worktree)) throw new Error('branch or worktree collision'); },
+    worktreeAdd: async (repo, dir, sha, branch) => exec.run('git', ['worktree', 'add', '-b', branch, dir, sha], { cwd: repo }),
+    lockfileHash: async dir => { for (const f of ['pnpm-lock.yaml','package-lock.json','yarn.lock']) if (await fs.exists(path.join(dir, f))) { const { stdout } = await exec.run('shasum', ['-a', '256', path.join(dir, f)]); return stdout.split(/\s/)[0]; } throw new Error('snapshot has no supported lockfile'); },
+    applyCheck: async (dir, patch) => exec.run('git', ['apply', '--check', patch], { cwd: dir }),
+    apply: async (dir, patch) => exec.run('git', ['apply', patch], { cwd: dir }),
+    verifyImported: async (repo, dispatchId) => { const { stdout } = await exec.run('anvil', ['status', '--json', '-C', repo], { cwd: repo }); if (!String(stdout).includes(dispatchId)) throw new Error(`anvil status did not find imported dispatch ${dispatchId}`); },
+  };
+}
+
+export function credentialExpiryMessage(auth, timeoutMs, now = Date.now()) {
+  if (!auth?.token) return 'controller error: no Vercel CLI credential found; run `vercel login`';
+  const needMinutes = Math.ceil((timeoutMs + COLLECTION_RESERVE_MS) / 60_000);
+  const leftMinutes = auth?.expiresAt ? Math.max(0, Math.floor((auth.expiresAt.getTime() - now) / 60_000)) : 0;
+  return `controller error: Vercel CLI credential has ${leftMinutes} minutes left but this dispatch needs ${needMinutes} minutes; lower timeoutMs or run \`vercel logout && vercel login\``;
+}
+
 async function main() {
   const requestPath = process.argv[2] ? path.resolve(process.argv[2]) : undefined;
   if (!requestPath) { console.error('usage: anvil-sandbox.mjs request.json'); process.exitCode = 4; return; }
@@ -436,7 +489,7 @@ async function main() {
       try { await promisify(execFile)('vercel', ['whoami'], { stdio: ['ignore', 'pipe', 'pipe'], timeout: 60_000 }); } catch {}
       auth = getAuth();
     }
-    if (!covers(auth)) { console.error('controller error: Vercel CLI credential is missing or expires before this dispatch would end; run `vercel login`'); process.exitCode = 4; return; }
+    if (!covers(auth)) { console.error(credentialExpiryMessage(auth, Number(request.timeoutMs) || 60 * 60_000)); process.exitCode = 4; return; }
     env.VERCEL_TOKEN = auth.token;
   }
   const sdk = {
@@ -449,21 +502,17 @@ async function main() {
   };
   const fs = { ...fsNative, exists: async p => { try { await fsNative.lstat(p); return true; } catch (e) { if (e.code === 'ENOENT') return false; throw e; } } };
   const exec = { run: async (cmd, args, opts = {}) => execFileAsync(cmd, args, { ...opts, maxBuffer: 16 * 1024 * 1024 }) };
-  const git = {
-    assertClean: async repo => { const { stdout } = await exec.run('git', ['status', '--porcelain'], { cwd: repo }); if (stdout.trim()) throw new Error('local repository must be clean'); },
-    refuseCollision: async (repo, branch, worktree) => { const { stdout } = await exec.run('git', ['branch', '--list', branch], { cwd: repo }); if (stdout.trim() || await fs.exists(worktree)) throw new Error('branch or worktree collision'); },
-    worktreeAdd: async (repo, dir, sha, branch) => exec.run('git', ['worktree', 'add', '-b', branch, dir, sha], { cwd: repo }),
-    lockfileHash: async dir => { for (const f of ['pnpm-lock.yaml','package-lock.json','yarn.lock']) if (await fs.exists(path.join(dir, f))) { const { stdout } = await exec.run('shasum', ['-a', '256', path.join(dir, f)]); return stdout.split(/\s/)[0]; } throw new Error('snapshot has no supported lockfile'); },
-    applyCheck: async (dir, patch) => exec.run('git', ['apply', '--check', patch], { cwd: dir }),
-    apply: async (dir, patch) => exec.run('git', ['apply', patch], { cwd: dir }),
-    verifyImported: async (repo, dispatchId) => { const { stdout } = await exec.run('anvil', ['status', '--json', '-C', repo], { cwd: repo }); if (!String(stdout).includes(dispatchId)) throw new Error(`anvil status did not find imported dispatch ${dispatchId}`); },
-  };
+  const git = hostGit({ exec, fs });
   let interrupted = false;
   const abortController = new AbortController();
   const onSignal = () => { interrupted = true; abortController.abort(); };
   process.on('SIGINT', onSignal); process.on('SIGTERM', onSignal);
   const snapshots = {
     list: () => listSnapshots(),
+    currentAnvilSha: async () => {
+      try { const { stdout } = await exec.run('git', ['-C', path.join(os.homedir(), 'dev', 'anvil'), 'rev-parse', 'origin/main']); return stdout.trim() || null; }
+      catch { return null; }
+    },
     // build-snapshot.mjs logs to stderr (the golem log) and prints its record to stdout.
     build: async ({ repo, ref }) => {
       const { stdout } = await promisify(execFile)(process.execPath, [path.join(path.dirname(fileURLToPath(import.meta.url)), 'build-snapshot.mjs'), '--repo', repo, '--ref', ref], { stdio: ['ignore', 'pipe', 'inherit'], maxBuffer: 2 ** 24, timeout: 30 * 60_000 });

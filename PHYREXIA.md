@@ -70,8 +70,11 @@ panes. `summon-*.sh` and `remind-at.sh` pick tmux or Rex through
   ceiling. Every snapshot build and dispatch is spend and needs the user's
   approval each time. Controller and builder: `scripts/sandbox/`
   (`docs/agent-maintenance.md`, "Sandbox lane"); ids in
-  `~/private/lanes/sandbox-golem.env`. Proven on anvil #59 (closed);
-  gtm-only until anvil #63 (per-repo snapshot, optional clone credential).
+  `~/private/lanes/sandbox-golem.env`. Proven on anvil #59 (closed).
+  Per-repo snapshots and the optional clone credential (anvil #63) are in
+  `8851ff3` but not yet proven live outside gtm. Dispatch friction from
+  the 2026-11-10 dogfood (clean check, lane env, summoner address,
+  refusal pings, stale-anvil notice) fixed 2026-11-15.
 
 - **Scout** -- a read-only child run by the `scout` tool (dotfiles
   `9c79797`, since 2026-11-10): haiku-5.5, tools `read,grep,find,ls`, up

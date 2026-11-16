@@ -3,13 +3,18 @@ import assert from 'node:assert/strict';
 import fsNative from 'node:fs/promises';
 import os from 'node:os';
 import path from 'node:path';
-import { runController, validateRequest, anvilBucket } from './anvil-sandbox.mjs';
+import { execFile } from 'node:child_process';
+import { promisify } from 'node:util';
+import { fileURLToPath } from 'node:url';
+import { runController, validateRequest, anvilBucket, hostGit, credentialExpiryMessage } from './anvil-sandbox.mjs';
 
 // snapshotId and ghStsPolicy are optional (anvil#63); their own tests live below this loop.
-const keys=['repoUrl','forkSha','specPath','gate','scopes','contracts','model','teamId','projectId','vcpus','timeoutMs','localRepo','dispatchId','summonerAddress'];
+const keys=['repoUrl','forkSha','specPath','gate','scopes','contracts','model','teamId','projectId','vcpus','timeoutMs','localRepo','dispatchId'];
 const OIDC='OIDC_TOKEN_marker';
 const GH='GH_STS_TOKEN_marker';
 const sha='a'.repeat(40);
+const execFileAsync=promisify(execFile);
+const SUMMONER=path.resolve(path.dirname(fileURLToPath(import.meta.url)),'../.scripts/summon-golem.sh');
 async function fixture(options={}) {
   const root=await fsNative.mkdtemp(path.join(os.tmpdir(),'anvil-sandbox-test-'));
   const home=path.join(root,'home'); await fsNative.mkdir(home);
@@ -59,7 +64,7 @@ async function fixture(options={}) {
   const secrets=['V_TOKEN_marker',OIDC,GH,'AI_KEY_marker'];
   const old=Object.fromEntries(['VERCEL_TOKEN','AI_GATEWAY_API_KEY'].map(k=>[k,process.env[k]]));
   [process.env.VERCEL_TOKEN,process.env.AI_GATEWAY_API_KEY]=[secrets[0],secrets[3]];
-  const snapshots=options.registry?{async list(){return options.registry;},async build(args){calls.push(['build',args]);return options.built??{snapshotId:'snapshot-rebuilt',lockfileHash:sha};}}:undefined;
+  const snapshots=options.registry?{async list(){return options.registry;},async currentAnvilSha(){return options.currentAnvilSha??null;},async build(args){calls.push(['build',args]);return options.built??{snapshotId:'snapshot-rebuilt',lockfileHash:sha};}}:undefined;
   return {root,home,repo,req,request,calls,sdk,fs,git,exec,credentials,logs,clock,secrets,old,async run(){try{return await runController(request,{sdk,fs,git,exec,credentials,clock,snapshots,log:m=>logs.push(m)});}finally{for(const k of ['VERCEL_TOKEN','AI_GATEWAY_API_KEY']){if(old[k]===undefined)delete process.env[k];else process.env[k]=old[k];}}},async clean(){await fsNative.rm(root,{recursive:true,force:true});}};
 }
 
@@ -76,8 +81,17 @@ test('validateRequest accepts a request missing snapshotId, ghStsPolicy, or both
     for(const k of drop)assert.equal(k in validated,false);
   }
 });
-test('validateRequest rejects an empty snapshotId or ghStsPolicy rather than treating it as absent',async()=>{
-  for(const k of ['snapshotId','ghStsPolicy'])assert.throws(()=>validateRequest({...baseRequest,[k]:''},'/tmp/request.json'),/non-empty string/);
+test('validateRequest rejects empty optional strings rather than treating them as absent',async()=>{
+  for(const k of ['snapshotId','ghStsPolicy','summonerAddress'])assert.throws(()=>validateRequest({...baseRequest,[k]:''},'/tmp/request.json'),/non-empty string/);
+});
+test('pinned snapshot errors distinguish an unset controller pin from a different pin',async()=>{
+  for(const [envValue,expected] of [[undefined,/not set in the controller's environment/],['different-pin',/differs from ANVIL_SANDBOX_SNAPSHOT_ID different-pin/]]){
+    const f=await fixture();
+    if(envValue===undefined)delete f.clock.env.ANVIL_SANDBOX_SNAPSHOT_ID;else f.clock.env.ANVIL_SANDBOX_SNAPSHOT_ID=envValue;
+    const result=await f.run();
+    assert.equal(result.exitCode,4);assert.ok(f.logs.some(line=>expected.test(line)));assert.equal(f.calls.some(call=>call[0]==='create'),false);
+    await f.clean();
+  }
 });
 test('request rejects bad SHA, empty gate, --link, traversal, unknown keys before allocation',async()=>{
   for(const mutate of [r=>r.forkSha='bad',r=>r.gate=[],r=>r.gate=['anvil run --link'],r=>r.specPath='../outside',r=>r.extra=true]){
@@ -179,3 +193,162 @@ test('registry: no snapshotId, no match, no rebuild stops before any sandbox is 
  const f=await fixture({req:{snapshotId:undefined},registry:[{snapshotId:'snapshot-other-repo',repo:'acme/other',lockfileHash:sha,builtAt:'2026-01-01'}]});
  const r=await f.run();assert.equal(r.exitCode,4);assert.ok(!f.calls.some(c=>c[0]==='create'));assert.ok(f.logs.some(l=>l.includes('acme/repo')&&l.includes('rebuildSnapshot: true')));
  await f.clean();});
+
+test('hostGit clean guard ignores untracked files but refuses staged and unstaged tracked changes', async () => {
+  const root = await fsNative.mkdtemp(path.join(os.tmpdir(), 'host-git-clean-'));
+  const run = (args) => execFileAsync('git', args, { cwd: root });
+  const fs = { exists: async p => { try { await fsNative.lstat(p); return true; } catch { return false; } } };
+  const git = hostGit({ fs, exec: { run: (cmd, args, opts) => execFileAsync(cmd, args, opts) } });
+  try {
+    await run(['init', '-q']);
+    await run(['config', 'user.email', 'sandbox-test@example.com']);
+    await run(['config', 'user.name', 'Sandbox Test']);
+    await fsNative.writeFile(path.join(root, 'tracked.txt'), 'committed\n');
+    await run(['add', 'tracked.txt']);
+    await run(['commit', '-qm', 'initial']);
+
+    await fsNative.writeFile(path.join(root, 'untracked.txt'), 'one\n');
+    await git.assertClean(root);
+    await fsNative.mkdir(path.join(root, '.anvil-worktrees', 'x'), { recursive: true });
+    await fsNative.writeFile(path.join(root, '.anvil-worktrees', 'x', 'file'), 'worktree\n');
+    await git.assertClean(root);
+
+    await fsNative.writeFile(path.join(root, 'tracked.txt'), 'modified\n');
+    await assert.rejects(git.assertClean(root), /local repository must be clean .*unstaged/);
+    await fsNative.writeFile(path.join(root, 'tracked.txt'), 'committed\n');
+    await fsNative.writeFile(path.join(root, 'staged-new.txt'), 'staged\n');
+    await run(['add', 'staged-new.txt']);
+    await assert.rejects(git.assertClean(root), /local repository must be clean .*staged/);
+  } finally { await fsNative.rm(root, { recursive: true, force: true }); }
+});
+
+test('sandbox provenance prefers the request address, then the environment fallback, then null', async () => {
+  const specified = await fixture();
+  try {
+    specified.clock.env.ANVIL_SUMMONER_ADDRESS = 'environment-address';
+    const result = await specified.run();
+    const handoff = JSON.parse(await fsNative.readFile(path.join(result.artifactDir, 'handoff-result.json'), 'utf8'));
+    assert.equal(handoff.provenance.summonerAddress, 'session-address');
+  } finally { await specified.clean(); }
+  for (const [address, expected] of [['fallback-session', 'fallback-session'], [undefined, null]]) {
+    const f = await fixture();
+    try {
+      delete f.req.summonerAddress;
+      await fsNative.writeFile(f.request, JSON.stringify(f.req));
+      if (address !== undefined) f.clock.env.ANVIL_SUMMONER_ADDRESS = address;
+      else delete f.clock.env.ANVIL_SUMMONER_ADDRESS;
+      const result = await f.run();
+      assert.equal(result.exitCode, 0);
+      const handoff = JSON.parse(await fsNative.readFile(path.join(result.artifactDir, 'handoff-result.json'), 'utf8'));
+      assert.equal(handoff.provenance.summonerAddress, expected);
+    } finally { await f.clean(); }
+  }
+});
+
+test('stale registry anvil dispatches with a warning and records both shas', async () => {
+  const current = 'b'.repeat(40);
+  const f = await fixture({ registry: [{ snapshotId: 'snapshot-approved', repo: 'acme/repo', lockfileHash: sha, anvilSha: sha }], currentAnvilSha: current });
+  try {
+    const result = await f.run();
+    assert.equal(result.exitCode, 0);
+    assert.ok(f.logs.some(line => line.includes('stale anvil') && line.includes(sha.slice(0, 9)) && line.includes(current.slice(0, 9)) && line.includes('rebuildSnapshot: true')));
+    for (const file of ['manifest.json', 'handoff-result.json']) {
+      const data = JSON.parse(await fsNative.readFile(path.join(result.artifactDir, file), 'utf8'));
+      assert.deepEqual(data.anvilStale, { snapshot: sha, current });
+    }
+  } finally { await f.clean(); }
+});
+
+test('stale registry anvil rebuilds once at fork sha when approved', async () => {
+  const f = await fixture({ registry: [{ snapshotId: 'snapshot-approved', repo: 'acme/repo', lockfileHash: sha, anvilSha: sha }], currentAnvilSha: 'b'.repeat(40), req: { rebuildSnapshot: true } });
+  try {
+    const result = await f.run();
+    assert.equal(result.exitCode, 0);
+    assert.equal(f.calls.filter(call => call[0] === 'build').length, 1);
+    assert.deepEqual(f.calls.find(call => call[0] === 'build')[1], { repo: f.repo, ref: sha });
+    assert.equal(f.calls.find(call => call[0] === 'create')[1].source.snapshotId, 'snapshot-rebuilt');
+    assert.equal(f.logs.some(line => line.includes('stale anvil')), true);
+  } finally { await f.clean(); }
+});
+
+test('registered snapshot without anvilSha does not emit a stale warning', async () => {
+  const f = await fixture({ registry: [{ snapshotId: 'snapshot-approved', repo: 'acme/repo', lockfileHash: sha }], currentAnvilSha: 'b'.repeat(40) });
+  try {
+    const result = await f.run();
+    assert.equal(result.exitCode, 0);
+    assert.equal(f.logs.some(line => line.includes('stale anvil')), false);
+  } finally { await f.clean(); }
+});
+
+test('pinned snapshot with no registry record dispatches without a stale warning', async () => {
+  const f = await fixture({ registry: [{ snapshotId: 'other-snapshot', repo: 'acme/repo', lockfileHash: sha, anvilSha: sha }], currentAnvilSha: 'b'.repeat(40) });
+  try {
+    const result = await f.run();
+    assert.equal(result.exitCode, 0);
+    assert.equal(f.calls.find(call => call[0] === 'create')[1].source.snapshotId, 'snapshot-approved');
+    assert.equal(f.logs.some(line => line.includes('stale anvil')), false);
+  } finally { await f.clean(); }
+});
+
+test('credential expiry message reports remaining and required dispatch minutes', () => {
+  const now = Date.parse('2026-01-01T00:00:00Z');
+  assert.match(credentialExpiryMessage(null, 600_000, now), /no Vercel CLI credential found; run `vercel login`/);
+  const message = credentialExpiryMessage({ token: 't', expiresAt: new Date(now + 4 * 60_000) }, 600_000, now);
+  assert.match(message, /4 minutes left/);
+  assert.match(message, /15 minutes/);
+  assert.match(message, /lower timeoutMs/);
+  assert.match(message, /vercel logout && vercel login/);
+});
+
+test('fresh and unknown-current registry anvil shas do not log stale warnings', async () => {
+  for (const currentAnvilSha of [sha, undefined]) {
+    const f = await fixture({ registry: [{ snapshotId: 'snapshot-approved', repo: 'acme/repo', lockfileHash: sha, anvilSha: sha }], currentAnvilSha });
+    try {
+      const result = await f.run();
+      assert.equal(result.exitCode, 0);
+      assert.equal(f.logs.some(line => line.includes('stale anvil')), false);
+    } finally { await f.clean(); }
+  }
+});
+
+test('sandbox runner sources lane env before scoped exports and captures summoner under -R', async () => {
+  const root = await fsNative.mkdtemp(path.join(os.tmpdir(), 'summon-golem-runner-'));
+  try {
+    const home = path.join(root, 'home');
+    const lanes = path.join(root, 'lane files');
+    await fsNative.mkdir(path.join(home, '.scripts'), { recursive: true });
+    await fsNative.mkdir(lanes, { recursive: true });
+    const laneEnv = path.join(lanes, 'sandbox.env');
+    await fsNative.writeFile(laneEnv, 'export VERCEL_TEAM_ID=from-lane\nexport VERCEL_PROJECT_ID=project-lane\n');
+    const env = { ...process.env, HOME: home, ANVIL_SANDBOX_LANE_ENV: laneEnv, PATH: process.env.PATH, PI_SESSION_ID: 'id-from-session', PI_SESSION_ADDRESS: '' };
+    const { stdout } = await execFileAsync('bash', [SUMMONER, '-R', '-n', '--sandbox', '-e', 'VERCEL_TEAM_ID=from-flag', 'test', 'prompt'], { cwd: process.cwd(), env });
+    assert.ok(stdout.includes(`LANE_ENV=${laneEnv.replaceAll(' ', '\\ ')}`));
+    assert.match(stdout, /\[\[ ! -r "\$LANE_ENV" \]\] \|\| source "\$LANE_ENV"/);
+    assert.match(stdout, /export ANVIL_SUMMONER_ADDRESS=id-from-session/);
+    assert.ok(stdout.indexOf('source "$LANE_ENV"') < stdout.indexOf('export VERCEL_TEAM_ID=from-flag'));
+    const noAddress = await execFileAsync('bash', [SUMMONER, '-R', '-n', '--sandbox', 'test', 'prompt'], { cwd: process.cwd(), env: { ...env, PI_SESSION_ID: '', PI_SESSION_ADDRESS: '' } });
+    assert.equal(noAddress.stdout.includes('export ANVIL_SUMMONER_ADDRESS='), false);
+    assert.ok(!stdout.includes('from-lane'), 'runner must source the file, not inline its contents');
+  } finally { await fsNative.rm(root, { recursive: true, force: true }); }
+});
+
+test('sandbox runner includes refusal and stale-anvil ping details while non-sandbox runner stays isolated', async () => {
+  const root = await fsNative.mkdtemp(path.join(os.tmpdir(), 'summon-golem-ping-'));
+  try {
+    const home = path.join(root, 'home');
+    await fsNative.mkdir(path.join(home, '.scripts'), { recursive: true });
+    const bin = path.join(root, 'bin'); await fsNative.mkdir(bin);
+    const piPost = path.join(bin, 'pi-post'); await fsNative.writeFile(piPost, '#!/bin/sh\nexit 0\n'); await fsNative.chmod(piPost, 0o755);
+    const env = { ...process.env, HOME: home, PATH: `${bin}:${process.env.PATH}`, PI_SESSION_ADDRESS: 'session-address' };
+    const sandbox = await execFileAsync('bash', [SUMMONER, '-n', '--sandbox', 'test', 'prompt'], { cwd: process.cwd(), env });
+    assert.match(sandbox.stdout, /controller refused the request before dispatch:/);
+    assert.match(sandbox.stdout, /grep -a 'controller error:' .*tail -n 1/);
+    assert.match(sandbox.stdout, /\$\{verdict:0:300\}/);
+    assert.match(sandbox.stdout, /anvilStale=/);
+    const ordinary = await execFileAsync('bash', [SUMMONER, '-R', '-n', 'test', 'prompt'], { cwd: process.cwd(), env });
+    assert.equal(ordinary.stdout.includes('controller refused the request before dispatch:'), false);
+    assert.equal(ordinary.stdout.includes('anvilStale='), false);
+    assert.equal(ordinary.stdout.includes('LANE_ENV'), false);
+    assert.equal(ordinary.stdout.includes('ANVIL_SUMMONER_ADDRESS'), false);
+  } finally { await fsNative.rm(root, { recursive: true, force: true }); }
+});

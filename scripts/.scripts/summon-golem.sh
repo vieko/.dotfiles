@@ -189,9 +189,10 @@ fi
 # Report-back address: captured here, where the summoner's env exists.
 # Hard error without one -- a silent golem is the failure mode this script
 # exists to prevent (symmetric with summon-familiar.sh).
+summoner_address="${PI_SESSION_ADDRESS:-${PI_SESSION_ID:-}}"
 report_to=""
 if [[ $no_report -eq 0 ]]; then
-    report_to="${PI_SESSION_ADDRESS:-${PI_SESSION_ID:-}}"
+    report_to="$summoner_address"
     if [[ -z "$report_to" ]]; then
         echo "error: no PI_SESSION_ADDRESS/PI_SESSION_ID in env -- cannot wire the completion ping" >&2
         echo "       run from inside a pi session's bash tool, or pass -R to deliberately summon without one" >&2
@@ -213,6 +214,7 @@ fi
 
 sandbox_request="${ANVIL_SANDBOX_REQUEST:-}"
 sandbox_controller="${ANVIL_SANDBOX_CONTROLLER:-$HOME/.dotfiles/scripts/sandbox/anvil-sandbox.mjs}"
+sandbox_lane_env="${ANVIL_SANDBOX_LANE_ENV:-$HOME/private/lanes/sandbox-golem.env}"
 if [[ $sandbox_enabled -eq 1 && $dry_run -eq 0 ]]; then
     [[ -n "$sandbox_request" && -r "$sandbox_request" ]] || { echo "error: --sandbox requires ANVIL_SANDBOX_REQUEST to name a readable request JSON" >&2; exit 2; }
     [[ -r "$sandbox_controller" ]] || { echo "error: sandbox controller not found: $sandbox_controller" >&2; exit 2; }
@@ -252,11 +254,14 @@ EOF
 SANDBOX=1
 REQUEST=$(printf '%q' "${sandbox_request:-${ANVIL_SANDBOX_REQUEST:-$HOME/scratch/logs/golem-$name-$ts.request.json}}")
 CONTROLLER=$(printf '%q' "$sandbox_controller")
+LANE_ENV=$(printf '%q' "$sandbox_lane_env")
+[[ ! -r "\$LANE_ENV" ]] || source "\$LANE_ENV"
 EOF
     fi
     for kv in "${golem_env[@]+"${golem_env[@]}"}"; do
         printf 'export %s=%q   # -e: scoped to this golem\n' "${kv%%=*}" "${kv#*=}"
     done
+    if [[ $sandbox_enabled -eq 1 && -n "$summoner_address" ]]; then printf 'export ANVIL_SUMMONER_ADDRESS=%q\n' "$summoner_address"; fi
     if [[ -n "$map_id" ]]; then
         cat <<EOF
 
@@ -290,6 +295,22 @@ ping() {
         verdict="\$(jq -r '"passed=\(.passed) attempts=\(.attempts) branch=\(.branch // "?") gate[\(.gate.source // "?")]=\((.gate.commands // []) | join("; "))" + (if .errors then "\nerrors: \(.errors)" else "" end)' "\$RESULT" 2>/dev/null)" \\
             || verdict="result JSON present but unparseable: \$RESULT"
     fi
+EOF
+        if [[ $sandbox_enabled -eq 1 ]]; then
+            cat <<'EOF'
+    if [[ "$status" == 4 ]]; then
+        local controller_error=""
+        controller_error="$(grep -a 'controller error:' "$LOG" | tail -n 1)"
+        if [[ -n "$controller_error" ]]; then
+            verdict="${controller_error#*controller error: }"
+            verdict="${verdict%%$'\n'*}"
+            verdict="${verdict:0:300}"
+            verdict="controller refused the request before dispatch: $verdict"
+        fi
+    fi
+EOF
+        fi
+        cat <<EOF
     local body="golem $name (anvil) finished: exit \${status}. \${verdict}
 result: \$RESULT
 log: \$LOG
@@ -299,9 +320,10 @@ EOF
         if [[ $sandbox_enabled -eq 1 ]]; then
             cat <<'EOF'
     local handoff="${SANDBOX_HANDOFF:-}"
-    local details=""
+    local details="" stale=""
     if [[ -s "$handoff" ]]; then
-        details="sandbox=$(jq -r '.sandboxId // "?"' "$handoff" 2>/dev/null) stop=$(jq -r '.stopStatus // "?"' "$handoff" 2>/dev/null) retrieval=$(jq -r '.retrievalStatus // "?"' "$handoff" 2>/dev/null) import=$(jq -r '.importStatus // "?"' "$handoff" 2>/dev/null) branch=$(jq -r '.branch // "?"' "$handoff" 2>/dev/null) worktree=$(jq -r '.worktree // "?"' "$handoff" 2>/dev/null) artifacts=$(dirname "$handoff") verdict=$(jq -r '.verdict // "?"' "$handoff" 2>/dev/null) voidReason=$(jq -r '.voidReason // "?"' "$handoff" 2>/dev/null) attempts=$(jq -r '.attempts // "?"' "$handoff" 2>/dev/null) cost=$(jq -r '.cost // "?"' "$handoff" 2>/dev/null) timeoutMs=$(jq -r '.timeoutMs // "?"' "$handoff" 2>/dev/null) provenance=$(jq -c '.provenance // {}' "$handoff" 2>/dev/null)"
+        stale="$(jq -r 'if .anvilStale then "anvilStale=\(.anvilStale.snapshot)..\(.anvilStale.current)" else empty end' "$handoff" 2>/dev/null)"
+        details="sandbox=$(jq -r '.sandboxId // "?"' "$handoff" 2>/dev/null) stop=$(jq -r '.stopStatus // "?"' "$handoff" 2>/dev/null) retrieval=$(jq -r '.retrievalStatus // "?"' "$handoff" 2>/dev/null) import=$(jq -r '.importStatus // "?"' "$handoff" 2>/dev/null) branch=$(jq -r '.branch // "?"' "$handoff" 2>/dev/null) worktree=$(jq -r '.worktree // "?"' "$handoff" 2>/dev/null) artifacts=$(dirname "$handoff") verdict=$(jq -r '.verdict // "?"' "$handoff" 2>/dev/null) voidReason=$(jq -r '.voidReason // "?"' "$handoff" 2>/dev/null) attempts=$(jq -r '.attempts // "?"' "$handoff" 2>/dev/null) cost=$(jq -r '.cost // "?"' "$handoff" 2>/dev/null) timeoutMs=$(jq -r '.timeoutMs // "?"' "$handoff" 2>/dev/null) provenance=$(jq -c '.provenance // {}' "$handoff" 2>/dev/null)${stale:+ $stale}"
     else
         details="sandbox=?, stop=?, retrieval=unknown, import=unknown, artifacts=see controller log"
     fi

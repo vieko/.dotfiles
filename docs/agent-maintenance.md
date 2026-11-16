@@ -357,9 +357,12 @@ request's `snapshotId` are optional (anvil#63): when the request sets
 `snapshotId`, it must still match `ANVIL_SANDBOX_SNAPSHOT_ID`, and the
 pre-check below runs as before; when it is absent, the pre-check is the
 selection -- the controller picks the newest registered snapshot for the
-request's repo slug and fork lockfile hash itself. Make these settings and
-credentials available in the login shell that executes the generated runner
-(the wrapper intentionally does not write them into the runner). `ghStsPolicy`
+request's repo slug and fork lockfile hash itself. In `--sandbox` mode the
+generated runner sources `~/private/lanes/sandbox-golem.env` (override the
+path with `ANVIL_SANDBOX_LANE_ENV` at summon time) before any `-e` export,
+so the team and project ids no longer need `-e`; a missing file is skipped.
+The two credentials come from the login shell that executes the runner (the
+wrapper does not write values into the runner). `ghStsPolicy`
 in the request is also optional: when present, the GitHub clone credential is
 minted at dispatch from the linked Vercel development project's OIDC identity
 via gh-sts, scoped to the requested repository with `contents: read` only,
@@ -372,7 +375,8 @@ probe failure. No GitHub token is configured in the environment, request,
 `-e`, snapshot, or remote environment. The controller mints at most once per
 dispatch and never retries a denial: gh-sts bans a
 source IP after repeated policy denials with no decay. `PI_SESSION_ADDRESS`
-is captured by the wrapper locally for the completion ping and is not copied
+is captured by the wrapper for the completion ping and exported to the
+controller as `ANVIL_SUMMONER_ADDRESS` (provenance only); it is not copied
 to the sandbox.
 
 One-time local setup: run `vercel login`, then run
@@ -391,16 +395,19 @@ to the request file), `gate` (non-empty commands), `scopes`, `contracts`
 (relative request-local files), `model`, optional `ghStsPolicy` (safe policy
 identifier; see above), optional `gateTimeout` (default `600s`), optional
 `rebuildSnapshot` (default false; see below), optional `snapshotId`, `teamId`,
-`projectId`, `vcpus`, `timeoutMs`, `localRepo`, `dispatchId`, and
-`summonerAddress`. An empty string for `snapshotId` or `ghStsPolicy` is still
+`projectId`, `vcpus`, `timeoutMs`, `localRepo`, `dispatchId`, and optional
+`summonerAddress` (defaults to `ANVIL_SUMMONER_ADDRESS`). An empty string for `snapshotId` or `ghStsPolicy` is still
 rejected -- omit the key to mean "absent", not `""`. Contracts are seeded into
 the clone at `.anvil-input/` and excluded from the patch. Gate and contract
 checks in the gate should pin field names, not exact expectation literals:
 attempt 1 of `gtmeng-4305-1` had correct code and failed on a contract grep
 for `sameCampaignMember: true`, and attempt 2 added a redundant assertion
 only to satisfy it. The timeout must leave
-at least five minutes for collection. Use a unique dispatch ID and a clean
-local repository; the controller refuses branch/worktree collisions.
+at least five minutes for collection. Use a unique dispatch ID. The controller
+refuses staged or unstaged changes to tracked files in `localRepo`, and
+branch/worktree collisions; untracked files, including earlier golem
+worktrees under `.anvil-worktrees/`, do not block, so one checkout can carry
+several dispatches.
 `--link`, symlinked inputs, traversal, unknown keys, and host paths in gate
 commands are rejected. The wrapper still uses the completion ping over stdin
 (required by the SentinelOne rule).
@@ -446,6 +453,12 @@ the request, it runs `build-snapshot.mjs --repo <localRepo> --ref <forkSha>`
 and dispatches on the new snapshot, logging the id so `ANVIL_SANDBOX_SNAPSHOT_ID`
 can be updated; with no match and no `rebuildSnapshot`, it exits 4 before
 creating anything, naming the repo slug and the rebuild command to run.
+After selection it compares the snapshot's registered `anvilSha` with
+`origin/main` of `~/dev/anvil` (no fetch). When they differ, a request with
+`rebuildSnapshot: true` rebuilds once; otherwise the dispatch goes ahead on
+the old anvil, logs `stale anvil <old>..<current>`, and records `anvilStale`
+in the manifest, the handoff result, and the completion ping. An exit 4
+ping quotes the controller's refusal line.
 **The first dispatch using each new snapshot requires explicit spend
 approval**, even if it is a dry-looking validation run. IDs must refer to an
 already-existing approved snapshot, team, and project. Do not use this lane to
