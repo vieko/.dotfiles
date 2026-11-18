@@ -72,7 +72,8 @@ panes. `summon-*.sh` and `remind-at.sh` pick tmux or Rex through
   (`docs/agent-maintenance.md`, "Sandbox lane"); ids in
   `~/private/lanes/sandbox-golem.env`. Proven on anvil #59 (closed).
   Per-repo snapshots and the optional clone credential (anvil #63) are in
-  `8851ff3` but not yet proven live outside gtm. Dispatch friction from
+  `8851ff3`, proven live on vieko/pi-redact 2026-11-15 (anvil #63
+  closed). Dispatch friction from
   the 2026-11-10 dogfood (clean check, lane env, summoner address,
   refusal pings) fixed 2026-11-15. Since then a lockfile change or an
   anvil release no longer forces a rebuild: the controller picks the
