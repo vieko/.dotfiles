@@ -17,5 +17,19 @@
       "**Host addendum, secrets**: secrets live in per-project .env.local files; never print DATABASE_URL or player emails",
       "**Host addendum, sensitive targets**: in addition to the heuristic above, any production database reachable via DATABASE_URL"
     ]
+  },
+  "hooks": {
+    "Notification": [
+      {
+        "matcher": "permission_prompt",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "[ \"${TERM_PROGRAM:-}\" = rex ] && exit 0; jq -r '\"\\(.cwd // \"\" | split(\"/\") | last)\\t\\(.message // \"waiting for approval\")\"' | { IFS=\"$(printf \"\\t\")\" read -r d m; notify-send -u critical -a \"Claude Code\" \"Approval needed: $d\" \"$m\"; } 2>/dev/null || true",
+            "timeout": 10
+          }
+        ]
+      }
+    ]
   }
 }
