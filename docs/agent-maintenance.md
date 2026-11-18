@@ -517,6 +517,24 @@ Controller exit status: `0` green and imported; `1` gate red; `2` void or
 inconclusive; `3` green but retrieval/import failed; `4` controller error
 before dispatch. Stop failure is recorded but does not change that status.
 
+## Local Postgres for DB integration tests (`pg-test.sh`)
+
+In `~/dev/gtm`, `*.integration.test.ts` suites skip unless a
+`*_TEST_DATABASE_URL` points at a localhost database, and no CI job
+provides one, so they run only on this machine. `postgresql@17` is
+keg-only in Homebrew, so `postgres`/`initdb` are not on PATH (only
+libpq's clients are); `pg-test.sh` finds the keg. Docker is not needed.
+
+```bash
+cd ~/dev/gtm   # or a worktree
+eval "$(pg-test.sh up)"   # throwaway server on 127.0.0.1:54329, one DB per env var
+pnpm --filter @repo/db exec vitest run src/access/calendar-meetings.integration.test.ts
+pg-test.sh down          # stop and delete the data directory
+```
+
+The server uses trust auth and listens on 127.0.0.1 only. Its data lives in `$TMPDIR/pg-test`.
+Override the port with `PG_TEST_PORT` and the directory with `PG_TEST_DIR`.
+
 ## History & lineage
 
 Context for names that appear in old sessions, bonfire entries, or scratch
