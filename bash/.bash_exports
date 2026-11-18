@@ -36,8 +36,13 @@ fi
 export LANG=en_CA.UTF-8
 export LC_ALL=en_CA.UTF-8
 
-# explicit timezone: some tools default to UTC when TZ is unset
-export TZ="America/Edmonton"
+# explicit timezone: some tools default to UTC when TZ is unset. Follow
+# the system zone (macOS sets it automatically from location) instead of
+# pinning one, so a trip does not leave the shell on the home zone.
+_tz=$(readlink /etc/localtime 2>/dev/null)
+_tz=${_tz##*/zoneinfo/}
+export TZ="${_tz:-America/Edmonton}"
+unset _tz
 
 export HISTIGNORE="ls:cd:pwd:exit:date:clear:history:bg:fg:* --help"
 export LESSHISTFILE=-
