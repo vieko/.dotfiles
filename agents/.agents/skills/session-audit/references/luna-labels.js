@@ -27,6 +27,12 @@ for (const [sessionIndex, s] of audit.sessions.entries()) {
     },
   });
 }
+// Corrections: the regex candidates from the audit, retries excluded.
+for (const [correctionIndex, c] of (audit.corrections ?? []).entries()) if (!c.retry) jobs.push({
+  correctionIndex, dir: c.dir, file: c.file, kind: "correction",
+  state: {prompt: c.text, agentBefore: c.before ?? "", lastTool: c.lastTool ?? null},
+  questions: {is_correction: questionsById.is_correction, corrected_behavior: questionsById.corrected_behavior},
+});
 const estimatedCost = jobs.reduce((n, j) => n + JSON.stringify({state: j.state, questions: j.questions}).length + 4000, 0) * 0.10 / 1e6;
 const labels = [];
 let cost = 0;
@@ -41,14 +47,14 @@ else for (let i = 0; i < jobs.length; i += 4) {
   if (cost >= 0.09) { skipped = "Budget guard stopped remaining calls"; break; }
   const batch = await Promise.allSettled(jobs.slice(i, i + 4).map(async (j) => {
     const r = await models.classify(model, {state: j.state, questions: j.questions});
-    return {sessionIndex: j.sessionIndex, reportIndex: j.reportIndex, dir: j.dir,
+    return {sessionIndex: j.sessionIndex, reportIndex: j.reportIndex, correctionIndex: j.correctionIndex, dir: j.dir,
       file: j.file, kind: j.kind, stopReason: r.stopReason,
       error: r.errorMessage, answers: r.stopReason === "stop" ? r.answers : {}, usage: r.usage};
   }));
   for (const [k, r] of batch.entries()) {
     const j = jobs[i + k];
     const row = r.status === "fulfilled" ? r.value : {
-      sessionIndex: j.sessionIndex, reportIndex: j.reportIndex, dir: j.dir,
+      sessionIndex: j.sessionIndex, reportIndex: j.reportIndex, correctionIndex: j.correctionIndex, dir: j.dir,
       file: j.file, kind: j.kind, stopReason: "error", error: String(r.reason), answers: {},
     };
     cost += row.usage?.cost?.total ?? 0;

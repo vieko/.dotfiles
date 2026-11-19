@@ -163,9 +163,11 @@ received completion/blocked reports (2,000 characters each), including forks.
 Read [the report selection rules](references/luna-inputs.md) before interpreting
 counts. The filter excludes dispatches, coordination, and progress messages.
 
-Read [the version-2 rubric](references/luna-rubric.json) verbatim.
+Read [the version-3 rubric](references/luna-rubric.json) verbatim.
 Run [the codemode script](references/luna-labels.js), setting its window name.
-It labels opener intent and each selected report's verification and deviations.
+It labels opener intent, each selected report's verification and deviations,
+and each non-retry correction from step 13 (`is_correction`,
+`corrected_behavior`; the agent's last 300 chars and last tool go with it).
 It uses vercel-ai-gateway / openai/gpt-6-luna-decisions, four concurrent calls,
 and a $0.10 budget. Classifier failures skip labels, never the audit.
 Do not redact inputs or paste more than short prompt excerpts.
@@ -175,6 +177,16 @@ question, errors, skipped jobs, and cost. A boolean label is true at probability
 >= 0.5. Preserve probabilities, but do not treat them as calibrated accuracy.
 Cutoffs can hide evidence. Read representative openers and reports before
 proposing templates or interpreting a false report label as an omission.
+
+**Correction labels** (rubric v3, 2026-11-19). Count a correction only when
+`is_correction` is true and `corrected_behavior` is not "not a correction";
+read the rows where the two disagree yourself. Group proposals by
+`corrected_behavior`. First run, 14 days to 11-19: 18 candidates, 9 kept,
+$0.0013. Kept: asked instead of acting 4, wrong scope 2, missed existing
+tool or rule 1, wrong or unverified claim 1, output quality 1. Labels are
+one sample: two runs flipped one row ("you should be able to know when
+the review lands"). Do not tune the rubric's examples on the window you
+measure.
 
 ## Open experiments (settle before proposing new ones)
 

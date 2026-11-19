@@ -10,6 +10,9 @@ const execute = new (Object.getPrototypeOf(async function () {}).constructor)("t
 const fixture = { since: 1, until: 2, sessions: [
 	{ dir: "fixture", file: "one", prompts: ["Implement the requested fix", "proceed with (a)"], reports: ["Completed. Verification: PASS.", "Blocked: ENOENT."] },
 	{ dir: "fixture", file: "two", prompts: ["Look up this model", "posted..."], reports: ["Done. Deviations: none."] },
+], corrections: [
+	{ dir: "fixture", file: "two", retry: false, lastTool: "bash", before: "Want me to push?", text: "you should push it" },
+	{ dir: "fixture", file: "two", retry: true, lastTool: null, before: "", text: "try again" },
 ] };
 const run = async (models, audit = fixture) => {
 	let saved;
@@ -22,7 +25,7 @@ const run = async (models, audit = fixture) => {
 	return saved;
 };
 
-test("v2 labels only opener intent and report evidence, with at most four concurrent calls", async () => {
+test("v3 labels opener intent, report evidence, and non-retry corrections, with at most four concurrent calls", async () => {
 	const calls = [];
 	let active = 0;
 	let maxActive = 0;
@@ -37,11 +40,14 @@ test("v2 labels only opener intent and report evidence, with at most four concur
 		},
 	});
 	assert.deepEqual(Object.keys(rubric), ["version", "questions"]);
-	assert.equal(rubric.version, 2);
-	assert.deepEqual(Object.keys(rubric.questions), ["intent", "has_verification", "lists_deviations"]);
+	assert.equal(rubric.version, 3);
+	assert.deepEqual(Object.keys(rubric.questions), ["intent", "has_verification", "lists_deviations", "is_correction", "corrected_behavior"]);
 	assert.equal(maxActive, 4);
-	assert.equal(saved.labels.length, 5);
-	assert.equal(saved.cost, 0.005);
+	assert.equal(saved.labels.length, 6);
+	assert.equal(saved.cost, 0.006);
+	assert.deepEqual(calls[5].state, { prompt: "you should push it", agentBefore: "Want me to push?", lastTool: "bash" });
+	assert.deepEqual(Object.keys(calls[5].questions), ["is_correction", "corrected_behavior"]);
+	assert.equal(saved.labels[5].correctionIndex, 0);
 	assert.equal(saved.budget, 0.10);
 	assert.deepEqual(calls[0].state, { prompts: ["Implement the requested fix"] });
 	assert.deepEqual(calls[3].state, { prompts: ["Look up this model"] });
@@ -55,7 +61,7 @@ test("classifier errors and thrown calls fail open", async () => {
 		async () => { throw Error("fixture failure"); },
 	]) {
 		const saved = await run({ getModelOfType: async () => ({}), classify });
-		assert.equal(saved.labels.length, 5);
+		assert.equal(saved.labels.length, 6);
 		assert.ok(saved.labels.every(x => x.stopReason === "error" && x.error));
 		assert.equal(saved.cost, 0);
 	}
@@ -66,7 +72,7 @@ test("a missing model or failed catalog saves a skipped result", async () => {
 		const saved = await run({ getModelOfType });
 		assert.match(saved.skipped, /Classifier unavailable/);
 		assert.equal(saved.labels.length, 0);
-		assert.equal(saved.jobs, 5);
+		assert.equal(saved.jobs, 6);
 	}
 });
 

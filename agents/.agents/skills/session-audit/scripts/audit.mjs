@@ -338,7 +338,9 @@ for (const dir of readdirSync(root)) {
 							const stop = a >= 0 ? L[a].message.stopReason : null;
 							// A retry after a transport error or an abort is not a behavior correction.
 							const retry = stop === "error" || stop === "aborted" || /^\s*(?:try again|retry|one more time)\b/i.test(txt);
-							corrections.push({ ts, when: mt(ts), dir: s.dir, file: s.file, retry, after: stop === "error" || stop === "aborted" ? stop : null, lastTool, text: txt.slice(0, 200) });
+							// The agent's last words before the pushback, for the classifier pass.
+							const before = a >= 0 ? textOf(L[a].message.content).replace(/\s+/g, " ").slice(-300) : "";
+							corrections.push({ ts, when: mt(ts), dir: s.dir, file: s.file, retry, after: stop === "error" || stop === "aborted" ? stop : null, lastTool, before, text: txt.slice(0, 200) });
 						}
 						const low = txt.length <= 500 ? txt.toLowerCase() : "";
 						if (low) for (const [name, phrases] of skillsFor(cwd)) {
