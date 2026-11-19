@@ -12,7 +12,7 @@
 #   --allow-unstable  merge when GitHub reports UNSTABLE (required checks
 #                     pass, a non-required one failed). Default: refuse.
 #   --keep-branch     merge only; leave worktree and branches alone.
-#   --no-linear       skip the Linear state check.
+#   --no-linear       skip the Linear state check and the cycle step.
 #
 # It never bypasses anything: no --admin, no force. A PR that is not CLEAN
 # (BLOCKED, BEHIND, DIRTY, a pending check) exits 1 with the reason; wait
@@ -21,7 +21,8 @@
 #
 # Linear: the GitHub integration moves a linked issue to Done about 3 s after
 # the merge (measured 2026-11-15 on 7 PRs). The script waits up to 30 s and
-# reports the state; it does not change it. Agents that set Done in the same
+# reports the state; it does not change it, but it adds my GTMENG issue to
+# the active cycle (linear-cycle-sync.sh). Agents that set Done in the same
 # batch as the merge raced the integration and reported "left at In Progress"
 # 10 times in week 46.
 #
@@ -106,6 +107,10 @@ if (( linear && !dry )) && key=$(grep -oiE '[a-z]{2,10}-[0-9]+' <<<"$head" | hea
   if [[ -z "$lstate" ]]; then echo "[INFO] $key: not found in Linear (or no access); check by hand if it is an issue"
   elif [[ "$lstate" =~ $final ]]; then echo "[OK] $key: $lstate"
   else echo "[WARN] $key: still $lstate after 30 s; move it only if the work is complete"; fi
+  # Finished work joins the active cycle (rule (b), linear-cli skill).
+  if [[ -n "$lstate" ]] && command -v linear-cycle-sync.sh >/dev/null; then
+    linear-cycle-sync.sh --issue "$key" --apply --quiet || echo "[WARN] $key: could not add it to the active cycle"
+  fi
 fi
 
 (( keep_branch )) && exit 0

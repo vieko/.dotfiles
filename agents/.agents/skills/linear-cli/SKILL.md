@@ -236,6 +236,12 @@ jq -n --arg term "onboarding" '{query: "query($term: String!) { searchIssues(ter
 - **`--fields` with a path into a nullable object** (e.g. `project.name` on an
   issue with no project) can produce output `jq` chokes on if you assume shape —
   handle nulls in your jq filter.
+- **Linear ORs the keys of an object inside `or`.** `or: [{ assignee: me },
+  { creator: me, team: GTMENG }]` matched every GTMENG Triage issue (79
+  instead of 5, 2026-11-19). Wrap multi-key branches in an explicit `and:
+  [{ creator }, { team }]`, the way saved views store them. A top-level
+  `or` next to sibling filters also dropped a matching issue once; when a
+  count matters, split the query in two.
 - **Verify writes with a fresh read** (`linear issues read <id>`) when a
   mutation matters — cheap insurance, and read-replica lag of a few seconds has
   been observed on the API.
@@ -256,11 +262,28 @@ keep them in sync with this table when a filter changes.
 | Backlog `8fe866ae-0b0f-467c-9f80-7e2f98e2ea76` | Planning pool: Backlog state, plus Todo with no cycle | - |
 | Vulns `d0bf8691-c0cb-4491-8088-dc88c7fc1994` | Open VULN findings (Verify Fix waits on security) | - |
 
-- **Cycles are planned by hand.** GTMENG has auto-add for started and
-  completed issues off, so nothing moves into or out of a cycle by
-  itself. At cycle end, move each unfinished issue to the next cycle or
-  back to Backlog. Cycle membership shows on the team's charts: propose
-  additions, do not add without Vieko.
+- **Started work joins the active cycle (decided 2026-11-18).** GTMENG
+  has cycle auto-add off, and most of my issues are filed and done in a
+  day, so before this rule the cycle charts showed about 3% of my work.
+  When you move one of my GTMENG issues to a started state, or file one
+  and do it in the same session, set `cycle` to the active cycle
+  (MCP `save_issue` takes `cycle`). `pr-merge.sh` does it for the merged
+  issue, and `linear-cycle-sync.sh [--apply]` sweeps the rest (started,
+  or completed since the cycle began; no saga parents). Backlog and
+  unstarted Todo stay out: putting planned Todo work into the current or
+  next cycle is a planning call, so propose it, do not add it without Vieko.
+  At cycle end, move each unfinished issue to the next cycle or back to
+  Backlog.
+- **Fill in new issues when you create them.** An issue filed for me
+  gets a priority and a project at creation, so it does not land in
+  Unsorted (36% of 143 issues filed 11-04 to 11-18 had no priority).
+  Use the project of the code it touches (Index, Lead, Event-Driven GTM,
+  GTM Workflows; monorepo platform, CI and DB work goes in Misc). Three
+  or more related issues get a parent issue (a saga), not a flat list.
+  When the right priority or project is unclear, set your best guess and
+  say so in the reply, rather than leaving it empty.
+- **Grooming** is the `/groom` prompt (`/groom close` at cycle end): it
+  reads every view, proposes, and applies only what Vieko picks.
 - **Views are writable only through GraphQL.** Linear MCP lists views
   (`list_custom_views`) but cannot edit them, and it returns metadata, not
   filters. Read `customView(id) { filterData issues { nodes { ... } } }`;
