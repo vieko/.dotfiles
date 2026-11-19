@@ -14,6 +14,7 @@ import re
 import signal
 import subprocess
 import sys
+import tempfile
 import time
 
 
@@ -70,8 +71,11 @@ def main():
     log = ""
     if detached:
         safe = re.sub(r"[^A-Za-z0-9._-]", "_", args.pr)
-        log = str(Path(os.environ.get("TMPDIR", "/tmp")) /
-                  f"pr-wait-{safe}-{time.time_ns()}.log")
+        # Owner-only and unpredictable: the status can carry private
+        # Security Review titles, and TMPDIR may be shared.
+        fd, log = tempfile.mkstemp(prefix=f"pr-wait-{safe}-", suffix=".log",
+                                   dir=os.environ.get("TMPDIR", "/tmp"))
+        os.close(fd)
         read_fd, write_fd = os.pipe()
         pid = os.fork()
         if pid:

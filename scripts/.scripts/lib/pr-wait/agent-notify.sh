@@ -110,9 +110,13 @@ notify_resolve() {
 # has no process evidence after that), so it is always sent when we have it.
 _notify_claude_socket_send() {
   local sock="$1" body="$2" payload
-  payload=$(jq -cn --arg t "${CLAUDE_CODE_MESSAGING_TOKEN:-}" --arg c "$body" '
-    (if $t != "" then {type:"auth",token:$t} else empty end),
-    {type:"user",message:{role:"user",content:$c}}')
+  # Body on stdin and token from the environment: neither goes in jq's argv,
+  # which other local accounts can read (the body can carry private
+  # Security Review findings).
+  payload=$(printf '%s' "$body" | CLAUDE_CODE_MESSAGING_TOKEN="${CLAUDE_CODE_MESSAGING_TOKEN:-}" jq -Rsc '
+    (env.CLAUDE_CODE_MESSAGING_TOKEN // "") as $t
+    | (if $t != "" then {type:"auth",token:$t} else empty end),
+      {type:"user",message:{role:"user",content:.}}')
   case "$_notify_sock_tool" in
     python3)
       printf '%s\n' "$payload" | python3 -c '
@@ -154,7 +158,9 @@ detach_reexec() {
   local args=() a log pid
   for a in "$@"; do [[ "$a" == "$strip" ]] || args+=("$a"); done
   safe=$(printf '%s' "$safe" | tr -c 'A-Za-z0-9._-' '_')
-  log="${TMPDIR:-/tmp}/${prefix}-${safe}-$(date +%H%M%S).log"
+  # mktemp: owner-only (0600) and unpredictable, so a shared TMPDIR does not
+  # expose the status (it can carry private Security Review titles).
+  log=$(mktemp "${TMPDIR:-/tmp}/${prefix}-${safe}-$(date +%H%M%S)-XXXXXX")
   # setsid (Linux) detaches from the tool's process group; nohup alone
   # suffices on macOS where setsid is absent.
   # AGENT_WAIT_LOG only carries the log path into the record; nothing reads the file.

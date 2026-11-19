@@ -100,7 +100,7 @@ query($owner:String!,$name:String!,$number:Int!){
   # A red Security Review check has its reason in Vercel, not on GitHub.
   if jq -e '.checks.failing | any(.name | test("Security Review"))' <<<"$status" >/dev/null; then
     security=$(vercelSecurityJson "$owner/$name" "$(jq -r .headRef <<<"$status")" "$(jq -r .head <<<"$status")")
-    status=$(jq --argjson s "$security" '. + {vercelSecurity: $s}' <<<"$status")
+    status=$(printf '%s\n%s\n' "$status" "$security" | jq -s '.[0] + {vercelSecurity: .[1]}')
   fi
 fi
 if (( emitJson )); then printf '%s\n' "$status"; exit 0; fi
@@ -115,8 +115,8 @@ jq -r --argjson threads "$showThreads" '
     | if .available | not then "  security findings unavailable: \(.reason)"
       elif (.findings | length) == 0 then "  security: no open findings (check may be waiting for a rescan)"
       else
-        ("  security: \(.findings | length) open finding(s) (vc security vulnerabilities inspect <id> --scope \(.scope))"),
-        (.findings[0:5][] | "    \(if (.severity | IN("critical", "high", "medium", "low")) then .severity else "unknown severity \(.severity // "")" end) \(.id) \(.title[0:90]) (found in \((.foundIn // "?")[0:7])\(if .onHead then ", head" else ", older than the head: open until a rescan closes it" end))"),
+        ("  security: \(.findings | length) open finding(s) (vc security vulnerabilities inspect <id> --scope <scope>)"),
+        (.findings[0:5][] | "    \(if (.severity | IN("critical", "high", "medium", "low")) then .severity else "unknown severity \(.severity // "")" end) \(.id) \(.title[0:90]) (found in \((.foundIn // "?")[0:7])\(if .onHead then ", head" else ", older than the head: open until a rescan closes it" end); --scope \(.scope // "?"))"),
         (if (.findings | length) > 5 then "    +\(.findings | length - 5) more" else empty end)
       end),
   (.baseOverlapEvents[]? | "base overlap: \(.baseRef) moved to \(.newBase[0:9]) and touches files in this PR: \(.paths | join(", "))"),

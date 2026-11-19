@@ -54,11 +54,10 @@ class VercelSecurityTests(unittest.TestCase):
         self.assertEqual(self.lookup(repo="owner/repo")["available"], False)
         self.assertEqual(self.vc_calls(), [])
 
-    def test_unknown_vercel_repo_needs_a_scope(self):
-        out = self.lookup(repo="vercel/other")
-        self.assertFalse(out["available"])
-        self.assertIn("PR_WAIT_VERCEL_SCOPE", out["reason"])
-        self.assertEqual(self.vc_calls(), [])
+    def test_other_vercel_repos_read_the_vercel_team(self):
+        (self.root / "vc-out.json").write_text(json.dumps({"vulnerabilities": []}))
+        self.lookup(repo="vercel/other")
+        self.assertEqual([c[c.index("--scope") + 1] for c in self.vc_calls()], ["vercel"])
 
     def test_reads_open_findings_most_severe_first_and_marks_the_head(self):
         (self.root / "vc-out.json").write_text(json.dumps({"vulnerabilities": [
@@ -67,9 +66,11 @@ class VercelSecurityTests(unittest.TestCase):
         self.assertTrue(out["available"])
         self.assertEqual([f["number"] for f in out["findings"]], [3, 2, 1])
         self.assertEqual([f["onHead"] for f in out["findings"]], [True, False, True])
-        call = self.vc_calls()[0]
+        calls = self.vc_calls()
+        call = calls[0]
         self.assertEqual(call[:3], ["security", "vulnerabilities", "list"])
-        self.assertIn("vercel-internal-apps", call)
+        self.assertEqual([c[c.index("--scope") + 1] for c in calls], ["vercel-internal-apps", "vercel"])
+        self.assertEqual(len(out["findings"]), 3)  # same finding in both teams is listed once
         self.assertEqual(call[call.index("--git-branch") + 1], "feature")
         self.assertEqual(call[call.index("--status") + 1], "open")
         self.assertNotIn("dismiss", json.dumps(self.vc_calls()))
