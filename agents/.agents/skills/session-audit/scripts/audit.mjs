@@ -108,7 +108,7 @@ const trueCostOf = (m, u) => {
 };
 
 const root = join(homedir(), ".pi/agent/sessions");
-const mt = (t) => new Date(t).toLocaleString("en-CA", { timeZone: TZ, hour12: false }).slice(0, 16);
+const mt = (t) => new Date(t).toLocaleString("en-CA", { timeZone: TZ, hour12: false }).replace(", ", " ").slice(0, 16);
 const day = (t) => new Date(t).toLocaleDateString("en-CA", { timeZone: TZ });
 const r2 = (x) => +x.toFixed(2);
 const usd = (x) => `$${x.toFixed(0)}`;
@@ -150,6 +150,89 @@ const redactions = [];
 // model, cost, input/output tokens, ms, ops, applied, rejected, error). Like
 // counsel, its spend is outside totals.tru; the footer no longer shows it.
 const sigilRuns = [];
+// Learning signals: typed prompts that correct the agent, and typed prompts
+// that name a skill's quoted trigger phrase in a session that never loaded
+// that skill. Both feed the "Proposed changes" step in ../SKILL.md.
+// Tuned on two weeks of typed follow-ups (2026-11): pushback here is mostly
+// question-shaped ("don't we have a script for that?", "so you did check?").
+const CORRECTION_START = /^(?:no|nope|nah|wrong|stop|wait|hold on|not that|try again|one more time|still (?:too|not|wrong|missing|broken|failing)|that'?s (?:not|wrong)|i (?:said|asked|meant|told you)|(?:don'?t|doesn'?t|didn'?t|shouldn'?t|isn'?t|aren'?t|can'?t|wouldn'?t) (?:you|we|this|that|it|there)|should(?:n'?t)? you|you (?:should|didn'?t|did not|forgot|missed|were supposed|need to|have to)|why (?:did|didn'?t|are|is|would|can'?t|not) |so you (?:did|didn'?t)|did you (?:not|check|test|run|read|verify)|(?:please )?(?:revert|undo)|actually|instead|already (?:sent|posted|did|done|told you)|(?:sent|posted|did) (?:it |that |this |both |them )?already)\b/i;
+const CORRECTION_ANY = /\b(?:i (?:already )?(?:said|told you)|as i said|like i said|you keep|stop doing|you ignored|that'?s not what i|instead of (?:relying|relaying|asking|waiting) (?:on|for) me|i already (?:sent|posted|did|told|said))\b/i;
+const isCorrection = (t) => t.length <= 500 && (CORRECTION_START.test(t.trim()) || CORRECTION_ANY.test(t));
+const corrections = [];
+let typedFollowUps = 0;
+const skillTriggers = [];
+// Skill index: name -> quoted multi-word trigger phrases from the SKILL.md
+// description. Roots: global skill dirs, pi package `skills/` dirs, and
+// `<cwd>/.agents/skills` per session (repo-local skills match only there).
+const agentDir = process.env.PI_CODING_AGENT_DIR ?? join(homedir(), ".pi/agent");
+const descriptionOf = (file) => {
+	const lines = readFileSync(file, "utf8").split("\n");
+	const i = lines.findIndex((l) => /^description:/.test(l));
+	if (i < 0) return "";
+	const first = lines[i].replace(/^description:\s*/, "");
+	if (!/^[>|]-?$/.test(first)) return first;
+	const rest = [];
+	for (const l of lines.slice(i + 1)) {
+		if (!/^\s+\S/.test(l)) break;
+		rest.push(l.trim());
+	}
+	return rest.join(" ");
+};
+const triggersOf = (desc) => [...new Set([...desc.matchAll(/["“]([^"”]{4,80})["”]/g)].map((m) => m[1].toLowerCase().trim()).filter((p) => /\s/.test(p)))];
+const indexRoot = (dir, into) => {
+	let names;
+	try {
+		names = readdirSync(dir);
+	} catch {
+		return into;
+	}
+	for (const name of names) {
+		const file = join(dir, name, "SKILL.md");
+		if (!existsSync(file)) continue;
+		try {
+			const phrases = triggersOf(descriptionOf(file));
+			if (phrases.length && !into.has(name)) into.set(name, phrases);
+		} catch {}
+	}
+	return into;
+};
+const packageDirs = (() => {
+	try {
+		const pk = JSON.parse(readFileSync(join(agentDir, "settings.json"), "utf8")).packages ?? [];
+		return pk.map((p) => (typeof p === "string" ? p : p?.source)).filter(Boolean).map((p) => {
+			const git = /^git:(.+?)(?:@[^/]*)?$/.exec(p);
+			return git ? join(agentDir, "git", git[1]) : p.startsWith("/") ? p : join(agentDir, p);
+		});
+	} catch {
+		return [];
+	}
+})();
+const globalSkills = new Map();
+for (const r of [join(homedir(), ".agents/skills"), join(agentDir, "skills"), ...packageDirs.map((p) => join(p, "skills"))]) indexRoot(r, globalSkills);
+const localSkills = new Map();
+const skillsFor = (cwd) => {
+	if (!cwd) return globalSkills;
+	if (!localSkills.has(cwd)) localSkills.set(cwd, indexRoot(join(cwd, ".agents/skills"), new Map(globalSkills)));
+	return localSkills.get(cwd);
+};
+// Skills a session file loaded: a read of .../<name>/SKILL.md or a /skill:
+// expansion (a user message that starts with <skill name="<name>").
+const skillLoadsOf = (L) => {
+	const loaded = new Set();
+	for (const e of L) {
+		if (e.type !== "message") continue;
+		const m = e.message;
+		if (m?.role === "assistant") for (const c of m.content ?? []) if (c.type === "toolCall" && c.name === "read") {
+			const hit = /([^/]+)\/SKILL\.md$/.exec(String(c.arguments?.path ?? ""));
+			if (hit) loaded.add(hit[1]);
+		}
+		if (m?.role === "user") {
+			const hit = /^\s*<skill name="([^"]+)"/.exec(textOf(m.content));
+			if (hit) loaded.add(hit[1]);
+		}
+	}
+	return loaded;
+};
 // `/fork` copies the parent's entries (same ids) into the new file. Count each
 // entry once; a duplicate still advances `prev` so gap/miss attribution holds.
 const seenIds = new Set();
@@ -183,6 +266,9 @@ for (const dir of readdirSync(root)) {
 			s.prompts = L.filter((e) => e.type === "message" && e.message?.role === "user").slice(0, promptsN).map((e) => textOf(e.message.content).replace(/\s+/g, " ").slice(0, 300));
 			s.reports = L.filter(isReportOf).map((e) => textOf(e.content).slice(0, 2000));
 		}
+		const cwd = L.find((e) => e.type === "session")?.cwd;
+		const firstUserIdx = L.findIndex((e) => e.type === "message" && e.message?.role === "user");
+		let loads = null;
 		const calls = new Map();
 		let prev = null;
 		let prevIdx = -1;
@@ -243,6 +329,25 @@ for (const dir of readdirSync(root)) {
 					totals.user++;
 					if (!txt.startsWith("Message from process")) userMsgs.push(txt.slice(0, 60));
 					if (s.user === 1) openers.push(txt.slice(0, 60));
+					if (!/^\s*(?:Message from |<skill )/.test(txt)) {
+						if (i > firstUserIdx) typedFollowUps++;
+						if (i > firstUserIdx && isCorrection(txt)) {
+							let a = i - 1;
+							while (a >= 0 && !(L[a].type === "message" && L[a].message?.role === "assistant")) a--;
+							const lastTool = a >= 0 ? (L[a].message.content ?? []).filter((c) => c.type === "toolCall").at(-1)?.name ?? null : null;
+							const stop = a >= 0 ? L[a].message.stopReason : null;
+							// A retry after a transport error or an abort is not a behavior correction.
+							const retry = stop === "error" || stop === "aborted" || /^\s*(?:try again|retry|one more time)\b/i.test(txt);
+							corrections.push({ ts, when: mt(ts), dir: s.dir, file: s.file, retry, after: stop === "error" || stop === "aborted" ? stop : null, lastTool, text: txt.slice(0, 200) });
+						}
+						const low = txt.length <= 500 ? txt.toLowerCase() : "";
+						if (low) for (const [name, phrases] of skillsFor(cwd)) {
+							const phrase = phrases.find((p) => new RegExp(`(?:^|\\W)${p.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}(?:\\W|$)`).test(low));
+							if (!phrase) continue;
+							loads ??= skillLoadsOf(L);
+							skillTriggers.push({ ts, when: mt(ts), dir: s.dir, file: s.file, skill: name, phrase, loaded: loads.has(name), text: txt.slice(0, 160) });
+						}
+					}
 				}
 				continue;
 			}
@@ -449,6 +554,25 @@ topPhrases(openers, `Openers: first prompt of each session (${openers.length})`)
 P();
 topPhrases(userMsgs, `Recurring user messages, all turns (${userMsgs.length})`);
 P();
+P(`## Learning signals`);
+const followUps = typedFollowUps;
+const corrDirs = {};
+const redirects = corrections.filter((c) => !c.retry);
+P(`Corrections: ${redirects.length} typed follow-up prompts read as a correction (${followUps ? ((100 * redirects.length) / followUps).toFixed(1) : 0}% of ${followUps} follow-ups) in ${new Set(redirects.map((c) => c.dir + c.file)).size} sessions. Retries (\`try again\`, or a reply to an errored or aborted turn), not listed: ${corrections.length - redirects.length}. Pattern match on the opening words, so expect false positives: read each excerpt.`);
+if (redirects.length) {
+	for (const c of redirects) corrDirs[c.dir] = (corrDirs[c.dir] ?? 0) + 1;
+	P(`By dir: ${Object.entries(corrDirs).sort((a, b) => b[1] - a[1]).slice(0, 8).map(([k, v]) => `${k}=${v}`).join(", ")}`);
+	for (const c of [...redirects].sort((a, b) => b.ts - a.ts).slice(0, 25)) P(`- ${c.when} ${c.dir}${c.lastTool ? ` [after ${c.lastTool}]` : ""} "${c.text.slice(0, 160).replace(/\|/g, "/")}"`);
+}
+const missed = skillTriggers.filter((t) => !t.loaded);
+P(`Skill triggers: ${skillTriggers.length} typed prompts (500 chars or less, so templates and briefs drop out) named a skill's quoted trigger phrase; ${skillTriggers.length - missed.length} were in a session that loaded the skill, ${missed.length} were not. Index: ${globalSkills.size} global skills with trigger phrases, plus repo-local \`.agents/skills\`.`);
+if (missed.length) {
+	const bySkill = {};
+	for (const t of missed) (bySkill[t.skill] ??= new Set()).add(t.phrase);
+	P(`Missed, by skill: ${Object.entries(bySkill).sort((a, b) => missed.filter((t) => t.skill === b[0]).length - missed.filter((t) => t.skill === a[0]).length).map(([k, v]) => `${k}=${missed.filter((t) => t.skill === k).length} ("${[...v].join('", "')}")`).join(", ")}`);
+	for (const t of [...missed].sort((a, b) => b.ts - a.ts).slice(0, 15)) P(`- ${t.when} ${t.dir} ${t.skill} "${t.phrase}": "${t.text.replace(/\|/g, "/")}"`);
+}
+P();
 const sum = (arr, f) => arr.reduce((a, x) => a + f(x), 0);
 P(`## Counsel (pi-counsel consultations: ${counsel.length})`);
 if (counsel.length) {
@@ -575,6 +699,6 @@ P(`_Generated by session-audit/scripts/audit.mjs. Catalog: ${catalogPath ? "foun
 
 console.log(out.join("\n"));
 if (jsonOut) {
-	writeFileSync(jsonOut, JSON.stringify({ since, until, totals: { ...totals }, byDay: Object.fromEntries(Object.entries(byDay).map(([d, v]) => [d, { ...v, sessions: v.sessions.size }])), byModel: Object.fromEntries(Object.entries(byModel).map(([m, v]) => [m, { ...v, sessions: v.sessions.size }])), ctxBuckets, misses, ttl, tools, toolErrCats, editByModel, hardStops, counsel, nudges, sigilRuns, sessions }, null, 1));
+	writeFileSync(jsonOut, JSON.stringify({ since, until, totals: { ...totals }, byDay: Object.fromEntries(Object.entries(byDay).map(([d, v]) => [d, { ...v, sessions: v.sessions.size }])), byModel: Object.fromEntries(Object.entries(byModel).map(([m, v]) => [m, { ...v, sessions: v.sessions.size }])), ctxBuckets, misses, ttl, tools, toolErrCats, editByModel, hardStops, counsel, nudges, sigilRuns, corrections, skillTriggers, sessions }, null, 1));
 	console.error(`json: ${jsonOut}`);
 }

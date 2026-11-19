@@ -132,6 +132,21 @@ converges on pi-reported $ and the repricing note can be dropped.
    `opus` = claude-opus-5.5, strong rung is opus not fable, `glm` dropped;
    `terra` = gpt-6.1-terra since 2026-11-02, a trial vessel); older rows
    in `summons.log` and `anvil status` carry the old ids, so group by alias, not by model id, across the boundary.
+13. **Learning signals** (since 2026-11-19). Two lists feed "Proposed
+   changes" in the write-up.
+   - **Corrections**: typed follow-ups whose opening words push back
+     ("don't we have a script for that?", "you should push it", "sent it
+     already"). Retries after an errored or aborted turn are counted, not
+     listed. The match is a regex, so read every excerpt and drop requests
+     that only look like pushback. Group the rest by the behavior they
+     correct, not by wording. First run (14 days to 11-19): 20 in 1,202
+     follow-ups, most of them "the agent asked or waited where the rules
+     already let it act".
+   - **Skill triggers**: typed prompts of 500 chars or less that contain
+     a quoted trigger phrase from a skill description, split by whether
+     the session loaded that skill (a read of its `SKILL.md` or a
+     `/skill:` expansion). A miss is a description problem or a phrase too
+     generic to keep. Templates and briefs drop out on length.
 
 ## Optional Luna Decisions labels (after step 8)
 
@@ -240,7 +255,23 @@ proposing templates or interpreting a false report label as an omission.
 Lead with the one number that changed since the last audit, then footguns
 (things that cost money or runs and have a fix), opportunities (a habit, a
 template, an extension), gaps (things nobody can see), minor. Each item: the
-number, the cause, the fix or the experiment that would settle it. Save the
+number, the cause, the fix or the experiment that would settle it.
+
+End with **Proposed changes**: rule, skill, or script edits drawn from the
+learning signals (and from any other section). Each item has:
+
+- the evidence: count, sessions, and two or three excerpts;
+- the target: one named file (global `AGENTS.md`, a skill's `SKILL.md`
+  description, a prompt template, a script);
+- the draft: the exact text to add or replace, kept short.
+
+Propose only a pattern seen in two or more sessions. Read the target first:
+if a rule already covers the behavior, the proposal is to sharpen or move
+that rule, not to add a second one. Never propose changes to the
+destructive-command guard or the delegation rules. Do not apply anything:
+the user accepts or rejects each item, and the accepted ones go in as one
+commit, since each edit to `AGENTS.md` costs one full cache rewrite per live
+session. Save the
 report to `~/scratch/sessions-<window>-assessment-notes.md`; baselines to
 compare against live in `references/baselines.md` next to this file. Update
 that file when a week moves a number materially.

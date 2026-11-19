@@ -49,10 +49,10 @@ writeFileSync(join(sessionsDir, "2026-10-10T16-00-parent.jsonl"), rows.map(x => 
 // A fork inherits entries, but its sample must retain the original opener.
 writeFileSync(join(sessionsDir, "2026-10-11T16-00-child.jsonl"), [first, received, user("u4", "fork follow-up"), assistant("a2")].map(x => JSON.stringify(x)).join("\n"));
 let runNumber = 0;
-const run = (extra = []) => {
-	const outputPath = join(home, `output-${runNumber++}.json`);
+const run = (extra = [], h = home) => {
+	const outputPath = join(h, `output-${runNumber++}.json`);
 	const result = spawnSync(process.execPath, ["--require", freeze, script, "--since", "7d", "--json", outputPath, ...extra], {
-		encoding: "utf8", env: { ...process.env, HOME: home },
+		encoding: "utf8", env: { ...process.env, HOME: h, PI_CODING_AGENT_DIR: join(h, ".pi/agent") },
 	});
 	return { ...result, jsonText: result.status === 0 ? readFileSync(outputPath, "utf8") : null };
 };
@@ -100,4 +100,29 @@ test("sigil observer runs are summed outside session spend", () => {
 	assert.match(r.stdout, /## Sigil observer \(`sigil-map-run` entries: 2\)/);
 	assert.match(r.stdout, /Spend \$0\.004 .*applied 2, rejected 1, unparsed replies 0, errors 1\./);
 	assert.match(r.stdout, /By map: fixture \(flash\)=1 \(\$0\.004\), fixture \(\?\)=1 \(\$0\.000\)\./);
+});
+
+test("learning signals: corrections and skill trigger misses", () => {
+	const h = mkdtempSync(join(tmpdir(), "session-audit-learn-"));
+	const dir = join(h, ".pi/agent/sessions/--learn--");
+	mkdirSync(dir, { recursive: true });
+	mkdirSync(join(h, ".agents/skills/demo"), { recursive: true });
+	writeFileSync(join(h, ".agents/skills/demo/SKILL.md"), '---\nname: demo\ndescription: >-\n  Use when the user says "run the demo" or "demo"\n---\n');
+	const errored = entry("e1", "message", { message: { role: "assistant", model: "fixture", content: [], stopReason: "error" } });
+	const read = entry("rd", "message", { message: { role: "assistant", model: "fixture", stopReason: "stop",
+		content: [{ type: "toolCall", id: "c1", name: "read", arguments: { path: "/x/demo/SKILL.md" } }] } });
+	const missed = [user("m1", "please run the demo now"), assistant("ma"), user("m2", "don't we have a script for that?"),
+		user("m3", "you should push it"), errored, user("m4", "no, keep going"), user("m5", "try again"),
+		user("m6", "could you show me the UI?"), user("m7", "a".repeat(600) + " run the demo")];
+	const hit = [user("h1", "run the demo"), read, user("h2", "sent it already")];
+	writeFileSync(join(dir, "2026-10-10T16-00-miss.jsonl"), missed.map((x) => JSON.stringify(x)).join("\n"));
+	writeFileSync(join(dir, "2026-10-10T17-00-hit.jsonl"), hit.map((x) => JSON.stringify({ ...x, id: `h-${x.id}` })).join("\n"));
+	const r = run([], h);
+	assert.equal(r.status, 0, r.stderr);
+	const json = JSON.parse(r.jsonText);
+	assert.deepEqual(json.corrections.map((c) => [c.text, c.retry]), [
+		["don't we have a script for that?", false], ["you should push it", false], ["no, keep going", true], ["try again", true], ["sent it already", false]]);
+	assert.deepEqual(json.skillTriggers.map((t) => [t.skill, t.phrase, t.loaded]), [["demo", "run the demo", false], ["demo", "run the demo", true]]);
+	assert.match(r.stdout, /Corrections: 3 typed follow-up prompts .* Retries .*: 2\./);
+	assert.match(r.stdout, /Missed, by skill: demo=1 \("run the demo"\)/);
 });
