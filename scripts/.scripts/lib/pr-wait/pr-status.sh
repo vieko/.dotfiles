@@ -116,7 +116,7 @@ jq -r --argjson threads "$showThreads" '
       elif (.findings | length) == 0 then "  security: no open findings (check may be waiting for a rescan)"
       else
         ("  security: \(.findings | length) open finding(s) (vc security vulnerabilities inspect <id> --scope \(.scope))"),
-        (.findings[0:5][] | "    \(.severity) \(.id) \(.title[0:90]) (found in \((.foundIn // "?")[0:7])\(if .onHead then ", head" else ", older commit: may be fixed, waiting for rescan" end))"),
+        (.findings[0:5][] | "    \(if (.severity | IN("critical", "high", "medium", "low")) then .severity else "unknown severity \(.severity // "")" end) \(.id) \(.title[0:90]) (found in \((.foundIn // "?")[0:7])\(if .onHead then ", head" else ", older than the head: open until a rescan closes it" end))"),
         (if (.findings | length) > 5 then "    +\(.findings | length - 5) more" else empty end)
       end),
   (.baseOverlapEvents[]? | "base overlap: \(.baseRef) moved to \(.newBase[0:9]) and touches files in this PR: \(.paths | join(", "))"),

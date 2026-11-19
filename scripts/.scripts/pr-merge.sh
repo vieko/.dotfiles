@@ -19,9 +19,10 @@
 # with pr-wait first. A PR that is already merged skips to the cleanup, so a
 # rerun after a partial cleanup is safe.
 #
-# Security (vercel/* repos, Vercel CLI 65.17+): an open critical or high
-# Vercel Security Review finding found in the head commit refuses the merge;
-# other open findings print as warnings. If the lookup cannot run (old or
+# Security (vercel/* repos, Vercel CLI 65.17+): any open critical or high
+# Vercel Security Review finding on the head branch refuses the merge (a
+# fixed one blocks until the rescan closes it); other open findings print as
+# warnings. If the lookup cannot run (old or
 # missing vc, expired login), it says so and does not block. It only reads:
 # dismissing a finding is the user's decision (vc security vulnerabilities
 # dismiss). PR_WAIT_VERCEL_SCOPE overrides the Vercel team.
@@ -88,22 +89,26 @@ else
     *) echo "[ERROR] #$pr is not mergeable: $mss (BLOCKED = checks or review pending, BEHIND = update the branch, DIRTY = conflicts)"
        (( dry )) || exit 1 ;;
   esac
-  # Vercel Security Review (vercel/* repos): refuse an open critical or high
-  # finding found in this head commit. Older-commit findings may be fixed and
-  # waiting for a rescan; lower severities are the user's call. A lookup
-  # that cannot run is reported and does not block.
+  # Vercel Security Review (vercel/* repos): refuse any open critical or high
+  # finding on the head branch. foundIn is the FIRST commit a finding was
+  # seen in and does not move on later scans, so an older foundIn does not
+  # mean fixed: a fixed finding blocks only until the rescan closes it.
+  # Lower severities are the user's call. A lookup that cannot run is
+  # reported and does not block.
   repo_path=$(field .url); repo_path=${repo_path#https://*/}; repo_path=${repo_path%/pull/*}
   sec=$(vercelSecurityJson "$repo_path" "$head" "$(field .headRefOid)")
   if [[ "$(jq -r .available <<<"$sec")" == true ]]; then
-    blocking=$(jq -r '[.findings[] | select(.onHead and (.severity == "critical" or .severity == "high"))]
-      | map("  \(.severity) \(.id) \(.title)") | .[]' <<<"$sec")
+    blocking=$(jq -r '[.findings[] | select(.severity == "critical" or .severity == "high")]
+      | map("  \(.severity) \(.id) \(.title)" + (if .onHead then " (found in the head commit)"
+          else " (found in \((.foundIn // "?")[0:7]), older than the head: if you fixed it, wait for the rescan, or dismiss it in Vercel)" end))
+      | .[]' <<<"$sec")
     if [[ -n "$blocking" ]]; then
-      echo "[ERROR] #$pr has open critical/high Vercel Security Review findings on its head:"
+      echo "[ERROR] #$pr has open critical/high Vercel Security Review findings on its branch:"
       echo "$blocking"
       (( dry )) || exit 1
     fi
-    jq -r '.findings[] | select((.onHead and (.severity == "critical" or .severity == "high")) | not)
-      | "[WARN] open security finding: \(.severity) \(.id) \(.title)\(if .onHead then "" else " (older commit, may be fixed)" end)"' <<<"$sec"
+    jq -r '.findings[] | select(.severity != "critical" and .severity != "high")
+      | "[WARN] open security finding: \(if (.severity | IN("medium", "low")) then .severity else "unknown severity \(.severity // "")" end) \(.id) \(.title)"' <<<"$sec"
   elif [[ "$repo_path" == vercel/* ]]; then
     echo "[INFO] security findings unavailable: $(jq -r .reason <<<"$sec")"
   fi

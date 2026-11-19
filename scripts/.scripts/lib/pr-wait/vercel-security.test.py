@@ -107,7 +107,7 @@ class VercelSecurityTests(unittest.TestCase):
         self.assertEqual(len(lines), 6)
         self.assertIn("+2 more", lines[-1])
         self.assertIn("found in head1, head", proc.stdout)
-        self.assertIn("older commit: may be fixed", proc.stdout)
+        self.assertIn("older than the head: open until a rescan closes it", proc.stdout)
         self.assertEqual(self.vc_calls(), [])
 
     def test_status_reports_an_unavailable_lookup(self):
@@ -121,6 +121,31 @@ class VercelSecurityTests(unittest.TestCase):
         proc = subprocess.run([str(STATUS), "--from-json"], input=json.dumps(snapshot),
                               env=self.env, text=True, capture_output=True, timeout=15)
         self.assertIn("security findings unavailable: vc not installed", proc.stdout)
+
+    def merge_dry_run(self, findings):
+        gh = self.root / "bin" / "gh"
+        gh.write_text("#!/usr/bin/env python3\nimport json\nprint(json.dumps({'state':'OPEN','mergeStateStatus':'CLEAN',"
+                      "'headRefName':'feature','headRefOid':'head1','baseRefName':'main','isCrossRepository':False,"
+                      "'url':'https://github.com/vercel/gtm/pull/42','mergeCommit':None}))\n")
+        gh.chmod(0o755)
+        (self.root / "vc-out.json").write_text(json.dumps({"vulnerabilities": findings}))
+        repo = self.root / "repo"
+        repo.mkdir()
+        subprocess.run(["git", "init", "-q"], cwd=repo, check=True)
+        return subprocess.run([str(HERE.parents[1] / "pr-merge.sh"), "42", "--dry-run", "--keep-branch", "--no-linear"],
+                              cwd=repo, env=self.env, text=True, capture_output=True, timeout=30)
+
+    def test_merge_refuses_a_high_finding_from_an_older_commit(self):
+        proc = self.merge_dry_run([finding(1, "high", "oldsha1234")])
+        self.assertIn("[ERROR] #42 has open critical/high", proc.stdout)
+        self.assertIn("found in oldsha1, older than the head", proc.stdout)
+
+    def test_merge_only_warns_on_medium_low_and_unknown(self):
+        proc = self.merge_dry_run([finding(1, "medium", "head1"), finding(2, "weird", "head1")])
+        self.assertNotIn("[ERROR]", proc.stdout)
+        self.assertIn("[WARN] open security finding: medium ID1", proc.stdout)
+        self.assertIn("unknown severity weird", proc.stdout)
+        self.assertIn("[DRY] would squash-merge", proc.stdout)
 
 
 if __name__ == "__main__":
