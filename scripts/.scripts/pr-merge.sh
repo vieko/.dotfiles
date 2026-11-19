@@ -109,6 +109,7 @@ else
     fi
     jq -r '.findings[] | select(.severity != "critical" and .severity != "high")
       | "[WARN] open security finding: \(if (.severity | IN("medium", "low")) then .severity else "unknown severity \(.severity // "")" end) \(.id) \(.title)"' <<<"$sec"
+    jq -r 'if (.unavailableScopes // []) | length > 0 then "[WARN] security findings not read for: \(.unavailableScopes | join(", "))" else empty end' <<<"$sec"
   elif [[ "$repo_path" == vercel/* ]]; then
     echo "[INFO] security findings unavailable: $(jq -r .reason <<<"$sec")"
   fi

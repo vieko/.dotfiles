@@ -80,6 +80,14 @@ class VercelSecurityTests(unittest.TestCase):
         self.lookup(repo="vercel/other", PR_WAIT_VERCEL_SCOPE="team-x")
         self.assertIn("team-x", self.vc_calls()[0])
 
+    def test_a_team_that_fails_is_named(self):
+        (self.root / "bin" / "vc").write_text(FAKE_VC.replace(
+            "if os.environ.get('FAKE_VC_RC')", "if 'vercel' == sys.argv[sys.argv.index('--scope') + 1]: sys.exit(1)\nif os.environ.get('FAKE_VC_RC')"))
+        (self.root / "vc-out.json").write_text(json.dumps({"vulnerabilities": []}))
+        out = self.lookup()
+        self.assertTrue(out["available"])
+        self.assertEqual(out["unavailableScopes"], ["vercel"])
+
     def test_cli_failure_degrades(self):
         out = self.lookup(FAKE_VC_RC="1")
         self.assertFalse(out["available"])

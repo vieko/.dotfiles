@@ -113,6 +113,7 @@ jq -r --argjson threads "$showThreads" '
   (if (.checks.pendingNames | length) > 0 then "  pending: \(.checks.pendingNames | join(", "))" else empty end),
   (.vercelSecurity // empty
     | if .available | not then "  security findings unavailable: \(.reason)"
+      elif (.findings | length) == 0 and ((.unavailableScopes // []) | length) > 0 then "  security: no open findings in the teams read; not read: \(.unavailableScopes | join(", "))"
       elif (.findings | length) == 0 then "  security: no open findings (check may be waiting for a rescan)"
       else
         ("  security: \(.findings | length) open finding(s) (vc security vulnerabilities inspect <id> --scope <scope>)"),

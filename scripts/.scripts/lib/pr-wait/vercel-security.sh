@@ -31,7 +31,7 @@ vercelSecurityScopes() {
 _vercelSecurityUnavailable() { jq -nc --arg r "$1" '{available: false, reason: $r}'; }
 
 vercelSecurityJson() {
-  local repo="$1" branch="$2" head="$3" scopes scope raw parts ok=0
+  local repo="$1" branch="$2" head="$3" scopes scope raw parts ok=0 failed=""
   [[ "$repo" == vercel/* ]] || { _vercelSecurityUnavailable "not a vercel repository"; return 0; }
   scopes=$(vercelSecurityScopes "$repo") || { _vercelSecurityUnavailable "no Vercel team for $repo (set PR_WAIT_VERCEL_SCOPE)"; return 0; }
   command -v vc >/dev/null || { _vercelSecurityUnavailable "vc not installed"; return 0; }
@@ -42,19 +42,20 @@ vercelSecurityJson() {
   for scope in $scopes; do
     raw=$(${timeoutCmd[@]+"${timeoutCmd[@]}"} vc security vulnerabilities list \
         --scope "$scope" --repository "$repo" --git-branch "$branch" \
-        --status open --limit 100 --json 2>/dev/null) || continue
+        --status open --limit 100 --json 2>/dev/null) || { failed+="$scope "; continue; }
     raw=$(jq -c --arg scope "$scope" --arg head "$head" '[.vulnerabilities[]? | {
         id: .findingId, number, scope: $scope, severity, title,
         foundIn: (.foundIn.commitSha // null),
-        onHead: ((.foundIn.commitSha // "") == $head)}]' <<<"$raw" 2>/dev/null) || continue
+        onHead: ((.foundIn.commitSha // "") == $head)}]' <<<"$raw" 2>/dev/null) || { failed+="$scope "; continue; }
     parts+="$raw"$'\n'; ok=1
   done
   if (( ! ok )); then
     _vercelSecurityUnavailable "vc lookup failed (CLI older than 65.17, not logged in, or timed out)"
     return 0
   fi
-  jq -sc '
+  jq -sc --arg failed "$failed" '
     def rank: {critical: 0, high: 1, medium: 2, low: 3}[.] // 4;
-    {available: true, findings: (add | unique_by(.id) | sort_by(.severity | rank))}
+    {available: true, findings: (add | unique_by(.id) | sort_by(.severity | rank)),
+     unavailableScopes: ($failed | split(" ") | map(select(. != "")))}
   ' <<<"$parts"
 }
