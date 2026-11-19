@@ -4,6 +4,9 @@
 # Usage: pr-status.sh <number|url|branch> [--repo owner/name] [--json] [--threads]
 #        pr-status.sh --from-json < snapshot.json
 set -euo pipefail
+here="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+# shellcheck source=scripts/.scripts/lib/pr-wait/vercel-security.sh
+. "$here/vercel-security.sh"
 
 prArg=""; repo=""; emitJson=0; showThreads=0; fromJson=0
 while (( $# )); do
@@ -94,6 +97,11 @@ query($owner:String!,$name:String!,$number:Int!){
                    elif ($checks | any(.result == "pending")) then "pending" else "pass" end)},
        reviews: {head: $reviews}, threads: {unresolved: ($threads | length), items: $threads}}
   ' <<<"$raw")
+  # A red Security Review check has its reason in Vercel, not on GitHub.
+  if jq -e '.checks.failing | any(.name | test("Security Review"))' <<<"$status" >/dev/null; then
+    security=$(vercelSecurityJson "$owner/$name" "$(jq -r .headRef <<<"$status")" "$(jq -r .head <<<"$status")")
+    status=$(jq --argjson s "$security" '. + {vercelSecurity: $s}' <<<"$status")
+  fi
 fi
 if (( emitJson )); then printf '%s\n' "$status"; exit 0; fi
 jq -r --argjson threads "$showThreads" '
@@ -103,6 +111,14 @@ jq -r --argjson threads "$showThreads" '
   "checks: \(.checks.summary) (\(.checks.pass) pass, \(.checks.fail) fail, \(.checks.pending) pending, \(.checks.skip) skip)",
   (.checks.failing[] | "  fail: \(.name)\(if .required then " [required]" else "" end)  \(.url // "")"),
   (if (.checks.pendingNames | length) > 0 then "  pending: \(.checks.pendingNames | join(", "))" else empty end),
+  (.vercelSecurity // empty
+    | if .available | not then "  security findings unavailable: \(.reason)"
+      elif (.findings | length) == 0 then "  security: no open findings (check may be waiting for a rescan)"
+      else
+        ("  security: \(.findings | length) open finding(s) (vc security vulnerabilities inspect <id> --scope \(.scope))"),
+        (.findings[0:5][] | "    \(.severity) \(.id) \(.title[0:90]) (found in \((.foundIn // "?")[0:7])\(if .onHead then ", head" else ", older commit: may be fixed, waiting for rescan" end))"),
+        (if (.findings | length) > 5 then "    +\(.findings | length - 5) more" else empty end)
+      end),
   (.baseOverlapEvents[]? | "base overlap: \(.baseRef) moved to \(.newBase[0:9]) and touches files in this PR: \(.paths | join(", "))"),
   "threads: \(.threads.unresolved) unresolved",
   (if $threads == 1 or .threads.unresolved <= 5 then

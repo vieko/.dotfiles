@@ -19,6 +19,13 @@
 # with pr-wait first. A PR that is already merged skips to the cleanup, so a
 # rerun after a partial cleanup is safe.
 #
+# Security (vercel/* repos, Vercel CLI 65.17+): an open critical or high
+# Vercel Security Review finding found in the head commit refuses the merge;
+# other open findings print as warnings. If the lookup cannot run (old or
+# missing vc, expired login), it says so and does not block. It only reads:
+# dismissing a finding is the user's decision (vc security vulnerabilities
+# dismiss). PR_WAIT_VERCEL_SCOPE overrides the Vercel team.
+#
 # Linear: the GitHub integration moves a linked issue to Done about 3 s after
 # the merge (measured 2026-11-15 on 7 PRs). The script waits up to 30 s and
 # reports the state; it does not change it, but it adds my GTMENG issue to
@@ -56,9 +63,12 @@ done
 command -v gh >/dev/null || die "gh not found"
 git rev-parse --git-dir >/dev/null 2>&1 || die "run it inside the repo"
 
-info=$(gh pr view "$pr" --json state,mergeStateStatus,headRefName,baseRefName,isCrossRepository,url,mergeCommit 2>&1) ||
+info=$(gh pr view "$pr" --json state,mergeStateStatus,headRefName,headRefOid,baseRefName,isCrossRepository,url,mergeCommit 2>&1) ||
   { echo "[ERROR] gh pr view $pr: $info"; exit 1; }
 field() { jq -r "$1" <<<"$info"; }
+here="$(cd "$(dirname "$(readlink -f "${BASH_SOURCE[0]}")")" && pwd)"
+# shellcheck source=scripts/.scripts/lib/pr-wait/vercel-security.sh
+. "$here/lib/pr-wait/vercel-security.sh"
 state=$(field .state) mss=$(field .mergeStateStatus) head=$(field .headRefName) cross=$(field .isCrossRepository)
 
 if [[ "$state" == MERGED ]]; then
@@ -70,7 +80,7 @@ else
   for _ in {1..10}; do
     [[ "$mss" == UNKNOWN ]] || break
     sleep 2
-    info=$(gh pr view "$pr" --json state,mergeStateStatus,headRefName,baseRefName,isCrossRepository,url,mergeCommit 2>/dev/null) && mss=$(field .mergeStateStatus)
+    info=$(gh pr view "$pr" --json state,mergeStateStatus,headRefName,headRefOid,baseRefName,isCrossRepository,url,mergeCommit 2>/dev/null) && mss=$(field .mergeStateStatus)
   done
   case "$mss" in
     CLEAN|HAS_HOOKS) ;;
@@ -78,6 +88,25 @@ else
     *) echo "[ERROR] #$pr is not mergeable: $mss (BLOCKED = checks or review pending, BEHIND = update the branch, DIRTY = conflicts)"
        (( dry )) || exit 1 ;;
   esac
+  # Vercel Security Review (vercel/* repos): refuse an open critical or high
+  # finding found in this head commit. Older-commit findings may be fixed and
+  # waiting for a rescan; lower severities are the user's call. A lookup
+  # that cannot run is reported and does not block.
+  repo_path=$(field .url); repo_path=${repo_path#https://*/}; repo_path=${repo_path%/pull/*}
+  sec=$(vercelSecurityJson "$repo_path" "$head" "$(field .headRefOid)")
+  if [[ "$(jq -r .available <<<"$sec")" == true ]]; then
+    blocking=$(jq -r '[.findings[] | select(.onHead and (.severity == "critical" or .severity == "high"))]
+      | map("  \(.severity) \(.id) \(.title)") | .[]' <<<"$sec")
+    if [[ -n "$blocking" ]]; then
+      echo "[ERROR] #$pr has open critical/high Vercel Security Review findings on its head:"
+      echo "$blocking"
+      (( dry )) || exit 1
+    fi
+    jq -r '.findings[] | select((.onHead and (.severity == "critical" or .severity == "high")) | not)
+      | "[WARN] open security finding: \(.severity) \(.id) \(.title)\(if .onHead then "" else " (older commit, may be fixed)" end)"' <<<"$sec"
+  elif [[ "$repo_path" == vercel/* ]]; then
+    echo "[INFO] security findings unavailable: $(jq -r .reason <<<"$sec")"
+  fi
   if (( dry )); then
     echo "[DRY] would squash-merge #$pr ($mss), then clean up $head"
   else
@@ -85,7 +114,7 @@ else
   fi
   for _ in {1..15}; do
     (( dry )) && break
-    info=$(gh pr view "$pr" --json state,mergeStateStatus,headRefName,baseRefName,isCrossRepository,url,mergeCommit 2>/dev/null) || continue
+    info=$(gh pr view "$pr" --json state,mergeStateStatus,headRefName,headRefOid,baseRefName,isCrossRepository,url,mergeCommit 2>/dev/null) || continue
     [[ "$(field .state)" == MERGED ]] && break
     sleep 2
   done
