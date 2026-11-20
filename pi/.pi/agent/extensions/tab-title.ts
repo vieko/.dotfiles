@@ -94,7 +94,7 @@ export function slug(text: string, maxWords = 4, minWords = 2): string | undefin
 		.replace(/https?:\/\/\S+/g, " ")
 		// Paths and file names: any token with a slash or a file extension.
 		.replace(/\S*\/\S*/g, " ")
-		.replace(/\S+\.[a-z]{1,5}\b/gi, " ")
+		.replace(/\S+\.(?:tsx?|m?js|jsonl?|md|ya?ml|toml|sh|lua|py|go|rs|txt|log|png|jpe?g|gif|webp|pdf|csv|sql)\b/gi, " ")
 		.toLowerCase()
 		.replace(/[^a-z0-9\s-]/g, " ")
 		.split(/\s+/)
