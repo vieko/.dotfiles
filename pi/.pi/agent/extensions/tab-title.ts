@@ -435,8 +435,15 @@ export default function (pi: ExtensionAPI) {
 			if (e.type === "custom" && e.customType === "tab-title") saved = { ...(e.data as Saved) };
 		}
 		const entries = ctx.sessionManager.getBranch();
+		const first = firstText(entries, "user");
+		// A name the first version of this extension set left no entry; adopt it.
+		const current = pi.getSessionName();
+		if (current && !saved.autoName && first) {
+			const derived = deriveName(first, ctx.cwd);
+			if (derived && current.replace(/-\d+$/, "") === derived.name) save({ autoName: current, autoSource: derived.source });
+		}
 		// Resumed or reloaded unnamed sessions get a name from their first prompt.
-		maybeName(firstText(entries, "user"), ctx);
+		maybeName(first, ctx);
 		applyTitle(ctx);
 		clearFocus();
 		if (firstText(entries, "assistant")) void generateTitle(ctx);
