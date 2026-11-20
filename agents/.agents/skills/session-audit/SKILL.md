@@ -206,7 +206,11 @@ measure.
   that ends on a lettered menu as `blocked`, so it shows there. At week
   47, compare the menu-shadow wait p90 before and after 11-15 (to 11-15:
   7,067 s, n=28). If it stays above ~15 min, propose the Rex Lua phone
-  push for `blocked` questions; otherwise drop the item.
+  push for `blocked` questions; otherwise drop the item. Week 47: p90
+  1,364 s (22.7 min, n=97) after 2400c8b, so the push criterion is met.
+  Held 2026-11-20: the Rex iOS alpha is due soon and may carry push
+  natively. At week 48, check the Rex iOS changelog first; build the
+  ntfy Lua script only if the alpha has no push for `blocked`.
 - **Fable seat** (agreed 2026-11-09): the Summoner stays on opus and
   reaches fable through counsel. Report any session switched to fable
   with its $/ut and whether the work was architecture or review.
