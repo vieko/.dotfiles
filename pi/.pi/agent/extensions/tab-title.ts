@@ -55,7 +55,7 @@ const STOPWORDS = new Set(
 		"please pls let lets let's just also some any all more most very really see look make get go use using " +
 		"need want like think know hey hi ok okay yes no not now up out over between than too " +
 		// request verbs: every session is something being built or fixed (Claude Code's title rule)
-		"fix add check investigate implement evaluate debug refactor update review explore find explain help " +
+		"fix add check investigate implement evaluate debug refactor update review explore find explain help read tell show give " +
 		"look into"
 	).split(" "),
 );
@@ -105,6 +105,12 @@ export function slug(text: string, maxWords = 4, minWords = 2): string | undefin
 		picked.push(w);
 	}
 	return picked.length >= minWords ? picked.join("-") : undefined;
+}
+
+/** A typeable pi-post name from an AI title: "turn-clock.ts summary" -> "turn-clock-ts-summary". */
+export function kebabOf(title: string): string | undefined {
+	const k = title.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, "").slice(0, 40).replace(/-+$/, "");
+	return k || undefined;
 }
 
 export function deriveName(prompt: string, cwd: string): { name: string; source: Source } | undefined {
@@ -299,7 +305,8 @@ interface Saved {
 export default function (pi: ExtensionAPI) {
 	if (process.env.PI_TAB_TITLE === "off") return;
 	const aiEnabled = process.env.PI_TAB_TITLE_AI !== "off";
-	const tty = process.stdout.isTTY;
+	// Status lines only where something shows them: the TUI inside Rex.
+	const statusTarget = process.stdout.isTTY && process.env.TERM_PROGRAM === "rex";
 
 	let saved: Saved = {};
 	let titleAttempted = false;
@@ -311,6 +318,7 @@ export default function (pi: ExtensionAPI) {
 	let running = false;
 	let runStart = 0;
 	let lastFocusAt = 0;
+	let lastDigest = "";
 	let runId = 0;
 
 	const log = (line: string) => {
@@ -324,7 +332,7 @@ export default function (pi: ExtensionAPI) {
 	};
 
 	const write = (seq: string) => {
-		if (!tty) return;
+		if (!statusTarget) return;
 		try {
 			process.stdout.write(seq);
 		} catch {
@@ -443,18 +451,20 @@ export default function (pi: ExtensionAPI) {
 		// A slug name gives way to the AI title's kebab form; issue keys and branches stay.
 		const name = pi.getSessionName();
 		if (name && name === saved.autoName && saved.autoSource === "slug") {
-			const kebab = slug(title, 5, 1);
+			const kebab = kebabOf(title);
 			if (kebab && kebab !== name) setAutoName(ctx, kebab, "slug");
 		}
 		applyTitle(ctx);
 	}
 
 	async function generateFocus(ctx: ExtensionContext): Promise<void> {
-		if (!aiEnabled || !tty || !ctx.hasUI || focusBusy || !running) return;
+		if (!aiEnabled || !statusTarget || ctx.mode !== "tui" || focusBusy || !running) return;
 		const now = Date.now();
 		if (now - runStart < FOCUS_FIRST_MS || now - lastFocusAt < FOCUS_EVERY_MS) return;
 		const digest = runDigest(ctx.sessionManager.getBranch(), explicitName() ?? saved.aiTitle ?? saved.autoName);
-		if (!digest) return;
+		// Nothing new since the last call: keep the line, skip the model.
+		if (!digest || digest === lastDigest) return;
+		lastDigest = digest;
 		focusBusy = true;
 		lastFocusAt = now;
 		const myRun = runId;
@@ -478,10 +488,13 @@ export default function (pi: ExtensionAPI) {
 
 	/** After a run: an `idle` focus record with where things stand, shown in the hover card. */
 	async function generateOutcome(ctx: ExtensionContext, ranMs: number): Promise<void> {
-		if (!aiEnabled || !tty || !ctx.hasUI || ranMs < FOCUS_FIRST_MS) return;
+		if (!aiEnabled || !statusTarget || ctx.mode !== "tui" || ranMs < FOCUS_FIRST_MS) return;
 		const entries = ctx.sessionManager.getBranch();
 		const last = entries.at(-1);
-		const lastText = last?.type === "message" && last.message.role === "assistant" ? textOf(last.message.content) : "";
+		if (last?.type !== "message" || last.message.role !== "assistant") return;
+		// An error run keeps pi's own error record alone.
+		if (last.message.stopReason === "error") return;
+		const lastText = textOf(last.message.content);
 		// A turn ending on a lettered menu already shows question-status's blocked box.
 		if (lastText && parseMenu(lastText)) return;
 		const digest = runDigest(entries, explicitName() ?? saved.aiTitle ?? saved.autoName);
@@ -517,7 +530,9 @@ export default function (pi: ExtensionAPI) {
 		const current = pi.getSessionName();
 		if (current && !saved.autoName && first) {
 			const derived = deriveName(first, ctx.cwd);
-			if (derived && current.replace(/-\d+$/, "") === derived.name) save({ autoName: current, autoSource: derived.source });
+			// Slugs only: an issue-key name may be a summon script's --name, which must stay explicit.
+			const matches = current === derived?.name || new RegExp(`^${derived?.name}-\\d+$`).test(current);
+			if (derived?.source === "slug" && matches) save({ autoName: current, autoSource: "slug" });
 		}
 		// Resumed or reloaded unnamed sessions get a name from their first prompt.
 		maybeName(first, ctx);

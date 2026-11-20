@@ -339,13 +339,18 @@ Rules from now on:
   first prompt (issue key, else non-default branch, else a 2-4 word
   slug) and sets the title to that name. After the first turn, a cheap
   model (Haiku 4.5) replaces it with a 2-5 word title, using Claude
-  Code's naming rules. During runs longer than 10s it also writes a
+  Code's naming rules. Inside Rex, during runs longer than 5s, it also writes a
   status line of 14 words or fewer as an OSC 7501 child record
   (`id=focus`). Rex shows the most recently updated record in the
   working capsule (verified 2026-11-20), so the line is resent after
   each pi root report. Rex shows the capsule only for working rows.
   When a run ends the record becomes `idle` with a one-line outcome
   ("PR #42 opened; waiting on review"). Rex lists it in the hover card
-  as "Status" with no extra row or alert (verified 2026-11-20; a `done`
-  child behaved the same, `idle` avoids a second done alert).
+  as "Status". On two unfocused tabs (2026-11-20) the row stayed under
+  Done with one blue dot and showed no extra row; a `done` child looked
+  the same, and `idle` was picked because it cannot count as a second
+  finished task. Not yet checked: a focused tab, and an error run.
+  Tests: `node --experimental-strip-types --test
+  pi/.pi/agent/tests/tab-title.test.ts`; prompt eval against your own
+  sessions: `pi/.pi/agent/tests/tab-title-eval.mts [title|focus|outcome]`.
 - Recheck the open items in a month (reminder `rex-open-items-recheck`).
