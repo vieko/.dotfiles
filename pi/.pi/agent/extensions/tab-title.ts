@@ -632,7 +632,7 @@ export default function (pi: ExtensionAPI) {
 		void generateFocus(ctx);
 	});
 
-	pi.on("compaction_end", async () => {
+	pi.on("session_compact", async () => {
 		sendFocus(150);
 	});
 
