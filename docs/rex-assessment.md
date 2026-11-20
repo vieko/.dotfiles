@@ -344,4 +344,8 @@ Rules from now on:
   (`id=focus`). Rex shows the most recently updated record in the
   working capsule (verified 2026-11-20), so the line is resent after
   each pi root report. Rex shows the capsule only for working rows.
+  When a run ends the record becomes `idle` with a one-line outcome
+  ("PR #42 opened; waiting on review"). Rex lists it in the hover card
+  as "Status" with no extra row or alert (verified 2026-11-20; a `done`
+  child behaved the same, `idle` avoids a second done alert).
 - Recheck the open items in a month (reminder `rex-open-items-recheck`).
