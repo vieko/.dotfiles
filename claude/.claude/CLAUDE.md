@@ -111,8 +111,9 @@ work). Repo rules may add more (`~/dev/gtm` adds a Slack one-liner).
 A merge needs the user's word:
 
 - **Personal repos** (owner `vieko`, no repo rule asking for a Slack post
-  or a second reviewer): the user's word to push and open the PR also
-  covers the merge once checks are green. Stop and wait instead when a
+  or a second reviewer): the user's go-ahead for the change covers the
+  push, the PR, and the merge once checks are green. A plain push of
+  your own branch never needs its own word; a force-push does. Stop and wait instead when a
   check fails, a review asks for changes, or the user comments or asks a
   question before the merge.
 - **Team repos** (`~/dev/gtm`, `vercel/*`, anything with other
