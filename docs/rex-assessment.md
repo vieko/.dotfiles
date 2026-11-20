@@ -337,6 +337,11 @@ Rules from now on:
 - Hand-started Pi sessions in one repo all read `π - gtm` in the
   sidebar. `tab-title.ts` (2026-11-20) names an unnamed session from its
   first prompt (issue key, else non-default branch, else a 2-4 word
-  slug) and sets the title to `<name> · <folder>`. The name is the pi
-  session name, so `/resume` and pi-post show it too.
+  slug) and sets the title to that name. After the first turn, a cheap
+  model (Haiku 4.5) replaces it with a 2-5 word title, using Claude
+  Code's naming rules. During runs longer than 10s it also writes a
+  status line of 14 words or fewer as an OSC 7501 child record
+  (`id=focus`). Rex shows the most recently updated record in the
+  working capsule (verified 2026-11-20), so the line is resent after
+  each pi root report. Rex shows the capsule only for working rows.
 - Recheck the open items in a month (reminder `rex-open-items-recheck`).
