@@ -18,7 +18,7 @@
 #   -m alias   vessel: haiku|sol|sonnet|opus|fable|luna|astra (default: sol),
 #              or a raw gateway id with an explicit effort when the alias's
 #              default level is not what the summoning wants, e.g.
-#              openai/gpt-6-astra:xhigh (astra's ceiling; the alias binds :high)
+#              openai/gpt-6.2-astra:xhigh (astra's ceiling; the alias binds :high)
 #   -P         print mode: in-band `pi -p` dispatch (nohup + log) instead of
 #              an interactive tmux or Rex pane
 #   -W name    construct window: open a new tmux or Rex window named <name>
@@ -74,12 +74,12 @@ log_summon() {
 alias_to_model() {
     case "$1" in
         haiku)  echo "anthropic/claude-haiku-5.5:low" ;;
-        sol)    echo "openai/gpt-6.1-sol:high" ;;  # 6.1 since 2026-10-09, matching anvil's alias and the picker
+        sol)    echo "openai/gpt-6.2-sol:high" ;;  # 6.2 since 2026-11-20 (pi 1.6.0), matching anvil's alias and the picker
         sonnet) echo "anthropic/claude-sonnet-5.5:medium" ;;
         opus)   echo "anthropic/claude-opus-5.5:medium" ;;
         fable)  echo "anthropic/claude-fable-5.2:high" ;;
         luna)   echo "openai/gpt-6-luna:high" ;;
-        astra)  echo "openai/gpt-6-astra:high" ;;
+        astra)  echo "openai/gpt-6.2-astra:high" ;;  # 6.2 since 2026-11-20: $8/$40, cache read $0.40
         # Raw gateway id passthrough (provider/model[:effort]). Still goes
         # through the catalog check below, so a typo surfaces.
         */*)    echo "$1" ;;

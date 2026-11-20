@@ -180,8 +180,9 @@ when the work demands it.
   review passes start catching what the Summoner should have, or if
   consults trend toward "stop". Escalate to fable for the gnarliest
   architecture or review passes while the A/B runs; that is now its job.
-- **Familiar** -- `gpt-6.1-sol:high` by default (was `claude-sonnet-5:medium`
-  until 2026-09-22, `gpt-6-sol` until 2026-10-09; golems and the picker
+- **Familiar** -- `gpt-6.2-sol:high` by default (was `claude-sonnet-5:medium`
+  until 2026-09-22, `gpt-6-sol` until 2026-10-09, `gpt-6.1-sol` until
+  2026-11-20; golems and the picker
   moved to 6.1 on 2026-09-29, the familiar alias lagged). Same $2/$10 tier; the switch is because sonnet-5 via
   the gateway drops ~11% of edit tool bodies in transit (`edits: [{}]`) and
   neither strict sampling nor the fine-grained-streaming path moved it,
@@ -311,7 +312,7 @@ when the work demands it.
   noise next to merge-conflict and review cost; the gate + review carry
   the judgment, not the member.
 
-- **Astra (`gpt-6-astra`) is a bounded vessel, never an all-day
+- **Astra (`gpt-6.2-astra`; `gpt-6-astra` until 2026-11-20) is a bounded vessel, never an all-day
   Summoner.** It rides the anthropic-messages transport on the gateway but
   its prompt cache is OpenAI's best-effort one, not Anthropic's 1h TTL:
   measured 2026-09-18, 12% of turns after a 5-15m idle and 29% after
