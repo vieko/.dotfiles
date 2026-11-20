@@ -53,6 +53,10 @@ echo "=> Configuring menu bar..."
 # Automatically hide and show the menu bar
 defaults write NSGlobalDomain _HIHideMenuBar -bool true
 
+# Show a menu bar background (Tahoe draws it transparent by default, so the
+# auto-hidden bar overlaps window content when it slides in)
+defaults write NSGlobalDomain SLSMenuBarUseBlurredAppearance -bool true
+
 # ============================================================================
 # Keyboard
 # ============================================================================
