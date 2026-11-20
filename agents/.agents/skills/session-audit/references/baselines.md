@@ -295,3 +295,19 @@ old row so drift is visible.
   sigil board name 0 after 11-09 16:22; 5 misses ($6.43) from sigil
   feature merges changing tool descriptions (11-15/16). Counsel
   unprompted 52/61 (85%, week 45 42%).
+
+## Week 47 (2026-11-13 18:02 to 2026-11-20 18:02 CET, 7 days incl. weekend), PHYREXIA
+
+- 104 sessions with turns, 8,545 assistant turns, 738 user turns. True
+  $526 (= pi-reported), $0.71/ut ($0.81 with counsel); opus-only $0.67/ut.
+- Split: cacheRead $217, cacheWrite $216, output $94. 1h TTL net +$97.
+- Context: 19% of turns >= 200K carried 30% of spend; max 379K.
+- Misses: idle 53 ($61, avg 142K, week 46 30); unexplained 26 ($26,
+  opus 0.39%); compaction 30 ($23).
+- Fable 3 sessions, $69, triage not architecture.
+- Counsel 53 consults, $71.63 (13.6%): before-a-choice trigger stays.
+- Menu shadow: 41 proceed, free+other 39%: drop criterion met. Menu wait
+  p90 after 2400c8b 22.7 min (before 118 min).
+- Familiar not-steered 45% (target < 25% by week 48).
+- anvil 24 runs, 12/23 first-attempt pass, $4.11.
+- Corrections: 11 candidates, 2 kept by label rule, 6 on reading.
