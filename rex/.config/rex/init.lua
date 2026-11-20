@@ -40,6 +40,7 @@ end
 rex.bind("ctrl+a>0", "client.tab.goto", { index = -1 })
 
 -- Sessions
+rex.bind("ctrl+a>shift+c", "session.new") -- C: one session per work stream
 rex.bind("ctrl+a>s", "session.switch")
 rex.bind("ctrl+a>w", "session.switch")
 rex.bind("ctrl+a>shift+4", "session.rename") -- $
