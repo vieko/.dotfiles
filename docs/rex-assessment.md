@@ -334,4 +334,9 @@ Rules from now on:
   lettered menu, with the options and the recommended one as the row
   text, and clears it on the next prompt. Pi's own record is untouched;
   check both with `rex block call program_status`.
+- Hand-started Pi sessions in one repo all read `π - gtm` in the
+  sidebar. `tab-title.ts` (2026-11-20) names an unnamed session from its
+  first prompt (issue key, else non-default branch, else a 2-4 word
+  slug) and sets the title to `<name> · <folder>`. The name is the pi
+  session name, so `/resume` and pi-post show it too.
 - Recheck the open items in a month (reminder `rex-open-items-recheck`).
