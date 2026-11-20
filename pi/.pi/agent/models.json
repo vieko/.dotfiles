@@ -428,6 +428,60 @@
             "xhigh": "xhigh",
             "max": "max"
           }
+        },
+        "openai/gpt-6.2-sol": {
+          "inputLimits": {
+            "images": {
+              "resize": {
+                "maxWidth": 1568,
+                "maxHeight": 1568,
+                "maxBytes": 1048576,
+                "jpegQuality": 75
+              }
+            }
+          },
+          "compat": {
+            "vercelGatewayRouting": {
+              "order": [
+                "openai"
+              ]
+            }
+          },
+          "thinkingLevelMap": {
+            "off": null,
+            "minimal": null,
+            "xhigh": "xhigh",
+            "max": "max"
+          }
+        },
+        "openai/gpt-6.2-astra": {
+          "inputLimits": {
+            "images": {
+              "resize": {
+                "maxWidth": 1568,
+                "maxHeight": 1568,
+                "maxBytes": 1048576,
+                "jpegQuality": 75
+              }
+            }
+          },
+          "thinkingLevelMap": {
+            "off": null,
+            "minimal": null,
+            "low": "low",
+            "medium": "medium",
+            "high": "high",
+            "xhigh": "xhigh",
+            "max": "max"
+          },
+          "compat": {
+            "forceAdaptiveThinking": true,
+            "vercelGatewayRouting": {
+              "order": [
+                "openai"
+              ]
+            }
+          }
         }
       }
     }
