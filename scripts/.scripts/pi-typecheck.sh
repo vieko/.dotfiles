@@ -80,7 +80,7 @@ echo
 jq -n --arg nm "$nm" --argjson paths "$piPaths" --args '{
   compilerOptions: {
     target: "ES2022", module: "NodeNext", moduleResolution: "NodeNext",
-    strict: true, noEmit: true, skipLibCheck: true,
+    strict: true, noEmit: true, skipLibCheck: true, allowImportingTsExtensions: true,
     typeRoots: ["\($nm)/@types"], types: ["node"], paths: $paths
   },
   files: $ARGS.positional
