@@ -5,7 +5,10 @@
 #
 # Usage:
 #   construct-term.sh backend              print tmux or rex, exit 1 if neither
-#   construct-term.sh open-window NAME DIR new background window with a login shell; prints ID
+#   construct-term.sh open-window NAME DIR [STREAM]
+#                                          new background window with a login shell; prints ID.
+#                                          STREAM puts it in the tmux/Rex session of that
+#                                          name (created when missing) instead of the caller's
 #   construct-term.sh open-split DIR       background split beside the caller; prints ID
 #   construct-term.sh send ID              type stdin into ID, then press Enter
 #   construct-term.sh capture ID           print ID's screen
@@ -58,10 +61,28 @@ parse_rex_id() {
     REX_S=${BASH_REMATCH[1]} REX_B=${BASH_REMATCH[2]}
 }
 
+# A session per work stream (Rex expects one; docs/rex-assessment.md).
+# Prints the session id for label STREAM, or nothing when there is none.
+rex_stream_session() {
+    "$1" ls --json | jq -r --arg s "$2" '[.sessions[] | select(.label == $s)][0].session_id // empty'
+}
+
 rex_open_window() {
-    local name=$1 dir=$2 rex out block
+    local name=$1 dir=$2 stream=${3:-} rex out block session=$REX_SESSION
     rex=$(rex_bin) || die "rex not found"
-    out=$("$rex" "do" -s "$REX_SESSION" --args "$(jq -nc --arg name "$name" --arg cwd "$dir" '{name: $name, cwd: $cwd}')" -e '
+    if [[ -n "$stream" ]]; then
+        session=$(rex_stream_session "$rex" "$stream")
+        if [[ -z "$session" ]]; then
+            # rex new makes the session and its first tab in one step.
+            out=$("$rex" new "$stream" --window "$name" --cwd "$dir" --json)
+            session=$(jq -r '.session_id' <<<"$out")
+            block=$(jq -r '.initial_windows[0].block_ids[0]' <<<"$out")
+            [[ "$session" == session:* && "$block" == block:* ]] || die "rex new returned no block: $out"
+            echo "rex/$session/$block"
+            return
+        fi
+    fi
+    out=$("$rex" "do" -s "$session" --args "$(jq -nc --arg name "$name" --arg cwd "$dir" '{name: $name, cwd: $cwd}')" -e '
         local w, err = rex.session.new_window{
             window_label = rex.args.name,
             focus = false,
@@ -72,7 +93,18 @@ rex_open_window() {
         return w.block_ids[1]')
     block=$(jq -r . <<<"$out")
     [[ "$block" == block:* ]] || die "rex did not return a block: $out"
-    echo "rex/$REX_SESSION/$block"
+    echo "rex/$session/$block"
+}
+
+tmux_open_window() {
+    local name=$1 dir=$2 stream=${3:-}
+    if [[ -z "$stream" ]]; then
+        tmux new-window -d -P -F '#{pane_id}' -n "$name" -c "$dir"
+    elif tmux has-session -t "=$stream" 2>/dev/null; then
+        tmux new-window -d -P -F '#{pane_id}' -t "=$stream:" -n "$name" -c "$dir"
+    else
+        tmux new-session -d -P -F '#{pane_id}' -s "$stream" -n "$name" -c "$dir"
+    fi
 }
 
 rex_open_split() {
@@ -89,10 +121,11 @@ case "$cmd" in
         backend || die "neither tmux (\$TMUX) nor Rex (\$REX_SESSION)"
         ;;
     open-window)
-        [[ $# -eq 2 ]] || die "usage: open-window NAME DIR"
+        [[ $# -eq 2 || $# -eq 3 ]] || die "usage: open-window NAME DIR [STREAM]"
+        [[ -z "${3:-}" || "$3" =~ ^[a-z0-9][a-z0-9-]{0,63}$ ]] || die "STREAM must be lowercase words joined by hyphens: $3"
         case "$(backend)" in
-            tmux) tmux new-window -d -P -F '#{pane_id}' -n "$1" -c "$2" ;;
-            rex) rex_open_window "$1" "$2" ;;
+            tmux) tmux_open_window "$@" ;;
+            rex) rex_open_window "$@" ;;
         esac
         ;;
     open-split)

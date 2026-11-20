@@ -23,6 +23,12 @@ Rex trial (2026-10-31, `docs/rex-assessment.md`): the same topology maps to
 a Rex session (plane), tabs (project and construct windows, same names) and
 panes. `summon-*.sh` and `remind-at.sh` pick tmux or Rex through
 `scripts/.scripts/construct-term.sh`; tmux wins when both are present.
+Rex expects one session per work stream and shows the session name under
+each tab, so a construct window for an epic or issue goes in its own
+session: `-S <stream>` on `summon-familiar.sh -W` and `summon-golem.sh`
+(created when missing; 2026-11-20). Rex cannot move a tab between
+sessions, so pick the stream at summon time. A pi tab alone in an
+unnamed Rex session names that session itself (`tab-title.ts`).
 
 ## Roles
 
@@ -338,7 +344,7 @@ against the configured provider's catalog.
 **Don't hand-roll summonings** -- use the summon scripts in
 `~/.dotfiles/scripts/.scripts/`:
 
-- `summon-familiar.sh [-m vessel] [-P] [-W fam-<issue>] <brief>` -- encodes
+- `summon-familiar.sh [-m vessel] [-P] [-W fam-<issue> [-S stream]] <brief>` -- encodes
   gateway provider binding, login-shell pane env, pane_id targeting instead
   of indexes, 15-second startup verification, and mandatory report-back
   injection. Pane mode is the steerable default; `-P` is an in-band `pi -p`
@@ -464,7 +470,9 @@ the layout.
 - **Dispatched Familiars get their own named window** (`fam-<issue>`),
   symmetric with golem watch windows: `summon-familiar.sh -W fam-<issue>`
   (see Vessels above; startup is verified either way). The window name is
-  the in-flight signal -- kill it on merge along with the worktree. A
+  the in-flight signal -- kill it on merge along with the worktree. Add
+  `-S <epic-or-issue>` when the work belongs to a stream other than the
+  summoner's own, so the Rex sidebar shows the stream under the tab. A
   split pane in the summoner's own window remains fine for a quick
   same-project helper that dies with the conversation.
 - **Any file-touching construct gets worktree isolation by default** --

@@ -101,6 +101,11 @@ Mac app connects to.
   `session.select`.
 - Our scripts as Lua actions in the command palette.
 - One session per worktree with labels and Collapse Other Sessions.
+  Started 2026-11-20 as one session per work stream: `-S <stream>` on
+  the summon scripts opens construct windows in that session (Rex
+  cannot move a tab between sessions: `window move` and `move` stay
+  inside one session), and a pi tab alone in an unnamed session renames
+  it (below).
 
 ## Counsel review corrections
 
@@ -350,6 +355,14 @@ Rules from now on:
   Done with one blue dot and showed no extra row; a `done` child looked
   the same, and `idle` was picked because it cannot count as a second
   finished task. Not yet checked: a focused tab, and an error run.
+  Rex session name: Rex's agent guide (`rex __internal skill`) asks
+  agents to label their session in 2-4 dashed words and to replace
+  generated labels. A pi tab that is the only pane in its session
+  renames a Rex-generated label ("misty-moor") or one it set itself to
+  the pi session name. Rex has no "generated" flag; the word list comes
+  from the server binary, and a missing word only skips the rename.
+  Shared sessions and chosen labels are left alone (verified
+  2026-11-20).
   Tests: `node --experimental-strip-types --test
   pi/.pi/agent/tests/tab-title.test.ts`; prompt eval against your own
   sessions: `pi/.pi/agent/tests/tab-title-eval.mts [title|focus|outcome]`.

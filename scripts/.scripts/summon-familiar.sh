@@ -13,7 +13,7 @@
 #      at its shell fail loudly here, not silently in a background pane.
 #
 # Usage:
-#   summon-familiar.sh [-m alias] [-P] [-n] [-R] [-C] [-B board] [-w name] [-W name] <brief-path> [prompt override]
+#   summon-familiar.sh [-m alias] [-P] [-n] [-R] [-C] [-B board] [-w name] [-W name [-S stream]] <brief-path> [prompt override]
 #
 #   -m alias   vessel: haiku|sol|sonnet|opus|fable|luna|astra (default: sol),
 #              or a raw gateway id with an explicit effort when the alias's
@@ -26,6 +26,11 @@
 #              the current window. The window name is the in-flight signal
 #              (PHYREXIA.md topology) -- kill it on merge with the worktree.
 #              Usually paired with -w for file-touching dispatches.
+#   -S stream  with -W: open the window in the Rex (or tmux) session named
+#              <stream>, created when missing, instead of the summoner's
+#              session. One session per work stream, e.g. the epic or issue
+#              (gtmeng-5068, lead-agent-queue); Rex shows the session name
+#              under each tab. Lowercase words joined by hyphens.
 #   -n         dry run: print what would be executed, run nothing
 #   -C         allow counsel: familiars run with PI_COUNSEL=off so a worker
 #              cannot spend on pi-counsel consults; -C lifts that for a
@@ -103,9 +108,10 @@ no_report=0
 allow_counsel=0
 worktree_name=""
 window_name=""
+stream=""
 board=""
 
-while getopts "m:PnRCB:w:W:" opt; do
+while getopts "m:PnRCB:w:W:S:" opt; do
     case "$opt" in
         m) vessel="$OPTARG" ;;
         P) print_mode=1 ;;
@@ -115,14 +121,17 @@ while getopts "m:PnRCB:w:W:" opt; do
         B) board="$OPTARG" ;;
         w) worktree_name="$OPTARG" ;;
         W) window_name="$OPTARG" ;;
+        S) stream="$OPTARG" ;;
         *) exit 2 ;;
     esac
 done
 shift $((OPTIND - 1))
 
 [[ $print_mode -eq 1 && -n "$window_name" ]] && { echo "error: -P and -W are mutually exclusive" >&2; exit 2; }
+[[ -n "$stream" && -z "$window_name" ]] && { echo "error: -S needs -W (a split stays beside the summoner)" >&2; exit 2; }
+[[ -z "$stream" || "$stream" =~ ^[a-z0-9][a-z0-9-]{0,63}$ ]] || { echo "error: -S takes lowercase words joined by hyphens: $stream" >&2; exit 2; }
 
-[[ $# -ge 1 ]] || { echo "usage: summon-familiar.sh [-m alias] [-P] [-n] [-R] [-C] [-B board] [-w name] [-W name] <brief-path> [prompt]" >&2; exit 2; }
+[[ $# -ge 1 ]] || { echo "usage: summon-familiar.sh [-m alias] [-P] [-n] [-R] [-C] [-B board] [-w name] [-W name [-S stream]] <brief-path> [prompt]" >&2; exit 2; }
 
 # -B: share a sigil board (sigil#51). Pane familiars start from a fresh login
 # shell, so the summoner's env never reaches them; SIGIL_ROOM goes on the
@@ -351,7 +360,7 @@ else
     pi_cmd="${counsel_env:+$counsel_env }${board_env:+$board_env }$role_env $bonfire_env ${parent_env:+$parent_env }pi --name $session_name --provider \"$PROVIDER\" --model \"$model\" \"$prompt\""
     if [[ $dry_run -eq 1 ]]; then
         if [[ -n "$window_name" ]]; then
-            echo "dry-run (window mode, $backend): new window $window_name, then type:"
+            echo "dry-run (window mode, $backend): new window $window_name${stream:+ in session $stream}, then type:"
         else
             echo "dry-run (pane mode, $backend): split beside this pane, then type:"
         fi
@@ -359,15 +368,15 @@ else
         exit 0
     fi
     if [[ -n "$window_name" ]]; then
-        pane_id="$("$term" open-window "$window_name" "$work_dir")"
+        pane_id="$("$term" open-window "$window_name" "$work_dir" ${stream:+"$stream"})"
     else
         pane_id="$("$term" open-split "$work_dir")"
     fi
     sleep 1
     printf '%s' "$pi_cmd" | "$term" send "$pane_id"
     if [[ -n "$window_name" ]]; then
-        log_summon "mode=window window=$window_name pane=$pane_id brief=$brief_abs${worktree_name:+ worktree=$worktree_name}${board:+ board=$board}"
-        echo "summoned: window $window_name (pane $pane_id), vessel $vessel ($model)"
+        log_summon "mode=window window=$window_name${stream:+ stream=$stream} pane=$pane_id brief=$brief_abs${worktree_name:+ worktree=$worktree_name}${board:+ board=$board}"
+        echo "summoned: window $window_name${stream:+ in session $stream} (pane $pane_id), vessel $vessel ($model)"
     else
         log_summon "mode=pane pane=$pane_id brief=$brief_abs${worktree_name:+ worktree=$worktree_name}${board:+ board=$board}"
         echo "summoned: pane $pane_id, vessel $vessel ($model)"

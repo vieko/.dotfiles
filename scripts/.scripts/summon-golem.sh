@@ -29,7 +29,7 @@
 # review pipeline (PHYREXIA.md standing invariant).
 #
 # Usage:
-#   summon-golem.sh [-m alias] [-r reason] [-e K=V]... [-n] [--sandbox] [-R] [-k] [-B board] <name> <spec-or-prompt> [anvil args...]
+#   summon-golem.sh [-m alias] [-r reason] [-e K=V]... [-n] [--sandbox] [-R] [-k] [-B board] [-S stream] <name> <spec-or-prompt> [anvil args...]
 #
 #   -m alias   vessel: haiku|sol|sonnet|opus|fable|astra|luna|terra|glm (anvil's aliases;
 #              astra needs anvil >= 0.3.1, sol the 2026-09-22 alias refresh).
@@ -58,6 +58,10 @@
 #              dispatch; `done` (detail: review pending) on a green exit,
 #              still `doing` with the exit code otherwise. '@' means the
 #              summoner's board, as in summon-familiar.sh. sigil#51.
+#   -S stream  open the window in the Rex (or tmux) session named <stream>,
+#              created when missing, instead of the summoner's session. One
+#              session per work stream, e.g. the epic or issue; Rex shows the
+#              session name under each tab. Lowercase words joined by hyphens.
 #   -k         keep the window open after a green exit. Default: a green
 #              golem closes its window 10s after the ping (the log + result
 #              JSON on disk are the forensic artifacts; the pane adds
@@ -104,8 +108,9 @@ keep_window=0
 golem_env=()
 board=""
 reason=""
+stream=""
 
-while getopts "m:r:e:nRkB:" opt; do
+while getopts "m:r:e:nRkB:S:" opt; do
     case "$opt" in
         m) vessel="$OPTARG" ;;
         r) reason="${OPTARG//[[:space:]]/-}" ;;
@@ -115,12 +120,14 @@ while getopts "m:r:e:nRkB:" opt; do
         R) no_report=1 ;;
         k) keep_window=1 ;;
         B) board="$OPTARG" ;;
+        S) stream="$OPTARG" ;;
         *) exit 2 ;;
     esac
 done
 shift $((OPTIND - 1))
 
-[[ $# -ge 2 ]] || { echo "usage: summon-golem.sh [-m alias] [-r reason] [-e K=V]... [-n] [-R] [-k] [-B board] <name> <spec-or-prompt> [anvil args...]" >&2; exit 2; }
+[[ -z "$stream" || "$stream" =~ ^[a-z0-9][a-z0-9-]{0,63}$ ]] || { echo "error: -S takes lowercase words joined by hyphens: $stream" >&2; exit 2; }
+[[ $# -ge 2 ]] || { echo "usage: summon-golem.sh [-m alias] [-r reason] [-e K=V]... [-n] [-R] [-k] [-B board] [-S stream] <name> <spec-or-prompt> [anvil args...]" >&2; exit 2; }
 
 alias_ok "$vessel" || { echo "error: unknown vessel alias: $vessel (anvil aliases: haiku|sol|sonnet|opus|fable|astra|luna|terra|glm)" >&2; exit 2; }
 
@@ -455,7 +462,7 @@ map_open() {
 
 if [[ $dry_run -eq 1 ]]; then
     [[ -n "$map_id" ]] && echo "dry-run: would open map task $map_task (\"$map_title\") on $map_id at $sigil_server"
-    echo "dry-run: would open ${backend:-tmux or Rex} window $window (login shell, cwd $PWD), then type:"
+    echo "dry-run: would open ${backend:-tmux or Rex} window $window${stream:+ in session $stream} (login shell, cwd $PWD), then type:"
     echo "  bash $runner"
     echo "--- runner ---"
     cat "$runner"
@@ -475,7 +482,7 @@ mark_summoner
 
 # Login shell first (env hydration), then the runner typed in -- same
 # discipline as summon-familiar.sh pane mode.
-pane_id="$("$term" open-window "$window" "$PWD")"
+pane_id="$("$term" open-window "$window" "$PWD" ${stream:+"$stream"})"
 sleep 1
 printf 'bash %q' "$runner" | "$term" send "$pane_id"
 # Summon ledger: shared with summon-familiar.sh (one grep audits all
@@ -483,8 +490,8 @@ printf 'bash %q' "$runner" | "$term" send "$pane_id"
 # Keys only: -e values can be credentials, and summons.log is plaintext.
 env_keys=()
 for kv in "${golem_env[@]+"${golem_env[@]}"}"; do env_keys+=("${kv%%=*}"); done
-echo "$(date +%Y-%m-%dT%H:%M:%S%z) kind=golem vessel=$vessel window=$window pane=$pane_id spec=$spec${reason:+ reason=$reason}${env_keys[*]+ env=${env_keys[*]}}" >> "$LOG_DIR/summons.log"
-echo "summoned: window $window (pane $pane_id), vessel $vessel"
+echo "$(date +%Y-%m-%dT%H:%M:%S%z) kind=golem vessel=$vessel window=$window${stream:+ stream=$stream} pane=$pane_id spec=$spec${reason:+ reason=$reason}${env_keys[*]+ env=${env_keys[*]}}" >> "$LOG_DIR/summons.log"
+echo "summoned: window $window${stream:+ in session $stream} (pane $pane_id), vessel $vessel"
 echo "log: $log"
 echo "result: $result"
 [[ $no_report -eq 0 ]] && echo "ping: wired to $report_to (fires on every exit path)"

@@ -57,3 +57,11 @@ test("pi-post names from AI titles keep identifiers", async () => {
 	assert.equal(kebabOf("GTMENG-5023 Notion import"), "gtmeng-5023-notion-import");
 	assert.equal(kebabOf("#6642 lead scoring"), "6642-lead-scoring");
 });
+
+test("only Rex's own default labels count as generated", async () => {
+	const { isGeneratedRexLabel, rexLabelOf } = await import("../extensions/tab-title.ts");
+	for (const l of ["misty-moor", "tidal-valley", "drifting-steppe", "quiet-meadow", null, ""]) assert.equal(isGeneratedRexLabel(l), true, String(l));
+	for (const l of ["summoning-demons", "lead-metrics", "sigil-board-review", "misty", "misty-moor-2"])
+		assert.equal(isGeneratedRexLabel(l), false, l);
+	assert.equal(rexLabelOf("GTMENG-5023 Notion import"), "gtmeng-5023-notion-import");
+});

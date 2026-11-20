@@ -24,6 +24,10 @@
  *   with where things stand ("PR #42 opened; waiting on review"), which Rex
  *   lists in the hover card (verified 2026-11-20: no extra row or alert).
  *   A turn that ends on a lettered menu gets none (question-status covers it).
+ * - Rex session name: Rex's agent guide asks agents to label their session.
+ *   When this pi tab is the only pane in its Rex session and the label is
+ *   Rex's default ("misty-moor") or one this extension set, the session gets
+ *   the pi session name. Shared sessions and chosen labels stay as they are.
  *
  * Title precedence: a name set with `/name` or `--name` > AI title >
  * instant name > folder. The `π - ` prefix and the folder are left out.
@@ -300,6 +304,35 @@ interface Saved {
 	autoName?: string;
 	autoSource?: Source;
 	aiTitle?: string;
+	/** The Rex session label this extension last set, so it may update its own label. */
+	rexLabel?: string;
+}
+
+// Words Rex 0.1.0-preview.14 uses for default session labels ("misty-moor"),
+// read from the server binary. Rex exposes no "generated" flag. A word
+// missing here only means pi leaves that session's label alone.
+const REX_LABEL_WORDS = new Set(
+	(
+		"arid bold calm dawn cove dune mesa moor pine reef isle vale " +
+		"amber brave crisp dusty eager lunar misty solar still tidal wispy " +
+		"atoll basin brook cedar cliff ember fjord glade ridge river shoal spire bluff creek delta marsh oasis " +
+		"cosmic fading floral gentle hidden lively silent sunlit " +
+		"canyon forest hollow lagoon meadow sierra steppe summit tundra valley willow alcove grotto quarry strait " +
+		"humming morning rolling harbour orchard prairie thicket narrows savanna terrace " +
+		"floating drifting electric polished restless twilight sparkling wandering quiet"
+	).split(" "),
+);
+
+/** True for a label Rex made up for an unnamed session, such as "misty-moor". */
+export function isGeneratedRexLabel(label: string | null | undefined): boolean {
+	if (!label) return true;
+	const parts = label.split("-");
+	return parts.length === 2 && parts.every((w) => REX_LABEL_WORDS.has(w));
+}
+
+/** A Rex session label from a pi session name: lowercase, dashed, at most 40 chars. */
+export function rexLabelOf(name: string): string | undefined {
+	return kebabOf(name);
 }
 
 export default function (pi: ExtensionAPI) {
@@ -320,6 +353,9 @@ export default function (pi: ExtensionAPI) {
 	let lastFocusAt = 0;
 	let lastDigest = "";
 	let runId = 0;
+	let rexSync: Promise<void> = Promise.resolve();
+	const rexSession = process.env.REX_SESSION;
+	const rexBlock = process.env.REX_BLOCK;
 
 	const log = (line: string) => {
 		const file = process.env.PI_TAB_TITLE_LOG;
@@ -419,6 +455,42 @@ export default function (pi: ExtensionAPI) {
 		} finally {
 			clearTimeout(t);
 		}
+	}
+
+	/**
+	 * Name the Rex session after this pi session, as Rex's agent guide asks,
+	 * but only when this pi tab is the session's only pane and the label is
+	 * one Rex generated or one this extension set. A shared session such as
+	 * summoning-demons, or a label a person chose, is never changed.
+	 */
+	async function nameRexSession(ctx: ExtensionContext): Promise<void> {
+		if (!statusTarget || ctx.mode !== "tui" || !rexSession || !rexBlock) return;
+		const name = pi.getSessionName();
+		const label = name ? rexLabelOf(name) : undefined;
+		if (!label) return;
+		const rex = (...args: string[]) => pi.exec("rex", ["--autostart=false", ...args], { timeout: 5000 });
+		try {
+			const res = await rex("session", "inspect", rexSession, "--json");
+			if (res.code !== 0) return;
+			const view = JSON.parse(res.stdout) as {
+				label?: string | null;
+				windows?: { layers?: { blocks?: { block_id: string }[] }[] }[];
+			};
+			const blocks = (view.windows ?? []).flatMap((w) => (w.layers ?? []).flatMap((l) => l.blocks ?? []));
+			if (view.windows?.length !== 1 || blocks.length !== 1 || blocks[0].block_id !== rexBlock) return;
+			const current = view.label ?? undefined;
+			if (current === label) return;
+			if (!isGeneratedRexLabel(current) && current !== saved.rexLabel) return;
+			const done = await rex("session", "rename", rexSession, label);
+			log(`rex session ${JSON.stringify(current)} -> ${JSON.stringify(label)} code=${done.code}`);
+			if (done.code === 0) save({ rexLabel: label });
+		} catch {
+			// naming is best effort
+		}
+	}
+
+	function syncRexSession(ctx: ExtensionContext): void {
+		rexSync = rexSync.then(() => nameRexSession(ctx));
 	}
 
 	function setAutoName(ctx: ExtensionContext, name: string, source: Source): void {
@@ -537,6 +609,7 @@ export default function (pi: ExtensionAPI) {
 		// Resumed or reloaded unnamed sessions get a name from their first prompt.
 		maybeName(first, ctx);
 		applyTitle(ctx);
+		syncRexSession(ctx);
 		clearFocus();
 		if (firstText(entries, "assistant")) void generateTitle(ctx);
 	});
@@ -565,6 +638,7 @@ export default function (pi: ExtensionAPI) {
 
 	pi.on("session_info_changed", async (_event, ctx) => {
 		applyTitle(ctx);
+		syncRexSession(ctx);
 		sendFocus(150);
 	});
 
