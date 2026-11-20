@@ -236,7 +236,12 @@ measure.
   build the live nudge if `free` + `other` is 15% or less of them; drop
   the extension and the proposal if it is above 25%; in between, extend
   once by 40 and then drop. Report the "Menu shadow" section, not the
-  one-token rate below.
+  one-token rate below. Closed 2026-11-20 (week 47): 41 `proceed`,
+  free + other 39% (about 32% after reading the replies: real
+  redirects such as "check with counsel first"). The live nudge is
+  dropped. The extension keeps logging only for its `waitMs`, which the
+  phone push decision reads; remove `menu-shadow.ts` once that is
+  decided, and do not propose the nudge again.
 
 - **One-token decisions**: closed 2026-11-09. 16-23% of user turns
   across weeks 39-45; the 10-11 rule and the 11-01 end-of-step sentence
