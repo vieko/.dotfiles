@@ -78,11 +78,11 @@ Pi sorts items by status key and joins them with one space, so each item
 is one token with no spaces inside:
 
 - `name:value`, with a six-letter lowercase name (`styles`, `redact`,
-  `remind`, `canvas`, `follow`) so the line reads evenly; pick words that
+  `remind`, `boards`, `follow`) so the line reads evenly; pick words that
   read without knowing the extension. Bonfire is the one seven-letter
   name (`bonfire:today`).
 - `dim` at rest. `warning` only when the user must act, with `!` after the
-  value (`remind:1!`, `canvas:gtm!`, `follow:#3146!`, `bonfire:init!`);
+  value (`remind:1!`, `boards:project!`, `follow:#3146!`, `bonfire:init!`);
   put the detail in a one-time notify, not the footer. Use semantic theme
   colors only; literal names throw on themes that lack them.
 - Clear the status (`undefined`) when there is nothing to say.
@@ -96,10 +96,10 @@ is one token with no spaces inside:
 | `styles:` | pi-prose | active output style |
 | `redact:` | pi-redact | distinct values kept out of the transcript |
 | `remind:` | `extensions/reminders.ts` (also the agent's `remind` tool) | pending reminders; `N!` when one fired and is open |
-| `canvas:` | sigil map observer | map name; `!` when a run failed |
+| `boards:` | sigil (`integrations/pi/boards.ts`) | `<whiteboard>+project`, each part a link to its canvas; `!` when an observer run failed; `/sigil` lists the URLs |
 | `follow:` | `extensions/waits.ts` | detached host `pr-wait.sh` or gtm `pr-wait`/`deploy-wait --notify` runs (`#N`, `deploy#N`, `deploy@main`, or a count); `!` when one exited without a delivered message (`/waits` shows its log) |
 
-Example: `bonfire:today styles:ste redact:1 remind:2 canvas:gtm follow:#3146`.
+Example: `bonfire:today styles:ste redact:1 remind:2 boards:gtm+project follow:#3146`.
 `tmux-status.ts` writes tmux, not the footer. `turn-clock.ts` prints its
 "done 15:30 · 13s" line in the chat, not the footer.
 
