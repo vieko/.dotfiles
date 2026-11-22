@@ -68,7 +68,7 @@ rex_stream_session() {
 }
 
 rex_open_window() {
-    local name=$1 dir=$2 stream=${3:-} rex out block session=$REX_SESSION
+    local name=$1 dir=$2 stream=${3:-} rex out block session=${REX_SESSION:-}
     rex=$(rex_bin) || die "rex not found"
     if [[ -n "$stream" ]]; then
         session=$(rex_stream_session "$rex" "$stream")
