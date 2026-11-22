@@ -311,13 +311,26 @@ rex.action{
 -- The sigil console (~/dev/sigil/apps/console, port 5860) in terminal-browser,
 -- full height at the right of the tab. Rex lets no custom action into tab
 -- buttons or right-click menus yet, so the key and the palette are the way in.
+-- It opens the board of the nearest Pi session (this pane, then this tab, then
+-- this Rex session), as the sigil server finds it, else the console's home.
 local SIGIL_LABEL = "sigil"
 local SIGIL_URL = "http://127.0.0.1:5860"
+local SIGIL_SERVER = "http://127.0.0.1:5858"
+
+local function sigil_closest_board(ctx, blocks)
+  local tab = {}
+  for _, b in ipairs(blocks) do tab[#tab + 1] = b.block_id end
+  local query = "block=" .. (ctx.block_id or "") .. "&tab=" .. table.concat(tab, ",") .. "&session=" .. (ctx.session_id or "")
+  local r = rex.exec({ "/usr/bin/curl", "-sf", "--max-time", "3", SIGIL_SERVER .. "/sessions/closest-board?" .. query }, { timeout = 4 })
+  if not r or not r.ok then return nil end
+  local ok, found = pcall(rex.json.decode, r.stdout)
+  return ok and type(found) == "table" and type(found.map) == "string" and found.map or nil
+end
 
 rex.action{
   name = "sigil_panel",
   title = "Toggle Sigil Panel",
-  description = "The sigil console in terminal-browser, full height on the right of the tab. Run again to close it.",
+  description = "The sigil console in terminal-browser, full height on the right of the tab, on the nearest Pi session's board. Run again to close it.",
   keywords = "sigil console board whiteboard panel sidebar browser",
   args = { url = "string?" },
   run = function(ctx, args)
@@ -333,6 +346,8 @@ rex.action{
           end
           if layer.kind == "tiled" then
             local root = layer.layout
+            local map = not args.url and sigil_closest_board(ctx, layer.blocks or {})
+            local url = args.url or (map and SIGIL_URL .. "/boards/" .. map) or SIGIL_URL
             local r = check(rex.session.new_split{
               anchor_id = (root.split and root.split.split_id) or root.block_id,
               direction = "horizontal",
@@ -342,11 +357,11 @@ rex.action{
                 flavor = "com.superlogical.terminal.shell",
                 label = SIGIL_LABEL,
                 options = { command = {
-                  os.getenv("HOME") .. "/.local/bin/terminal-browser", "open", args.url or SIGIL_URL,
+                  os.getenv("HOME") .. "/.local/bin/terminal-browser", "open", url,
                 } },
               } },
             })
-            return { opened = r.block_ids and r.block_ids[1] }
+            return { opened = r.block_ids and r.block_ids[1], url = url }
           end
         end
       end
