@@ -37,6 +37,7 @@ Full layer map and collision audit: `docs/keybindings.md`, `keybind-audit.sh`.
 - `f` float pane. `!` pane to new tab. `0` last tab. `s` / `w` session picker.
 - `[` Find (no copy mode yet). `:` command palette. `Y` copy pane directory.
 - `a` Activity: every agent and golem across sessions, blocked first (tmux's `a` was last window).
+- `g` Sigil console in a pane at the right of the tab; `g` again closes it.
 - Not ported: `.` swap with index, `d` detach, `C-s` / `C-r`.
 
 ## Pi (Ctrl)
