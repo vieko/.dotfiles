@@ -88,6 +88,8 @@ rex.bind("ctrl+a>shift+;", "client.palette.toggle") -- :
 rex.bind("ctrl+a>shift+/", "keys_card") -- ?
 -- Activity: every program across sessions and hosts, blocked first.
 rex.bind("ctrl+a>a", "pane.view_activity")
+-- Sigil console beside the tab; again closes it. See the sigil_panel action.
+rex.bind("ctrl+a>g", "sigil_panel")
 
 -- Resize mode: hjkl in 5% steps, HJKL in 15%, Escape or Enter leaves.
 rex.mode("resize", { exclusive = true })
@@ -303,5 +305,52 @@ rex.action{
         command = { os.getenv("HOME") .. "/.scripts/keys" },
       } } },
     })
+  end,
+}
+
+-- The sigil console (~/dev/sigil/apps/console, port 5860) in terminal-browser,
+-- full height at the right of the tab. Rex lets no custom action into tab
+-- buttons or right-click menus yet, so the key and the palette are the way in.
+local SIGIL_LABEL = "sigil"
+local SIGIL_URL = "http://127.0.0.1:5860"
+
+rex.action{
+  name = "sigil_panel",
+  title = "Toggle Sigil Panel",
+  description = "The sigil console in terminal-browser, full height on the right of the tab. Run again to close it.",
+  keywords = "sigil console board whiteboard panel sidebar browser",
+  args = { url = "string?" },
+  run = function(ctx, args)
+    local view = check(rex.session.view{})
+    for _, w in ipairs(view.windows or {}) do
+      if w.window_id == view.active_window_id then
+        for _, layer in ipairs(w.layers or {}) do
+          for _, b in ipairs(layer.blocks or {}) do
+            if b.label == SIGIL_LABEL then
+              check(rex.call("block.close", { session_id = ctx.session_id or rex.session_id, block_id = b.block_id }))
+              return { closed = b.block_id }
+            end
+          end
+          if layer.kind == "tiled" then
+            local root = layer.layout
+            local r = check(rex.session.new_split{
+              anchor_id = (root.split and root.split.split_id) or root.block_id,
+              direction = "horizontal",
+              side = "after",
+              focus = true,
+              layout = { block = {
+                flavor = "com.superlogical.terminal.shell",
+                label = SIGIL_LABEL,
+                options = { command = {
+                  os.getenv("HOME") .. "/.local/bin/terminal-browser", "open", args.url or SIGIL_URL,
+                } },
+              } },
+            })
+            return { opened = r.block_ids and r.block_ids[1] }
+          end
+        end
+      end
+    end
+    error("no tiled layer in the active window", 0)
   end,
 }
