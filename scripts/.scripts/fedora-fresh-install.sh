@@ -73,4 +73,5 @@ rpm -q mesa-va-drivers-freeworld >/dev/null 2>&1 || dnf install -y mesa-va-drive
 echo "==> Done. Post-steps (as user):"
 echo "    gh auth login && gh repo clone <you>/.dotfiles -- --recurse-submodules"
 echo "    npm i -g n && n lts"
+echo "    npm i -g typescript-language-server typescript  # Claude Code typescript-lsp plugin"
 echo "    sudo systemctl enable --now tailscaled docker"
