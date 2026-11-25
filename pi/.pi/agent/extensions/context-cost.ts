@@ -171,6 +171,7 @@ export default function (pi: ExtensionAPI) {
 		const choice = await ctx.ui.select(
 			`Prompt cache expired: idle ${mins(s.idleMs)} > ${s.p.ttlMin}m TTL with ${ktok(s.tokens)} tokens of context`,
 			[compactFirst, sendAnyway, keep],
+			{ blockedKind: "permission" }, // approves spend: Rex shows it as a permission request
 		);
 		if (choice === compactFirst) {
 			const content = event.images?.length
