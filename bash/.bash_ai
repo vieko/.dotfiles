@@ -1,9 +1,10 @@
 #!/usr/bin/env bash
 
 # AI shortcuts
-# c*  = claude code (normal mode)
+# c*  = claude code (normal mode: auto mode, prompts when it needs you)
+# cu* = claude code unattended (auto mode; anything that would prompt is denied)
 # f*  = forge (outcome-driven workflows)
-# xc* = claude code (dangerous: skips ALL permission prompts)
+# xc* = claude code (dangerous: skips ALL permission checks; sandboxes/VMs only)
 
 # ==> model shortcuts
 ch() { claude --model haiku "$@"; }
@@ -213,6 +214,30 @@ op-hydrate() {
     echo "op-hydrate: $n keys loaded${TMUX:+ (shell + tmux global env)}"
 }
 
+# ==> unattended mode (walk-away sessions; prefer this over xc*)
+# Two settings ride in via --settings, so supervised sessions are untouched
+# (never put them in settings.base.json or a host fragment):
+#   denyInsteadOfPrompting  anything that would prompt (destructive-guard
+#                           "confirm", `ask` rules, the classifier's 3/20
+#                           fallback) becomes a denial Claude reads and works
+#                           around; a run of denials ends the turn, no hang.
+#   classifyAllShell        Bash allow rules (git:*, gh:*, source:*, ...) are
+#                           suspended, so every shell command meets the
+#                           classifier. Costs one classifier call per command.
+# Flag-level autoMode adds to the user-level block (rules concatenate per
+# source), so the host fragment's environment/soft_deny still apply.
+# Verified on chaos (2.1.332): a guard "confirm" is denied and Claude carries
+# on; /permissions lists no Bash allow rules. The `ask`-rule and 3/20 paths
+# are from docs/binary, untested. On phyrexia, a gateway fallback to billed
+# classifier requests needs an acknowledgement, and until it is answered
+# this mode denies every call the classifier would judge.
+cu() {
+    claude --permission-mode auto \
+        --settings '{"permissions":{"denyInsteadOfPrompting":true},"autoMode":{"classifyAllShell":true}}' "$@"
+}
+cuf() { cu --model claude-fable-5-2 "$@"; }
+cucont() { cu --continue "$@"; }
+
 # ==> dangerous mode (skips ALL permission prompts — use with caution)
 # WARNING: These bypass safety confirmations. Only use in trusted contexts.
 # (Guard runs via the `claude` wrapper above — no need to repeat it here.)
@@ -220,7 +245,7 @@ xcc() { claude --dangerously-skip-permissions "$@"; }
 xco() { claude --dangerously-skip-permissions --model opus "$@"; }
 # Fable isn't in CC's model picker under gateway/API billing (that menu entry
 # came from the Enterprise subscription), but the gateway routes it fine.
-# Name it explicitly. In-session equivalent: /model claude-fable-5
-xcf() { claude --dangerously-skip-permissions --model claude-fable-5 "$@"; }
+# Name it explicitly. In-session equivalent: /model claude-fable-5-2
+xcf() { claude --dangerously-skip-permissions --model claude-fable-5-2 "$@"; }
 xcont() { claude --dangerously-skip-permissions --continue "$@"; }
 xcd() { codex --dangerously-bypass-approvals-and-sandbox "$@"; }
