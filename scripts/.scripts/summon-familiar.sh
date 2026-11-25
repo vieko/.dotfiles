@@ -68,7 +68,7 @@ SUMMON_LEDGER="$LOG_DIR/summons.log"
 # of summons). One line per dispatch; drift shows up in a single grep.
 log_summon() {
     mkdir -p "$LOG_DIR"
-    echo "$(date +%Y-%m-%dT%H:%M:%S%z) kind=familiar vessel=$vessel model=$model $*" >> "$SUMMON_LEDGER"
+    echo "$(date +%Y-%m-%dT%H:%M:%S%z) kind=familiar vessel=$vessel model=$model${PI_SESSION_ADDRESS:+ by=$PI_SESSION_ADDRESS} $*" >> "$SUMMON_LEDGER"
 }
 
 alias_to_model() {

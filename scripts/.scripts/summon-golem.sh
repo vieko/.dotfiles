@@ -490,7 +490,7 @@ printf 'bash %q' "$runner" | "$term" send "$pane_id"
 # Keys only: -e values can be credentials, and summons.log is plaintext.
 env_keys=()
 for kv in "${golem_env[@]+"${golem_env[@]}"}"; do env_keys+=("${kv%%=*}"); done
-echo "$(date +%Y-%m-%dT%H:%M:%S%z) kind=golem vessel=$vessel window=$window${stream:+ stream=$stream} pane=$pane_id spec=$spec${reason:+ reason=$reason}${env_keys[*]+ env=${env_keys[*]}}" >> "$LOG_DIR/summons.log"
+echo "$(date +%Y-%m-%dT%H:%M:%S%z) kind=golem vessel=$vessel window=$window${PI_SESSION_ADDRESS:+ by=$PI_SESSION_ADDRESS}${stream:+ stream=$stream} pane=$pane_id spec=$spec${reason:+ reason=$reason}${env_keys[*]+ env=${env_keys[*]}}" >> "$LOG_DIR/summons.log"
 echo "summoned: window $window${stream:+ in session $stream} (pane $pane_id), vessel $vessel"
 echo "log: $log"
 echo "result: $result"
