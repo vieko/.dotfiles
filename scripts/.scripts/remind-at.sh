@@ -9,6 +9,7 @@
 #   remind-at.sh --resume <slug> [--same]  open the reminder's session, then close it
 #                                    (--same: the old session, also when it is large)
 #   remind-at.sh --done <slug>       close an open reminder
+#   remind-at.sh --now <slug>        fire a pending reminder now, as at its time
 #   remind-at.sh --cancel <slug>     remove a pending or open reminder
 #   remind-at.sh --open <address> [label]  focus or resume any pi session the
 #                                    way Resume does (used by pi-halted.sh)
@@ -478,6 +479,20 @@ cmd_resume() {
   fi
 }
 
+# --fire is launchd's entry point and does nothing before the due time, and
+# it waits on a modal alert, so a caller cannot run it inline. --now moves the
+# due time to now and has launchd start the job: same alert, same delivery.
+cmd_now() {
+  local slug=$1 meta="$STATE_DIR/$1.meta" tmp
+  [[ -f "$meta" ]] || die "no reminder named $slug"
+  [[ -f "$(plist_of "$slug")" ]] || die "$slug already fired"
+  tmp=$(mktemp "$meta.XXXXXX")
+  sed "s/^DUE=.*/DUE=$(date +%s)/" "$meta" > "$tmp" && mv "$tmp" "$meta"
+  log "$slug" "run now: due time moved to now"
+  /bin/launchctl kickstart "$UID_DOMAIN/$LABEL_PREFIX.$slug" >/dev/null 2>&1 || die "launchd could not start $slug"
+  echo "[OK] firing $slug now"
+}
+
 # Runs under launchd. Must not exit on error before the final bootout.
 cmd_fire() {
   local slug=$1 label="$LABEL_PREFIX.$1" meta="$STATE_DIR/$1.meta"
@@ -553,6 +568,7 @@ case "${1:-}" in
     [[ -z "${3:-}" || "$3" == --same ]] || die "usage: remind-at.sh --resume <slug> [--same]"
     cmd_resume "$2" "${3:-}"; exit 0 ;;
   --fire) valid_slug "${2:?}"; cmd_fire "$2"; exit 0 ;;
+  --now) valid_slug "${2:?usage: remind-at.sh --now <slug>}"; cmd_now "$2"; exit 0 ;;
   --open) [[ "${2:-}" =~ ^s-[0-9a-f]{12}$ ]] || die "usage: remind-at.sh --open <s-address> [label]"
     [[ -z "${3:-}" ]] || valid_slug "$3"
     out=$(resume_session "$2" "${3:-}") || die "$out"
