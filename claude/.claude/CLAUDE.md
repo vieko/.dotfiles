@@ -139,9 +139,12 @@ Definitions live in `~/.claude/agents/`.
   small UI change.
 - **`researcher`** (sonnet, read-only) -- docs, pricing, platform
   features, status pages, "how does X work here".
-- **`builder`** (session model, 1h cache) -- one PR end to end that is
-  too large or too open for a fixer: architecture, cross-cutting changes,
-  an ambiguous spec. Name WHY in the summoning.
+- **`builder`** (opus, medium effort, 1h cache, one advisor call at
+  planning) -- one PR end to end that is too large or too open for a
+  fixer: architecture, cross-cutting changes, an ambiguous spec. Name WHY
+  in the summoning; escalate one spawn to fable with the Agent `model`
+  override only for a named reason. Pattern-following work with a tight
+  brief (e.g. battlemox pilot/deck/list tasks) goes to a fixer.
 - **`general-purpose`** -- only when none of the above fit. `/code-review`
   runs on it and inherits the session model; leave that alone.
 

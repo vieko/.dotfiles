@@ -29,9 +29,29 @@ corrected mid-run instead of re-run from scratch).
 
 ## Vessels
 
-PHYREXIA's binding policy applies (fable Summoner, sonnet-default
+PHYREXIA's binding policy applies (opus Summoner, sonnet-default
 Familiars with escalation only for a named reason, luna-default Golems
 for cross-family anti-collusion, sonnet Legions). CHAOS deltas:
+
+- **Claude Code on the Max plan (2026-11-25):** Summoner and `builder`
+  default to opus; `fable` is an escalation for one session (`/model
+  fable`) or one spawn (Agent `model` override), with the reason named.
+  `advisorModel: fable` stays: an opus builder with a Fable advisor is
+  Anthropic's cheap-executor/strong-advisor pairing. Builders consult it
+  at most once, at planning, only when the brief leaves the design open;
+  never for pattern work (pilot/deck/list) or before done (the review
+  gate covers that). Why: week of 2026-11-18, about 81% of the Fable cap
+  went to Fable builders and their Fable-on-Fable advisor calls (82 runs,
+  mostly battlemox pilot/deck/list work), against 18% for the directing
+  sessions. Evidence: `~/scratch/claude-token-usage-assessment.md`.
+- **Builder trials (2026-11-25, review 2026-12-09):** `effort: medium`
+  (thinking was 31% of builder output at high) and `autoCompactWindow:
+  250000` (was 400K; 59% of builder cache reads came from calls above
+  200K). Keep both if finish and merge rates hold; revert either one if
+  runs fail or redo work more often.
+- **Directing-session handoff:** hand off at about 250K of context or 150
+  turns. One battlemox Summoner ran 989 turns over 3.5 days; every late
+  turn re-read 300-600K.
 
 - **Wider pool (unrestricted gateway key):** `kimi-k3:high` and
   `grok-4.5:high` are also enabled here -- they join the consult pool and
