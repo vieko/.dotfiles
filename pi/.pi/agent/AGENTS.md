@@ -7,15 +7,15 @@ extend these.
 
 ## Session memory
 
-Cross-session, cross-agent project memory is **Bonfire**:
-`<project>/.bonfire/index.md` (not `.sessions/`). Pi and Claude Code
-adapters keep it current; there is nothing to run. Agents without an
-adapter (Codex, OpenCode) use `/skill:bonfire end`, which never
-autoloads. A repo opts in with `mkdir <repo>/.bonfire`. Adapter install
-and pins: `~/.dotfiles/docs/agent-packages.md`.
+Durable project knowledge goes in the repo's `AGENTS.md` or its docs.
+To continue earlier work, the user resumes that session (`/resume`).
 
-Pi's session tree (`/tree`, `/fork`, `/resume`) replays conversation
-history; Bonfire is project memory. They do not replace each other.
+`<project>/.bonfire/index.md`, where it exists, is a log that the
+Bonfire adapters write: the last session's state and a list of recent
+sessions. In a repo with parallel sessions, it usually describes some
+other task. Do not read it at session start. Read it when the user asks
+what was going on, or when you take over work from another session or
+harness. Adapter install and pins: `~/.dotfiles/docs/agent-packages.md`.
 
 ## Closing a session
 
@@ -80,7 +80,7 @@ profile stays in `~/private`.
 ## Scratch directory (`~/scratch`)
 
 Machine-local working area for session artifacts — specs, handoffs, reviews,
-run logs, exports. It is **ephemeral**: not project memory (that's Bonfire)
+run logs, exports. It is **ephemeral**: not project memory (that goes in repo docs)
 and not durable docs (those belong in repos or dotfiles).
 
 Layout:
@@ -96,7 +96,7 @@ Kinds: `spec`, `handoff`, `review`, `assessment`, `notes`.
 
 Lifecycle: two states — **live or gone**. There is no archive. On a sweep,
 anything untouched for ~30 days is either **deleted** or **promoted** into a
-real artifact (a script in dotfiles, a skill, a Bonfire entry, a repo doc, a
+real artifact (a script in dotfiles, a skill, a repo doc, a
 Linear comment). If it's not worth promoting, it's not worth keeping. Agents
 may write freely here but must never treat stale scratch as authoritative.
 

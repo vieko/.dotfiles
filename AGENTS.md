@@ -6,8 +6,9 @@ resolve to identical content; edit only `AGENTS.md`.
 
 ## Session Context
 
-Read `.bonfire/index.md` for current state. Host-native bonfire adapters keep
-it current; there are no commands to run. Pi loads the adapter from the
+`.bonfire/index.md` is a log of the last session, not current state: read it
+only when you take over earlier work (global `AGENTS.md`, "Session memory").
+The adapters write it; there are no commands to run. Pi loads the adapter from the
 `packages` pin in `pi/.pi/agent/settings.base.json` (PHYREXIA swaps the pin for
 `~/dev/bonfire` via `hosts/packages.phyrexia.json`); Claude Code runs it from
 a `Stop` hook in `claude/.claude/settings.base.json`; other agents use
