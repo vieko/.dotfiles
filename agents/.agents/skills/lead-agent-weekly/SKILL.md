@@ -1,6 +1,6 @@
 ---
 name: lead-agent-weekly
-description: Compose a recurring LEAD AGENT project update for Slack in Vieko's voice and format. Use this whenever the user asks to write, draft, compose, or update a Lead Agent project update, weekly or biweekly report, "this week" update, or recurring Lead-Agent progress summary destined for Slack. Gathers merged work from git + the bonfire epic state, then renders it as raw Slack mrkdwn (value-first bullets, not a commit recap).
+description: Compose a recurring LEAD AGENT project update for Slack in Vieko's voice and format. Use this whenever the user asks to write, draft, compose, or update a Lead Agent project update, weekly or biweekly report, "this week" update, or recurring Lead-Agent progress summary destined for Slack. Gathers merged work from git and the Linear project state, then renders it as raw Slack mrkdwn (value-first bullets, not a commit recap).
 ---
 
 # LEAD AGENT — project update

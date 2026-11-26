@@ -1,6 +1,6 @@
 ---
 name: index-biweekly
-description: Compose a recurring INDEX project update for Slack in Vieko's voice and format. Use this whenever the user asks to write, draft, compose, or update an Index project update, two-week or biweekly Index report, "Index this week" update, or recurring Index progress summary destined for Slack. Gathers merged work from git + the bonfire epic state across the whole Index surface (all contributors), then renders it as compact Slack mrkdwn with a TL;DR (value-first bullets, not a commit recap).
+description: Compose a recurring INDEX project update for Slack in Vieko's voice and format. Use this whenever the user asks to write, draft, compose, or update an Index project update, two-week or biweekly Index report, "Index this week" update, or recurring Index progress summary destined for Slack. Gathers merged work from git and the Linear project state across the whole Index surface (all contributors), then renders it as compact Slack mrkdwn with a TL;DR (value-first bullets, not a commit recap).
 ---
 
 # INDEX — project update
