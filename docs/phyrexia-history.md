@@ -1,0 +1,637 @@
+# PHYREXIA history (frozen 2026-11-26)
+
+This is the full text of `PHYREXIA.md` as of 2026-11-26, kept for the
+incidents, measurements and trial criteria behind each rule. It is not
+the policy. The rules are in `~/.dotfiles/PHYREXIA.md`; when the two
+disagree, that file wins. Do not add to this file: put a new incident in
+the commit message or the weekly audit notes.
+
+---
+
+# PHYREXIA session lexicon
+
+Personal, machine-local naming convention for multi-agent work on this host.
+**Not a team convention** -- never propagate into project/team repos. Both Pi
+and Claude Code surface it via a pointer in their global config
+(`~/.pi/agent/AGENTS.md`, `~/.claude/CLAUDE.md`); this file is the source of
+truth.
+
+## Topology
+
+    PHYREXIA          plane      tmux session / machine (set-default-session-name.sh)
+      |
+      +- <window>     project    one window per project; window name is random
+      |                          occult flavor (tmux-name-window.sh) -- not a role
+      |
+      +- <window>     construct  dispatched constructs get their own named
+      |                          window (fam-2551, golem-2683) -- the name IS
+      |                          the in-flight signal; pruned on merge
+      |
+      +- panes        agents     each pane runs an agent session
+
+Rex trial (2026-10-31, `docs/rex-assessment.md`): the same topology maps to
+a Rex session (plane), tabs (project and construct windows, same names) and
+panes. `summon-*.sh` and `remind-at.sh` pick tmux or Rex through
+`scripts/.scripts/construct-term.sh`; tmux wins when both are present.
+Rex expects one session per work stream and shows the session name under
+each tab, so a construct window for an epic or issue goes in its own
+session: `-S <stream>` on `summon-familiar.sh -W` and `summon-golem.sh`
+(created when missing; 2026-11-20). Rex cannot move a tab between
+sessions, so pick the stream at summon time. A pi tab alone in an
+unnamed Rex session names that session itself (`tab-title.ts`).
+
+## Roles
+
+- **Summoner** -- the directing session. Runtime-agnostic: a Pi *or* Claude
+  Code session in the driving seat. It scries (explores), scopes, inscribes
+  Linear issues, sequences work, and coordinates parallel sessions. It
+  delegates implementation rather than doing it.
+
+- **Familiar** -- a steerable worker of the **same runtime as the Summoner**
+  (Pi Summoner -> Pi Familiars; Claude Code Summoner -> Claude Code Familiars).
+  Defined by STEERABILITY, not by panes: an interactive pane session *or* an
+  in-band background dispatch (Agent-tool subagent in its own worktree) that
+  the Summoner can message mid-flight. Steering is the point -- correcting a
+  construct mid-run beats re-running from scratch. Same-kind, to avoid mixing
+  harnesses.
+
+- **Golem** -- the unsteerable kind: gate-bound, no conversation. Canonically
+  an **Anvil** run: an isolated, autonomous construct (its own git worktree,
+  grinds until its deterministic gate passes). Mechanism is flavor, the
+  property is identity. Usually its own pane, but the Summoner may also
+  invoke Anvil directly without a pane.
+
+- **Legion** -- a batch of Golems run in parallel against one spec template.
+  Requirements: **disjoint scopes** (no shared files between members -- merge
+  conflicts void the pattern), **batch-sized to machine capacity** --
+  measured 2026-09-22 on gtm (M4 Pro, 48 GB, 12 cores): `pnpm install`
+  peaks at 1.6 GB, a scoped gate (`--filter=./apps/<app>` check-types +
+  lint + test) at 2-2.7 GB, a repo-wide uncached `turbo run check-types`
+  at 11.4 GB; a pi session is 0.2-1.3 GB. With ~30 GB free (Chrome takes
+  ~19 GB), the ceiling is **6 concurrent golems on scoped gates**, bounded
+  by CPU not RAM (each turbo run spawns up to 10 workers; past 6 they only
+  get slower), and **2 on repo-wide gates** (3 with Chrome closed). Trade
+  wall time for memory with `turbo run ... --concurrency=4` when a wide
+  gate is unavoidable,
+  **one review pipeline** (each member's diff is individually reviewed before
+  ship -- a Legion multiplies the mechanics, never the judgment; a green gate
+  cannot distinguish "make the test pass" from "the test was lying").
+
+  **Sandbox lane (live since 2026-11-09).** `summon-golem.sh --sandbox`
+  runs a golem on a 4 vCPU Vercel Sandbox (project `vieko-golem-sandbox`,
+  team `vercel-internal-playground`) from a snapshot of the gtm checkout;
+  no secret in the VM (development OIDC, gh-sts `contents: read`, gateway
+  key brokered by the firewall). Setup is ~17 s, a gtm run 6 to 13 min,
+  ~$0.01 to $0.05 of model per run. It is the way past the 6-golem
+  ceiling. Every snapshot build and dispatch is spend and needs the user's
+  approval each time. Controller and builder: `scripts/sandbox/`
+  (`docs/agent-maintenance.md`, "Sandbox lane"); ids in
+  `~/private/lanes/sandbox-golem.env`. Proven on anvil #59 (closed).
+  Per-repo snapshots and the optional clone credential (anvil #63) are in
+  `8851ff3`, proven live on vieko/pi-redact 2026-11-15 (anvil #63
+  closed). Dispatch friction from
+  the 2026-11-10 dogfood (clean check, lane env, summoner address,
+  refusal pings) fixed 2026-11-15. Since then a lockfile change or an
+  anvil release no longer forces a rebuild: the controller picks the
+  newest snapshot of the repo, fetches the package delta, and updates
+  anvil in the setup phase (registry egress in setup only).
+
+- **Scout** -- a read-only child run by the `scout` tool (dotfiles
+  `9c79797`, since 2026-11-10): haiku-5.5, tools `read,grep,find,ls`, up
+  to 8 tasks per call, 4 at a time, capped at $0.25 and 240 s each;
+  `PI_SCOUT=off` turns it off. It gathers and returns cited reports; it
+  writes nothing, so it is not a construct and has no diff to review. Its
+  report is an unreviewed claim: open the cited lines before an edit or a
+  spec depends on them. `/issue` uses it for the gather step. Point it at a
+  detached worktree at `origin/main` when the shared checkout is behind
+  (2026-11-10: `~/dev/gtm` was 9 commits and 187 files behind; the add
+  took 3 s). Measured in round 2 of the orchestration climb: 1 call, 3
+  tasks, $0.043, 22-48 s each, and its findings turned two of three "Do"
+  issues into decisions before any golem ran.
+
+## Standing invariants
+
+- **The review gate applies to every construct, not just Legions.** Each
+  construct's diff passes one review pipeline, and judgment sits with the
+  session holding the richest context (usually the Summoner). A green gate
+  cannot distinguish "make the test pass" from "the test was lying"; the
+  review catches what no gate can (planted probe strings, contracts that
+  enshrine the bug, prose that satisfies a grep). Open proof 5 (Vessels >
+  Golem) trials one impact-tiered exception for low-impact mechanical
+  golems; until it holds, there is no exception.
+
+- **Pi Durable and harness-on-world are not construct substrates here**
+  (assessed 2026-10-11). Durable targets always-on, multi-human agents;
+  harness-on-world adds ~400-1000 ms per tool call. Reopen on any of: a
+  `running` anvil record lost mid-dispatch; a wish for a Slack-reachable
+  or always-on agent on Scourge; Pi moving the coding agent onto Durable;
+  or constructs leaving this host, where this repo's sandbox lane is the
+  reference.
+
+## Host hazards
+
+- **SentinelOne SIGKILLs code-like argv.** This host runs SentinelOne
+  (sentineld + friends); it kills processes whose command line looks like
+  obfuscated shell -- instant "Killed: 9" (exit 137), nothing in the
+  kernel or syspolicyd logs, and no error a retry can get past (content
+  rule, not a race). Observed 2026-09-02: golem completion pings carrying
+  gate commands (grep -E, sed, xargs, `$(...)`) in a `--body` argument
+  died on every attempt across three runs; the identical 2 KB body
+  delivered over stdin; a `python3 -` call with 2.5 KB of markdown argv
+  died the same way (so not node- or anvil-specific). The rule: **never
+  put code-like or long generated text on a command line -- pass it via
+  stdin or a file.** Applies to `pi-post send --body`, `node -e`,
+  `python3 - "$x"`, `gh pr edit --body`, and anything similar.
+  summon-golem.sh pipes its ping body over stdin since ec819d4.
+  Measured 2026-09-18: the trigger is a **single argv element of ~1000+
+  bytes on a `node <script>` exec**, prose included -- `'y'*1000` passed,
+  `'y'*1023` died, 300 short args totalling 1500 bytes passed, and
+  `node -e`, `python3 file.py`, and curl were untouched that day. So
+  `linear issues create --description "$(cat long.md)"` dies silently
+  (nothing created, no output; `--help` with the same argv dies too).
+  Long Linear bodies go through the jq `--rawfile` + curl GraphQL recipe
+  in the `linear-cli` skill.
+
+- **Salesforce from this host needs the `egress-pdx` Tailscale exit node.**
+  Every SFDC integration identity in `gtm-environments` (LEAD_AGENT,
+  LEAD_SURFACE, ...) is IP-restricted; the allowlisted static IP is
+  `5.78.100.55`, a Hetzner exit node (`~/.dotfiles/TAILSCALE_EXIT_NODE.md`).
+  Symptom when it is off: JWT auth returns `400 invalid_grant: ip
+  restricted` before any instance URL is known. Check before dispatching a
+  construct that reads SFDC (`tailscale status --json | jq
+  .ExitNodeStatus.Online`, or `curl -4 ifconfig.me` -> `5.78.100.55`); turn
+  on with `tailscale set --exit-node=egress-pdx --exit-node-allow-lan-access`
+  (a human toggle, not an agent one -- it reroutes all egress). Observed
+  2026-09-24: fam-3776 reported the SOQL leg blocked and the summoner
+  filed it as a permissions problem when the exit node was simply off.
+
+- **Keyboard chords are layered; check before binding.** Cmd belongs to
+  macOS/Aerospace, Ctrl to the terminal stack, and macOS symbolic hotkeys
+  win over everything. The owner map, the chords deliberately given up, and
+  the audit (`~/.scripts/keybind-audit.sh`) live in `docs/keybindings.md`.
+
+## Vessels
+
+Which model a construct is bound into. Available vessels are per-host
+(for Pi: `~/.pi/agent/hosts/enabledModels.<host>.json`); this is the
+PHYREXIA binding policy, grounded in session history (2026-06/07) and this
+host's work profile (production TS monorepo, gated prod migrations,
+governance-heavy coordination). Defaults, not law -- override per summoning
+when the work demands it.
+
+- **Summoner** -- `claude-opus-5.5:high` (the Pi default since 2026-10-05,
+  a declared two-week A/B; `claude-fable-5.1:high` held the seat from
+  2026-09-22 and is one `/model fable` away). Week 40 ran 2,199 opus turns
+  against 2,834 fable turns: $0.48 vs $1.02 per user turn, abort rate 2.6%
+  vs 2.9%, unexplained cache-miss rate 0.05% vs 0.07%, opus carrying the
+  week's largest contexts (491K). Price and cache penalties are ruled out;
+  quality parity is the open question and only a fortnight of real
+  Summoner work answers it. Decision point: the week-42 audit. Revert if
+  review passes start catching what the Summoner should have, or if
+  consults trend toward "stop". Escalate to fable for the gnarliest
+  architecture or review passes while the A/B runs; that is now its job.
+- **Familiar** -- `gpt-6.2-sol:high` by default (was `claude-sonnet-5:medium`
+  until 2026-09-22, `gpt-6-sol` until 2026-10-09, `gpt-6.1-sol` until
+  2026-11-20; golems and the picker
+  moved to 6.1 on 2026-09-29, the familiar alias lagged). Same $2/$10 tier; the switch is because sonnet-5 via
+  the gateway drops ~11% of edit tool bodies in transit (`edits: [{}]`) and
+  neither strict sampling nor the fine-grained-streaming path moved it,
+  while gpt-6-sol had 0 malformed edits across 600+ GPT-family edit calls
+  (measured on 6.0; the next audit's edit-health line covers 6.1).
+  **Terra trial (2026-11-02..11-15): closed, reverted to sol.** 8
+  familiar tasks on `gpt-6.1-terra:high` ($1/$5, half sol): $0.007/turn,
+  all landed through normal review, but 2 of 92 edit calls (week 46, one sigil
+  task) lost the `newText` key, and the rule fixed before the trial
+  required 0 malformed. The familiar alias is gone; a raw
+  `openai/gpt-6.1-terra:high` still passes through. Anvil keeps its own
+  `terra` alias (anvil#61).
+  `-m sonnet` still resolves, for the A/B and for a same-family worker when
+  one is wanted. Escalate to the Summoner's vessel only when the summoning
+  names WHY judgment dominates (governance paths, prod-impact calls,
+  ambiguous spec the familiar must resolve alone) -- "owns a whole phase"
+  is not by itself a reason. The test: a brief tight enough to delegate
+  with a verify gate is worker-tier work by definition. Observed 2026-08-30
+  audit: ~11 of 14 script-summoned familiars over three weeks ran
+  `-m fable` -- the escalation clause had inverted the default in practice;
+  that is the drift this wording exists to stop. Familiars run with
+  `PI_COUNSEL=off`; summon with `-C` when the brief asks for a counsel
+  read.
+- **Golem** -- anvil `--model luna` (gpt-6-luna) by default: a
+  cross-family golem under an Anthropic reviewer diversifies failure modes
+  -- same-family worker+reviewer share blind spots, and the review gate
+  exists to catch "the test was lying." Luna is the base for everything,
+  including deep refactors: let the ladder climb. The one standing
+  exception is the moderation trap below (purge / delete / redact verbs ->
+  `-m fable` up front). Any other `-m fable` base names WHY in the
+  summoning, with `summon-golem.sh -r <reason>`: the script logs it in
+  `summons.log` and nags when a fable or opus base has none (since
+  2026-11-11); "raw capability" is not a reason on its own -- the record has
+  no spec that failed on luna and passed on fable that the ladder would not
+  have reached anyway, and the three specs that failed everything failed on
+  fable too. Ladder (anvil#45): `luna:high -> luna:xhigh -> opus:high ->
+  opus:xhigh`; under the default `-n 3` a luna golem ends on `opus:high`.
+  The luna:xhigh rung is a ~$0.02 retry with the gate errors, added because
+  a third of luna's gate failures were mechanical (formatter, lockfile,
+  stale comments) and were being paid for at the strong rung. The strong
+  tier is `opus` = claude-opus-5.5 since the 2026-09-22 alias refresh: on
+  anvil's token profile (~98% cache reads) opus-5.5 undercuts fable-5.1 on
+  cache-read (0.20 vs 0.25), cache-write (5 vs 12.5) and output (20 vs 50).
+  Aliases: `haiku/sol/sonnet/opus/fable/astra/luna/terra/glm`.
+  Same-model effort climbs are a mid-conversation effort change on one
+  cache-warm session (pi 0.85 `supportsMidConvoEffort`); the luna->opus
+  switch is a fresh conversation over the same worktree, so luna's partial
+  work carries.
+
+  **Open proofs** (read with `~/.scripts/anvil-ledger`, which aggregates
+  anvil's per-attempt run files; `--escalations` lists every run that left
+  rung 0). Criteria fixed before the data, 2026-09-29:
+  1. *luna:xhigh retry rung* and 2. *opus-5.5 strong tier* -- closed
+     2026-11-10 without enough samples (3 escalations against the ~20
+     needed). Nobody tracks them; reopen if escalations pass ~5 a month.
+     opus stays the strong tier on the repricing argument above, not on
+     observed passes. `-m sol` stays available as a golem worker.
+  3. *luna-first on former fable specs* -- **not run.** Since 2026-09-29,
+     4 golems took a fable base ($44.84 of the window's ~$50 golem spend)
+     and luna was never tried on any of them. The proof stays open; it
+     only runs if the next `-m fable` base is dispatched luna-first with a
+     reason recorded either way. Criterion unchanged: over the next ~15
+     specs that would have been `-m fable`, expected cost per spec under
+     $6 (fable base averaged $12). Holds if luna's rung-0 rate on them is
+     above ~40%; fails if rung-1 cost on luna's partial worktree exceeds a
+     cold fable base.
+  The fable row in the ledger had one stale record, closed 2026-11-11:
+  `gtmeng-3938-pr4a-build-spec` was `state: running` from 2026-10-14
+  until `anvil status --all --prune` marked it failed. Cause: a sol
+  session ran `anvil run` inline through the bash tool with a 1800 s
+  timeout, and the tool killed the run at 30 minutes, in attempt 1 (the
+  tool result is "Command timed out after 1800 seconds"; `summons.log`
+  has no line for it). The caller killed it; anvil did not crash. This
+  is not the Pi Durable reopen trigger ("a `running` anvil record lost
+  mid-dispatch", Standing invariants).
+  4. *haiku-5.5 golem trial* (restarted 2026-10-11 on pi 1.1.0, anvil#52;
+     count with `anvil-ledger --since 2026-10-11`) -- the next ~10
+     mechanical specs (lint, formatter, small refactors, codemods) go
+     `summon-golem.sh -m haiku`. haiku now means claude-haiku-5.5: luna's
+     list price ($0.10/$0.50; 5x above 100K input, which 1% of golem
+     turns reach), same ladder shape (`haiku:high -> haiku:xhigh ->
+     opus:high`). Repriced on luna's 2,128 observed turns it is $1.73 vs
+     $2.76, so base cost is a wash and the only lever is escalation spend
+     ($75 of $78 in the window). Holds if haiku's rung-0 rate on those
+     specs is at or above luna's 71% and its follow-up rate no worse than
+     luna's ~7%; then haiku becomes the mechanical-spec vessel. It does not
+     become the default either way: it is same-family as the reviewer,
+     which is the blind spot luna's default exists to avoid. Fails below
+     ~60% rung 0, since each extra escalation costs ~$3.70. The 3 runs
+     from 2026-10-08..10 (pi 0.99.1, derived-model bridge; 3/3 rung 0,
+     $0.17) are a separate cohort: #52 deleted the bridge and changed the
+     prompt prefix, so they do not count toward the ~10.
+  5. *impact-tiered review* (from 2026-10-11) -- can low-impact golem
+     diffs move from Summoner review to cross-family agent review? Source:
+     Calvin Grunewald's attention/impact grid (x.com, 2026-10-07): spend
+     human attention by impact, not uniformly. **Low impact** means all
+     of: a trial-4 mechanical spec, one app or package, no `packages/*`
+     source, no migrations / prod-DB / auth / secrets / CI / governance
+     paths, no new dependencies, under ~200 changed lines. Anything else
+     keeps full review. **Shadow mode** for the next ~10 qualifying green
+     golems: a one-shot review familiar from the other family than the
+     golem (`summon-familiar.sh -P -m astra` for haiku, `-m opus` for
+     luna) gets the spec and the diff and returns SHIP or HOLD with
+     findings. The Summoner still does its full review, before it reads
+     the agent verdict, and logs both in
+     `~/scratch/review-tier-trial-notes.md` (spec, golem vessel, both
+     verdicts, blocking findings on each side, Summoner minutes spent).
+     The standing invariant is unchanged while the trial runs.
+     Criteria, fixed before the data:
+     - Holds if the agent review misses zero blocking findings the
+       Summoner caught, issues at most 2 false HOLDs, and merged diffs
+       need follow-ups (`-repair`/`-fix`) no more often than luna's ~7%.
+       Then low-impact golems ship on agent SHIP plus a Summoner spot
+       check (spec, diffstat, gate output, agent verdict; a full read of
+       every third), and the standing invariant gains that exception.
+     - Fails on one missed blocking finding: full review stays for every
+       construct, and the tiering is dropped, not tuned.
+     - Drop it even if it holds when Summoner reviews of these diffs
+       average under ~3 minutes: there is no attention to save.
+     - Fewer than ~6 qualifying specs by the week-44 audit: extend once,
+       then drop.
+     PR-level form for docs-only PRs: `docs/lowrisk-merge-lane.md` and
+     `~/.scripts/pr-lowrisk-check.sh` (dry run; not enabled).
+- **Legion** -- `sol` members (`haiku` only for purely mechanical
+  batches -- historically unused at 4.5 prices; 5.5 since 2026-10-08
+  costs a tenth of that, so revisit with the golem trial above). At a 3-member ceiling, member cost is
+  noise next to merge-conflict and review cost; the gate + review carry
+  the judgment, not the member.
+
+- **Astra (`gpt-6.2-astra`; `gpt-6-astra` until 2026-11-20) is a bounded vessel, never an all-day
+  Summoner.** It rides the anthropic-messages transport on the gateway but
+  its prompt cache is OpenAI's best-effort one, not Anthropic's 1h TTL:
+  measured 2026-09-18, 12% of turns after a 5-15m idle and 29% after
+  15-60m were full-prefix misses (fable-5.1: 2.3% / 11%), and its cache
+  reads cost 4x fable-5.1's per token. Week 37-38 it took 50% of spend on
+  24% of turns; one 11-day astra Summoner at 520K cost $206 for 6 user
+  turns. Bind astra for work that starts fresh and finishes in one sitting
+  (review familiars, one-shot assessments, cross-family second reads).
+  Sessions expected to live past a few hours are fable-5.1. If astra is
+  the Summoner anyway: `/new` + `/recap` instead of resuming after a
+  break, and compact at 150K, not 300K.
+
+Cross-family consults (`gpt-6-astra`, `gpt-6-sol`) are conversations, not
+constructs -- a second read needs no binding. In a session, ask for one
+through counsel ("have counsel review with an OpenAI model"): the tool's
+`model` argument (pi-counsel#1) sends one consult to that model with the
+full transcript and the session budget, without changing `counsel.json`.
+The default counsel stays fable, same family as an opus Summoner;
+`/counsel status` says so. Do not hand-roll `pi -p` for it (observed
+2026-10-16, sigil: an anchoring brief, a shell, no budget).
+
+**CLI binding gotcha:** gateway model IDs contain a slash
+(`anthropic/claude-sonnet-5`), so `pi --model "anthropic/claude-sonnet-5"`
+parses as provider `anthropic` (direct API, no key on this host) and fails
+with "No API key found for anthropic." Always bind explicitly:
+`pi --provider vercel-ai-gateway --model "anthropic/claude-sonnet-5:medium"`.
+Interactive sessions don't hit this because `enabledModels` entries resolve
+against the configured provider's catalog.
+
+**Don't hand-roll summonings** -- use the summon scripts in
+`~/.dotfiles/scripts/.scripts/`:
+
+- `summon-familiar.sh [-m vessel] [-P] [-W fam-<issue> [-S stream]] <brief>` -- encodes
+  gateway provider binding, login-shell pane env, pane_id targeting instead
+  of indexes, 15-second startup verification, and mandatory report-back
+  injection. Pane mode is the steerable default; `-P` is an in-band `pi -p`
+  dispatch with a log under `~/scratch/logs/`.
+- `summon-golem.sh [-m vessel] <name> <spec> [anvil args...]` -- wraps
+  `anvil run` in a named window (`golem-<name>`) with `--json` results,
+  `-v --reasoning` by default, logs under `~/scratch/logs/`, and a
+  pi-post completion ping wired at dispatch (fires on every exit path:
+  green, red, crash, killed window -- silence always means still running).
+  Never hand-roll `anvil run` inside a tmux window (observed 2026-08-21:
+  golem-2055 dispatched bare -- no ping, discovery by sleep-and-capture
+  polling). Running anvil inline in the summoner's own turn, blocking on
+  it, remains fine -- the wrapper exists for detached runs. Inline is
+  only for a run that ends well inside the tool timeout: a timeout kills
+  anvil with no exit path, so the record stays `running` and no result is
+  written (2026-10-14, above). A fable base or a slow gate goes through
+  `summon-golem.sh`.
+
+Both fail loudly at summon time -- misbindings, and a missing report-back
+address (deliberate silent constructs need the explicit `-R` opt-out).
+
+## Usage
+
+- The directing session refers to itself as the **Summoner** and to delegated
+  work as "summon a Familiar / Golem."
+- Worker panes still inherit per-window occult names from
+  `~/.dotfiles/scripts/.scripts/tmux-name-window.sh` -- those are flavor, not
+  roles.
+
+## Summoning discipline
+
+Encode the invariant (know what's summoned; runs must be discoverable), not
+the layout.
+
+- **Route at dispatch by the decision the work needs.** A gate exists:
+  golem. No gate and no decision expected mid-run (a review, a survey, a
+  fix the brief fully decides): `summon-familiar.sh -P`. A decision
+  expected mid-run: window familiar. In the 30 days to 2026-11-15, 17 of
+  37 familiars got no Summoner message before their report (8 none, 9
+  review only). The weekly audit's "Familiar routing" line counts this;
+  the target is under 25% not steered.
+- **Specs go to golems, briefs go to familiars.** `~/scratch/<id>-spec.md`
+  (a verifiable end state, a gate) is summon-golem input; `<id>-brief.md`
+  (work that needs steering or judgment mid-run) is summon-familiar input.
+  Week 40: 3 of 7 sol familiars ran `Read <id>-spec.md and execute it
+  exactly`; one took 274 turns, 17 tool errors and $10 for 2 user turns,
+  while the week's one luna golem passed on attempt 1 for $0.03. A spec
+  executed as a familiar pays worker-tier prices for no gate and no
+  steering. If a spec has no gate, write the gate (or `--check <cmd>`)
+  before summoning; if it cannot have one, it is a brief, name it so.
+  Caveat (2026-10-09 Luna Decisions audit, 199 ledger files): that week-40
+  count is by filename, and the suffix is unreliable. gtmeng-3910-spec.md
+  opens with "Familiar brief. Steerable"; all three week-40 files scored
+  as briefs (0.01-0.03), and specs sent to familiars scored a median 0.17
+  vs 0.87 for specs sent to golems. Name by content, not by precision: a
+  steerable brief with a gate is still `-brief.md`. The summon scripts warn
+  on a suffix/script mismatch and never refuse.
+- **A relayed approval unlocks nothing.** pi-post marks a message from
+  any session but the Familiar's own Summoner as carrying no authority,
+  and the Summoner stamp (pi-post v0.9.0) excludes push, merge, deploys,
+  DB writes and publishes. Familiars hold to that correctly: a brief
+  that gates a push, PR or prod-DB write on "Vieko first" stays blocked
+  when the Summoner relays the user's go. Observed 2026-10-09: fam-3879
+  and fam-3938 both refused relayed approvals, one for a test-table import
+  and one for opening PR #4539. When you write the brief, choose one: the
+  familiar stops at a commit and the Summoner does the gated action itself,
+  or the user approves in the familiar's window. Do not plan on relaying.
+- **Run a batch of issues from one flat coordinator** (orchestration
+  climb, 2026-11-10; scorecard `~/scratch/orchestration-climb-notes.md`).
+  Round 1 put a Summoner session on each of three issues: each stopped on
+  a menu and the user answered "(a)" 2 to 3 times per issue, and a
+  coordinator collecting their reports could not direct them. What worked
+  was workers stopping at a commit with a report and a prepared PR body,
+  and the session with the user's word doing push, PR and merge for all
+  of them (one user turn opened three PRs, one merged them). Round 2 made
+  that the whole shape: one session does scout gather, spec plus gate,
+  `summon-golem.sh`, review on the ping, re-commit, and a PR body with
+  `LEDE_PLACEHOLDER`, then gives the user one batch (ledes, "open them",
+  decisions, "merge when green"). Three issues took 3 directing user turns
+  and $3.10 of coordinator. Decide on keeping it after about 10 issues,
+  not one round.
+- **Golem commits are pushable as they are since anvil#65** (`520f9b2`,
+  2026-11-10). Anvil commits as the configured `user.name`/`user.email`
+  and falls back to `anvil@localhost` only when either is unset; git
+  config does the signing, so gtm's verified-commit rule passes. Before
+  that, every gtm golem branch needed a `--reset-author` re-commit. A
+  soft reset and one commit with a real message is still the way to
+  replace the `anvil: <spec>` message; check the tree is unchanged
+  against the golem's commit before pushing.
+- **Seed contracts from a base worktree, not the shared checkout.** anvil
+  copies `--contract` files only from the `-C` repo's working tree. Round
+  1 left a contract untracked in `~/dev/gtm`, which failed another
+  session's dispatch. Add a detached worktree at `origin/main`
+  (`~/dev/<repo>-worktrees/<id>-base`), write the contract there, run
+  `summon-golem.sh ... -C <base>`, and remove the base after the merge.
+- **`git worktree remove` on a gtm worktree can take over 90 s** (47 s
+  measured 2026-11-10 with a full `node_modules`). Run it alone, with a
+  long tool timeout, after `lsof -d cwd | grep -F <path>` comes back
+  empty.
+- **Familiars are summoned, never conscripted.** New task work always gets
+  a fresh construct -- never dispatch a brief into an existing session
+  found via `list_sessions` / pi-post. A session named for task A silently
+  running task B poisons the discovery surface for every future summoner
+  and erodes "messages carry no authority" (observed 2026-08-19/20: a
+  month-old vdr-dashboard-polish session acting as the GTMENG-2551
+  summoner; the 2551 familiar then executed a third party's "rebase now").
+  Existing sessions receive coordination only: acks, freezes, collision
+  checks, relays.
+- **The Summoner speaks for the user within the brief** (since
+  2026-10-09). pi-post stamps a message from the Familiar's parent as
+  "from your summoner": scope changes and recoverable git steps in the
+  Familiar's own worktree need no user round-trip.
+  Push, merge, deploys, DB writes and publishes still do (global AGENTS.md
+  destructive guard). Trigger: fam-audit-labels took the Summoner's word
+  for a local amend, then blocked on a local rebase. The parent is the
+  address `summon-familiar.sh` passes in `PI_POST_PARENT`; pi-post
+  records it once in the session file, matches it against the sender
+  address, never `reply_to`, and does not pass it to the Familiar's own
+  children (pi-post#9, v0.9.0). Until 2026-11-11 a SUMMONER AUTHORITY
+  prompt footer matched the bracketed sender address instead. Without a
+  parent binding every message gets the no-authority stamp, so the rule
+  fails closed.
+- **Dispatched Familiars get their own named window** (`fam-<issue>`),
+  symmetric with golem watch windows: `summon-familiar.sh -W fam-<issue>`
+  (see Vessels above; startup is verified either way). The window name is
+  the in-flight signal -- kill it on merge along with the worktree. Add
+  `-S <epic-or-issue>` when the work belongs to a stream other than the
+  summoner's own, so the Rex sidebar shows the stream under the tab. A
+  split pane in the summoner's own window remains fine for a quick
+  same-project helper that dies with the conversation.
+- **Any file-touching construct gets worktree isolation by default** --
+  in-band Familiars AND top-level sessions (Summoners included). Two
+  constructs in one checkout yank branches out from under each other
+  (observed 2026-08-06: a sibling session's `reset --hard` in ~/dev/gtm
+  wiped another session's uncommitted work mid-build). Before editing in a
+  main checkout, check the panes for other live sessions in that repo; when
+  in doubt, branch into `~/dev/<repo>-worktrees/<issue>`.
+- **The Summoner's own tool commands are the leak, not just constructs.**
+  Three times on 2026-09-03 a summoner command landed in the shared
+  `~/dev/gtm` checkout while every construct was correctly isolated:
+  `git stash` / `stash pop` around an inspection popped another session's
+  entry (`refs/stash` is one ref for ALL worktrees of a repo, so a no-op
+  stash followed by a pop takes whatever is on top); the same pair a second
+  time in an anvil worktree; and a `cd <worktree> &&`-less multi-line
+  command whose `cd` failed, so `prettier --write` ran on `main`'s file.
+  Rules: never `git stash` in a repo with more than one worktree; inspect
+  other refs with `git show <ref>:<path>` or a throwaway
+  `git worktree add /tmp/x <ref>` (removed after), never `git checkout` in
+  the shared checkout; every multi-step bash tool call starts with
+  `cd <worktree> && ...` as one chain, so a failed `cd` stops the chain
+  instead of running the rest in the previous cwd.
+
+- **Privacy / deletion / redaction specs trip OpenAI moderation on luna.**
+  golem-3546 (2026-09-16, "purge call data, redact transcript text") had
+  every luna turn refused until the escalation clause moved it to fable;
+  the same spec ran clean on fable from the start (golem-3547). Bind
+  `-m fable` up front for any spec whose verbs are purge / delete / redact /
+  wipe personal data; the luna attempt is pure cost.
+
+- **Split repair specs before binding the strong rung.** The review-repair
+  loop (luna pilot -> review -> strong-rung `*-repair-spec`) works: week
+  37-38, 51 of 56 anvil runs passed, 39 on luna's first attempt, 12 rescued
+  by fable (the strong rung is opus-5.5 since 2026-09-22; the shape of the
+  rule is unchanged). Repair specs are luna-first like everything else;
+  the ladder reaches the strong rung on its own when luna cannot close the
+  findings.
+  The cost lives entirely in the rescues: every fable run above $10 (ten,
+  $10.88-$26.59, 8-29M cumulative ctx) was a repair spec carrying several
+  independent findings, and `arcade-221-completion` hit $26.59 at 28.7M
+  ctx. Rule: a repair spec carries at most two independent review
+  findings, or touches one app/package; more than that is two specs with
+  disjoint scopes (Legion rules apply). A luna attempt costs cents whether
+  or not it passes (68% rung-0 pass rate over 63 runs), so the split is
+  free; a strong-rung golem past ~10M cumulative ctx in `anvil status` is
+  the spec's fault, not the model's.
+
+- **A gate must be satisfiable inside `--scope`, against the fork SHA.**
+  golem-14121 (2026-09-03) had `--scope apps/dse-platform/**` and a
+  `comment-lint --all` gate; `main` had grown two stale paths in
+  `apps/athena` between the summoner's zero-findings check and the fork, so
+  the only way to green was to edit out of scope, and anvil voided a
+  correct run. Same day, a `git diff --name-only <fork> | xargs prettier
+  --check` gate fed moved `.png` files to prettier, which errors on files
+  with no parser; the golem "fixed" `.prettierignore` (config drift to
+  satisfy a gate). Before dispatch: run every gate on the fork SHA itself
+  and confirm green; scope repo-wide lints to the changed files or the
+  scope; mirror CI's filters (quality.yml checks `*.ts *.tsx *.md` only).
+  A gate the golem satisfied by touching config or out-of-scope files is a
+  summoner bug, and the diff needs that part reverted before review.
+  Same lesson outside gtm, 2026-11-10: pi-post's `npm run check` is red
+  on this host at main (the SentinelOne argv kill on the oversize-body
+  test, see Host hazards), the spec did not say so, and the golem edited
+  `test/cli.test.ts` out of scope to get green; anvil voided a run whose
+  in-scope work was correct. Name known host-only failures in the spec, or
+  gate on the subset that can pass here.
+  The other half of the dry run: the gate must *fail cleanly* on the fork
+  SHA when the work is not done, not crash. Before anvil v0.5.0 a harness
+  crash (verify-script traceback, `gate.mjs` the spec expects the golem to
+  create, `.npmrc` env failures) was fed back as errors and escalated;
+  4-5 of the 19 luna->fable escalations in 2026-09 were this. Since v0.5.0
+  anvil runs the gate on the fork SHA before attempt 0 and voids the run if
+  it is inconclusive, and a non-zero exit that names the gate's own
+  program/script is classified inconclusive rather than fail (pass
+  `--gate-crash-pattern <re>` for gates it cannot see through). The
+  dry-run habit still stands: the classifier is narrow by design, and an
+  install failure (npm cooldown, see the `golem-anvil-46` first summon)
+  still exits before any record is written, invisible to `anvil-ledger`.
+
+- **A gate must pass on a clean run, not just fail on a dirty one.**
+  golem-3307 (2026-09-03) had a gate written as
+  `tsc --noEmit | grep -v validator | { ! grep -q error; }` under
+  `set -o pipefail`. On a clean tree `grep -v` emits nothing and exits 1,
+  pipefail propagates it, and the gate reads "failed" precisely when the
+  code is correct; the golem burned its retries chasing a phantom. Grep
+  pipelines are exit-code traps: `grep -v` fails on empty output, `grep -q`
+  fails on no match, `! cmd` inside a group does not un-fail the pipe.
+  Write gates as explicit counts (`n=$(tsc ... | grep -vc validator);
+  [ "$n" -eq 0 ]`) or a script that exits on a boolean it computed, run
+  the gate on the fork SHA before dispatch, and check it is green there,
+  not only that it goes red when you plant an error.
+
+- **Report-back targets are concrete addresses, never directory paths.**
+  The summon scripts inject the target (`s-...` from `PI_SESSION_ADDRESS`)
+  at dispatch; any hand-written brief follows the same rule. Observed
+  2026-08-20: fam-2651's brief said "send_message to ~/dev/gtm" -- 7 live
+  sessions registered there, the send bounced, delivery happened by luck
+  of initiative; fam-2649's brief omitted the mechanism entirely and
+  finished silently. Directory paths stay fine for *human-directed* sends
+  where the cwd is unique (worktrees); injected report-back never uses
+  them. Script-level injection is the guarantee -- briefs are habit.
+- **Push, not poll -- and the push is structural.** Familiar reports and
+  golem completion pings arrive as pi-post messages wired at summon time,
+  not by watching panes grind. A ping is a claim, not a review (see the
+  standing invariant). Prune anvil worktrees after merge; a stale worktree
+  is a false "in flight" signal.
+- **Check work in flight before summoning:** `anvil status` (golems),
+  `git worktree list` (sibling checkouts, incl. stale anvil dirs), and
+  `tmux list-panes -s -F '#{window_name}: #{pane_current_command}'`
+  (familiars + dev servers -- construct windows announce themselves by
+  name; `construct-term.sh list` covers tmux and Rex). The collisions that matter are semantic --
+  two agents on one issue, or two open DB migrations -- not visual.
+
+- **Hand-rolled golem gates on TS work include `tsc --noEmit`.** Explicit
+  `--verify` overrides anvil's auto-detection, and test+build alone has a
+  typecheck blind spot: vitest transpiles without checking, `next build`
+  skips test files. Moot per-repo once a `typecheck` script exists for
+  auto-detection to find (gtm: retired -- GTMENG-1994 closed, all apps gated).
+
+- **Gate commands run in the golem's login-shell env, not the summoner's
+  bash tool.** `CDPATH` is set there, so `cd` echoes the resolved path;
+  a `$(cd "$d" && cmd | grep -c x)` capture comes back as two lines and
+  `[ "$n" -le 2 ]` dies with "integer expression expected". Observed
+  2026-09-02 (golem-3251c): the gate was validated green in the summoner's
+  tool, burned all three attempts in the golem, and the golem correctly
+  diagnosed it and refused to touch the gate. Never `cd` inside a captured
+  substitution in a gate; pass paths to the tool (`tsc -p "$d/tsconfig.json"`)
+  or `unset CDPATH` first, as `scripts/verify-athena.sh` does. Validate
+  gates in a login shell (a new tmux or Rex window), not only in the bash tool.
+  Corollary: a gate the golem cannot satisfy is a summoner bug; read the
+  golem's diagnosis before re-dispatching.
+
+- **A golem gate for a shared package builds its consumers.** golem-3256
+  fixed `import('./utils')` to `import('./utils.js')` in
+  `packages/bounty-scoring` (correct for tsc under NodeNext, correct under
+  vitest) and the gate passed typecheck + lint + tests. gtm-workflows'
+  Turbopack build then failed: raw `.ts` consumer, no `.js` remap. Caught
+  by the Vercel review bot, not the gate. When a spec touches source (not
+  tests) in `packages/*`, add `pnpm --filter <consumer> build` for at least
+  one bundler consumer to `--verify`, or the golem is proving the wrong
+  thing.
+
+- **Scry by the variable the decision turns on, not the one at hand.**
+  GTMENG-3262 measured lint memory on the four apps with the most
+  warnings, found lead-web at 2.9 GB, and called it the outlier. Nine apps
+  set `parserOptions.project`; athena was 4.4 GB. Dropping the CI heap
+  override on that reading OOM-killed the next wide PR. The cheap fix was
+  `grep -l 'project:' **/eslint.config.mjs` before measuring anything. A
+  sample chosen for convenience answers a different question than the one
+  being asked.
