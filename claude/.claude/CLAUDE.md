@@ -50,7 +50,7 @@ voice-doc contents into public repos — the profile stays in
 
 Machine-local working area for session artifacts — specs, handoffs,
 reviews, run logs, exports. It is **ephemeral**: not project memory
-(that goes in repo docs) and not durable docs (those belong in repos or
+and not durable docs (those belong in repos or
 dotfiles).
 
 Layout:

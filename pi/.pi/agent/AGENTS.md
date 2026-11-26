@@ -80,7 +80,7 @@ profile stays in `~/private`.
 ## Scratch directory (`~/scratch`)
 
 Machine-local working area for session artifacts — specs, handoffs, reviews,
-run logs, exports. It is **ephemeral**: not project memory (that goes in repo docs)
+run logs, exports. It is **ephemeral**: not project memory
 and not durable docs (those belong in repos or dotfiles).
 
 Layout:
