@@ -7,15 +7,13 @@ extend these.
 
 ## Session memory
 
-Durable project knowledge goes in the repo's `AGENTS.md` or its docs.
-To continue earlier work, the user resumes that session (`/resume`).
+Durable project knowledge goes in the repo's `AGENTS.md` or its docs;
+work state goes in Linear issues and handoff files in `~/scratch`. To
+continue earlier work, the user resumes that session (`/resume`).
 
-`<project>/.bonfire/index.md`, where it exists, is a log that the
-Bonfire adapters write: the last session's state and a list of recent
-sessions. In a repo with parallel sessions, it usually describes some
-other task. Do not read it at session start. Read it when the user asks
-what was going on, or when you take over work from another session or
-harness. Adapter install and pins: `~/.dotfiles/docs/agent-packages.md`.
+Bonfire is retired (2026-11-26). An old `.bonfire/` folder in a repo is
+frozen local data: its `index.md` is the last state of some old session,
+so do not read it at session start or treat it as current.
 
 ## Closing a session
 
@@ -274,7 +272,7 @@ waiter or `remind`; do not ask the user to tell you when it happens).
 ## Timestamps
 
 Report times to the user in the system's local time zone (what `date`
-prints), not raw UTC ISO strings. Session files and bonfire entries store UTC internally -- convert
+prints), not raw UTC ISO strings. Session files store UTC internally -- convert
 before quoting them.
 
 ## Shell behavior

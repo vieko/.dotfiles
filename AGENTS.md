@@ -4,16 +4,6 @@ Canonical guidance for any coding agent (Claude Code, Pi, Codex, ...) working in
 this repository. `CLAUDE.md` is a symlink to this file, so both filenames
 resolve to identical content; edit only `AGENTS.md`.
 
-## Session Context
-
-`.bonfire/index.md` is a log of the last session, not current state: read it
-only when you take over earlier work (global `AGENTS.md`, "Session memory").
-The adapters write it; there are no commands to run. Pi loads the adapter from the
-`packages` pin in `pi/.pi/agent/settings.base.json` (PHYREXIA swaps the pin for
-`~/dev/bonfire` via `hosts/packages.phyrexia.json`); Claude Code runs it from
-a `Stop` hook in `claude/.claude/settings.base.json`; other agents use
-`/skill:bonfire end` explicitly. Install detail: `docs/agent-packages.md`.
-
 ## Dotfiles Management
 
 ### Commands
@@ -46,8 +36,8 @@ Rules that apply on every edit. Layout, rationale, and bootstrap steps are in
   `~/.pi/agent/settings.json` by hand: change `settings.base.json` or a
   `hosts/*.json` fragment, then run `pi/.pi/agent/setup-pi.sh`.
 - **`agents/`** stows to `~/.agents/` and is the single source of truth for
-  cross-agent skills. `bonfire` and `anvil` are gitignored symlinks into
-  `~/dev`; regenerate them with `agents/.agents/setup-skill-symlinks.sh`.
+  cross-agent skills. `anvil` is a gitignored symlink into
+  `~/dev`; regenerate it with `agents/.agents/setup-skill-symlinks.sh`.
   After editing `agents/.agents/verbs.json`, run
   `node agents/.agents/scripts/sync-verbs.mjs`, commit
   `claude/.claude/settings.base.json` with it, and rerun

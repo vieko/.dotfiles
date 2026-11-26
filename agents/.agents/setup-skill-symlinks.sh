@@ -24,5 +24,4 @@ link() {
 }
 
 echo "Linking dev-repo skills in $SKILLS_DIR:"
-link bonfire "dev/bonfire/skills/bonfire"
 link anvil   "dev/anvil/packages/cli/skills/anvil"

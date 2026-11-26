@@ -20,7 +20,7 @@ from the current version down to, not including, the previous one. Follow the
 - `keybindings.json`, `CHEATSHEET.md`, `~/.dotfiles/docs/keybindings-card.md`
 - `extensions/*.ts` (extension API changes; check the types they import)
 - `prompts/*.md`
-- our pi packages (bonfire, pi-prose, pi-post, pi-counsel, pi-redact,
+- our pi packages (pi-prose, pi-post, pi-counsel, pi-redact,
   sigil) and anvil, which pins its own pi SDK (see **Packages** below;
   fixes there go upstream, not into dotfiles)
 - model names outside `models.json`: the aliases in

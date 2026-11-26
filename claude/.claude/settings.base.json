@@ -81,7 +81,6 @@
       "WebFetch(domain:cal.com)",
       "WebFetch(domain:ai-sdk.dev)",
       "WebFetch(domain:neon.com)",
-      "Skill(bonfire)",
       "Skill(agent-browser)",
       "Skill(linear-cli)"
     ],
@@ -120,14 +119,6 @@
           {
             "type": "command",
             "command": "$HOME/.agents/sounds/play-random.sh yes"
-          }
-        ]
-      },
-      {
-        "hooks": [
-          {
-            "type": "command",
-            "command": "node $HOME/dev/bonfire/claude/update-bonfire.mjs"
           }
         ]
       }

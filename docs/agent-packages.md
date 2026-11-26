@@ -42,14 +42,13 @@ An optional `hosts/packages.<host>.json` lists local dev checkouts loaded as pi
 packages (e.g. `"../../dev/sigil"`, relative to `~/.pi/agent`, so it only
 resolves where the clone exists). A path replaces the shared pin with the same
 package name in place (`../../dev/pi-redact` replaces `npm:@vieko/pi-redact@…`);
-paths without a pin are appended. PHYREXIA lists all six packages (bonfire,
-pi-prose, pi-post, pi-counsel, pi-redact, sigil), so it runs the `~/dev`
+paths without a pin are appended. PHYREXIA lists all five packages (pi-prose, pi-post, pi-counsel, pi-redact, sigil), so it runs the `~/dev`
 working copies and needs no install after a release; other hosts keep the
 pins. Without the file, a dev path added to the live file is dropped on the
 next `setup-pi.sh` run.
 
 **pi-prose** (`~/dev/pi-prose`, published as `pi-prose` on npm, pinned via
-the `packages` array) follows the same pattern as the bonfire adapter: pinned
+the `packages` array) follows the same pattern as the other packages: pinned
 hosts run the release, PHYREXIA runs the checkout. Footgun: the package and a
 local copy cannot load simultaneously -- both register the `--style` flag, and
 flag collisions fail the extension load. The in-place replacement above keeps
@@ -79,10 +78,9 @@ is one token with no spaces inside:
 
 - `name:value`, with a six-letter lowercase name (`styles`, `redact`,
   `remind`, `boards`, `follow`) so the line reads evenly; pick words that
-  read without knowing the extension. Bonfire is the one seven-letter
-  name (`bonfire:today`).
+  read without knowing the extension.
 - `dim` at rest. `warning` only when the user must act, with `!` after the
-  value (`remind:1!`, `boards:status!`, `follow:#3146!`, `bonfire:init!`);
+  value (`remind:1!`, `boards:status!`, `follow:#3146!`);
   put the detail in a one-time notify, not the footer. Use semantic theme
   colors only; literal names throw on themes that lack them.
 - Clear the status (`undefined`) when there is nothing to say.
@@ -92,14 +90,13 @@ is one token with no spaces inside:
 
 | Item | Source | Value |
 |---|---|---|
-| `bonfire:` | bonfire | breadcrumb age; `init!`, `fences!`, `7d!` stale in-flight, `compact?` nudge, `+IS`/`+F` writes |
 | `styles:` | pi-prose | active output style |
 | `redact:` | pi-redact | distinct values kept out of the transcript |
 | `remind:` | `extensions/reminders.ts` (also the agent's `remind` tool) | pending reminders; `N!` when one fired and is open |
 | `boards:` | sigil (`integrations/pi/boards.ts`) | `<sketch board>+status`, each part a link to its canvas; `!` when an observer run failed; `/sigil` lists the URLs |
 | `follow:` | `extensions/waits.ts` | detached host `pr-wait.sh` or gtm `pr-wait`/`deploy-wait --notify` runs (`#N`, `deploy#N`, `deploy@main`, or a count); `!` when one exited without a delivered message (`/waits` shows its log) |
 
-Example: `bonfire:today styles:ste redact:1 remind:2 boards:gtm+status follow:#3146`.
+Example: `styles:ste redact:1 remind:2 boards:gtm+status follow:#3146`.
 `tmux-status.ts` writes tmux, not the footer. `turn-clock.ts` prints its
 "done 15:30 · 13s" line in the chat, not the footer.
 
@@ -159,14 +156,13 @@ conditions, timeouts, notification transports, hooks, and exit codes.
 cross-agent shared skills. Stows to `~/.agents/`. Single source
 of truth for skills that any agent (Pi, Claude, Codex) should see.
 
-Some skills are symlinks to dev repos:
-- `~/.agents/skills/bonfire` → `~/dev/bonfire/skills/bonfire`
+One skill is a symlink to a dev repo:
 - `~/.agents/skills/anvil` → `~/dev/anvil/packages/cli/skills/anvil`
 
-These point into machine-local `~/dev` clones, so their absolute target differs
+It points into a machine-local `~/dev` clones, so their absolute target differs
 per OS (`/Users/...` on macOS, `/home/...` on Linux) — a single committed symlink
-can't be right for both. They are **gitignored and regenerated per machine**: on a
-fresh machine, clone the dev repos (`~/dev/bonfire`, `~/dev/anvil`), then run
+can't be right for both. It is **gitignored and regenerated per machine**: on a
+fresh machine, clone `~/dev/anvil`, then run
 `agents/.agents/setup-skill-symlinks.sh` after stowing `agents/`. Other skills are
 self-contained directories.
 
@@ -179,24 +175,14 @@ every host gets it, and it ends in `|| true`, so it does nothing where `rex`
 is missing. `rex skill status` shows what is
 installed, `rex skill remove` undoes it.
 
-(Lineage notes for retired names — forge, old bonfire commands — live in
+(Lineage notes for retired names — forge, bonfire — live in
 `docs/agent-maintenance.md`.)
 
-## Bonfire adapter installation
+## Bonfire (retired 2026-11-26)
 
-The Pi adapter is a package entry in `pi/.pi/agent/settings.base.json`
-(`packages: ["git:github.com/vieko/bonfire@vX.Y.Z"]`). On a fresh pinned
-machine, run `setup-pi.sh`, then `pi update --extensions` to materialize it.
-Pi clones to `~/.pi/agent/git/github.com/vieko/bonfire/`, and the root
-`package.json` manifest points at `./pi/extension.ts`. PHYREXIA loads
-`~/dev/bonfire` instead (`hosts/packages.phyrexia.json`), so it needs only the
-clone.
-
-The Claude Code adapter is wired via a `Stop` hook entry in
-`claude/.claude/settings.base.json` pointing to
-`$HOME/dev/bonfire/claude/update-bonfire.mjs`. This requires
-`~/dev/bonfire/` cloned (see the deploy checklist); the `$HOME`-relative path
-is portable across macOS and Linux, so no per-OS editing is needed.
+The Pi package, the Claude Code `Stop` hook and the skill symlink are
+removed. Old `.bonfire/` folders stay on disk as frozen local data. Why:
+`docs/agent-maintenance.md`, "History & lineage".
 
 ## Skill layout convention
 
@@ -302,16 +288,14 @@ Status (2026-09-26): OpenCode is a **bounded trial**, not a Summoner runtime.
 Use it for fresh-start, single-sitting work (cross-family second reads,
 one-shot reviews, `opencode run` in scripts, harness A/Bs against Pi); Pi
 remains the Summoner and constructs stay Pi/Anvil. Known gaps, investigated
-and deliberately not built yet: no Bonfire adapter (nothing native writes
-portable project memory; run `/skill:bonfire end` before closing a session in
-an opted-in repo), no pi-post bridge (the server has per-session inboxes with
+and deliberately not built yet: no pi-post bridge (the server has per-session inboxes with
 steer/queue delivery, but no addresses, registry, offline queue, or path to
 Pi/anvil senders, so `summon-golem.sh` refuses to dispatch from an OpenCode
 pane without `-R`), and no pi-prose (agent `system` replaces the base prompt
 rather than appending, so the native half-measure is not worth configuring).
-All three are buildable on the V2 plugin API (`@opencode/plugin`: `context` /
+Both are buildable on the V2 plugin API (`@opencode/plugin`: `context` /
 `compaction` hooks, `session.prompt` steer, `command.transform`). Build
-trigger: OpenCode earns a standing weekly role. Build order if so: pi-post
-bridge, then Bonfire adapter; skip pi-prose. If the trial shows nothing Pi
+trigger: OpenCode earns a standing weekly role. Build the pi-post
+bridge if so; skip pi-prose. If the trial shows nothing Pi
 lacks, keep this package as maintained config and stop.
 

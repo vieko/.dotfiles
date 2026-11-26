@@ -14,7 +14,7 @@
 #
 # Targets: ~/.dotfiles/pi/.pi/agent/extensions/*.ts, then each repo in
 # PI_TYPECHECK_REPOS (space-separated; default: the ~/dev checkouts of
-# bonfire/pi pi-prose pi-post pi-counsel pi-redact sigil anvil that exist).
+# pi-prose pi-post pi-counsel pi-redact sigil anvil that exist).
 #
 # Catalog: vercel-ai-gateway model ids added or removed since the previous
 # release on disk, and every gateway id we name (models.json overrides,
@@ -37,7 +37,7 @@ repos=()
 if [[ -n "${PI_TYPECHECK_REPOS:-}" ]]; then
   read -r -a repos <<<"$PI_TYPECHECK_REPOS"
 else
-  for r in bonfire/pi pi-prose pi-post pi-counsel pi-redact sigil anvil; do
+  for r in pi-prose pi-post pi-counsel pi-redact sigil anvil; do
     [[ -f "$dev/$r/tsconfig.json" ]] && repos+=("$dev/$r")
   done
 fi

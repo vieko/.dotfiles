@@ -51,11 +51,12 @@ For any commit whose value isn't obvious from the subject line, read the body --
 `git show <hash> --stat` and the commit message often carry the *why* and the metrics
 (eval deltas, cost numbers, FP rates) that make a bullet land.
 
-Then read `<repo>/.bonfire/index.md`. This is where the epic narrative lives -- which
-measurement windows opened/closed, which flags flipped, what's blocked, what's queued
-next. The git log tells you *what merged*; bonfire tells you *what it means for the
-epic* and feeds the summary and What's next. If the repo has no `.bonfire/`, ask the
-user for the epic state instead.
+Then get the epic narrative -- which measurement windows opened/closed, which flags
+flipped, what's blocked, what's queued next -- from the Lead Agent Linear project (its
+latest project update, started and blocked issues, and their recent comments) and
+from specs in `~/scratch`. The git log tells you *what merged*; this tells you *what it
+means for the epic* and feeds the summary and What's next. Ask the user for anything
+the epic state needs that neither source shows.
 
 ### 2. Compose
 
@@ -113,18 +114,18 @@ number is the point. One dry aside per report is the ceiling.
 an italic 2-3 sentence intro and themed section taglines can help. Do not add them to
 the default compact project-update format.
 
-**What's next:** include the genuine next priorities pulled from bonfire's "In flight" /
-"Next Steps" / blocked items. Three is a useful default, not a hard limit; include a
+**What's next:** include the genuine next priorities pulled from started, blocked and
+next-up Linear issues and the scoping specs. Three is a useful default, not a hard limit; include a
 fourth when it is a real user priority. Lead with the outcome and name gating
 dependencies honestly.
 
 ## Output
 
-Write the finished report to `<repo>/.bonfire/drafts/lead-agent-this-week.md` so it's a
-reviewable artifact in the gitignored drafts area, then offer the clipboard one-liner:
+Write the finished report to `~/scratch/lead-agent-this-week-notes.md` so it's a
+reviewable artifact, then offer the clipboard one-liner:
 
 ```bash
-pbcopy < <repo>/.bonfire/drafts/lead-agent-this-week.md
+pbcopy < ~/scratch/lead-agent-this-week-notes.md
 ```
 
 Present the raw mrkdwn in the reply too, so the user can eyeball it before pasting.

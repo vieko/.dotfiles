@@ -65,8 +65,9 @@ For any commit whose value isn't obvious from the subject line, read the PR body
 `gh pr view <n> --json body -q .body` — it usually carries the *why* and the numbers
 (precision rates, coverage, user anecdotes) that make a bullet land.
 
-Then read `<repo>/.bonfire/index.md` for the project narrative — what flipped live,
-what's blocked, what's queued. Scoping specs in `~/scratch` (e.g. encryption scope)
+Then get the project narrative — what flipped live, what's blocked, what's queued —
+from the Index Linear project (latest project update, started and blocked issues,
+recent comments). Scoping specs in `~/scratch` (e.g. encryption scope)
 are a legitimate What's-next source; flag them as inferred and confirm with the user.
 
 ### 2. Compose
@@ -112,16 +113,16 @@ experience more dependable"). The reader counts outcomes, not commits.
 Don't attribute bullets to individuals.
 
 **What's next:** three bullets, outcome-first, honest about gating dependencies.
-Pull from bonfire, scoping specs, and stated PR out-of-scope notes; confirm inferred
+Pull from Linear, scoping specs, and stated PR out-of-scope notes; confirm inferred
 items with the user before treating them as priorities.
 
 ## Output
 
-Write the finished report to `<repo>/.bonfire/drafts/index-this-week.md` so it's a
-reviewable artifact in the gitignored drafts area, then offer the clipboard one-liner:
+Write the finished report to `~/scratch/index-this-week-notes.md` so it's a
+reviewable artifact, then offer the clipboard one-liner:
 
 ```bash
-pbcopy < <repo>/.bonfire/drafts/index-this-week.md
+pbcopy < ~/scratch/index-this-week-notes.md
 ```
 
 Present the raw mrkdwn in the reply too, so the user can eyeball it before pasting.

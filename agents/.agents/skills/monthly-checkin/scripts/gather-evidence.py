@@ -328,11 +328,8 @@ def main() -> int:
         for item in sorted(issues, key=lambda item: item["completedAt"])
     ]
 
-    project_memory = repo / ".bonfire" / "index.md"
     memory_note = (
-        f"Read `{project_memory}` and extract only in-window rollout state, measurements, reversals, incidents, and collaboration context."
-        if project_memory.exists()
-        else "No project-memory index found; ask for rollout and production context."
+        "Get in-window rollout state, measurements, reversals, incidents, and collaboration context from Linear project updates, PR bodies, and repo docs; ask for what they do not show."
     )
 
     person_name = config["person_name"]

@@ -54,8 +54,8 @@ thing>". Then the sections below.
    comment with what happened. Only if Linear was in play.
 10. **Carry-forward.** Only if work remains. Three to six lines a fresh
     session would need: the goal, where it stands, the next concrete step,
-    the trap to avoid, the map's canvas link if one exists. Bonfire writes
-    its own summary on shutdown; this is the version in my words.
+    the trap to avoid, the map's canvas link if one exists. Put it in the
+    Linear issue or the handoff file, not only in this reply.
 
 **Report** in that order, skipping empty sections with one "none" line. End
 with lettered options, recommended one marked:

@@ -48,9 +48,9 @@ profile):
    when `$LINEAR_API_KEY` is set; fall back to raw GraphQL via curl against
    `https://api.linear.app/graphql` (get the user id from
    `{ viewer { id } }` first).
-3. **Project memory** (`.bonfire/index.md` in the active repo): rollout
-   state, what shipped vs what is gated, lessons learned (evals, soaks,
-   reversals).
+3. **Project docs and specs** (repo docs, `~/scratch` specs and
+   assessments): rollout state, what shipped vs what is gated, lessons
+   learned (evals, soaks, reversals).
 4. **Codebase pulse**: recent git log for the user, reports and assessments
    committed under docs.
 
@@ -102,8 +102,8 @@ file and the private edit-pattern notes before drafting the next one.
 
 ## Future-project spin-offs
 
-When a goal names a net-new project, write a kickoff spec into the repo's
-project memory (e.g. `.bonfire/specs/<project>.md`) covering: the goal as
+When a goal names a net-new project, write a kickoff spec
+(`~/scratch/<project>-kickoff-spec.md`, or a Linear project description) covering: the goal as
 posted, why it is a separate project, shipped prerequisites, first moves,
-and open questions. Reference it from the project-memory index so a future
-session lands on it without archaeology.
+and open questions. Link it from the Linear project so a future session
+lands on it without archaeology.

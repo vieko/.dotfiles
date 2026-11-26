@@ -100,7 +100,7 @@ update both. Verify with a `-ne` probe that logs `ctx.model` on
 `session_start` using `--provider vercel-ai-gateway --model <id>` (without
 `--provider`, `anthropic/<id>` resolves the provider prefix, not the gateway).
 
-## Updating pinned git packages in Pi (pi-post, bonfire)
+## Updating pinned git packages in Pi (pi-post)
 
 Applies to hosts that run the pins. PHYREXIA loads the `~/dev` checkouts
 instead (see "Pi packages run from `~/dev` on PHYREXIA" below) and skips this.
@@ -127,8 +127,7 @@ Pi packages pinned via the `packages` array in `~/.pi/agent/settings.json`
    start; only sessions started after the reconcile get the new version.
 
 Release procedure for pi-post itself (bump, tag, npm publish via OIDC) is in
-the repo: `~/dev/pi-post/docs/releasing.md`. Same pin-bump rules apply to the
-bonfire adapter (see `~/.pi/agent/AGENTS.md`).
+the repo: `~/dev/pi-post/docs/releasing.md`.
 
 ## Pi MCP servers (`~/.pi/agent/mcp.json`, machine-local)
 
@@ -246,7 +245,7 @@ shell or `setup-pi.sh` run.
 ## Pi packages run from `~/dev` on PHYREXIA
 
 `pi/.pi/agent/hosts/packages.phyrexia.json` replaces every shared pin
-(bonfire, pi-prose, pi-post, pi-counsel, pi-redact) with its `~/dev`
+(pi-prose, pi-post, pi-counsel, pi-redact) with its `~/dev`
 checkout, plus sigil, so this machine runs the working copies. Consequences,
 the same as for anvil below:
 
@@ -289,7 +288,7 @@ No build, no reinstall, no version skew. Consequences:
 - **Keep `~/dev/anvil` on `main`.** File-touching anvil work goes in
   `~/dev/anvil-worktrees/<branch>` like any other repo; a WIP branch checked
   out in `~/dev/anvil` is what every golem on the machine runs.
-- The pi packages (bonfire, pi-prose, pi-post, pi-counsel, pi-redact) load
+- The pi packages (pi-prose, pi-post, pi-counsel, pi-redact) load
   through pi's `packages` array: from `~/dev` on PHYREXIA (see "Pi packages
   run from `~/dev` on PHYREXIA" above), as pinned releases elsewhere, where a
   release plus pin bump is the update path.
@@ -540,6 +539,11 @@ Override the port with `PG_TEST_PORT` and the directory with `PG_TEST_DIR`.
 Context for names that appear in old sessions, bonfire entries, or scratch
 notes. None of this shapes current behavior.
 
+- **Bonfire retired 2026-11-26.** Its log (`.bonfire/index.md`) was the last
+  session's state; in repos with parallel sessions it described another
+  task, and `/resume` gives continuity with the full session. Durable notes
+  moved to docs and Linear; old `.bonfire/` folders are frozen local data.
+  Assessment: `~/scratch/workflow-latest-models-assessment.md`.
 - **bonfire 7.0 removed `/skill:bonfire start` and `/skill:bonfire handoff`.**
   `start` was redundant: cwd discovery already loads `.bonfire/index.md`.
   Handoff is better served by Pi's first-party `handoff` extension, by
