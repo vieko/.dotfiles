@@ -473,10 +473,10 @@ and `anvilRefresh` is recorded in the manifest, the handoff result, and the
 completion ping. A failed refresh is exit 4 before dispatch. An anvil
 release therefore never forces a snapshot rebuild. An exit 4
 ping quotes the controller's refusal line.
-**The first dispatch using each new snapshot requires explicit spend
-approval**, even if it is a dry-looking validation run. IDs must refer to an
-already-existing approved snapshot, team, and project. Do not use this lane to
-probe Vercel or create resources without that approval.
+Spend needs no approval per dispatch or per snapshot build since
+2026-11-27 (a $10K monthly budget, PHYREXIA.md "Sandbox lane"). IDs must
+still refer to the existing team and project: do not use this lane to
+create Vercel projects or other resources.
 
 The setup firewall is deny-by-default except for gateway access and the two
 GitHub upload-pack matchers that attach the minted credential for the one

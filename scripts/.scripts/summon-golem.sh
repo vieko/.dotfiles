@@ -137,7 +137,7 @@ alias_ok "$vessel" || { echo "error: unknown vessel alias: $vessel (anvil aliase
 case "$vessel" in
     fable|opus)
         if [[ -z "$reason" ]]; then
-            echo "nag: $vessel golem with no -r reason -- luna is the base, and the ladder reaches opus on its own." >&2
+            echo "nag: $vessel golem with no -r reason -- luna is the base, and the ladder reaches fable on its own." >&2
             echo "     A purge/delete/redact spec is a reason (-r moderation). Name any other with -r; it goes in summons.log." >&2
         fi
         ;;

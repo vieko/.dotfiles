@@ -15,7 +15,7 @@
 # Usage:
 #   summon-familiar.sh [-m alias] [-P] [-n] [-R] [-C] [-B board] [-w name] [-W name [-S stream]] <brief-path> [prompt override]
 #
-#   -m alias   vessel: haiku|sol|sonnet|opus|fable|luna|astra (default: sol),
+#   -m alias   vessel: haiku|sol|sonnet|opus|fable|luna|astra (default: fable),
 #              or a raw gateway id with an explicit effort when the alias's
 #              default level is not what the summoning wants, e.g.
 #              openai/gpt-6.2-astra:xhigh (astra's ceiling; the alias binds :high)
@@ -101,7 +101,10 @@ alias_to_model() {
 # and clean in review, but 2 of 92 edit calls lost the newText key, and the
 # rule fixed before the trial needed 0. Default back to sol, alias dropped;
 # a raw `openai/gpt-6.1-terra:high` still passes through for a one-off.
-vessel="sol"
+# Default fable since 2026-11-27 (quality first, PHYREXIA.md Vessels): a
+# familiar has a brief and no gate, so the model's judgment is its quality.
+# The fable/opus escalation nag went with it.
+vessel="fable"
 print_mode=0
 dry_run=0
 no_report=0
@@ -192,18 +195,6 @@ if [[ "$brief_abs" == *-spec.md ]]; then
 fi
 
 model="$(alias_to_model "$vessel")" || { echo "error: unknown vessel alias: $vessel" >&2; exit 2; }
-
-# Escalation nag (2026-08-30 audit): ~11 of 14 script-summoned familiars
-# over three weeks ran -m fable, inverting the worker-tier default in
-# practice. The nag is friction at the moment of decision, not a gate --
-# PHYREXIA.md Vessels has the escalation test (brief tight enough to
-# delegate with a verify gate == worker-tier (sol) work by definition).
-case "$vessel" in
-    fable|opus)
-        echo "nag: $vessel familiar -- escalation needs a named reason (governance, prod-impact," >&2
-        echo "     ambiguous spec); a tight brief with a verify gate is sol work. PHYREXIA.md Vessels." >&2
-        ;;
-esac
 
 # Warn if the model id (effort suffix stripped) is not in pi's catalog for
 # this provider. Checks existence, not the picker: enabledModels.<host>.json
