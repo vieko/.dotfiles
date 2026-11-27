@@ -28,6 +28,7 @@ const { QUEUE_PREFIX, sandbox } = await import('durable-harness');
 const { pi, createCodingTools } = await import('durable-harness/pi');
 const { sandboxName } = await import('durable-harness/sandbox');
 const { Sandbox } = await import('@vercel/sandbox');
+const { getVercelOidcToken } = await import('@vercel/oidc');
 const { createModels } = await import('@earendil-works/pi-ai');
 const { vercelAIGatewayProvider } = await import('@earendil-works/pi-ai/providers/vercel-ai-gateway');
 
@@ -209,6 +210,12 @@ async function startFamiliar(req) {
   if (store.get(name)) { log(`refused request ${name}: a familiar with that name exists`); return; }
   if (req.model && parseModelSpec(req.model).id !== main.model.id) {
     store.put({ name, repo: req.repo, status: 'failed', error: `this driver runs ${main.spec}; restart it with REMOTE_FAMILIAR_MODEL=${req.model}`, startedAt: Date.now() });
+    return;
+  }
+  // Without an OIDC token every VM call fails as "not run"; refuse the familiar instead of starting it blind.
+  try { await getVercelOidcToken(); } catch (e) {
+    store.put({ name, repo: req.repo, status: 'failed', error: `no Vercel OIDC token on the driver: ${String(e?.message ?? e).slice(0, 300)}`, startedAt: Date.now() });
+    log(`refused ${name}: no Vercel OIDC token`);
     return;
   }
   store.put({ name, repo: req.repo, brief: req.brief, summoner: req.summoner, model: main.spec, status: 'starting', startedAt: Date.now() });
