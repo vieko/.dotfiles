@@ -43,7 +43,7 @@ import { appendFileSync, readdirSync, readFileSync } from "node:fs";
 import { homedir } from "node:os";
 import { basename, join } from "node:path";
 import type { ExtensionAPI, ExtensionContext } from "@earendil-works/pi-coding-agent";
-import { parseMenu } from "./menu-shadow.ts";
+import { parseMenu } from "./question-status.ts";
 
 // ---------------------------------------------------------------- instant name
 

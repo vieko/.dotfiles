@@ -201,16 +201,12 @@ measure.
   does not move, the rule is prose nobody reads at dispatch and the next
   lever is a prompt in `summon-familiar.sh` ("does this brief expect a
   decision?").
-- **Needs-you view**: closed 2026-11-15 without a new view. Rex Activity
-  (set up 11-14) is the list, and `question-status.ts` reports a turn
-  that ends on a lettered menu as `blocked`, so it shows there. At week
-  47, compare the menu-shadow wait p90 before and after 11-15 (to 11-15:
-  7,067 s, n=28). If it stays above ~15 min, propose the Rex Lua phone
-  push for `blocked` questions; otherwise drop the item. Week 47: p90
-  1,364 s (22.7 min, n=97) after 2400c8b, so the push criterion is met.
-  Held 2026-11-20: the Rex iOS alpha is due soon and may carry push
-  natively. At week 48, check the Rex iOS changelog first; build the
-  ntfy Lua script only if the alpha has no push for `blocked`.
+- **Needs-you view and phone push**: closed 2026-11-27 (week 48). Rex
+  Activity is the list; `question-status.ts` reports a turn that ends on
+  a lettered menu as `blocked`. Menu wait p90 fell from 22.7 min (week
+  47) to 11.1 min (week 48, n=63), under the 15 min line, and Rex iOS
+  0.1.1 has no push (iOS push is `accepted` in Rex feedback). No ntfy
+  script. Reopen only if Rex ships iOS push for `blocked`.
 - **Fable seat** (agreed 2026-11-09): the Summoner stays on opus and
   reaches fable through counsel. Report any session switched to fable
   with its $/ut and whether the work was architecture or review.
@@ -224,24 +220,10 @@ measure.
   allowlist candidate, `uuid` first. The allowlist is the second half of
   pi-redact#6 and is not built.
 
-- **Menu shadow** (started 2026-11-11; first entry 11-12 09:40 MT, since
-  only processes started after the install load it): `menu-shadow.ts` logs, for each
-  reply to a lettered menu with a marked recommendation, what a live
-  "proceed" nudge would have done (`proceed` when the recommended option
-  names no gated action, else `ask`) and what the user did (`rec`,
-  `rec-plus`, `other`, `free`). Nothing is shown and no prompt text
-  changes. Replay of 2026-10-11..11-03 with the same code: 60 `proceed`
-  verdicts; rec 57%, rec-plus 17%, free 23%, other 3%. Criteria, fixed
-  before the data, at the first audit with 40 or more `proceed` entries:
-  build the live nudge if `free` + `other` is 15% or less of them; drop
-  the extension and the proposal if it is above 25%; in between, extend
-  once by 40 and then drop. Report the "Menu shadow" section, not the
-  one-token rate below. Closed 2026-11-20 (week 47): 41 `proceed`,
-  free + other 39% (about 32% after reading the replies: real
-  redirects such as "check with counsel first"). The live nudge is
-  dropped. The extension keeps logging only for its `waitMs`, which the
-  phone push decision reads; remove `menu-shadow.ts` once that is
-  decided, and do not propose the nudge again.
+- **Menu shadow**: closed 2026-11-20 (week 47); `menu-shadow.ts` removed
+  2026-11-27. 41 `proceed` verdicts, free + other 39% against a 25% drop
+  line: a live "proceed" nudge would often go against the reply. Do not
+  propose the nudge again.
 
 - **One-token decisions**: closed 2026-11-09. 16-23% of user turns
   across weeks 39-45; the 10-11 rule and the 11-01 end-of-step sentence

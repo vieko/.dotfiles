@@ -12,15 +12,36 @@
  * run, on a session switch and on shutdown; terminals also drop `blocked`
  * records when the process exits.
  *
- * The menu parser is menu-shadow's (the one behind the 2026-11-03 menu
- * baseline). The row text names the options and the recommended one, never
+ * The menu parser is the one behind the 2026-11-03 menu baseline;
+ * tab-title imports it from here. The row text names the options and the recommended one, never
  * the reply. `PI_QUESTION_STATUS=off` turns it off.
  *
  * Spec: https://www.superlogical.com/rex/docs/build/program-status
  */
 
 import type { ExtensionAPI, ExtensionContext } from "@earendil-works/pi-coding-agent";
-import { type Menu, parseMenu } from "./menu-shadow.ts";
+
+export type Menu = { letters: string[]; options: Record<string, string>; rec: string | null };
+
+// Option line: "- **a)** ...", "a) ...", "(a) ...", "- (b) ...", "**(c)** ..."
+const OPTION = /^\s*(?:[-*]\s+)?\**\(?([a-h])\)\**[.:]?\s+(.+)$/;
+
+/** The lettered menu in the tail of an assistant message, or null. */
+export function parseMenu(text: string): Menu | null {
+	const found: Record<string, string> = {};
+	for (const line of text.slice(-4000).split("\n")) {
+		const m = OPTION.exec(line);
+		if (m && !found[m[1]!]) found[m[1]!] = m[2]!.trim();
+	}
+	if (!found.a || !found.b) return null;
+	const letters: string[] = [];
+	for (const l of "abcdefgh") {
+		if (found[l]) letters.push(l);
+		else break;
+	}
+	const rec = letters.find((l) => /recommend/i.test(found[l]!)) ?? null;
+	return { letters, options: Object.fromEntries(letters.map((l) => [l, found[l]!])), rec };
+}
 
 const ID = "question";
 const MAX_MSG = 160;
