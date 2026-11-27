@@ -392,7 +392,9 @@ running `summon-golem.sh --sandbox`. It contains only the controller's
 allowlisted inputs: `repoUrl`, `forkSha` (40-hex commit), `specPath` (relative
 to the request file), `gate` (non-empty commands), `scopes`, `contracts`
 (relative request-local files), `model`, optional `ghStsPolicy` (safe policy
-identifier; see above), optional `gateTimeout` (default `600s`), optional
+identifier; see above), optional `gateTimeout` (default `600s`), optional `maxAttempts` (integer 1
+to 5, passed to anvil as `--max-attempts`; absent means anvil's default of 3
+with the escalation ladder, and `1` means the base model only), optional
 `rebuildSnapshot` (default false; see below), optional `snapshotId`, `teamId`,
 `projectId`, `vcpus`, `timeoutMs`, `localRepo`, `dispatchId`, and optional
 `summonerAddress` (defaults to `ANVIL_SUMMONER_ADDRESS`). An empty string for `snapshotId` or `ghStsPolicy` is still
