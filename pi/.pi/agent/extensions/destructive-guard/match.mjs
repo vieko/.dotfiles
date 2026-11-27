@@ -10,7 +10,12 @@
  *
  * Tiers:
  *   never    always blocked; the user runs it by hand
- *   confirm  needs the user's yes in the session; blocked when nobody can answer
+ *   confirm  needs the user's yes in the session; blocked when nobody can answer,
+ *            or held for the approval inbox (approvals.mjs) when it is on
+ *
+ * With `{ inbox: true }` (PI_APPROVAL_INBOX=1, set by `summon-familiar.sh -A`)
+ * plain pushes and PR creates and merges also ask: the inbox lets a
+ * familiar take those steps itself once the user approves each one.
  *
  * Matching looks at command position only, so a commit message, an echo, or a
  * heredoc body that mentions `git push --force` does not match.
@@ -20,6 +25,7 @@
  */
 
 import { homedir } from "node:os";
+import { approvalsDir } from "./approvals.mjs";
 
 /** @typedef {{ tier: "never" | "confirm"; rule: string; reason: string }} Hit */
 
@@ -146,10 +152,43 @@ function writerScript(w) {
 	return null;
 }
 
+const APPROVE_URL = /\/approvals\/[a-z0-9]{12}\/(approve|deny)\b/;
+const READ_ONLY = new Set(["ls", "cat", "jq", "head", "tail", "stat", "wc", "grep", "rg", "find", "file", "test", "["]);
+const SELF = { tier: "never", rule: "approval-self", reason: "only the user answers an approval request" };
+
+/** Paths that count as the approval inbox, as written in a command. */
+function inboxPaths() {
+	const dir = approvalsDir();
+	const out = new Set([".local/state/approvals", dir]);
+	if (dir.startsWith(HOME)) out.add(dir.slice(HOME.length + 1));
+	return [...out];
+}
+export const isInboxPath = (p) => {
+	const abs = expandHome(String(p).trim());
+	return inboxPaths().some((d) => abs === d || abs.includes(`${d}/`) || abs.endsWith(d));
+};
+
+/**
+ * An agent answering an approval request: the approvals CLI's approve or deny,
+ * a POST to an /approvals/<id>/<action> URL (sigil or the console), or any
+ * command that touches the inbox directory beyond reading it.
+ * @returns {Hit | null}
+ */
+function approvalSelf(text) {
+	if (APPROVE_URL.test(text)) return SELF;
+	if (!inboxPaths().some((d) => text.includes(d))) return null;
+	const { blanked } = unquote(text);
+	const progs = segments(blanked).map((seg) => words(seg)[0]).filter(Boolean);
+	if (progs.length && progs.every((p) => READ_ONLY.has(p)) && !/(^|[^>])>/.test(blanked)) return null;
+	return SELF;
+}
+
 /** @returns {Hit | null} */
-function checkWords(w, raw) {
+function checkWords(w, raw, opts = {}) {
 	if (!w.length) return null;
 	const [prog] = w;
+
+	if (prog === "approvals" && w.slice(1).some((x) => x === "approve" || x === "deny")) return SELF;
 
 	const script = writerScript(w);
 	if (script) return { tier: "confirm", rule: "writer-script", reason: `${script} writes to a database (production or dev)` };
@@ -161,11 +200,19 @@ function checkWords(w, raw) {
 				(a) => a === "--force" || a.startsWith("--force-with-lease") || a === "--mirror" || /^-[a-zA-Z]*f[a-zA-Z]*$/.test(a) || /^\+[^\s]/.test(a),
 			);
 			if (force) return { tier: "confirm", rule: "git-force-push", reason: "force-push rewrites remote history" };
+			if (opts.inbox) return { tier: "confirm", rule: "inbox-write", reason: "git push publishes commits" };
 		}
 		if (sub === "reset" && args.includes("--hard"))
 			return { tier: "confirm", rule: "git-reset-hard", reason: "git reset --hard discards uncommitted work" };
 		if (sub === "clean" && args.some((a) => /^-[a-zA-Z]*f/.test(a) || a === "--force"))
 			return { tier: "confirm", rule: "git-clean", reason: "git clean -f deletes untracked files" };
+		return null;
+	}
+
+	if (prog === "gh" && opts.inbox) {
+		const pos = w.slice(1).filter((x) => !x.startsWith("-"));
+		if (pos[0] === "pr" && ["create", "merge"].includes(pos[1]))
+			return { tier: "confirm", rule: "inbox-write", reason: `gh pr ${pos[1]} writes to GitHub` };
 		return null;
 	}
 
@@ -188,7 +235,7 @@ function checkWords(w, raw) {
 		// The runner executes a tool: npx vercel, pnpm exec prisma, pnpm dlx vercel,
 		// pnpm drizzle-kit. Not `pnpm add vercel`: the tool there is a package name.
 		const tool = ["exec", "dlx", "x"].includes(s[0]) ? s[1] : prog === "npx" || prog === "bunx" || prog === "pnpm" || prog === "yarn" ? s[0] : undefined;
-		if (tool && RUNNABLE.has(tool)) return checkWords(w.slice(w.indexOf(tool, 1)), raw);
+		if (tool && RUNNABLE.has(tool)) return checkWords(w.slice(w.indexOf(tool, 1)), raw, opts);
 		return null;
 	}
 
@@ -235,22 +282,26 @@ function checkWords(w, raw) {
 /**
  * Check a shell command string.
  * @param {string} command
+ * @param {{ inbox?: boolean }} [opts]
  * @returns {Hit | null}
  */
-export function checkCommand(command, depth = 0) {
+export function checkCommand(command, opts = {}, depth = 0) {
 	if (typeof command !== "string" || !command.trim() || depth > 3) return null;
-	const { blanked, inner } = unquote(stripHeredocs(command));
+	const stripped = stripHeredocs(command);
+	const self = approvalSelf(stripped);
+	if (self) return self;
+	const { blanked, inner } = unquote(stripped);
 	/** @type {Hit | null} */
 	let best = null;
 	for (const seg of segments(blanked)) {
 		const w = words(seg);
 		if (SHELLS.has(w[0]) && !writerScript(w)) continue; // its -c script is checked via `inner`
-		const hit = checkWords(w, seg);
+		const hit = checkWords(w, seg, opts);
 		if (hit && (!best || hit.tier === "never")) best = hit;
 		if (best?.tier === "never") return best;
 	}
 	for (const s of inner) {
-		const hit = checkCommand(s, depth + 1);
+		const hit = checkCommand(s, opts, depth + 1);
 		if (hit && (!best || hit.tier === "never")) best = hit;
 	}
 	return best;
@@ -261,13 +312,15 @@ export function checkCommand(command, depth = 0) {
  * and Claude Code (`Bash`, `Read`) share one switch.
  * @param {string} tool
  * @param {Record<string, unknown>} input
+ * @param {{ inbox?: boolean }} [opts]
  * @returns {Hit | null}
  */
-export function checkToolCall(tool, input) {
+export function checkToolCall(tool, input, opts = {}) {
 	const t = String(tool).toLowerCase();
-	if (t === "bash") return checkCommand(String(input?.command ?? ""));
+	if (t === "bash") return checkCommand(String(input?.command ?? ""), opts);
 	const path = String(input?.path ?? input?.file_path ?? "");
 	if (!path) return null;
+	if ((t === "write" || t === "edit" || t === "multiedit") && isInboxPath(path)) return SELF;
 	if (t === "read" || t === "grep") {
 		if (isSecretPath(path)) return { tier: "confirm", rule: "secret-read", reason: `${path} is a credential; its contents would land in the transcript` };
 		return null;

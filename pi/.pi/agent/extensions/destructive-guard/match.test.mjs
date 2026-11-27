@@ -1,4 +1,4 @@
-// Run: node --test ~/.dotfiles/pi/.pi/agent/extensions/destructive-guard/
+// Run: node --test ~/.dotfiles/pi/.pi/agent/extensions/destructive-guard/*.test.mjs
 import assert from "node:assert/strict";
 import { test } from "node:test";
 import { checkCommand, checkToolCall } from "./match.mjs";
@@ -157,4 +157,34 @@ test("database writer scripts ask in every form", () => {
 		"bash -c 'echo hi'",
 	];
 	for (const c of passes) assert.equal(rule(c), null, c);
+});
+
+test("agents cannot answer approval requests", () => {
+	const self = [
+		"~/.scripts/approvals approve abcdef012345",
+		"approvals deny abcdef012345",
+		"curl -X POST http://127.0.0.1:5858/approvals/abcdef012345/approve",
+		"curl -s -X POST -H 'Origin: http://localhost:3000' \"http://localhost:3000/api/approvals/abcdef012345/approve\"",
+		"node -e 'x' > ~/.local/state/approvals/abcdef012345.json",
+		"jq '.status=\"approved\"' ~/.local/state/approvals/a.json > /tmp/x && mv /tmp/x ~/.local/state/approvals/a.json",
+		"rm ~/.local/state/approvals/a.json",
+	];
+	for (const c of self) assert.equal(rule(c), "approval-self", c);
+	assert.equal(tier(self[0]), "never");
+	const ok = ["approvals list", "approvals show abcdef012345", "ls ~/.local/state/approvals", "cat ~/.local/state/approvals/a.json | jq .status"];
+	for (const c of ok) assert.equal(rule(c), null, c);
+	assert.equal(checkToolCall("write", { path: `${process.env.HOME}/.local/state/approvals/a.json` })?.rule, "approval-self");
+	assert.equal(checkToolCall("read", { path: "~/.local/state/approvals/a.json" }), null);
+});
+
+test("the inbox flag makes pushes and PR writes ask", () => {
+	const inbox = { inbox: true };
+	assert.equal(checkCommand("git push origin vieko/x"), null);
+	assert.equal(checkCommand("gh pr create --fill"), null);
+	assert.equal(checkCommand("git push -u origin vieko/x", inbox)?.rule, "inbox-write");
+	assert.equal(checkCommand("cd /r && gh pr create --title t --body-file b.md", inbox)?.rule, "inbox-write");
+	assert.equal(checkCommand("gh pr merge 12 --squash", inbox)?.rule, "inbox-write");
+	assert.equal(checkCommand("git push --force", inbox)?.rule, "git-force-push");
+	assert.equal(checkCommand("gh pr view 12", inbox), null);
+	assert.equal(checkToolCall("bash", { command: "git push" }, inbox)?.rule, "inbox-write");
 });
