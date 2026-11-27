@@ -10,10 +10,12 @@ import { findSnapshot, listSnapshots, repoSlug } from './snapshot-registry.mjs';
 import { deltaFetchCommand, detectPackageManager } from './snapshot-toolchain.mjs';
 
 const execFileAsync = promisify(execFile);
-const KEYS = ['repoUrl','forkSha','specPath','gate','scopes','contracts','model','gateTimeout','snapshotId','teamId','projectId','ghStsPolicy','vcpus','timeoutMs','localRepo','dispatchId','summonerAddress','rebuildSnapshot','exactSnapshot'];
+const KEYS = ['repoUrl','forkSha','specPath','gate','scopes','contracts','model','gateTimeout','snapshotId','teamId','projectId','ghStsPolicy','vcpus','timeoutMs','localRepo','dispatchId','summonerAddress','rebuildSnapshot','exactSnapshot','maxAttempts'];
 // snapshotId and ghStsPolicy are optional (anvil#63): a public repo needs no clone credential,
 // and a repo with no approved snapshot yet is selected from the registry instead of pinned.
-const OPTIONAL_KEYS = ['gateTimeout', 'rebuildSnapshot', 'snapshotId', 'ghStsPolicy', 'summonerAddress', 'exactSnapshot'];
+const OPTIONAL_KEYS = ['gateTimeout', 'rebuildSnapshot', 'snapshotId', 'ghStsPolicy', 'summonerAddress', 'exactSnapshot', 'maxAttempts'];
+// anvil's own cap is 3; above that a dispatch is a spec problem, not an attempt problem.
+const MAX_ATTEMPTS_LIMIT = 5;
 const SECRET_ENV = ['VERCEL_TOKEN','AI_GATEWAY_API_KEY'];
 const GH_STS_URL = 'https://gh-sts.vercel-infra.com/token';
 const GH_STS_SETUP_BUDGET_MS = 10 * 60_000;
@@ -51,6 +53,7 @@ export function validateRequest(r, requestPath) {
   if (!Number.isInteger(r.vcpus) || r.vcpus < 1 || r.vcpus > 32 || !Number.isInteger(r.timeoutMs) || r.timeoutMs <= COLLECTION_RESERVE_MS + 30_000) throw new Error('vcpus and timeoutMs must leave a five-minute collection window');
   if (r.rebuildSnapshot !== undefined && typeof r.rebuildSnapshot !== 'boolean') throw new Error('rebuildSnapshot must be a boolean');
   if (r.exactSnapshot !== undefined && typeof r.exactSnapshot !== 'boolean') throw new Error('exactSnapshot must be a boolean');
+  if (r.maxAttempts !== undefined && (!Number.isInteger(r.maxAttempts) || r.maxAttempts < 1 || r.maxAttempts > MAX_ATTEMPTS_LIMIT)) throw new Error(`maxAttempts must be an integer from 1 to ${MAX_ATTEMPTS_LIMIT}`);
   if (r.gateTimeout !== undefined && (typeof r.gateTimeout !== 'string' || !/^\d+[smh]$/.test(r.gateTimeout))) throw new Error('gateTimeout must be a duration');
   const reqDir = path.resolve(path.dirname(requestPath));
   const spec = path.resolve(reqDir, r.specPath);
@@ -294,7 +297,7 @@ export async function runController(requestPath, effects) {
     dispatched = true;
     manifest.status = 'dispatched';
     await fs.writeFile(path.join(state.artifactDir, 'manifest.json'), JSON.stringify(manifest, null, 2));
-    const anvilArgs = ['run', remoteSpec, '-C', remoteRepo, '--model', req.model, '-v', '--reasoning', '--json', '--from', req.forkSha, '--gate-timeout', req.gateTimeout, ...req.gate.flatMap(x => ['--verify', x]), ...req.scopes.flatMap(x => ['--scope', x]), ...req.contracts.flatMap(x => ['--contract', `.anvil-input/${path.basename(x)}`])];
+    const anvilArgs = ['run', remoteSpec, '-C', remoteRepo, '--model', req.model, '-v', '--reasoning', '--json', '--from', req.forkSha, '--gate-timeout', req.gateTimeout, ...(req.maxAttempts !== undefined ? ['--max-attempts', String(req.maxAttempts)] : []), ...req.gate.flatMap(x => ['--verify', x]), ...req.scopes.flatMap(x => ['--scope', x]), ...req.contracts.flatMap(x => ['--contract', `.anvil-input/${path.basename(x)}`])];
     let runError;
     const anvilStartedAt = clock.now().getTime();
     try {

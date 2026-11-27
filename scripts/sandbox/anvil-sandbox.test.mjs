@@ -91,6 +91,18 @@ test('exactSnapshot accepts only a boolean request value',()=>{
   assert.equal(validateRequest({...baseRequest,exactSnapshot:false},'/tmp/request.json').exactSnapshot,false);
   assert.throws(()=>validateRequest({...baseRequest,exactSnapshot:'true'},'/tmp/request.json'),/exactSnapshot must be a boolean/);
 });
+test('maxAttempts accepts only an integer from 1 to 5',()=>{
+  assert.equal(validateRequest({...baseRequest,maxAttempts:1},'/tmp/request.json').maxAttempts,1);
+  assert.equal('maxAttempts' in validateRequest(baseRequest,'/tmp/request.json'),false);
+  for(const bad of [0,6,1.5,'1',true])assert.throws(()=>validateRequest({...baseRequest,maxAttempts:bad},'/tmp/request.json'),/maxAttempts must be an integer from 1 to 5/);
+});
+test('maxAttempts reaches anvil as --max-attempts, and is absent by default',async()=>{
+  const anvilArgs=f=>f.calls.find(c=>c[0]==='remote'&&c[1].cmd==='anvil')[1].args;
+  const capped=await fixture({req:{maxAttempts:1}});assert.equal((await capped.run()).exitCode,0);
+  const args=anvilArgs(capped);assert.equal(args[args.indexOf('--max-attempts')+1],'1');await capped.clean();
+  const plain=await fixture();assert.equal((await plain.run()).exitCode,0);
+  assert.equal(anvilArgs(plain).includes('--max-attempts'),false);await plain.clean();
+});
 test('pinned snapshot errors distinguish an unset controller pin from a different pin',async()=>{
   for(const [envValue,expected] of [[undefined,/not set in the controller's environment/],['different-pin',/differs from ANVIL_SANDBOX_SNAPSHOT_ID different-pin/]]){
     const f=await fixture();

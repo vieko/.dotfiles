@@ -98,18 +98,26 @@ why. Available models per host: `~/.pi/agent/hosts/enabledModels.<host>.json`.
   architecture or review reads.
 - **Familiar**: `claude-fable-5.2:high` (the default since 2026-11-27).
   A familiar gets a brief, not a gate, so judgment decides its quality.
+  The bake-off did not settle this: the two blind readers split by model
+  family (fable's reader ranked fable first, astra's ranked sol and astra
+  first). Change it only after a third-family or human read.
   `-m sol` for a brief that is mechanical but has no gate. Familiars run
   with `PI_COUNSEL=off`; summon with `-C` when the brief needs counsel.
-- **Golem**: anvil `--model luna`, also for deep refactors. Ladder:
-  `luna:high -> luna:xhigh -> fable:high` (default `-n 3`). Evidence,
-  185 runs to 2026-11-25: luna-base runs end 93% green with 3% repair
-  specs; fable:high rescued 16 of 19 escalations, opus:high 1 of 6.
+- **Golem**: anvil `--model sol` (gpt-6.2-sol, since 2026-11-28), also
+  for deep refactors. Ladder: `sol:high -> sol:xhigh -> fable:high`
+  (default `-n 3`). Evidence: the sandbox bake-off (10 specs x 6 models,
+  one attempt each, blind review by two readers,
+  `~/scratch/model-bakeoff-report.md`): sol green on 9 of 9 quality specs
+  (one on host rerun), 8 of 9 patches with no blocker or major, $0.59 a
+  run; luna 1 blocker and 8 majors in 7 patches. From the 185-run ledger:
+  fable:high rescued 16 of 19 escalations, opus:high 1 of 6.
   Anvil's default strong rung is fable since anvil#70. Exceptions:
   - Purge, delete, redact or wipe-personal-data specs: `-m fable` from
-    the start (OpenAI moderation refuses them on luna).
+    the start (OpenAI moderation refused them on luna; untested on sol).
+  - Purely mechanical batches (formatting, a codemod): `-m luna` is fine.
   - A spec whose gate cannot see the quality that matters (UI feel,
     prose, an API shape): `-m fable`, with `-r` naming the reason.
-- **Legion**: `luna` members, the golem rule.
+- **Legion**: `sol` members, the golem rule.
 - **Astra** (`gpt-6.2-astra`): only for work that starts fresh and ends in
   one sitting (review familiars, one-shot assessments, cross-family second
   reads). Its prompt cache misses often after idle gaps; never use it as
