@@ -52,6 +52,8 @@ function slug(s) {
 
 // fnm's per-shell and per-version paths vanish (fnm-prune.sh); launchd needs a node and a PATH that stay.
 const STABLE_NODE = ['/opt/homebrew/bin/node', '/usr/local/bin/node'].find((p) => existsSync(p)) ?? process.execPath;
+// The Vercel CLI keeps its login under XDG_DATA_HOME when it is set; without it OIDC finds no login.
+const XDG = ['XDG_DATA_HOME', 'XDG_CONFIG_HOME', 'XDG_STATE_HOME', 'XDG_CACHE_HOME'];
 const stablePath = () => (process.env.PATH ?? '').split(':').filter((p) => p && !p.includes('fnm_multishells')).join(':');
 
 function plist() {
@@ -67,7 +69,7 @@ function plist() {
   <dict>
     <key>PATH</key><string>${esc(stablePath())}</string>
     <key>HOME</key><string>${esc(homedir())}</string>
-  </dict>
+${XDG.filter((k) => process.env[k]).map((k) => `    <key>${k}</key><string>${esc(process.env[k])}</string>\n`).join('')}  </dict>
   <key>RunAtLoad</key><true/>
   <key>KeepAlive</key><true/>
   <key>ThrottleInterval</key><integer>30</integer>
