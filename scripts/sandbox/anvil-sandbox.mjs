@@ -168,7 +168,7 @@ export async function runController(requestPath, effects) {
     const agentPolicy = { allow: { 'ai-gateway.vercel.sh': [gatewayRule] } };
     // Reuse an exact snapshot first, then a compatible near snapshot whose content-addressed
     // store can be warmed before dispatch. A pinned but unregistered snapshot retains the legacy
-    // in-sandbox hash guard; every rebuild still requires explicit spend approval.
+    // in-sandbox hash guard.
     let snapshotId = req.snapshotId;
     const records = snapshots ? await snapshots.list() : [];
     let builtThisRun = false;

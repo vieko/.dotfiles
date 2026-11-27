@@ -38,8 +38,11 @@ the stream at summon time: `-S <stream>` on `summon-familiar.sh -W` and
 - **Sandbox lane**: `summon-golem.sh --sandbox` runs a golem on a Vercel
   Sandbox (project `vieko-golem-sandbox`, team
   `vercel-internal-playground`), with no secret in the VM. It is the way
-  past the 6-golem ceiling. **Each snapshot build and each dispatch is
-  spend: get the user's approval every time.** Controller and setup:
+  past the 6-golem ceiling, and the default lane from 2026-11-27 (the
+  user's direction: sandboxes almost always). Spend needs no approval
+  per dispatch or snapshot build: the budget is $10K a month for models
+  and compute together, and a 4 vCPU / 8 GB sandbox costs about $0.70
+  an hour at full CPU. Controller and setup:
   `scripts/sandbox/`, `docs/agent-maintenance.md` ("Sandbox lane"); ids in
   `~/private/lanes/sandbox-golem.env`.
 - **Scout**: a read-only child from the `scout` tool (haiku, read-only
@@ -75,27 +78,29 @@ the stream at summon time: `-S <stream>` on `summon-familiar.sh -W` and
 
 ## Vessels
 
-Defaults per construct; override when the work needs it, and say why.
-Available models per host: `~/.pi/agent/hosts/enabledModels.<host>.json`.
+Quality first, cost second (the user's rule, 2026-11-27). A gate checks
+golem output, so a cheap base with a strong ladder is the same quality;
+work with no gate gets the strongest model, since nothing checks it but
+review. Defaults per construct; override when the work needs it, and say
+why. Available models per host: `~/.pi/agent/hosts/enabledModels.<host>.json`.
 
 - **Summoner**: `claude-opus-5.5`. Use fable through counsel for hard
-  architecture or review reads; do not move the seat to fable for triage
-  or status checks.
-- **Familiar**: `gpt-6.2-sol:high`. `-m sonnet` still resolves. Escalate
-  to the Summoner's model only when the brief says why judgment dominates
-  (governance paths, prod impact, an ambiguous spec). A brief tight
-  enough to delegate with a gate is worker-tier work. Familiars run with
-  `PI_COUNSEL=off`; summon with `-C` when the brief needs counsel.
+  architecture or review reads.
+- **Familiar**: `claude-fable-5.2:high` (the default since 2026-11-27).
+  A familiar gets a brief, not a gate, so judgment decides its quality.
+  `-m sol` for a brief that is mechanical but has no gate. Familiars run
+  with `PI_COUNSEL=off`; summon with `-C` when the brief needs counsel.
 - **Golem**: anvil `--model luna`, also for deep refactors. Ladder:
-  `luna:high -> luna:xhigh -> opus:high -> opus:xhigh` (default `-n 3`
-  ends on `opus:high`). Exceptions:
+  `luna:high -> luna:xhigh -> fable:high` (default `-n 3`). Evidence,
+  185 runs to 2026-11-25: luna-base runs end 93% green with 3% repair
+  specs; fable:high rescued 16 of 19 escalations, opus:high 1 of 6.
+  The strong rung is fable once anvil's default strong model changes
+  (until then pass the ladder explicitly). Exceptions:
   - Purge, delete, redact or wipe-personal-data specs: `-m fable` from
     the start (OpenAI moderation refuses them on luna).
-  - Any other fable or opus base: give the reason with
-    `summon-golem.sh -r <reason>`. "Raw capability" is not a reason.
-  - Mechanical specs (lint, formatter, codemod, small refactor):
-    `-m haiku` while the haiku trial runs.
-- **Legion**: `sol` members (`haiku` for purely mechanical batches).
+  - A spec whose gate cannot see the quality that matters (UI feel,
+    prose, an API shape): `-m fable`, with `-r` naming the reason.
+- **Legion**: `luna` members, the golem rule.
 - **Astra** (`gpt-6.2-astra`): only for work that starts fresh and ends in
   one sitting (review familiars, one-shot assessments, cross-family second
   reads). Its prompt cache misses often after idle gaps; never use it as
@@ -105,14 +110,13 @@ Available models per host: `~/.pi/agent/hosts/enabledModels.<host>.json`.
 - **CLI binding**: gateway ids contain a slash, so always bind with
   `pi --provider vercel-ai-gateway --model "<vendor>/<model>:<effort>"`.
 
-**Open trials** (criteria and history in `docs/phyrexia-history.md`,
-"Open proofs"; read the results with `~/.scripts/anvil-ledger`):
+**Measure quality, not only green.** Record each construct's review
+findings (count and worst severity) when you review its diff, so the
+ledger can compare models on what review finds, not on gate passes.
 
-- *Haiku golems for mechanical specs* (proof 4, since 2026-10-11): the
-  next ~10 mechanical specs go `-m haiku`. It never becomes the default.
-- *Luna-first on former fable specs* (proof 3): the next spec you would
-  bind `-m fable` (outside the moderation case) goes luna-first, with
-  the reason recorded either way.
+Closed 2026-11-27 by the quality-first rule: proof 4 (haiku golems for
+mechanical specs) ends, and proof 3 (luna-first on former fable specs)
+is now the golem rule.
 
 Lapsed: proof 5 (impact-tiered review) had no entry in
 `~/scratch/review-tier-trial-notes.md` by its extended deadline, so it
