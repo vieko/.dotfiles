@@ -33,9 +33,9 @@
 #
 #   -m alias   vessel: haiku|sol|sonnet|opus|fable|astra|luna|terra|glm (anvil's aliases;
 #              astra needs anvil >= 0.3.1, sol the 2026-09-22 alias refresh).
-#              Default: luna (PHYREXIA golem binding -- cross-family worker
-#              under an Anthropic reviewer diversifies failure modes)
-#   -r reason  why the base is not luna, as one word or a hyphenated phrase
+#              Default: sol (PHYREXIA golem binding since the 2026-11-28
+#              bake-off; still cross-family under an Anthropic reviewer)
+#   -r reason  why the base is not sol, as one word or a hyphenated phrase
 #              (moderation, governance-paths, ...). Logged as reason=<...> in
 #              summons.log. A fable or opus base without it prints a nag
 #              and still runs (PHYREXIA.md Vessels, open proof 3)
@@ -101,7 +101,8 @@ alias_ok() {
     esac
 }
 
-vessel="luna"
+# Default sol since 2026-11-28: the sandbox bake-off (PHYREXIA.md Vessels).
+vessel="sol"
 dry_run=0
 no_report=0
 keep_window=0
@@ -137,7 +138,7 @@ alias_ok "$vessel" || { echo "error: unknown vessel alias: $vessel (anvil aliase
 case "$vessel" in
     fable|opus)
         if [[ -z "$reason" ]]; then
-            echo "nag: $vessel golem with no -r reason -- luna is the base, and the ladder reaches fable on its own." >&2
+            echo "nag: $vessel golem with no -r reason -- sol is the base, and the ladder reaches fable on its own." >&2
             echo "     A purge/delete/redact spec is a reason (-r moderation). Name any other with -r; it goes in summons.log." >&2
         fi
         ;;
