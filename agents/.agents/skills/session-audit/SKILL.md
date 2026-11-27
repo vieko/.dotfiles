@@ -201,6 +201,11 @@ measure.
   does not move, the rule is prose nobody reads at dispatch and the next
   lever is a prompt in `summon-familiar.sh` ("does this brief expect a
   decision?").
+  Week 48: 4 of 6 print + window dispatches were `-P` (0 of 29 in
+  11-15..19), so the rule moved routing and the prompt is not needed.
+  The old share counted `-P` familiars, which cannot be steered. From
+  week 49 read the window-only not-steered share (plan dispatches
+  excluded) and the `-P` share; n is small, so read the rows.
 - **Needs-you view and phone push**: closed 2026-11-27 (week 48). Rex
   Activity is the list; `question-status.ts` reports a turn that ends on
   a lettered menu as `blocked`. Menu wait p90 fell from 22.7 min (week

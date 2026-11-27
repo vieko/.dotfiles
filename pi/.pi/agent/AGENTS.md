@@ -265,9 +265,14 @@ do not close on a menu of next steps when the recommended one is inside the
 brief and reversible; start it. These cases are always inside the brief:
 a plain `git push` of your own branch and opening its PR once any repo
 rule such as a human lede is met (never a force-push); a follow-up the
-user already asked for in this session (do it; do not ask "now?"); and
+user already asked for in this session (do it; do not ask "now?");
 waiting for an event such as a review, a deploy, or a reply (start a
-waiter or `remind`; do not ask the user to tell you when it happens).
+waiter or `remind`; do not ask the user to tell you when it happens);
+and a step your own tools can do that you were about to leave to the
+user or a queue (post a Linear comment you drafted at the user's
+request, resume an offline session you need an answer from with
+`remind-at.sh --open`, check what you can before you route a question
+to a colleague).
 
 ## Timestamps
 

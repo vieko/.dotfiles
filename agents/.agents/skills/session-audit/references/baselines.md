@@ -311,3 +311,21 @@ old row so drift is visible.
 - Familiar not-steered 45% (target < 25% by week 48).
 - anvil 24 runs, 12/23 first-attempt pass, $4.11.
 - Corrections: 11 candidates, 2 kept by label rule, 6 on reading.
+
+## Week 48 (2026-11-20 13:29 to 2026-11-27 13:29 CET, 7 days, US holiday), PHYREXIA
+
+- 56 sessions with turns, 4,187 assistant turns, 374 user turns. True
+  $320 (= pi-reported), $0.86/ut ($0.96 with counsel); opus-only $0.79/ut.
+- Split: cacheRead $129, cacheWrite $132, output $59. 1h TTL net +$15.
+- Context: 26% of turns >= 200K carried 42% of spend; max 511K (sigil
+  console builds in the Summoner).
+- Misses: idle 25 ($33); unexplained 19 ($30, opus 0.47%, 0 clustered;
+  6 prompt changes, 2 `context_edit`); compaction 11 ($7).
+- Fable 1 session, $51, $1.66/ut, operational work.
+- Counsel 29 consults, $39.50 (12.3%), 27 revise / 2 proceed.
+- Menu wait p90 667 s (n=63): phone push dropped, menu-shadow removed.
+- Familiars 8: 4 `-P`, 2 plan, 2 window (1 steered, 1 review-only).
+- anvil 7 runs, 6/7 first-attempt pass, $5.66.
+- Redactions: identifier 55% of 874 values (allowlist criterion met).
+- Corrections: 3 candidates, 1 kept by label rule, 3 on reading (left a
+  step to the user or a queue).

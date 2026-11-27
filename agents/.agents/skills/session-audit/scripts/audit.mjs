@@ -468,7 +468,8 @@ for (const dir of readdirSync(root)) {
 				const steer = (e.type === "custom_message" && e.customType === "pi-post" && /^Message from pi session/.test(String(e.content))) || (e.type === "message" && e.message?.role === "user" && e !== firstUser);
 				if (steer) i < fi ? mid++ : post++;
 			});
-			familiars.push({ dir: s.dir, model: [...s.models][0] ?? "?", bucket: mid ? "steered" : post ? "review-only" : "none", mid, post, tru: s.tru });
+			const brief = /\bRead (\S+?\.md)\b/.exec(textOf(firstUser.message.content))?.[1] ?? null;
+			familiars.push({ dir: s.dir, model: [...s.models][0] ?? "?", bucket: mid ? "steered" : post ? "review-only" : "none", mid, post, tru: s.tru, brief });
 		}
 		if (s.inWindow) sessions.push({ ...s, models: [...s.models], avgCtxK: s.turns ? Math.round(s.ctxSum / s.turns / 1000) : 0, maxCtxK: Math.round(s.maxCtx / 1000) });
 	}
@@ -647,11 +648,31 @@ if (sigilRuns.length) {
 P();
 P(`## Familiar routing (${familiars.length} familiar sessions)`);
 if (familiars.length) {
-	const b = {};
-	for (const f of familiars) b[f.bucket] = (b[f.bucket] ?? 0) + 1;
-	const n = familiars.length;
-	P(`steered mid-flight ${b.steered ?? 0}, review-only ${b["review-only"] ?? 0}, none ${b.none ?? 0}. Not steered: ${Math.round((100 * ((b["review-only"] ?? 0) + (b.none ?? 0))) / n)}% (baseline 30 days to 11-15: 46%, 17 of 37). Not-steered familiars are golem (gate) or \`-P\` (no decision) shaped.`);
-	P(`$ by bucket: ${["steered", "review-only", "none"].map((k) => `${k} ${usd(sum(familiars.filter((f) => f.bucket === k), (f) => f.tru))}`).join(", ")}.`);
+	// Mode per familiar from its summons.log line (joined on the brief path):
+	// `-P` (print) familiars cannot be steered and plan dispatches open a
+	// window by design, so not-steered is measured on the other window ones.
+	const summonsPath = join(homedir(), "scratch/logs/summons.log");
+	const modeOf = {};
+	if (existsSync(summonsPath)) for (const l of readFileSync(summonsPath, "utf8").split("\n")) {
+		const b = / brief=(\S+)/.exec(l)?.[1];
+		if (!b || !/kind=familiar/.test(l)) continue;
+		modeOf[b] = / mode=print\b/.test(l) ? "print" : / stream=plan-/.test(l) || b.includes("/.rooms/plans/") ? "plan" : "window";
+	}
+	for (const f of familiars) f.mode = (f.brief && modeOf[f.brief.replace(/^~(?=\/)/, homedir())]) || "unknown";
+	const count = (rows) => {
+		const b = {};
+		for (const f of rows) b[f.bucket] = (b[f.bucket] ?? 0) + 1;
+		return b;
+	};
+	const modes = {};
+	for (const f of familiars) modes[f.mode] = (modes[f.mode] ?? 0) + 1;
+	P(`By mode: ${["window", "print", "plan", "unknown"].map((m) => `${m} ${modes[m] ?? 0}`).join(", ")}. \`-P\` share of print + window: ${Math.round((100 * (modes.print ?? 0)) / ((modes.print ?? 0) + (modes.window ?? 0) || 1))}%.`);
+	const win = familiars.filter((f) => f.mode === "window" || f.mode === "unknown");
+	const b = count(win);
+	if (win.length) P(`Window familiars (incl. unknown mode, excl. plan): steered mid-flight ${b.steered ?? 0}, review-only ${b["review-only"] ?? 0}, none ${b.none ?? 0}. Not steered: ${Math.round((100 * ((b["review-only"] ?? 0) + (b.none ?? 0))) / win.length)}% of ${win.length} (all familiars, 30 days to 11-15: 46%, 17 of 37).`);
+	else P(`No window familiars outside plan dispatch.`);
+	const all = count(familiars);
+	P(`$ by bucket (all): ${["steered", "review-only", "none"].map((k) => `${k} ${usd(sum(familiars.filter((f) => f.bucket === k), (f) => f.tru))}`).join(", ")}; counts ${all.steered ?? 0}/${all["review-only"] ?? 0}/${all.none ?? 0}.`);
 } else P(`None in window.`);
 P();
 P(`## Constructs`);
