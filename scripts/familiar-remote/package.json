@@ -1,0 +1,15 @@
+{
+  "name": "remote-familiar-driver",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "test": "node --test test/*.test.mjs"
+  },
+  "dependencies": {
+    "@earendil-works/pi-agent-core": "1.0.4",
+    "@earendil-works/pi-ai": "1.0.4",
+    "@vercel/sandbox": "3.8.0",
+    "@workflow/world-local": "5.1.2",
+    "durable-harness": "0.0.2"
+  }
+}
