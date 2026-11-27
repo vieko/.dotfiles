@@ -22,7 +22,7 @@
  * guard, not a sandbox. `PI_DESTRUCTIVE_GUARD=off` turns it off.
  */
 
-import { spawn } from "node:child_process";
+import { execFileSync, spawn } from "node:child_process";
 import type { ExtensionAPI } from "@earendil-works/pi-coding-agent";
 import { DEFAULT_WAIT_MS, request, waitFor } from "./approvals.mjs";
 import { checkToolCall } from "./match.mjs";
@@ -41,6 +41,16 @@ function alert(id: string) {
 		child.on("error", () => {});
 		child.unref();
 	} catch {}
+}
+
+/** The commit a push would publish, so the approval applies to that commit only. */
+function headOf(cwd: string, input: Record<string, unknown>): string | undefined {
+	if (!/\bgit\b[^\n;&|]*\bpush\b/.test(String(input.command ?? ""))) return undefined;
+	try {
+		return execFileSync("git", ["-C", cwd, "rev-parse", "HEAD"], { encoding: "utf8", timeout: 5000 }).trim() || undefined;
+	} catch {
+		return undefined;
+	}
 }
 
 export default function (pi: ExtensionAPI) {
@@ -62,6 +72,7 @@ export default function (pi: ExtensionAPI) {
 
 		if (!ctx.hasUI) {
 			if (!inbox) return tell("It needs the user's yes, and this session has no UI to ask.");
+			const head = headOf(ctx.cwd, input);
 			const req = request({
 				tool: event.toolName,
 				input,
@@ -69,11 +80,15 @@ export default function (pi: ExtensionAPI) {
 				reason: hit.reason,
 				address: process.env.PI_SESSION_ADDRESS,
 				cwd: ctx.cwd,
+				head,
 				waitMs,
 			});
 			alert(req.id);
 			const answer = await waitFor(req.id, req.hash, { signal: ctx.signal });
-			if (answer === "approved") return undefined;
+			if (answer === "approved") {
+				if (head && headOf(ctx.cwd, input) !== head) return tell(`Approval request ${req.id} was for commit ${head.slice(0, 12)}, and HEAD moved since.`);
+				return undefined;
+			}
 			return tell(`Approval request ${req.id} was ${answer}.`);
 		}
 

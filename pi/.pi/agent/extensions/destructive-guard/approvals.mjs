@@ -9,7 +9,8 @@
  *
  * One JSON file per request, `<dir>/<id>.json`, rewritten in place:
  *   { id, status: pending|approved|denied, rule, reason, tool, command, hash,
- *     address, cwd, created, expires, decided?, by? }
+ *     address, cwd, head?, created, expires, decided?, by? }
+ * `head` is the commit a push would publish; the guard refuses the push when HEAD moved before it runs.
  * `hash` covers the full tool input, so an answer applies to that exact call.
  */
 
@@ -71,7 +72,7 @@ function prune(dir, now) {
 
 /**
  * @param {{ tool: string, input: Record<string, unknown>, rule: string, reason: string,
- *   address?: string, cwd?: string, waitMs?: number, now?: number, dir?: string }} o
+ *   address?: string, cwd?: string, head?: string, waitMs?: number, now?: number, dir?: string }} o
  */
 export function request(o) {
 	const dir = o.dir ?? approvalsDir();
@@ -89,6 +90,7 @@ export function request(o) {
 		hash: hashCall(o.tool, o.input),
 		address: o.address || undefined,
 		cwd: o.cwd || undefined,
+		head: o.head || undefined,
 		created: now,
 		expires: now + (o.waitMs ?? DEFAULT_WAIT_MS),
 	};
