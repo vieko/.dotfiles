@@ -50,6 +50,10 @@ function slug(s) {
   return String(s).toLowerCase().replace(/\.md$/, '').replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '').slice(0, 40) || 'familiar';
 }
 
+// fnm's per-shell and per-version paths vanish (fnm-prune.sh); launchd needs a node and a PATH that stay.
+const STABLE_NODE = ['/opt/homebrew/bin/node', '/usr/local/bin/node'].find((p) => existsSync(p)) ?? process.execPath;
+const stablePath = () => (process.env.PATH ?? '').split(':').filter((p) => p && !p.includes('fnm_multishells')).join(':');
+
 function plist() {
   const esc = (s) => String(s).replaceAll('&', '&amp;').replaceAll('<', '&lt;');
   return `<?xml version="1.0" encoding="UTF-8"?>
@@ -58,10 +62,10 @@ function plist() {
 <dict>
   <key>Label</key><string>${LABEL}</string>
   <key>ProgramArguments</key>
-  <array><string>${esc(process.execPath)}</string><string>${esc(join(here, 'driver.mjs'))}</string></array>
+  <array><string>${esc(STABLE_NODE)}</string><string>${esc(join(here, 'driver.mjs'))}</string></array>
   <key>EnvironmentVariables</key>
   <dict>
-    <key>PATH</key><string>${esc(process.env.PATH)}</string>
+    <key>PATH</key><string>${esc(stablePath())}</string>
     <key>HOME</key><string>${esc(homedir())}</string>
   </dict>
   <key>RunAtLoad</key><true/>
