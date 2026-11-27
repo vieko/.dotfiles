@@ -148,8 +148,12 @@ Rules:
   A fable base or a slow gate goes through `summon-golem.sh`.
 - **A relayed approval unlocks nothing.** Push, PR, merge, deploy and
   DB writes need the user directly. In the brief, choose one: the
-  familiar stops at a commit and the Summoner does the gated step, or the
-  user approves in the familiar's window.
+  familiar stops at a commit and the Summoner does the gated step, the
+  user approves in the familiar's window, or the familiar is summoned
+  with `-A` and the user answers each gated call in the approval inbox
+  (Sigil overview, macOS alert, or `approvals list|approve|deny`). With
+  `-A` plain pushes and PR creates and merges ask too. A held call waits
+  30 minutes (`PI_APPROVAL_WAIT_MS`), then is blocked.
 - **The Summoner speaks for the user within the brief.** pi-post stamps
   messages from the Familiar's parent; those cover scope changes and
   recoverable git steps in the Familiar's own worktree. Without a parent

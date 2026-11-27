@@ -13,7 +13,7 @@
 #      at its shell fail loudly here, not silently in a background pane.
 #
 # Usage:
-#   summon-familiar.sh [-m alias] [-P] [-n] [-R] [-C] [-B board] [-w name] [-W name [-S stream]] <brief-path> [prompt override]
+#   summon-familiar.sh [-m alias] [-P] [-n] [-R] [-C] [-A] [-B board] [-w name] [-W name [-S stream]] <brief-path> [prompt override]
 #
 #   -m alias   vessel: haiku|sol|sonnet|opus|fable|luna|astra (default: sol),
 #              or a raw gateway id with an explicit effort when the alias's
@@ -35,6 +35,12 @@
 #   -C         allow counsel: familiars run with PI_COUNSEL=off so a worker
 #              cannot spend on pi-counsel consults; -C lifts that for a
 #              dispatch that should be able to ask for a second read
+#   -A         approval inbox: gated tool calls (deploys, force-push, and
+#              with this flag plain pushes and PR creates and merges) wait for
+#              the user's answer in the Sigil overview, a macOS alert, or the
+#              `approvals` CLI instead of being blocked, so the familiar can
+#              push and open its PR itself. Sets PI_APPROVAL_INBOX=1; read
+#              destructive-guard/approvals.mjs.
 #   -R         no report-back: summon without injecting the report-back
 #              footer. Deliberate opt-out only -- a familiar summoned this
 #              way finishes silently (the fam-2649 failure mode).
@@ -106,18 +112,20 @@ print_mode=0
 dry_run=0
 no_report=0
 allow_counsel=0
+approval_inbox=0
 worktree_name=""
 window_name=""
 stream=""
 board=""
 
-while getopts "m:PnRCB:w:W:S:" opt; do
+while getopts "m:PnRCAB:w:W:S:" opt; do
     case "$opt" in
         m) vessel="$OPTARG" ;;
         P) print_mode=1 ;;
         n) dry_run=1 ;;
         R) no_report=1 ;;
         C) allow_counsel=1 ;;
+        A) approval_inbox=1 ;;
         B) board="$OPTARG" ;;
         w) worktree_name="$OPTARG" ;;
         W) window_name="$OPTARG" ;;
@@ -131,7 +139,7 @@ shift $((OPTIND - 1))
 [[ -n "$stream" && -z "$window_name" ]] && { echo "error: -S needs -W (a split stays beside the summoner)" >&2; exit 2; }
 [[ -z "$stream" || "$stream" =~ ^[a-z0-9][a-z0-9-]{0,63}$ ]] || { echo "error: -S takes lowercase words joined by hyphens: $stream" >&2; exit 2; }
 
-[[ $# -ge 1 ]] || { echo "usage: summon-familiar.sh [-m alias] [-P] [-n] [-R] [-C] [-B board] [-w name] [-W name [-S stream]] <brief-path> [prompt]" >&2; exit 2; }
+[[ $# -ge 1 ]] || { echo "usage: summon-familiar.sh [-m alias] [-P] [-n] [-R] [-C] [-A] [-B board] [-w name] [-W name [-S stream]] <brief-path> [prompt]" >&2; exit 2; }
 
 # -B: share a sigil board (sigil#51). Pane familiars start from a fresh login
 # shell, so the summoner's env never reaches them; SIGIL_ROOM goes on the
@@ -170,6 +178,11 @@ mark_summoner() {
 # off unless -C says this dispatch may consult. Same env var for both modes.
 counsel_env="PI_COUNSEL=off"
 [[ $allow_counsel -eq 1 ]] && counsel_env=""
+
+# -A: the destructive guard holds gated calls for the user's answer instead of
+# blocking them (destructive-guard/approvals.mjs). Same env var for both modes.
+inbox_env=""
+[[ $approval_inbox -eq 1 ]] && inbox_env="PI_APPROVAL_INBOX=1"
 
 brief="$1"; shift
 brief_abs="$(cd "$(dirname "$brief")" 2>/dev/null && pwd)/$(basename "$brief")" || true
@@ -215,6 +228,7 @@ if ! pi --list-models 2>/dev/null | awk -v p="$PROVIDER" -v m="$model_id" '$1 ==
 fi
 
 prompt="${*:-Read $brief_abs and execute it exactly.}"
+[[ $approval_inbox -eq 1 ]] && prompt+=" APPROVAL INBOX: gated steps (git push, gh pr create or merge, deploys, migrations) wait for the user's answer. Run them as usual and wait; a block means the user denied it or the request expired, so report it and do not try another way."
 
 # Report-back injection (2026-08-20 post-mortem). Two observed failure modes:
 # fam-2649's brief omitted the report-back mechanism entirely (finished
@@ -320,7 +334,7 @@ if [[ $print_mode -eq 1 ]]; then
     # starts. The brief slug keeps same-second parallel dispatches apart.
     brief_slug="$(basename "$brief_abs" .md)"
     log="$LOG_DIR/familiar-$(date +%Y%m%d-%H%M%S)-${brief_slug}-${vessel//[\/:]/-}.log"
-    cmd=(env ${counsel_env:+"$counsel_env"} ${board_env:+"$board_env"} "$role_env" ${parent_env:+"$parent_env"} pi -p --name "$session_name" --provider "$PROVIDER" --model "$model" "$prompt")
+    cmd=(env ${counsel_env:+"$counsel_env"} ${inbox_env:+"$inbox_env"} ${board_env:+"$board_env"} "$role_env" ${parent_env:+"$parent_env"} pi -p --name "$session_name" --provider "$PROVIDER" --model "$model" "$prompt")
     if [[ $dry_run -eq 1 ]]; then
         echo "dry-run (print mode):"
         printf '  '; printf '%q ' "${cmd[@]}"; printf '\n  log: %s\n' "$log"
@@ -329,7 +343,7 @@ if [[ $print_mode -eq 1 ]]; then
     cd "$work_dir"
     nohup "${cmd[@]}" > "$log" 2>&1 &
     pid=$!
-    log_summon "mode=print pid=$pid brief=$brief_abs${worktree_name:+ worktree=$worktree_name}${board:+ board=$board}"
+    log_summon "mode=print pid=$pid brief=$brief_abs${worktree_name:+ worktree=$worktree_name}${board:+ board=$board}${inbox_env:+ inbox=1}"
     echo "dispatched: pid $pid, vessel $vessel ($model)"
     echo "log: $log"
     sleep 15
@@ -354,7 +368,7 @@ else
     term="$HOME/.scripts/construct-term.sh"
     backend="$("$term" backend 2>/dev/null)" \
         || { echo "error: pane/window mode requires tmux or Rex (use -P for in-band)" >&2; exit 1; }
-    pi_cmd="${counsel_env:+$counsel_env }${board_env:+$board_env }$role_env ${parent_env:+$parent_env }pi --name $session_name --provider \"$PROVIDER\" --model \"$model\" \"$prompt\""
+    pi_cmd="${counsel_env:+$counsel_env }${inbox_env:+$inbox_env }${board_env:+$board_env }$role_env ${parent_env:+$parent_env }pi --name $session_name --provider \"$PROVIDER\" --model \"$model\" \"$prompt\""
     if [[ $dry_run -eq 1 ]]; then
         if [[ -n "$window_name" ]]; then
             echo "dry-run (window mode, $backend): new window $window_name${stream:+ in session $stream}, then type:"
@@ -372,10 +386,10 @@ else
     sleep 1
     printf '%s' "$pi_cmd" | "$term" send "$pane_id"
     if [[ -n "$window_name" ]]; then
-        log_summon "mode=window window=$window_name${stream:+ stream=$stream} pane=$pane_id brief=$brief_abs${worktree_name:+ worktree=$worktree_name}${board:+ board=$board}"
+        log_summon "mode=window window=$window_name${stream:+ stream=$stream} pane=$pane_id brief=$brief_abs${worktree_name:+ worktree=$worktree_name}${board:+ board=$board}${inbox_env:+ inbox=1}"
         echo "summoned: window $window_name${stream:+ in session $stream} (pane $pane_id), vessel $vessel ($model)"
     else
-        log_summon "mode=pane pane=$pane_id brief=$brief_abs${worktree_name:+ worktree=$worktree_name}${board:+ board=$board}"
+        log_summon "mode=pane pane=$pane_id brief=$brief_abs${worktree_name:+ worktree=$worktree_name}${board:+ board=$board}${inbox_env:+ inbox=1}"
         echo "summoned: pane $pane_id, vessel $vessel ($model)"
     fi
     sleep 15

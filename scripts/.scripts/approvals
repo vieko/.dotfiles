@@ -1,0 +1,106 @@
+#!/usr/bin/env node
+// approvals -- answer the destructive guard's approval requests.
+//
+// A print-mode familiar summoned with `summon-familiar.sh -A` holds a gated
+// tool call (deploy, force-push, plain push, PR create or merge, ...) and
+// writes a request to ~/.local/state/approvals/ (PI_APPROVALS_DIR). Answer it
+// here, in the macOS alert, or on the session's card in the Sigil overview.
+//
+//   approvals list [--all] [--json]   pending requests (--all: last day too)
+//   approvals show <id>               one request as JSON
+//   approvals approve <id>            run the held call
+//   approvals deny <id>               block it
+//   approvals prompt <id>             the macOS alert (the guard starts it)
+//
+// Agents never answer requests: the guard's approval-self rule blocks
+// `approvals approve|deny` from a tool call. Library: destructive-guard/approvals.mjs.
+
+import { spawnSync } from "node:child_process";
+import { realpathSync } from "node:fs";
+import { dirname, join } from "node:path";
+import { fileURLToPath, pathToFileURL } from "node:url";
+
+const here = dirname(realpathSync(fileURLToPath(import.meta.url)));
+const lib = join(here, "..", "..", "pi", ".pi", "agent", "extensions", "destructive-guard", "approvals.mjs");
+const { decide, effectiveStatus, list, read, validId } = await import(pathToFileURL(lib).href);
+
+const [cmd, ...rest] = process.argv.slice(2);
+const flags = new Set(rest.filter((a) => a.startsWith("--")));
+const id = rest.find((a) => !a.startsWith("--"));
+
+function die(msg, code = 1) {
+	process.stderr.write(`approvals: ${msg}\n`);
+	process.exit(code);
+}
+
+function age(ms) {
+	const m = Math.round(ms / 60_000);
+	return m < 60 ? `${m}m` : `${Math.round(m / 60)}h`;
+}
+
+function needId() {
+	if (!validId(id)) die("give a request id (12 lowercase letters and digits)", 2);
+	return id;
+}
+
+function answer(decision, by) {
+	const r = decide(needId(), decision, by);
+	if (!r.ok) die(r.error, r.code === 404 ? 3 : 4);
+	process.stdout.write(`${r.req.id} ${decision}\n`);
+}
+
+switch (cmd) {
+	case "list": {
+		const rows = list({ all: flags.has("--all") });
+		if (flags.has("--json")) {
+			process.stdout.write(`${JSON.stringify(rows)}\n`);
+			break;
+		}
+		if (!rows.length) {
+			process.stdout.write("no pending approval requests\n");
+			break;
+		}
+		const now = Date.now();
+		for (const r of rows) {
+			const cmdText = r.command.length > 100 ? `${r.command.slice(0, 100)}…` : r.command;
+			process.stdout.write(`${r.id}  ${r.status.padEnd(8)}  ${age(now - r.created).padStart(4)}  ${r.rule}  ${cmdText}\n`);
+			if (r.cwd) process.stdout.write(`${" ".repeat(14)}in ${r.cwd}\n`);
+		}
+		break;
+	}
+	case "show": {
+		const r = read(needId());
+		if (!r) die(`no approval request ${id}`, 3);
+		process.stdout.write(`${JSON.stringify({ ...r, status: effectiveStatus(r) }, null, 2)}\n`);
+		break;
+	}
+	case "approve":
+		answer("approved", "cli");
+		break;
+	case "deny":
+		answer("denied", "cli");
+		break;
+	case "prompt": {
+		const r = read(needId());
+		if (!r || effectiveStatus(r) !== "pending") break;
+		// Text goes through the environment, not argv: SentinelOne kills a process
+		// with a long argv element, and env avoids AppleScript quoting.
+		const cmdText = r.command.length > 300 ? `${r.command.slice(0, 300)}…` : r.command;
+		const msg = `${r.reason}.\n\n${cmdText}${r.cwd ? `\n\nin ${r.cwd}` : ""}\n\nRequest ${r.id}. Deny is the default.`;
+		const giveUp = Math.max(1, Math.round((r.expires - Date.now()) / 1000));
+		const osa = `set r to display alert (system attribute "APPROVAL_TITLE") message (system attribute "APPROVAL_MSG") buttons {"Deny", "Approve"} default button "Deny" cancel button "Deny" giving up after ${giveUp}
+if gave up of r then return "gave-up"
+return button returned of r`;
+		const out = spawnSync("/usr/bin/osascript", ["-"], {
+			input: osa,
+			encoding: "utf8",
+			env: { ...process.env, APPROVAL_TITLE: `Approve ${r.rule}?`, APPROVAL_MSG: msg },
+		});
+		const button = (out.stdout ?? "").trim();
+		if (button === "Approve") decide(r.id, "approved", "alert");
+		else if (out.status === 1 && /-128/.test(out.stderr ?? "")) decide(r.id, "denied", "alert");
+		break;
+	}
+	default:
+		die("usage: approvals list [--all] [--json] | show <id> | approve <id> | deny <id> | prompt <id>", 2);
+}
