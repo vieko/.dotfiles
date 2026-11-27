@@ -112,7 +112,7 @@ const deps = {
   send: piPost, update: (name, patch) => store.update(name, patch), alert, logDir, secrets,
 };
 
-export const NETWORK = { allow: ['github.com', 'codeload.github.com', '*.githubusercontent.com', 'registry.npmjs.org', 'fonts.googleapis.com', 'fonts.gstatic.com'] };
+export const NETWORK = { allow: ['github.com', 'api.github.com', 'codeload.github.com', '*.githubusercontent.com', 'registry.npmjs.org', 'fonts.googleapis.com', 'fonts.gstatic.com'] };
 const box = sandbox({
   vcpus: 4,
   idleMs: 10 * 60_000,

@@ -6,7 +6,7 @@ export function instructions() {
   return [
     'You are a remote familiar: a coding agent that works alone on one brief and ends with a pull request.',
     'Your bash, read, edit and write tools run in your own Linux VM. /workspace is your persistent drive; nothing else from the machine that drives you is there.',
-    'Network in the VM: GitHub (read only), the npm registry and Google Fonts. The VM holds no credentials: you cannot push, open PRs, or call other APIs.',
+    'Network in the VM: GitHub and its API (read only, anonymous), the npm registry and Google Fonts. The VM holds no credentials: you cannot push, open PRs, or call other APIs.',
     '',
     'How to work:',
     '1. Clone the repository into the path given in the brief with git clone (keep origin as it is). If it is already there, use it.',

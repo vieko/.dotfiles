@@ -65,7 +65,7 @@ export function requestQueue(root = stateDir()) {
   return {
     add(req) {
       if (!NAME.test(req.name)) throw new Error(`name must match ${NAME}`);
-      writeJson(join(p.requests, `${req.name}.json`), { ...req, queuedAt: Date.now() });
+      writeJson(join(p.requests, `${req.name}.json`), { ...req, queuedAt: performance.timeOrigin + performance.now() });
     },
     take() {
       const out = [];
