@@ -15,7 +15,7 @@
 // Agents never answer requests: the guard's approval-self rule blocks
 // `approvals approve|deny` from a tool call. Library: destructive-guard/approvals.mjs.
 
-import { spawnSync } from "node:child_process";
+import { spawn } from "node:child_process";
 import { realpathSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath, pathToFileURL } from "node:url";
@@ -91,14 +91,26 @@ switch (cmd) {
 		const osa = `set r to display alert (system attribute "APPROVAL_TITLE") message (system attribute "APPROVAL_MSG") buttons {"Deny", "Approve"} default button "Deny" cancel button "Deny" giving up after ${giveUp}
 if gave up of r then return "gave-up"
 return button returned of r`;
-		const out = spawnSync("/usr/bin/osascript", ["-"], {
-			input: osa,
-			encoding: "utf8",
+		// The alert follows the request: when the user answers it elsewhere (the Sigil
+		// overview, the CLI) or it expires, the alert closes instead of waiting for a click.
+		const child = spawn("/usr/bin/osascript", ["-"], {
 			env: { ...process.env, APPROVAL_TITLE: `Approve ${r.rule}?`, APPROVAL_MSG: msg },
+			stdio: ["pipe", "pipe", "pipe"],
 		});
-		const button = (out.stdout ?? "").trim();
+		let stdout = "";
+		let stderr = "";
+		child.stdout.on("data", (d) => (stdout += d));
+		child.stderr.on("data", (d) => (stderr += d));
+		child.stdin.end(osa);
+		const watch = setInterval(() => {
+			const now = read(r.id);
+			if (!now || effectiveStatus(now) !== "pending") child.kill();
+		}, 1000);
+		const code = await new Promise((resolve) => child.on("close", (c) => resolve(c)));
+		clearInterval(watch);
+		const button = stdout.trim();
 		if (button === "Approve") decide(r.id, "approved", "alert");
-		else if (out.status === 1 && /-128/.test(out.stderr ?? "")) decide(r.id, "denied", "alert");
+		else if (code === 1 && /-128/.test(stderr)) decide(r.id, "denied", "alert");
 		break;
 	}
 	default:
