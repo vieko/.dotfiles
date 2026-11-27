@@ -32,6 +32,10 @@ pi/.pi/agent/models-store.json
 
 # Controller deps for the sandbox golem lane (scripts/sandbox/package.json); npm install locally.
 scripts/sandbox/node_modules/
+# Remote-familiar driver deps and its link to the sandbox lane's Vercel project.
+scripts/familiar-remote/node_modules/
+scripts/familiar-remote/.vercel
+scripts/familiar-remote/.workflow-data/
 
 # Generated per host by claude/.claude/setup-claude.sh from settings.base.json + hosts/settings.<host>.json.
 claude/.claude/settings.json

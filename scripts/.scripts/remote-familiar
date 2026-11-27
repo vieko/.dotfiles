@@ -1,0 +1,4 @@
+#!/usr/bin/env bash
+# remote-familiar -- familiars in Vercel Sandbox VMs; see scripts/familiar-remote/cli.mjs.
+here="$(cd "$(dirname "$(readlink -f "${BASH_SOURCE[0]}")")" && pwd)"
+exec node "$here/../familiar-remote/cli.mjs" "$@"

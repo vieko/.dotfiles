@@ -45,6 +45,16 @@ the stream at summon time: `-S <stream>` on `summon-familiar.sh -W` and
   an hour at full CPU. Controller and setup:
   `scripts/sandbox/`, `docs/agent-maintenance.md` ("Sandbox lane"); ids in
   `~/private/lanes/sandbox-golem.env`.
+- **Remote familiar** (first slice, 2026-11-27): `remote-familiar start
+  -r owner/repo <brief>` runs a familiar as a durable-harness Pi session
+  with its own Vercel Sandbox VM and Drive. One driver (launchd agent,
+  `remote-familiar driver install`) runs the agent loop and model calls on
+  this host; the VM gets no credentials. The familiar publishes through
+  `request_publish`: checks, a review model that can only hold or deny,
+  then the approval inbox; after approval the driver commits on
+  `vercel-sandbox/<name>` with GitHub-signed commits and opens the PR.
+  It reports over pi-post and shows in the Sigil overview. Not steerable
+  yet, one model per driver. Code: `scripts/familiar-remote/`.
 - **Scout**: a read-only child from the `scout` tool (haiku, read-only
   tools, up to 8 tasks). It writes nothing, so it is not a construct. Its
   report is an unreviewed claim: open the cited lines before an edit or a
@@ -56,10 +66,10 @@ the stream at summon time: `-S <stream>` on `summon-familiar.sh -W` and
 - **Every construct's diff passes one review**, by the session with the
   richest context (usually the Summoner). A green gate cannot tell "the
   test passes" from "the test was lying".
-- **Pi Durable and harness-on-world are not construct substrates here.**
-  Reopen if a `running` anvil record is lost mid-dispatch, if you want an
-  always-on or Slack-reachable agent, if Pi moves the coding agent onto
-  Durable, or if constructs leave this host.
+- **durable-harness is the substrate for remote familiars only.** Its
+  reopen trigger (constructs leave this host) was met on 2026-11-27.
+  Local familiars stay on the pi CLI and golems on anvil; Pi Durable and
+  harness-on-world are still not construct substrates here.
 
 ## Host hazards
 
