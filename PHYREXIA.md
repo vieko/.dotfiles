@@ -94,8 +94,7 @@ why. Available models per host: `~/.pi/agent/hosts/enabledModels.<host>.json`.
   `luna:high -> luna:xhigh -> fable:high` (default `-n 3`). Evidence,
   185 runs to 2026-11-25: luna-base runs end 93% green with 3% repair
   specs; fable:high rescued 16 of 19 escalations, opus:high 1 of 6.
-  The strong rung is fable once anvil's default strong model changes
-  (until then pass the ladder explicitly). Exceptions:
+  Anvil's default strong rung is fable since anvil#70. Exceptions:
   - Purge, delete, redact or wipe-personal-data specs: `-m fable` from
     the start (OpenAI moderation refuses them on luna).
   - A spec whose gate cannot see the quality that matters (UI feel,
