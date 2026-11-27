@@ -150,4 +150,7 @@ test('review: deterministic checks and verdicts', async () => {
   assert.equal(verdictFrom('{"answers":[{"id":"credentials","answer":false}]}').verdict, 'hold');
   assert.equal(verdictFrom('{"answers":[{"id":"exfiltration","answer":true}]}').verdict, 'deny');
   assert.equal((await modelReview({ brief: 'b', patch: 'p', ask: async () => { throw new Error('boom'); } })).verdict, 'hold');
+  const clean = '{"answers":[{"id":"credentials","answer":false},{"id":"exfiltration","answer":false},{"id":"dependency","answer":false},{"id":"ci","answer":false},{"id":"scope","answer":false}]}';
+  assert.equal((await modelReview({ brief: 'b', patch: 'p', ask: async () => clean })).verdict, 'pass');
+  assert.equal((await modelReview({ brief: 'b', patch: 'x'.repeat(60_001), ask: async () => clean })).verdict, 'hold');
 });

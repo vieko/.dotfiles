@@ -20,6 +20,7 @@ import { fileURLToPath } from 'node:url';
 import { familiarStore, paths, readJson, requestQueue, NAME } from './lib/state.mjs';
 import { parseModelSpec } from './lib/model.mjs';
 import { REPO } from './lib/publish.mjs';
+import { vercelLogin } from './lib/auth.mjs';
 
 const here = dirname(fileURLToPath(import.meta.url));
 const LABEL = 'dev.vieko.remote-familiars';
@@ -90,6 +91,8 @@ switch (cmd) {
     if (!NAME.test(name)) die(`name must match ${NAME}`, 2);
     if (familiarStore(P.root).get(name)) die(`a familiar named ${name} exists; pick another with -n`, 2);
     if (!driverAlive()) die('the driver is not running: remote-familiar driver install (or driver status)', 3);
+    const login = await vercelLogin();
+    if (!login.ok) die(login.message, 3);
     const summoner = process.env.PI_SESSION_ADDRESS;
     requestQueue(P.root).add({ name, repo, brief, ...(model ? { model } : {}), ...(summoner ? { summoner } : {}) });
     // Summon ledger, shared with summon-familiar.sh and summon-golem.sh.
@@ -142,6 +145,9 @@ switch (cmd) {
       mkdirSync(dirname(PLIST), { recursive: true });
       mkdirSync(dirname(DRIVER_LOG), { recursive: true });
       spawnSync('launchctl', ['bootout', `${domain}/${LABEL}`], { stdio: 'ignore' });
+      spawnSync('sleep', ['3']);
+      // One driver only: a second one on the same world would drive the same sessions.
+      if (driverAlive()) die(`a driver outside launchd runs (pid ${readJson(P.driver).pid}); stop it first`, 4);
       writeFileSync(PLIST, plist());
       const r = spawnSync('launchctl', ['bootstrap', domain, PLIST], { encoding: 'utf8' });
       if (r.status !== 0) die(`launchctl bootstrap failed: ${r.stderr.trim()}`);
@@ -153,7 +159,9 @@ switch (cmd) {
     } else if (sub === 'status') {
       const d = readJson(P.driver);
       process.stdout.write(driverAlive() ? `running: pid ${d.pid}, model ${d.model}, review ${d.review}\n` : `not running${existsSync(PLIST) ? ' (launchd agent installed; see the log)' : ''}; log ${DRIVER_LOG}\n`);
-      if (!driverAlive()) process.exitCode = 1;
+      const login = await vercelLogin({ refresh: false });
+      process.stdout.write(login.ok ? `vercel login: ${login.left === Infinity ? 'no expiry' : `${login.left} minutes left`}\n` : `vercel login: ${login.message}\n`);
+      if (!driverAlive() || !login.ok) process.exitCode = 1;
     } else if (sub === 'run') {
       const r = spawnSync(process.execPath, [join(here, 'driver.mjs')], { stdio: 'inherit' });
       process.exitCode = r.status ?? 1;

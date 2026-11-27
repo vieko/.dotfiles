@@ -47,3 +47,11 @@ test('model specs: aliases, effort, catalog first, pinned fallback', () => {
   assert.equal(resolveModel('opus', { catalog, pinned: (id) => ({ id, from: 'pinned' }) }).model.from, 'pinned');
   assert.throws(() => resolveModel('opus', { catalog }), /no gateway model/);
 });
+
+test('vercel login minutes', async () => {
+  const { minutesLeft } = await import('../lib/auth.mjs');
+  assert.equal(minutesLeft(undefined), 0);
+  assert.equal(minutesLeft({ token: 't' }), Infinity);
+  assert.equal(minutesLeft({ token: 't', expiresAt: new Date(10 * 60_000) }, 0), 10);
+  assert.equal(minutesLeft({ token: 't', expiresAt: new Date(0) }, 60_000), 0);
+});

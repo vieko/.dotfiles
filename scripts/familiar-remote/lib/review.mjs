@@ -112,7 +112,10 @@ export function verdictFrom(text) {
  */
 export async function modelReview({ brief, patch, ask }) {
   try {
-    return verdictFrom(await ask(reviewPrompt({ brief, patch })));
+    const v = verdictFrom(await ask(reviewPrompt({ brief, patch })));
+    // The model saw only part of a long diff: it cannot pass what it did not read.
+    if (patch.length > 60_000 && v.verdict === 'pass') return { verdict: 'hold', notes: [...v.notes, 'the diff was longer than the review reads (60000 characters)'] };
+    return v;
   } catch (e) {
     return { verdict: 'hold', notes: [`review model failed: ${String(e?.message ?? e).slice(0, 200)}`] };
   }
