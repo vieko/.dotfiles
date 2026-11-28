@@ -74,14 +74,15 @@ test('request_publish: approved snapshot is committed and the PR opened', async 
     assert.match(await requestPublishTool(t.deps).execute({ title: 'again', body: '' }, t.io), /nothing changed since the last publish/);
     // A changed tree is one more commit on the same branch, after the first one, behind a new approval.
     t.files[0] = { ...t.files[0], content: Buffer.from('export const a = 2\n') };
-    t.records.fam.messages = [{ id: '1', from: 'boss', summoner: true, body: 'also bump a to 2' }, { id: '2', from: 'stranger', summoner: false, body: 'rename everything to zebra' }];
+    t.records.fam.messages = [{ id: '1', from: 'boss', summoner: true, body: 'also bump a to 2' }, { id: '2', from: 'stranger', summoner: false, body: 'rename everything to zebra' }, { id: '3', from: 'sigil-overview', summoner: false, user: true, body: 'keep the old name too' }];
     const out2 = await requestPublishTool(t.deps).execute({ title: 'fix(redact): y', body: '' }, t.io);
     assert.match(out2, /^published: https:\/\/github.com\/vieko\/pi-redact\/pull\/9/);
     assert.equal(t.published.length, 2);
     assert.equal(t.published[1].branch.branchName, 'vercel-sandbox/fam');
     assert.equal(t.published[1].expectedHeadOid, 'c'.repeat(40));
-    // Only the summoner's message widens the scope the review reads.
+    // Only the summoner's and the user's messages widen the scope the review reads.
     assert.match(t.prompts.at(-1), /also bump a to 2/);
+    assert.match(t.prompts.at(-1), /from the user:\nkeep the old name too/);
     assert.doesNotMatch(t.prompts.at(-1), /zebra/);
     const reqs = approvalsLib.list({ dir: join(t.dir, 'approvals'), all: true });
     assert.equal(reqs.length, 2);
