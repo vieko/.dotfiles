@@ -40,6 +40,7 @@ function setup({ files = [{ path: 'src/a.ts', status: 'M', mode: '100644', conte
     createBranch: async () => ({}),
     commitOnBranch: async (input) => { published.push(input); return { oid: 'c'.repeat(40), signature: { isValid: true } }; },
     openPr: async () => ({ html_url: 'https://github.com/vieko/pi-redact/pull/9', number: 9 }),
+    pr: async () => ({ state: 'open' }),
   };
   const deps = {
     familiarOf: (runId) => (runId === 'run1' ? records.fam : undefined),
@@ -52,7 +53,7 @@ function setup({ files = [{ path: 'src/a.ts', status: 'M', mode: '100644', conte
     logDir: () => join(dir, 'logs'),
     secrets: () => ['sk-live-secret-value-123456789'],
   };
-  return { dir, deps, records, sent, published, io: { ctx: { runId: 'run1' }, signal: new AbortController().signal } };
+  return { dir, deps, records, sent, published, files, io: { ctx: { runId: 'run1' }, signal: new AbortController().signal } };
 }
 
 test('request_publish: approved snapshot is committed and the PR opened', async () => {
@@ -68,8 +69,19 @@ test('request_publish: approved snapshot is committed and the PR opened', async 
     assert.equal(req.rule, 'remote-publish');
     assert.match(req.command, /^open PR "fix\(redact\): x" on vieko\/pi-redact from vercel-sandbox\/fam$/);
     assert.match(req.reason, /1 files \(0 added, 1 modified, 0 deleted\)/);
-    // A second call does not publish twice.
-    assert.match(await requestPublishTool(t.deps).execute({ title: 'again', body: '' }, t.io), /already published/);
+    // The same tree again is not a second publish.
+    assert.match(await requestPublishTool(t.deps).execute({ title: 'again', body: '' }, t.io), /nothing changed since the last publish/);
+    // A changed tree is one more commit on the same branch, after the first one, behind a new approval.
+    t.files[0] = { ...t.files[0], content: Buffer.from('export const a = 2\n') };
+    const out2 = await requestPublishTool(t.deps).execute({ title: 'fix(redact): y', body: '' }, t.io);
+    assert.match(out2, /^published: https:\/\/github.com\/vieko\/pi-redact\/pull\/9/);
+    assert.equal(t.published.length, 2);
+    assert.equal(t.published[1].branch.branchName, 'vercel-sandbox/fam');
+    assert.equal(t.published[1].expectedHeadOid, 'c'.repeat(40));
+    const reqs = approvalsLib.list({ dir: join(t.dir, 'approvals'), all: true });
+    assert.equal(reqs.length, 2);
+    assert.ok(reqs.some((r) => /^push commit "fix\(redact\): y" to PR #9 on vieko\/pi-redact/.test(r.command)));
+    assert.equal(t.records.fam.published.commits.length, 2);
   } finally { rmSync(t.dir, { recursive: true, force: true }); }
 });
 

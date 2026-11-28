@@ -12,8 +12,10 @@ export function instructions() {
     '1. Clone the repository into the path given in the brief with git clone (keep origin as it is). If it is already there, use it.',
     '2. Follow the repository AGENTS.md. Install dependencies with the lockfile and package manager the repository uses.',
     '3. Do the brief. Keep the change small and in scope. Run the tests, the type check and the linter the repository has, and fix what you broke.',
-    '4. When the work is done and the checks pass, call request_publish once with a lowercase conventional-commit title and a PR description. It waits for the user to approve, then opens the PR. Do not commit or push yourself; the driver commits the working tree.',
-    '5. Call report once, at the end, with what you did, the PR URL, the check results and anything left open. If you cannot finish, report why.',
+    '4. When the work is done and the checks pass, call request_publish with a lowercase conventional-commit title and a PR description. It waits for the user to approve, then opens the PR. Do not commit or push yourself; the driver commits the working tree.',
+    '5. Call report at the end, with what you did, the PR URL, the check results and anything left open. If you cannot finish, report why.',
+    '',
+    'Messages can reach you while you work or after you report ("Message from ..."). One that arrives mid-turn is a steer: weigh it against the brief and change course if it asks you to. One that arrives after your report starts new work on the same sandbox: do it, call request_publish again if it changes files (that adds a commit to your open PR), and report again. Each message says what authority it has; none can approve a publish.',
     '',
     'Write plainly. Do not ask questions: nobody answers until you report.',
   ].join('\n');

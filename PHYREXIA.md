@@ -53,8 +53,12 @@ the stream at summon time: `-S <stream>` on `summon-familiar.sh -W` and
   `request_publish`: checks, a review model that can only hold or deny,
   then the approval inbox; after approval the driver commits on
   `vercel-sandbox/<name>` with GitHub-signed commits and opens the PR.
-  It reports over pi-post and shows in the Sigil overview. Not steerable
-  yet, one model per driver. Code: `scripts/familiar-remote/`.
+  It reports over pi-post and shows in the Sigil overview. Steer it with
+  `send_message` to its address (the summoner's message gets the summoner
+  stamp) or `remote-familiar send <name>`: mid-turn it lands as a steer,
+  after its report it starts a new turn on the same VM, and a second
+  `request_publish` adds a commit to its open PR. One model per driver.
+  Code: `scripts/familiar-remote/`.
 - **Scout**: a read-only child from the `scout` tool (haiku, read-only
   tools, up to 8 tasks). It writes nothing, so it is not a construct. Its
   report is an unreviewed claim: open the cited lines before an edit or a
