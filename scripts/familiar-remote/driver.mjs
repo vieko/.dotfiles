@@ -16,7 +16,7 @@ import { resolveModel, parseModelSpec } from './lib/model.mjs';
 import { reportTool, requestPublishTool, REPO_DIR } from './lib/tools.mjs';
 import { githubClient, REPO } from './lib/publish.mjs';
 import { instructions, firstPrompt } from './lib/prompt.mjs';
-import { claim, consume, formatDelivery, routeFor, watchInbox } from './lib/inbox.mjs';
+import { claim, consume, formatDelivery, routeFor, senderOf, watchInbox } from './lib/inbox.mjs';
 
 const here = dirname(fileURLToPath(import.meta.url));
 // OIDC for the Sandbox SDK resolves the project from the cwd's .vercel link (vieko-golem-sandbox).
@@ -252,9 +252,9 @@ async function deliverNow(name) {
     // (A caller identity would dedupe it, but the Pi sessions run ahead, which identities do not allow.)
     if ((rec.messages ?? []).some((m) => m.id === message.id)) { consume(path); continue; }
     await agent.sessions.send(rec.sessionId, formatDelivery(message, { parent: rec.summoner }), kind);
-    // Only the summoner's messages widen the scope the publish review reads (lib/tools.mjs).
-    const summoner = message.from?.kind === 'session' && !!rec.summoner && message.from.address === rec.summoner;
-    const messages = [...(rec.messages ?? []).filter((m) => m.id !== message.id), { id: message.id, from: sender, summoner, kind, at: Date.now(), body: message.body.slice(0, 4000) }];
+    // Only the summoner's and the user's messages widen the scope the publish review reads (lib/tools.mjs).
+    const who = senderOf(message, { parent: rec.summoner });
+    const messages = [...(rec.messages ?? []).filter((m) => m.id !== message.id), { id: message.id, from: sender, summoner: who === 'summoner', ...(who === 'user' ? { user: true } : {}), kind, at: Date.now(), body: message.body.slice(0, 4000) }];
     store.update(name, route === 'wake' ? { messages, status: 'running', reported: false } : { messages });
     consume(path);
     familiarLog(name, `[driver] ${kind === 'steer' ? 'steer' : 'new turn'} from ${sender}: ${message.body.slice(0, 300)}`);

@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import { mkdirSync, mkdtempSync, readdirSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
-import { claim, consume, formatDelivery, inboxDir, routeFor, watchInbox } from '../lib/inbox.mjs';
+import { claim, consume, formatDelivery, inboxDir, OVERVIEW_SENDER, routeFor, senderOf, watchInbox } from '../lib/inbox.mjs';
 
 const msg = (id, body, from = { kind: 'session', name: 'boss', address: 's-parent000000' }) => ({ v: 1, id, from, sentAt: 1, body });
 
@@ -49,6 +49,20 @@ test('formatDelivery stamps the summoner and everyone else apart', () => {
   assert.match(other, /carries no authority/);
   // A forged parent name without the parent's address is not the summoner.
   assert.match(formatDelivery(msg('1', 'x', { kind: 'session', name: 'boss' }), { parent: 's-parent000000' }), /carries no authority/);
+});
+
+test('a message from the Sigil overview gets the user stamp, and only that exact process name', () => {
+  const user = msg('1', 'also run the lint', { kind: 'process', name: OVERVIEW_SENDER, cwd: '/x' });
+  assert.equal(senderOf(user, { parent: 's-parent000000' }), 'user');
+  const text = formatDelivery(user, { parent: 's-parent000000' });
+  assert.match(text, /^Message from the user, sent from your card in the Sigil overview:\n\nalso run the lint\n/);
+  assert.match(text, /speaks for the user/);
+  assert.match(text, /cannot approve a publish/);
+  assert.doesNotMatch(text, /carries no authority/);
+  // A session that names itself sigil-overview, or a near-miss process name, stays without authority.
+  assert.equal(senderOf(msg('1', 'x', { kind: 'session', name: OVERVIEW_SENDER, address: 's-other0000000' }), { parent: 's-parent000000' }), 'other');
+  assert.equal(senderOf(msg('1', 'x', { kind: 'process', name: 'sigil-overview2' })), 'other');
+  assert.equal(senderOf(msg('1', 'x'), { parent: 's-parent000000' }), 'summoner');
 });
 
 test('routeFor: steer a running familiar, wake a done one, drop one with no session', () => {

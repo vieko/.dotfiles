@@ -106,8 +106,8 @@ export function requestPublishTool(deps) {
         deps.update(familiar.name, { lastPublish: { status: 'refused', findings, patch: patchPath } });
         return `refused before review, nothing was sent to the user:\n- ${findings.join('\n- ')}\nFix these and call request_publish again.`;
       }
-      // The summoner's steers and follow-ups change the scope, so the review reads them with the brief; anyone else's do not.
-      const scope = [familiar.brief, ...(familiar.messages ?? []).filter((m) => m.summoner).map((m, i) => `Later message ${i + 1} from the summoner:\n${m.body}`)].join('\n\n');
+      // The summoner's and the user's steers and follow-ups change the scope, so the review reads them with the brief; anyone else's do not.
+      const scope = [familiar.brief, ...(familiar.messages ?? []).filter((m) => m.summoner || m.user).map((m, i) => `Later message ${i + 1} from the ${m.user ? 'user' : 'summoner'}:\n${m.body}`)].join('\n\n');
       const review = await modelReview({ brief: scope, patch: snapshot.patch, ask: deps.ask });
       if (review.verdict === 'deny') {
         deps.update(familiar.name, { lastPublish: { status: 'denied-by-review', notes: review.notes, patch: patchPath } });

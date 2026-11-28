@@ -55,7 +55,9 @@ the stream at summon time: `-S <stream>` on `summon-familiar.sh -W` and
   `vercel-sandbox/<name>` with GitHub-signed commits and opens the PR.
   It reports over pi-post and shows in the Sigil overview. Steer it with
   `send_message` to its address (the summoner's message gets the summoner
-  stamp) or `remote-familiar send <name>`: mid-turn it lands as a steer,
+  stamp), `remote-familiar send <name>`, or the message box on its card
+  in the Sigil overview (the user stamp: it speaks for the user on scope,
+  never for a publish): mid-turn it lands as a steer,
   after its report it starts a new turn on the same VM, and a second
   `request_publish` adds a commit to its open PR. One model per driver.
   Code: `scripts/familiar-remote/`.
