@@ -37,9 +37,11 @@ const P = paths();
 mkdirSync(P.world, { recursive: true, mode: 0o700 });
 // One driver only: two on one world both drive every session (each logs, each delivers steers).
 {
-  const other = readJson(P.driver)?.pid;
+  const d = readJson(P.driver);
+  const other = d?.pid;
   let alive = false;
-  if (other && other !== process.pid) try { process.kill(other, 0); alive = true; } catch {}
+  // A live pid that stopped heartbeating (a crash, then a reused pid) is not a driver: launchd must be able to start.
+  if (other && other !== process.pid && Date.now() - (d.lastSeen ?? 0) < 90_000) try { process.kill(other, 0); alive = true; } catch {}
   if (alive) { console.error(`another driver runs (pid ${other}); not starting a second one`); process.exit(4); }
 }
 const LOGS = join(homedir(), 'scratch', 'logs');
@@ -161,11 +163,23 @@ function serial(name, fn) {
   return p;
 }
 
-/** Returns false when a message reached the session after `idleAt`: that started a new turn, so it is not done. */
+/** Unplaced messages in the session log: a steer or prompt that came in as the turn ended, so another turn follows. */
+async function pendingSubmissions(sessionId) {
+  const st = await agent.sessions.inspect(sessionId);
+  return st.submissions.filter((x) => ['prompt', 'steer', 'followUp'].includes(x.kind) && !st.placed.has(x.id) && !st.withdrawn.has(x.id)).length;
+}
+
+/** Returns false when a message still waits in the session: it starts a new turn, so the familiar is not done. */
 async function finish(name, lastText, idleAt) {
   let rec = store.get(name);
   if (!rec) return true;
-  if ((rec.messages ?? []).some((m) => m.at > idleAt)) return false;
+  try {
+    if (await pendingSubmissions(rec.sessionId)) return false;
+  } catch (e) {
+    // Without the log, fall back to time: a message delivered after the idle is likely unanswered.
+    log(`inspect ${name}: ${e.message}`);
+    if ((rec.messages ?? []).some((m) => m.at > idleAt)) return false;
+  }
   if (!rec.reported && rec.summoner) {
     const body = `Remote familiar ${name} (${rec.repo}) went idle without calling report. Its last message:\n\n${(lastText || '(no text)').slice(-4000)}`;
     try { await piPost(rec.summoner, `rfam:${name}`, body); } catch (e) { log(`fallback report for ${name} failed: ${e.message}`); }
@@ -238,7 +252,9 @@ async function deliverNow(name) {
     // (A caller identity would dedupe it, but the Pi sessions run ahead, which identities do not allow.)
     if ((rec.messages ?? []).some((m) => m.id === message.id)) { consume(path); continue; }
     await agent.sessions.send(rec.sessionId, formatDelivery(message, { parent: rec.summoner }), kind);
-    const messages = [...(rec.messages ?? []).filter((m) => m.id !== message.id), { id: message.id, from: sender, kind, at: Date.now(), body: message.body.slice(0, 4000) }];
+    // Only the summoner's messages widen the scope the publish review reads (lib/tools.mjs).
+    const summoner = message.from?.kind === 'session' && !!rec.summoner && message.from.address === rec.summoner;
+    const messages = [...(rec.messages ?? []).filter((m) => m.id !== message.id), { id: message.id, from: sender, summoner, kind, at: Date.now(), body: message.body.slice(0, 4000) }];
     store.update(name, route === 'wake' ? { messages, status: 'running', reported: false } : { messages });
     consume(path);
     familiarLog(name, `[driver] ${kind === 'steer' ? 'steer' : 'new turn'} from ${sender}: ${message.body.slice(0, 300)}`);

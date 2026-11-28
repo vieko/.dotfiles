@@ -30,8 +30,10 @@ test('watchInbox fires when a message lands', async () => {
   try {
     let fired = 0;
     const w = watchInbox('s-aaaaaaaaaaaa', () => { fired++; }, root);
+    // FSEvents can miss a write in the first moments of a new watch; the driver's poll covers that case.
+    await new Promise((r) => setTimeout(r, 200));
     writeFileSync(join(inboxDir('s-aaaaaaaaaaaa', root), '0000000000001-aaaaaaaa.json'), JSON.stringify(msg('0000000000001-aaaaaaaa', 'x')));
-    for (let i = 0; i < 40 && !fired; i++) await new Promise((r) => setTimeout(r, 25));
+    for (let i = 0; i < 200 && !fired; i++) await new Promise((r) => setTimeout(r, 25));
     w.close();
     assert.ok(fired > 0);
   } finally { rmSync(root, { recursive: true, force: true }); }

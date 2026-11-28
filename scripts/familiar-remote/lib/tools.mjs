@@ -90,6 +90,8 @@ export function requestPublishTool(deps) {
         if (previous) {
           baseContent = await readBaseFiles(vm, REPO_DIR, snapshot.base, restorePaths(previous, snapshot));
           updateChanges(previous, snapshot, baseContent); // refuses a moved base or no change, before anyone is asked
+          const pr = await deps.github.pr(familiar.repo, previous.number);
+          if (pr.state !== 'open') return `error: PR #${previous.number} is ${pr.merged_at ? 'merged' : pr.state}; it cannot take more commits. Report instead.`;
         }
       } catch (e) {
         return `error: could not take the changes from the sandbox: ${e.message}`;
@@ -104,8 +106,8 @@ export function requestPublishTool(deps) {
         deps.update(familiar.name, { lastPublish: { status: 'refused', findings, patch: patchPath } });
         return `refused before review, nothing was sent to the user:\n- ${findings.join('\n- ')}\nFix these and call request_publish again.`;
       }
-      // Steers and follow-ups change the scope the familiar works to, so the review reads them with the brief.
-      const scope = [familiar.brief, ...(familiar.messages ?? []).map((m, i) => `Later message ${i + 1} (from ${m.from}):\n${m.body}`)].join('\n\n');
+      // The summoner's steers and follow-ups change the scope, so the review reads them with the brief; anyone else's do not.
+      const scope = [familiar.brief, ...(familiar.messages ?? []).filter((m) => m.summoner).map((m, i) => `Later message ${i + 1} from the summoner:\n${m.body}`)].join('\n\n');
       const review = await modelReview({ brief: scope, patch: snapshot.patch, ask: deps.ask });
       if (review.verdict === 'deny') {
         deps.update(familiar.name, { lastPublish: { status: 'denied-by-review', notes: review.notes, patch: patchPath } });
