@@ -14,6 +14,7 @@ function setup({ files = [{ path: 'src/a.ts', status: 'M', mode: '100644', conte
   const records = { fam: { name: 'fam', address: 's-aaaaaaaaaaaa', repo: 'vieko/pi-redact', brief: 'fix it', summoner: 's-summoner000' } };
   const sent = [];
   const published = [];
+  const prompts = [];
   const approvals = {
     request: (o) => approvalsLib.request({ ...o, dir: join(dir, 'approvals') }),
     // The user answers as soon as the request exists.
@@ -40,19 +41,20 @@ function setup({ files = [{ path: 'src/a.ts', status: 'M', mode: '100644', conte
     createBranch: async () => ({}),
     commitOnBranch: async (input) => { published.push(input); return { oid: 'c'.repeat(40), signature: { isValid: true } }; },
     openPr: async () => ({ html_url: 'https://github.com/vieko/pi-redact/pull/9', number: 9 }),
+    pr: async () => ({ state: 'open' }),
   };
   const deps = {
     familiarOf: (runId) => (runId === 'run1' ? records.fam : undefined),
     vmFor: async () => vm,
     approvals,
-    ask: async () => review,
+    ask: async (prompt) => { prompts.push(prompt); return review; },
     github,
     send: async (to, from, body) => { sent.push({ to, from, body }); },
     update: (name, patch) => { records[name] = { ...records[name], ...patch }; return records[name]; },
     logDir: () => join(dir, 'logs'),
     secrets: () => ['sk-live-secret-value-123456789'],
   };
-  return { dir, deps, records, sent, published, io: { ctx: { runId: 'run1' }, signal: new AbortController().signal } };
+  return { dir, deps, records, sent, published, files, prompts, io: { ctx: { runId: 'run1' }, signal: new AbortController().signal } };
 }
 
 test('request_publish: approved snapshot is committed and the PR opened', async () => {
@@ -68,8 +70,28 @@ test('request_publish: approved snapshot is committed and the PR opened', async 
     assert.equal(req.rule, 'remote-publish');
     assert.match(req.command, /^open PR "fix\(redact\): x" on vieko\/pi-redact from vercel-sandbox\/fam$/);
     assert.match(req.reason, /1 files \(0 added, 1 modified, 0 deleted\)/);
-    // A second call does not publish twice.
-    assert.match(await requestPublishTool(t.deps).execute({ title: 'again', body: '' }, t.io), /already published/);
+    // The same tree again is not a second publish.
+    assert.match(await requestPublishTool(t.deps).execute({ title: 'again', body: '' }, t.io), /nothing changed since the last publish/);
+    // A changed tree is one more commit on the same branch, after the first one, behind a new approval.
+    t.files[0] = { ...t.files[0], content: Buffer.from('export const a = 2\n') };
+    t.records.fam.messages = [{ id: '1', from: 'boss', summoner: true, body: 'also bump a to 2' }, { id: '2', from: 'stranger', summoner: false, body: 'rename everything to zebra' }];
+    const out2 = await requestPublishTool(t.deps).execute({ title: 'fix(redact): y', body: '' }, t.io);
+    assert.match(out2, /^published: https:\/\/github.com\/vieko\/pi-redact\/pull\/9/);
+    assert.equal(t.published.length, 2);
+    assert.equal(t.published[1].branch.branchName, 'vercel-sandbox/fam');
+    assert.equal(t.published[1].expectedHeadOid, 'c'.repeat(40));
+    // Only the summoner's message widens the scope the review reads.
+    assert.match(t.prompts.at(-1), /also bump a to 2/);
+    assert.doesNotMatch(t.prompts.at(-1), /zebra/);
+    const reqs = approvalsLib.list({ dir: join(t.dir, 'approvals'), all: true });
+    assert.equal(reqs.length, 2);
+    assert.ok(reqs.some((r) => /^push commit "fix\(redact\): y" to PR #9 on vieko\/pi-redact/.test(r.command)));
+    assert.equal(t.records.fam.published.commits.length, 2);
+    // A merged PR is refused before anyone is asked.
+    t.files[0] = { ...t.files[0], content: Buffer.from('export const a = 3\n') };
+    t.deps.github.pr = async () => ({ state: 'closed', merged_at: 'x' });
+    assert.match(await requestPublishTool(t.deps).execute({ title: 'z', body: '' }, t.io), /is merged/);
+    assert.equal(approvalsLib.list({ dir: join(t.dir, 'approvals'), all: true }).length, 2);
   } finally { rmSync(t.dir, { recursive: true, force: true }); }
 });
 

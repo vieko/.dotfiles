@@ -4,6 +4,9 @@
 //   remote-familiar start -r owner/repo [-n name] [-m model] <brief-path | ->
 //   remote-familiar list [--json]
 //   remote-familiar show <name>
+//   remote-familiar send <name> <text | ->  steer it, or give a done one new work
+//                                         (sent as a process; send_message from the
+//                                         summoner session gets the summoner stamp)
 //   remote-familiar clean <name>          delete the familiar's VM and Drive
 //   remote-familiar driver install|uninstall|status|run
 //
@@ -124,6 +127,19 @@ switch (cmd) {
     if (args.includes('--json')) { process.stdout.write(`${JSON.stringify(rows.map(({ brief, cursor, ...r }) => r))}\n`); break; }
     if (!rows.length) { process.stdout.write('no remote familiars\n'); break; }
     for (const r of rows) process.stdout.write(`${r.name.padEnd(28)} ${String(r.status).padEnd(17)} ${r.repo}${r.published ? ` ${r.published.pr}` : ''}\n`);
+    break;
+  }
+  case 'send': {
+    // The same as send_message to the familiar's address: pi-post delivers, the driver hands it on.
+    const rec = familiarStore(P.root).get(args[0] ?? '');
+    if (!rec?.address) die(`no remote familiar ${args[0]} with a session`, 3);
+    if (rec.cleaned) die(`${rec.name} was cleaned; it has no session to take the message`, 4);
+    const text = args[1] === '-' || args.length < 2 ? readFileSync(0, 'utf8') : args.slice(1).join(' ');
+    if (!text.trim()) die('give the message text', 2);
+    if (!driverAlive()) process.stderr.write('remote-familiar: the driver is not running; the message waits until it is\n');
+    const r = spawnSync(join(homedir(), '.pi', 'agent', 'post', 'bin', 'pi-post'), ['send', '--to', rec.address], { input: text, encoding: 'utf8' });
+    if (r.status !== 0) die(`pi-post: ${(r.stderr || r.stdout).trim()}`, 4);
+    process.stdout.write(r.stdout || 'sent\n');
     break;
   }
   case 'show': {

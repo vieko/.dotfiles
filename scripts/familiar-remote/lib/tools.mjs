@@ -7,7 +7,7 @@ import { createHash } from 'node:crypto';
 import { mkdirSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { deterministicChecks, modelReview } from './review.mjs';
-import { BRANCH_PREFIX, publishSnapshot, summarize, takeSnapshot } from './publish.mjs';
+import { BRANCH_PREFIX, publishSnapshot, readBaseFiles, restorePaths, summarize, takeSnapshot, updateChanges, updatePublished } from './publish.mjs';
 
 export const REPO_DIR = '/workspace/repo';
 
@@ -40,7 +40,7 @@ export function reportTool(deps) {
   return {
     name: 'report',
     label: 'Report',
-    description: 'Send your final report to the session that summoned you. Call it once, at the end: what you did, the PR URL if you published one, test results, and anything left open.',
+    description: 'Send your final report to the session that summoned you. Call it at the end of the brief, and again at the end of each later message you are given: what you did, the PR URL if you published one, test results, and anything left open.',
     inputSchema: { type: 'object', properties: { body: { type: 'string', description: 'The report, plain text, at most 6000 characters.' } }, required: ['body'], additionalProperties: false },
     replay: 'never',
     async execute(input, io) {
@@ -63,7 +63,7 @@ export function requestPublishTool(deps) {
   return {
     name: 'request_publish',
     label: 'Request publish',
-    description: `Publish your changes in ${REPO_DIR} as a pull request. The driver takes every changed file in the working tree against the commit you cloned, checks it, and asks the user to approve it; it then commits on the branch ${BRANCH_PREFIX}<your name> (a signed commit) and opens the PR. This call waits for the user's answer, up to 30 minutes. You cannot push yourself. Call it once, when the work is done and the tests pass.`,
+    description: `Publish your changes in ${REPO_DIR} as a pull request. The driver takes every changed file in the working tree against the commit you cloned, checks it, and asks the user to approve it; it then commits on the branch ${BRANCH_PREFIX}<your name> (a signed commit) and opens the PR. This call waits for the user's answer, up to 30 minutes. You cannot push yourself. Call it when the work is done and the tests pass. Once your PR is open, calling it again pushes one more commit to the same PR with everything that changed since; the PR title and description stay as they are.`,
     inputSchema: {
       type: 'object',
       properties: {
@@ -79,11 +79,20 @@ export function requestPublishTool(deps) {
       const title = String(input?.title ?? '').trim().slice(0, 200);
       const body = String(input?.body ?? '').slice(0, 20_000);
       if (!title) return 'error: give a title';
-      if (familiar.published) return `already published: ${familiar.published.pr}`;
-      const branch = `${BRANCH_PREFIX}${familiar.name}`;
+      const previous = familiar.published;
+      if (previous && !previous.base) return `already published: ${previous.pr} (this PR predates updates; it cannot take more commits)`;
+      const branch = previous?.branch ?? `${BRANCH_PREFIX}${familiar.name}`;
       let snapshot;
+      let baseContent;
       try {
-        snapshot = await takeSnapshot(await deps.vmFor(runId), REPO_DIR);
+        const vm = await deps.vmFor(runId);
+        snapshot = await takeSnapshot(vm, REPO_DIR);
+        if (previous) {
+          baseContent = await readBaseFiles(vm, REPO_DIR, snapshot.base, restorePaths(previous, snapshot));
+          updateChanges(previous, snapshot, baseContent); // refuses a moved base or no change, before anyone is asked
+          const pr = await deps.github.pr(familiar.repo, previous.number);
+          if (pr.state !== 'open') return `error: PR #${previous.number} is ${pr.merged_at ? 'merged' : pr.state}; it cannot take more commits. Report instead.`;
+        }
       } catch (e) {
         return `error: could not take the changes from the sandbox: ${e.message}`;
       }
@@ -97,16 +106,21 @@ export function requestPublishTool(deps) {
         deps.update(familiar.name, { lastPublish: { status: 'refused', findings, patch: patchPath } });
         return `refused before review, nothing was sent to the user:\n- ${findings.join('\n- ')}\nFix these and call request_publish again.`;
       }
-      const review = await modelReview({ brief: familiar.brief, patch: snapshot.patch, ask: deps.ask });
+      // The summoner's steers and follow-ups change the scope, so the review reads them with the brief; anyone else's do not.
+      const scope = [familiar.brief, ...(familiar.messages ?? []).filter((m) => m.summoner).map((m, i) => `Later message ${i + 1} from the summoner:\n${m.body}`)].join('\n\n');
+      const review = await modelReview({ brief: scope, patch: snapshot.patch, ask: deps.ask });
       if (review.verdict === 'deny') {
         deps.update(familiar.name, { lastPublish: { status: 'denied-by-review', notes: review.notes, patch: patchPath } });
         return `the review denied this publish, nothing was sent to the user:\n- ${review.notes.join('\n- ')}`;
       }
 
       // `command` is what the overview and `approvals list` show; the hash covers the whole call, digest included.
-      const call = { command: `open PR "${title}" on ${familiar.repo} from ${branch}`, repo: familiar.repo, branch, base: snapshot.base, digest: snapshot.digest, title, body: createHash('sha256').update(body).digest('hex') };
+      const command = previous ? `push commit "${title}" to PR #${previous.number} on ${familiar.repo} (${branch})` : `open PR "${title}" on ${familiar.repo} from ${branch}`;
+      const call = { command, ...(previous ? { pr: previous.number, after: previous.commit } : {}), repo: familiar.repo, branch, base: snapshot.base, digest: snapshot.digest, title, body: createHash('sha256').update(body).digest('hex') };
       const reason = [
-        `remote familiar ${familiar.name}: PR on ${familiar.repo} from ${branch}, ${summarize(snapshot)}`,
+        previous
+          ? `remote familiar ${familiar.name}: one more commit on ${previous.pr}; the branch becomes ${summarize(snapshot)} against the base (the diff is the whole PR)`
+          : `remote familiar ${familiar.name}: PR on ${familiar.repo} from ${branch}, ${summarize(snapshot)}`,
         `diff: ${patchPath}`,
         ...(review.verdict === 'hold' ? [`review held it: ${review.notes.join('; ')}`] : []),
         ...snapshot.notes,
@@ -129,7 +143,9 @@ export function requestPublishTool(deps) {
         return `the user did not approve the publish (${answer}). Nothing was pushed.`;
       }
       try {
-        const published = await publishSnapshot({ github: deps.github, repo: familiar.repo, branch, snapshot, title, body });
+        const published = previous
+          ? await updatePublished({ github: deps.github, repo: familiar.repo, previous, snapshot, title, body, baseContent })
+          : await publishSnapshot({ github: deps.github, repo: familiar.repo, branch, snapshot, title, body });
         deps.update(familiar.name, { published, lastPublish: { status: 'published', approval: req.id, patch: patchPath } });
         return `published: ${published.pr} (commit ${published.commit.slice(0, 9)} on ${branch}${published.verified ? ', signed' : ', NOT verified'})`;
       } catch (e) {

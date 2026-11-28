@@ -121,6 +121,7 @@ export function githubClient({ token, fetch = globalThis.fetch, api = 'https://a
       return res.data.createCommitOnBranch.commit;
     },
     openPr: (repo, pr) => call('POST', `/repos/${repo}/pulls`, pr),
+    pr: (repo, number) => call('GET', `/repos/${repo}/pulls/${number}`),
   };
 }
 
@@ -145,5 +146,71 @@ export async function publishSnapshot({ github, repo, branch, snapshot, title, b
     },
   });
   const pr = await github.openPr(repo, { title, head: branch, base: info.default_branch, body: body ?? '' });
-  return { branch, commit: commit.oid, verified: commit.signature?.isValid === true, pr: pr.html_url, number: pr.number };
+  return { branch, commit: commit.oid, verified: commit.signature?.isValid === true, pr: pr.html_url, number: pr.number, ...publishedState(snapshot) };
+}
+
+/** What a later update needs to know about the branch: the base and each changed path. */
+export function publishedState(snapshot) {
+  return { base: snapshot.base, digest: snapshot.digest, files: snapshot.files.map((f) => ({ path: f.path, status: f.status })) };
+}
+
+/**
+ * The file changes that take the branch from the last published snapshot to
+ * this one. Both are diffs against the same base, so a path the familiar has
+ * put back goes back to the base: deleted when the last one added it, else
+ * restored from `baseContent` (read from the VM, `restorePaths`).
+ */
+export function updateChanges(previous, snapshot, baseContent = new Map()) {
+  if (previous.base !== snapshot.base) throw new Error(`the sandbox clone moved from ${previous.base.slice(0, 9)} to ${snapshot.base.slice(0, 9)}; updating a PR across a new base is not supported`);
+  if (previous.digest === snapshot.digest) throw new Error('nothing changed since the last publish');
+  const was = new Map(previous.files.map((f) => [f.path, f.status]));
+  const now = new Set(snapshot.files.map((f) => f.path));
+  const additions = [];
+  const deletions = [];
+  for (const f of snapshot.files) {
+    if (f.status === 'D') { if (was.get(f.path) !== 'D') deletions.push({ path: f.path }); }
+    else additions.push({ path: f.path, contents: f.content.toString('base64') });
+  }
+  for (const [path, status] of was) {
+    if (now.has(path)) continue;
+    if (status === 'A') deletions.push({ path });
+    else {
+      const content = baseContent.get(path);
+      if (!content) throw new Error(`${path}: no base content to restore`);
+      additions.push({ path, contents: content.toString('base64') });
+    }
+  }
+  return { additions, deletions };
+}
+
+/** Paths the last publish changed that this snapshot leaves at the base, and were not added: they need their base content. */
+export function restorePaths(previous, snapshot) {
+  const now = new Set(snapshot.files.map((f) => f.path));
+  return previous.files.filter((f) => !now.has(f.path) && f.status !== 'A').map((f) => f.path);
+}
+
+export async function readBaseFiles(vm, repoDir, base, paths) {
+  const out = new Map();
+  for (const p of paths) {
+    checkPath(p);
+    const r = await vm.run(`cd ${q(repoDir)} && git cat-file blob ${q(`${base}:${p}`)} | base64 -w0`);
+    if (r.code !== 0) throw new Error(`reading ${p} at the base failed: ${r.out.slice(-300)}`);
+    out.set(p, Buffer.from(r.out.trim(), 'base64'));
+  }
+  return out;
+}
+
+/** Push an approved follow-up snapshot onto the familiar's open PR as one more signed commit. */
+export async function updatePublished({ github, repo, previous, snapshot, title, body, baseContent }) {
+  if (!REPO.test(repo)) throw new Error(`bad repo ${repo}`);
+  const pr = await github.pr(repo, previous.number);
+  if (pr.state !== 'open') throw new Error(`PR #${previous.number} is ${pr.merged_at ? 'merged' : pr.state}; a closed PR cannot take more commits`);
+  const fileChanges = updateChanges(previous, snapshot, baseContent);
+  const commit = await github.commitOnBranch({
+    branch: { repositoryNameWithOwner: repo, branchName: previous.branch },
+    expectedHeadOid: previous.commit,
+    message: { headline: title, ...(body ? { body } : {}) },
+    fileChanges,
+  });
+  return { ...previous, commit: commit.oid, verified: commit.signature?.isValid === true, ...publishedState(snapshot), commits: [...(previous.commits ?? [previous.commit]), commit.oid] };
 }

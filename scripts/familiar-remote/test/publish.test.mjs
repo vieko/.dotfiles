@@ -4,7 +4,7 @@ import { execFileSync, spawnSync } from 'node:child_process';
 import { mkdtempSync, readFileSync, rmSync, symlinkSync, unlinkSync, writeFileSync, chmodSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
-import { checkPath, digestOf, githubClient, parseRaw, publishSnapshot, takeSnapshot } from '../lib/publish.mjs';
+import { checkPath, digestOf, githubClient, parseRaw, publishSnapshot, restorePaths, takeSnapshot, updateChanges, updatePublished } from '../lib/publish.mjs';
 
 const git = (cwd, ...a) => execFileSync('git', a, { cwd, encoding: 'utf8', env: { ...process.env, GIT_AUTHOR_NAME: 't', GIT_AUTHOR_EMAIL: 't@t', GIT_COMMITTER_NAME: 't', GIT_COMMITTER_EMAIL: 't@t' } });
 
@@ -105,7 +105,7 @@ const snap = { base: 'b'.repeat(40), files: [{ path: 'a.txt', status: 'M', conte
 test('publishSnapshot branches at the base, commits the snapshot, opens the PR', async () => {
   const gh = fakeGithub();
   const out = await publishSnapshot({ github: gh, repo: 'o/r', branch: 'vercel-sandbox/x', snapshot: snap, title: 'fix: x', body: 'why' });
-  assert.deepEqual(out, { branch: 'vercel-sandbox/x', commit: 'c'.repeat(40), verified: true, pr: 'https://github.com/o/r/pull/7', number: 7 });
+  assert.deepEqual(out, { branch: 'vercel-sandbox/x', commit: 'c'.repeat(40), verified: true, pr: 'https://github.com/o/r/pull/7', number: 7, base: snap.base, digest: undefined, files: [{ path: 'a.txt', status: 'M' }, { path: 'old.txt', status: 'D' }] });
   const input = gh.calls.find((c) => c[0] === 'commitOnBranch')[1];
   assert.equal(input.expectedHeadOid, snap.base);
   assert.deepEqual(input.fileChanges, { additions: [{ path: 'a.txt', contents: Buffer.from('hi').toString('base64') }], deletions: [{ path: 'old.txt' }] });
@@ -130,4 +130,34 @@ test('githubClient sends the token, maps 404 on a ref to false, and surfaces Gra
   assert.equal(await gh.branchExists('o/r', 'vercel-sandbox/x'), false);
   await assert.rejects(gh.commitOnBranch({}), /expectedHeadOid mismatch/);
   assert.ok(seen.every(([, , auth]) => auth === 'Bearer tkn'));
+});
+
+test('updateChanges takes the branch from the last snapshot to this one', () => {
+  const b = 'b'.repeat(40);
+  const previous = { base: b, digest: 'd1', files: [{ path: 'a.txt', status: 'M' }, { path: 'new.txt', status: 'A' }, { path: 'old.txt', status: 'D' }, { path: 'back.txt', status: 'M' }] };
+  const now = { base: b, digest: 'd2', files: [{ path: 'a.txt', status: 'M', content: Buffer.from('v2') }, { path: 'old.txt', status: 'D' }, { path: 'gone.txt', status: 'D' }] };
+  // new.txt was added and is gone now: deleted. back.txt was modified and is at the base now: restored. old.txt stays deleted: no change.
+  assert.deepEqual(restorePaths(previous, now), ['back.txt']);
+  const ch = updateChanges(previous, now, new Map([['back.txt', Buffer.from('base')]]));
+  assert.deepEqual(ch.additions, [{ path: 'a.txt', contents: Buffer.from('v2').toString('base64') }, { path: 'back.txt', contents: Buffer.from('base').toString('base64') }]);
+  assert.deepEqual(ch.deletions, [{ path: 'gone.txt' }, { path: 'new.txt' }]);
+  assert.throws(() => updateChanges(previous, { ...now, digest: 'd1' }), /nothing changed/);
+  assert.throws(() => updateChanges(previous, { ...now, base: 'e'.repeat(40) }), /clone moved/);
+  assert.throws(() => updateChanges(previous, now), /no base content/);
+});
+
+test('updatePublished commits after the last commit and refuses a closed PR', async () => {
+  const b = 'b'.repeat(40);
+  const previous = { branch: 'vercel-sandbox/x', commit: 'c'.repeat(40), pr: 'u', number: 7, base: b, digest: 'd1', files: [{ path: 'a.txt', status: 'M' }] };
+  const now = { base: b, digest: 'd2', files: [{ path: 'a.txt', status: 'M', content: Buffer.from('v2') }] };
+  const gh = { ...fakeGithub(), pr: async () => ({ state: 'open' }) };
+  const out = await updatePublished({ github: gh, repo: 'o/r', previous, snapshot: now, title: 'fix: more' });
+  const input = gh.calls.find((c) => c[0] === 'commitOnBranch')[1];
+  assert.equal(input.expectedHeadOid, previous.commit);
+  assert.equal(input.branch.branchName, 'vercel-sandbox/x');
+  assert.equal(gh.calls.some((c) => c[0] === 'openPr' || c[0] === 'createBranch'), false);
+  assert.equal(out.digest, 'd2');
+  assert.deepEqual(out.commits, ['c'.repeat(40), 'c'.repeat(40)]);
+  const closed = { ...fakeGithub(), pr: async () => ({ state: 'closed', merged_at: 'x' }) };
+  await assert.rejects(updatePublished({ github: closed, repo: 'o/r', previous, snapshot: now, title: 't' }), /merged/);
 });

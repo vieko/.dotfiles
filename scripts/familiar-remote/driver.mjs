@@ -11,11 +11,12 @@ import { appendFileSync, mkdirSync, writeFileSync } from 'node:fs';
 import { homedir } from 'node:os';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { familiarStore, paths, registerSession, addressOf, requestQueue, writeJson, NAME } from './lib/state.mjs';
+import { familiarStore, paths, registerSession, addressOf, requestQueue, readJson, writeJson, NAME } from './lib/state.mjs';
 import { resolveModel, parseModelSpec } from './lib/model.mjs';
 import { reportTool, requestPublishTool, REPO_DIR } from './lib/tools.mjs';
 import { githubClient, REPO } from './lib/publish.mjs';
 import { instructions, firstPrompt } from './lib/prompt.mjs';
+import { claim, consume, formatDelivery, routeFor, watchInbox } from './lib/inbox.mjs';
 
 const here = dirname(fileURLToPath(import.meta.url));
 // OIDC for the Sandbox SDK resolves the project from the cwd's .vercel link (vieko-golem-sandbox).
@@ -34,6 +35,15 @@ const { vercelAIGatewayProvider } = await import('@earendil-works/pi-ai/provider
 
 const P = paths();
 mkdirSync(P.world, { recursive: true, mode: 0o700 });
+// One driver only: two on one world both drive every session (each logs, each delivers steers).
+{
+  const d = readJson(P.driver);
+  const other = d?.pid;
+  let alive = false;
+  // A live pid that stopped heartbeating (a crash, then a reused pid) is not a driver: launchd must be able to start.
+  if (other && other !== process.pid && Date.now() - (d.lastSeen ?? 0) < 90_000) try { process.kill(other, 0); alive = true; } catch {}
+  if (alive) { console.error(`another driver runs (pid ${other}); not starting a second one`); process.exit(4); }
+}
 const LOGS = join(homedir(), 'scratch', 'logs');
 mkdirSync(LOGS, { recursive: true });
 const store = familiarStore(P.root);
@@ -145,9 +155,31 @@ function heartbeat(rec, live = true) {
   registerSession({ address: rec.address, sessionId: rec.sessionId, name: `rfam-${rec.name}`, cwd: `github.com/${rec.repo}`, parent: rec.summoner, startedAt: rec.startedAt, live });
 }
 
-async function finish(name, lastText) {
+// Per-familiar serial work: message delivery and the done mark never interleave.
+const chains = new Map();
+function serial(name, fn) {
+  const p = (chains.get(name) ?? Promise.resolve()).then(fn).catch((e) => log(`${name}: ${e?.stack ?? e}`));
+  chains.set(name, p);
+  return p;
+}
+
+/** Unplaced messages in the session log: a steer or prompt that came in as the turn ended, so another turn follows. */
+async function pendingSubmissions(sessionId) {
+  const st = await agent.sessions.inspect(sessionId);
+  return st.submissions.filter((x) => ['prompt', 'steer', 'followUp'].includes(x.kind) && !st.placed.has(x.id) && !st.withdrawn.has(x.id)).length;
+}
+
+/** Returns false when a message still waits in the session: it starts a new turn, so the familiar is not done. */
+async function finish(name, lastText, idleAt) {
   let rec = store.get(name);
-  if (!rec) return;
+  if (!rec) return true;
+  try {
+    if (await pendingSubmissions(rec.sessionId)) return false;
+  } catch (e) {
+    // Without the log, fall back to time: a message delivered after the idle is likely unanswered.
+    log(`inspect ${name}: ${e.message}`);
+    if ((rec.messages ?? []).some((m) => m.at > idleAt)) return false;
+  }
   if (!rec.reported && rec.summoner) {
     const body = `Remote familiar ${name} (${rec.repo}) went idle without calling report. Its last message:\n\n${(lastText || '(no text)').slice(-4000)}`;
     try { await piPost(rec.summoner, `rfam:${name}`, body); } catch (e) { log(`fallback report for ${name} failed: ${e.message}`); }
@@ -155,11 +187,13 @@ async function finish(name, lastText) {
   rec = store.update(name, { status: 'done', endedAt: Date.now() });
   heartbeat(rec, false);
   familiarLog(name, `[driver] done`);
+  return true;
 }
 
 async function watch(name) {
   if (watching.has(name)) return;
   watching.add(name);
+  let again = false;
   try {
     const rec = store.get(name);
     let text = '';
@@ -183,7 +217,9 @@ async function watch(name) {
       if (e.type === 'idle' && worked) {
         if (text.trim()) familiarLog(name, text.trim());
         store.update(name, { cursor });
-        await finish(name, text || rec.lastText);
+        const idleAt = Date.now();
+        const last = text || rec.lastText;
+        again = !(await serial(name, () => finish(name, last, idleAt)));
         break;
       }
       if (e.type === 'text' && text.length > 8000) { store.update(name, { lastText: text.slice(-4000) }); }
@@ -194,6 +230,44 @@ async function watch(name) {
     heartbeat(store.get(name), false);
   } finally {
     watching.delete(name);
+  }
+  if (again) watch(name);
+}
+
+// ---- steering: the familiar's pi-post inbox ----
+async function deliverNow(name) {
+  for (const { message, path } of claim(store.get(name)?.address ?? '')) {
+    const rec = store.get(name);
+    const sender = message.from?.name ?? 'unknown';
+    const route = routeFor(rec);
+    if (route === 'drop') {
+      consume(path);
+      const back = message.replyTo ?? (message.from?.kind === 'session' ? message.from.address : undefined);
+      if (back) piPost(back, `rfam:${name}`, `Remote familiar ${name} has no session any more (its sandbox was cleaned), so your message was not delivered.`).catch(() => {});
+      familiarLog(name, `[driver] dropped a message from ${sender}: no session`);
+      continue;
+    }
+    const kind = route === 'steer' ? 'steer' : 'prompt';
+    // At-least-once, as pi-post is: a crash after the send and before the consume delivers it twice.
+    // (A caller identity would dedupe it, but the Pi sessions run ahead, which identities do not allow.)
+    if ((rec.messages ?? []).some((m) => m.id === message.id)) { consume(path); continue; }
+    await agent.sessions.send(rec.sessionId, formatDelivery(message, { parent: rec.summoner }), kind);
+    // Only the summoner's messages widen the scope the publish review reads (lib/tools.mjs).
+    const summoner = message.from?.kind === 'session' && !!rec.summoner && message.from.address === rec.summoner;
+    const messages = [...(rec.messages ?? []).filter((m) => m.id !== message.id), { id: message.id, from: sender, summoner, kind, at: Date.now(), body: message.body.slice(0, 4000) }];
+    store.update(name, route === 'wake' ? { messages, status: 'running', reported: false } : { messages });
+    consume(path);
+    familiarLog(name, `[driver] ${kind === 'steer' ? 'steer' : 'new turn'} from ${sender}: ${message.body.slice(0, 300)}`);
+    heartbeat(store.get(name));
+    watch(name);
+  }
+}
+const deliver = (name) => serial(name, () => deliverNow(name));
+const inboxes = new Map();
+function watchInboxes() {
+  for (const rec of store.list()) {
+    if (!rec.address || inboxes.has(rec.name)) continue;
+    try { inboxes.set(rec.name, watchInbox(rec.address, () => deliver(rec.name))); } catch (e) { log(`inbox ${rec.name}: ${e.message}`); }
   }
 }
 
@@ -244,6 +318,9 @@ let ticks = 0;
 const tick = async () => {
   if (stopping) return;
   for (const req of queue.take()) await startFamiliar(req);
+  // fs.watch is the fast path; this poll catches what it misses.
+  watchInboxes();
+  for (const rec of store.list()) if (rec.address) await deliver(rec.name);
   // pi-post heartbeats every 30 s; the overview calls a record stale after 3 minutes.
   if (ticks++ % 15 === 0) {
     writeJson(P.driver, { pid: process.pid, model: main.spec, review: reviewer.spec, lastSeen: Date.now() });
@@ -257,7 +334,8 @@ const shutdown = () => {
   stopping = true;
   clearInterval(pollTimer);
   for (const rec of store.list()) if (ACTIVE.has(rec.status)) heartbeat(rec, false);
-  try { writeFileSync(P.driver, `${JSON.stringify({ pid: null, lastSeen: Date.now() })}\n`); } catch {}
+  // Only this driver's own record: a second driver refused at start must not blank the running one's.
+  if (readJson(P.driver)?.pid === process.pid) try { writeFileSync(P.driver, `${JSON.stringify({ pid: null, lastSeen: Date.now() })}\n`); } catch {}
   log('driver stopping');
   process.exit(0);
 };
